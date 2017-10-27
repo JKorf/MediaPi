@@ -104,7 +104,12 @@ class TorrentDownloadManager:
         skipped = 0
         removed = 0
         start = current_time()
-        for block_download in self.queue[block_offset:]:
+
+        queue = self.queue[block_offset:]
+        if self.torrent.end_game:
+            queue.sort(key=lambda x: len(x.peers))
+
+        for block_download in queue:
             if block_download.block.done:
                 to_remove.append(block_download)
                 removed += 1
@@ -148,17 +153,16 @@ class TorrentDownloadManager:
         if peer in block_download.peers:
             return False
 
-        if not self.torrent.end_game:
+        if self.torrent.end_game:
+            if len(block_download.peers) > 5:
+                return False
+        else:
             if self.torrent.data_manager.pieces[block_download.block.piece_index].priority < 100:
                 if self.download_mode != DownloadMode.ImportantOnly:
                     return False
             if len(block_download.peers) > 2:
                 return False
             if peer.peer_speed == PeerSpeed.Low and (self.torrent.peer_manager.high_speed_peers > 0 or self.torrent.peer_manager.medium_speed_peers > 1):
-                return False
-
-        if self.torrent.end_game:
-            if len(block_download.peers) > 3:
                 return False
 
         return True
