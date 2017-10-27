@@ -1,0 +1,109 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height:100%">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mediaplayer</title>
+
+    <meta name="theme-color" content="#3d7ed3">
+
+    <!-- for Chrome on Android, multi-resolution icon of 196x196 -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="shortcut icon" sizes="196x196" href="/Images/icon.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <link rel="stylesheet" type="text/css" href="Css/base.css">
+    <link rel="stylesheet" type="text/css" href="Css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="Css/bootstrap_ms.css">
+    <link rel="stylesheet" type="text/css" href="Css/menu.css">
+    <link rel="stylesheet" type="text/css" href="Css/player.css">
+    <link rel="stylesheet" type="text/css" href="Css/torrent_settings.css">
+    <link rel="stylesheet" type="text/css" href="Css/hd.css">
+    <link rel="stylesheet" type="text/css" href="Css/radio.css">
+    <link rel="stylesheet" type="text/css" href="Css/shows.css">
+    <link rel="stylesheet" type="text/css" href="Css/movies.css">
+    <link rel="stylesheet" type="text/css" href="Css/youtube.css">
+    <link rel="stylesheet" type="text/css" href="Css/home.css">
+    <link rel="stylesheet" type="text/css" href="Css/torrents.css">
+    <link rel="stylesheet" type="text/css" href="Css/media_list.css">
+
+    <script src="/App/External/angular.js"></script>
+    <script src="/App/External/ngSanitize.js"></script>
+    <script src="/App/External/angular-ui-router.js"></script>
+    <script src="/App/External/jquery.js"></script>
+    <script src="/App/External/hammer.js"></script>
+    <script src="/App/External/angular-hammer.js"></script>
+    <script src="/App/External/bootstrap.js"></script>
+
+    <script src="/App/Config/Angular.js"></script>
+    <script src="/App/Config/States.js"></script>
+    <script src="/App/Config/Config.js"></script>
+
+    <script src="/App/Modules/Index/IndexController.js"></script>
+    <script src="/App/Modules/Home/HomeController.js"></script>
+    <script src="/App/Modules/Shows/ShowController.js"></script>
+    <script src="/App/Modules/Movies/MovieController.js"></script>
+    <script src="/App/Modules/Direct/DirectController.js"></script>
+    <script src="/App/Modules/HD/HDController.js"></script>
+    <script src="/App/Modules/Radio/RadioController.js"></script>
+    <script src="/App/Modules/Media/MediaListController.js"></script>
+    <script src="/App/Modules/Debug/DebugController.js"></script>
+    <script src="/App/Modules/YouTube/YouTubeController.js"></script>
+    <script src="/App/Modules/Settings/SettingsController.js"></script>
+    <script src="/App/Modules/Torrents/TorrentsController.js"></script>
+
+    <script src="/App/Directives/Menu/MenuDirective.js"></script>
+    <script src="/App/Directives/OptionsMenu/OptionsMenuDirective.js"></script>
+    <script src="/App/Directives/ViewLoader/ViewLoaderDirective.js"></script>
+    <script src="/App/Directives/Player/PlayerDirective.js"></script>
+    <script src="/App/Directives/Textbox/TextboxDirective.js"></script>
+    <script src="/App/Directives/Button/ButtonDirective.js"></script>
+    <script src="/App/Directives/Dropdown/DropdownDirective.js"></script>
+    <script src="/App/Directives/ProtectedImg/ProtectedImgDirective.js"></script>
+    <script src="/App/Directives/ImageOnLoad/ImageOnLoadDirective.js"></script>
+    <script src="/App/Directives/ColorIndicator/ColorIndicatorDirective.js"></script>
+    <script src="/App/Directives/SlidingText/SlidingTextDirective.js"></script>
+    <script src="/App/Directives/EnterPress/EnterPressDirective.js"></script>
+    <script src="/App/Directives/Header/HeaderDirective.js"></script>
+    <script src="/App/Directives/Slider/SliderDirective.js"></script>
+    <script src="/App/Directives/ProgressBar/ProgressBarDirective.js"></script>
+    <script src="/App/Directives/StatusBar/StatusBarDirective.js"></script>
+    <script src="/App/Directives/Ripple/RippleDirective.js"></script>
+    <script src="/App/Modules/Movies/MovieBoxDirective.js"></script>
+    <script src="/App/Modules/Shows/ShowBoxDirective.js"></script>
+
+    <script src="/App/Factories/Memory/MemoryFactory.js"></script>
+    <script src="/App/Factories/Watched/EpisodesWatchedFactory.js"></script>
+    <script src="/App/Factories/Watched/FilesWatchedFactory.js"></script>
+    <script src="/App/Factories/Realtime/RealtimeFactory.js"></script>
+    <script src="/App/Factories/Confirmation/ConfirmationFactory.js"></script>
+    <script src="/App/Factories/Errors/ErrorFactory.js"></script>
+    <script src="/App/Factories/SearchHistory/SearchHistoryFactory.js"></script>
+    <script src="/App/Factories/Favorites/FavoritesFactory.js"></script>
+    <script src="/App/Factories/Cache/CacheFactory.js"></script>
+    <script src="/App/Factories/Request/RequestFactory.js"></script>
+
+    <script type="text/javascript">
+        window.addEventListener("load", function() { window.scrollTo(0, 0); });
+
+        if ('serviceWorker' in navigator) {
+            <!--navigator.serviceWorker.register('/serviceworker.js').then(function() {-->
+                <!--console.log('Service worker registered');-->
+            <!--}, function(e) {-->
+                <!--console.log('Service worker couldnt register, ' + e);-->
+            <!--});-->
+        }
+    </script>
+</head>
+<body style="width: 100%; height: 100%" ng-app="pi-test">
+    <div ng-controller="IndexController" class="content-wrapper" hm-swiperight="openMenu($event)" hm-swipeleft="closeMenu($event)" >
+        <header></header>
+        <div ui-view class="view" ></div>
+        <player></player>
+        <menu></menu>
+        <options-menu></options-menu>
+        <status-bar></status-bar>
+    </div>
+</body>
+</html>

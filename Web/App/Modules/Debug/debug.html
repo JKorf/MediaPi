@@ -1,0 +1,183 @@
+﻿<div class="view-debug sub-view">
+    <div class="debug-wrapper">
+        <div class="row debug-tab-select">
+            <div class="col-xs-6 debug-tab-item" ng-click="switchTab('info')">
+                <div class="debug-tab-item-inner">Info</div></div>
+            <div class="col-xs-6 debug-tab-item" ng-click="switchTab('debug')">
+                <div class="debug-tab-item-inner">Debug</div></div>
+        </div>
+        <div ng-if="tab == 'info'">
+             <div class="version-holder">
+                <div class="debug-title">Build</div>
+                <div class="version-build">
+                    <div class="version">V{{version.version_number}}</div>
+                    <div class="build-date">({{version.build_date}})</div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12 debug-title">Connections</div>
+                <div class="col-xs-5">Attempted</div>
+                <div class="col-xs-7 align-right">{{write_big_number(info.peers_attempted)}}</div>
+            </div>
+
+             <div class="row">
+                <div class="col-xs-5">Failed</div>
+                <div class="col-xs-7 align-right">{{write_big_number(info.peers_failed)}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-5">Succeeded</div>
+                <div class="col-xs-7 align-right">{{write_big_number(info.peers_succeeded)}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12 debug-title">Peer sources</div>
+                <div class="col-xs-5">Http tr.</div>
+                <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_http_tracker)}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-5">Udp tr.</div>
+                <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_udp_tracker)}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-5">PEX</div>
+                <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_pex)}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-5">DHT</div>
+                <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_dht)}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12 debug-title">Timing</div>
+                <div class="col-xs-5">Played</div>
+                <div class="col-xs-7 align-right">{{to_time(info.play_time)}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-5">Online</div>
+                <div class="col-xs-7 align-right">{{to_time(info.running_for)}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12 debug-title">Download</div>
+                <div class="col-xs-5">Downloaded</div>
+                <div class="col-xs-7 align-right">{{info.total_downloaded}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-5">Max kbps</div>
+                <div class="col-xs-7 align-right">{{info.max_download}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12 debug-title">Other</div>
+                <div class="col-xs-5">Subs dl</div>
+                <div class="col-xs-7 align-right">{{write_big_number(info.subs_downloaded)}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-5">Threads</div>
+                <div class="col-xs-7 align-right">{{write_big_number(info.threads_started)}}</div>
+            </div>
+
+            <div class="row debug-row">
+                <div class="col-xs-6">
+                    <basic-button click="resetCache" text="Reset cache"></basic-button>
+                </div>
+                <div class="col-xs-6">
+                    <basic-button click="update" text="Update"></basic-button>
+                </div>
+                 <div class="col-xs-6">
+                </div>
+            </div>
+        </div>
+
+        <div ng-if="tab == 'debug'">
+            <div class="row">
+                <div class="col-xs-12 debug-title">Peers</div>
+                <div class="col-xs-7">Potential: </div>
+                <div class="col-xs-5" ng-class="{'warning-system': debugInfo.potential < 10}">{{debugInfo.potential}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">Connected: </div>
+                <div class="col-xs-5">{{debugInfo.connected}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 debug-title">Downloading</div>
+                <div class="col-xs-7">Total Size: </div>
+                <div class="col-xs-5">{{debugInfo.size}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">Torrent state: </div>
+                <div class="col-xs-5" ng-class="{'ok-system': debugInfo.torrentState == 'done'}">{{debugInfo.torrent_state}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">Downloaded: </div>
+                <div class="col-xs-5">{{debugInfo.downloaded}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">Left: </div>
+                <div class="col-xs-5">{{debugInfo.left_to_download}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">Speed: </div>
+                <div class="col-xs-5">{{debugInfo.speed}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">Stream buffer ready: </div>
+                <div class="col-xs-5"  ng-class="{'warning-system': debugInfo.stream_position == debugInfo.stream_buffer_position}">{{debugInfo.stream_buffer_ready}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">Stream buffer total: </div>
+                <div class="col-xs-5">{{debugInfo.stream_buffer_total}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 debug-title">Streaming</div>
+                <div class="col-xs-7">Total streamed: </div>
+                <div class="col-xs-5">{{debugInfo.bytes_streamed}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">Stream position: </div>
+                <div class="col-xs-5">{{debugInfo.stream_position}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">Stream buffer position: </div>
+                <div class="col-xs-5">{{debugInfo.stream_buffer_position}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12 debug-title">DHT</div>
+                <div class="col-xs-7">Nodes: </div>
+                <div class="col-xs-5">{{debugInfo.dht_nodes}}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12 debug-title">System state</div>
+                <div class="col-xs-7">Threads: </div>
+                <div class="col-xs-5">{{debugInfo.threads}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">CPU: </div>
+                <div class="col-xs-5">{{debugInfo.cpu}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-7">Memory: </div>
+                <div class="col-xs-5">{{debugInfo.memory}}</div>
+            </div>
+
+            <div class="row" ng-show="errors.length > 0">
+                <div class="col-xs-12 debug-title">Errors</div>
+                <div class="col-xs-12 error-wrapper">
+                    <div ng-repeat="error in errors">
+                        <div class="debug-error-msg"  ng-class="{'first-debug-error': $index == 0}">{{error.time | date:'HH:mm:ss'}} | {{error.type}} <br /> {{error.message}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

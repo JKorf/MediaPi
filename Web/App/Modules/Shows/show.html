@@ -1,0 +1,75 @@
+﻿<div class="view-show sub-view">
+    <view-loader promise="promise"></view-loader>
+
+    <div class="show-wrapper">
+        <div class="show-image">
+            <protected-img src="show.images.poster" imgclass="show-image-img"></protected-img>
+        </div>
+        <div class="show-info">
+            <div class="show-title truncate">{{show.title}}</div>
+             <div class="row">
+                <div class="col-xs-6">Rating:</div>
+                <div class="col-xs-6 show-info-value" color-indicator val="show.rating.percentage" type="percentage">{{show.rating.percentage}}%</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6">Year:</div>
+                <div class="col-xs-6 show-info-value">{{show.year}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6">Average length:</div>
+                <div class="col-xs-6 show-info-value">{{show.runtime}} min</div>
+            </div>
+            <div class="row" ng-if="show.status == 'returning series'">
+                <div class="col-xs-6">Airs on:</div>
+                <div class="col-xs-6 show-info-value">{{show.air_day}} - {{show.air_time}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6">IMDB link:</div>
+                <div class="col-xs-6 show-info-value link" ng-click="goToImdb()">{{show.imdb_id}}</div>
+            </div>
+
+            <div class="show-synopsis multiline-truncate" ng-click="synopsisClick()">{{show.synopsis}}</div>
+
+            <div class="show-episode-view">
+                <div class="show-episode-view-season-title">Season</div>
+                <div class="show-episode-view-seasons">
+                    <div class="show-episode-view-season" ng-repeat="season in show.Seasons" ng-class="{'selectedseason': season==selectedSeason}" ng-click="selectSeason(season)">{{season[0].season}}</div>
+                </div>
+
+                <div class="show-episode-view-episode-title" ng-if="selectedSeason">Episode</div>
+                <div class="show-episode-view-episodes"  ng-if="selectedSeason">
+                    <div class="show-episode-view-episode" ripple ng-repeat="episode in selectedSeason"
+                         ng-class="{'selectedepisode': episode==selectedEpisode, 'lastepisode': $last, 'firstepisode': $first}" ng-click="selectEpisode(episode)">
+                        <div class="show-episode-view-episode-number" ng-class="{'show-episode-view-episode-watched': isWatched(episode)}">{{episode.episode}}. <img class="watched-episode-img" ng-if="isWatched(episode)" src="/Images/watched.png"/></div>
+                        <div class="show-episode-view-episode-title2 truncate" ng-class="{'show-episode-view-episode-watched': isWatched(episode)}">{{episode.title}}</div>
+                        <div class="show-episode-view-episode-info">
+                            <div class="show-episode-view-episode-aired-on"  ng-if="episode==selectedEpisode">{{episode.first_aired | secondsToDateTime | date:'dd MMM yyyy'}}</div>
+                            <div class="show-episode-view-episode-info-overview multiline-truncate" ng-click="showFullEpisodeOverview($event); $event.stopPropagation();">{{episode.overview}}</div>
+
+                            <div class="episode-torrents" ng-if="keys(episode.torrents).length > 2">
+                                <div class="episode-torrent" ng-if="key != '0'" ng-repeat="key in keys(episode.torrents) | orderBy:sortResolutions"
+                                     ng-class="{'selected-torrent': selectedResolution.resolution == '{{key}}'}" ng-click="selectResolution(key); $event.stopPropagation();">
+                                    <div class="episode-torrent-title">{{key}} ({{episode.torrents[key].seeds}})</div>
+                                    <div class="episode-torrent-checkbox">
+                                        <input type="radio" ng-model="selectedResolution.resolution" value="{{key}}" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="episode-download" ng-click="downloadEpisode(episode); $event.stopPropagation();">
+                                <img src="/Images/download.png"/>
+                            </div>
+                            <div class="episode-watch" ng-click="watchEpisode(episode); $event.stopPropagation();" ripple>
+                                Watch
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="show-favorite" ng-click="toggleFavorite()">
+            <img src="/Images/fav-open.png" ng-if="!isFavorite()">
+            <img src="/Images/fav-closed.png" ng-if="isFavorite()">
+        </div>
+    </div>
+</div>

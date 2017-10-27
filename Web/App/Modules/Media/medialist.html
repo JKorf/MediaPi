@@ -1,0 +1,26 @@
+<div class="view-media-list sub-view">
+    <div class="search-bar">
+        <div class="media-search-box">
+            <textbox model="search.keywords" enter="searchMedia" placeholder="search.."></textbox>
+        </div>
+        <div class="orderby-dropdown">
+            <dropdown model="search.orderby" options="searchoptions" placeholder="^"></dropdown>
+            <div class="drop-arrow-down"><img src="/Images/down-gray.png" /></div>
+        </div>
+        <div class="media-search-button" ng-click="searchMedia()">
+            <img src="/Images/search.png" />
+        </div>
+    </div>
+
+    <div class="no-media" ng-if="mediaList.length == 0 && done">
+        No media found :(
+    </div>
+
+    <div class="media-box hide" ng-class="{'first-media-box': $index==0}" ng-repeat="media in mediaList | limitTo:showUntil" ng-click="goToMedia(media.imdb_id)">
+        <movie-box ng-if="mediaType == 'movies'" movie="media"></movie-box>
+        <show-box ng-if="mediaType == 'shows'" show="media"></show-box>
+    </div>
+
+    <div class='media-more' ng-if="showUntil % 16 == 0 && showUntil != 0">Scroll to load more <img src='/Images/down big.png' /></div>
+    <div class="media-more-loader">Loading.. <img src='/Images/loader.gif' /></div>
+</div>

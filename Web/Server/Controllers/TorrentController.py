@@ -1,0 +1,30 @@
+import urllib.parse
+
+from Shared.Events import EventType, EventManager
+from Shared.Logger import Logger
+from Shared.Util import to_JSON
+from TorrentSrc.Util.Enums import OutputMode
+from Web.Server.Models import TorrentDetailModel
+
+
+class TorrentController:
+
+    @staticmethod
+    def download(url, title):
+        Logger.write(2, "Download torrent: " + urllib.parse.unquote(title))
+
+        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.File])
+
+    @staticmethod
+    def get_torrents(start):
+        torrents = []
+        for torrent in start.torrent_manager.torrents:
+            torrents.append(TorrentDetailModel.from_torrent(torrent))
+
+        return to_JSON(torrents)
+
+    @staticmethod
+    def remove(start, id):
+        Logger.write(2, "Remove torrent: " + id)
+
+        start.torrent_manager.remove_torrent(int(id))

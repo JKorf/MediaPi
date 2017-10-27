@@ -1,0 +1,50 @@
+﻿<div class="view-home sub-view" >
+    <div class="list-holder">
+        <div class="list-title">Favorite shows</div>
+        <div class="list-item-wrapper favorites">
+            <div class="list-item" ng-repeat="fav in favorites" ng-click="goToShow(fav._id)" ng-if="favorites.length > 0">
+                <div class="list-image">
+                    <protected-img imgclass="list-image-img" src="fav.images.poster"></protected-img>
+                </div>
+                <div class="list-watched-at truncate" ng-if="fav.toWatch > 0">
+                    <div class="list-last-updated">
+                        {{ fav.toWatch }} to watch
+                    </div>
+                </div>
+                <div class="list-show-info">
+                    <div class="list-info-title truncate"></div>
+                    <div class="list-info-subtitle truncate">{{fav.title}}</div>
+                </div>
+            </div>
+        </div>
+        <div class="list-more-fade"></div>
+        <div ng-if="favorites.length == 0" class="list-no-items">
+            No favorites
+        </div>
+    </div>
+
+    <div class="list-holder">
+        <div class="list-title">Last watched files</div>
+        <div class="list-item-wrapper last-watched-files" ng-if="lastWatchedFiles.length > 0">
+            <div class="list-item" ng-repeat="file in lastWatchedFiles | limitTo: 5 | orderBy: 'watchedAt':true track by $index" ng-click="goToFile(file.url)">
+                <div class="list-image">
+                    <img ng-src="/Images/unknown.png" class="list-image-img" />
+                </div>
+                <div class="list-watched-at truncate">
+                    <img src="/Images/watched-black.png" class="list-refreshed-icon" />
+                    <div class="list-last-updated">
+                        {{ timeToTimespan(file.watchedAt) }}
+                    </div>
+                </div>
+                <div class="list-show-info file-show-info">
+                    <div class="list-info-title"></div>
+                    <div class="list-info-subtitle truncate">{{getFileName(file.url)}}</div>
+                </div>
+            </div>
+        </div>
+        <div class="list-more-fade"></div>
+        <div ng-if="lastWatchedFiles.length == 0" class="list-no-items">
+            No files watched yet
+        </div>
+    </div>
+</div>

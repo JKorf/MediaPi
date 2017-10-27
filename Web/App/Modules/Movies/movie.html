@@ -1,0 +1,55 @@
+﻿<div class="view-movie sub-view">
+    <view-loader promise="promise"></view-loader>
+
+    <div class="movie-wrapper">
+        <div class="movie-image">
+            <protected-img src="movie.poster" imgclass="movie-image-img"></protected-img>
+        </div>
+        <div class="movie-info">
+            <div class="movie-title">{{movie.title}}</div>
+             <div class="row">
+                <div class="col-xs-6">Rating:</div>
+                <div class="col-xs-6 movie-info-value" color-indicator val="movie.rating_percentage" ng-if="movie.rating_percentage" type="percentage">{{movie.rating_percentage}}%</div>
+                <div class="col-xs-6 movie-info-value" color-indicator val="movie.rating_grade" ng-if="movie.rating_grade" type="grade">{{movie.rating_grade}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6">Year:</div>
+                <div class="col-xs-6 movie-info-value">{{movie.year}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6">Length:</div>
+                <div class="col-xs-6 movie-info-value">{{movie.runtime}} minutes</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6">Released:</div>
+                <div class="col-xs-6 movie-info-value">{{movie.released | secondsToDateTime | date:'dd-MM-yyyy'}}</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6">IMDB link:</div>
+                <div class="col-xs-6 movie-info-value link" ng-click="goToImdb()">{{movie.imdb_id}}</div>
+            </div>
+            <div class="row" ng-if="movie.trailer != 'false'">
+                <div class="col-xs-6">Trailer:</div>
+                <div class="col-xs-6 movie-info-value link" ng-click="watchTrailer()">Youtube</div>
+            </div>
+
+            <div class="movie-synopsis multiline-truncate" ng-click="synopsisClick()">{{movie.synopsis}}</div>
+
+            <div class="episode-torrents" ng-if="movie.torrents.length > 1">
+                <div class="episode-torrent" ng-if="key != '0'" ng-repeat="torrent in movie.torrents | orderBy:sortResolutions"
+                     ng-class="{'selected-torrent': selectedTorrent.url == torrent.url}" ng-click="selectTorrent(torrent); $event.stopPropagation();">
+                    <div class="episode-torrent-title">{{torrent.quality}} ({{torrent.seeds}})</div>
+                    <div class="episode-torrent-checkbox">
+                        <input type="radio" ng-model="selectedTorrent.url" value="{{torrent.url}}" />
+                    </div>
+                </div>
+            </div>
+            <div class="episode-download" ng-click="downloadMovie(); $event.stopPropagation();">
+                <img src="/Images/download.png"/>
+            </div>
+            <div class="episode-watch" ng-click="watchMovie(); $event.stopPropagation();" ripple>
+                Watch
+            </div>
+        </div>
+    </div>
+</div>

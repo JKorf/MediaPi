@@ -1,0 +1,48 @@
+<div class="player-settings-scroll">
+    <div class="player-settings-audio">Audio</div>
+
+    <div class="player-volume">
+        <div class="player-settings-volume-icons">
+            <div class="player-settings-volume-muted"><img src="/Images/muted.png"/></div>
+            <div class="player-settings-volume-full"><img src="/Images/speaker.png"/></div>
+        </div>
+        <div class="player-setting-volume">
+            <slider tooltip-bottom="true" model="playerState.volume" text="volumeToolTip" min="0" max="100" on-end-change="volChanged"></slider>
+        </div>
+    </div>
+
+     <div class="player-audio" ng-if="playerState.type != 'Radio' && playerState.audio_tracks.length > 2">
+        <div class="player-audio-wrapper">
+            <div class="player-audio-tracks">
+                <div class="player-audio-track" ng-class="{'selected-audio': track[0] == playerState.current_audio_track}" ng-click="changeAudio(track[0])" ng-repeat="track in playerState.audio_tracks">
+                    <div class="player-audio-name truncate">{{track[1]}}</div>
+                    <div class="player-audio-checkbox">
+                        <input type="radio" name="audio-track" ng-model="playerState.current_audio_track" ng-value="track[0]" ng-change="changeAudio(track[0])" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="player-subtitles" ng-if="playerState.type != 'Radio'">
+        <div class="player-settings-subtitle">Subtitles</div>
+        <div ng-if="playerState.subtitles.length == 0" class="player-no-subs">No subtitles available</div>
+        <div ng-if="playerState.subtitles.length != 0" class="player-subs-wrapper">
+            <div class="player-subtitle-delay">
+                <div class="player-subtitle-delay-min">-10s</div>
+                <div class="player-subtitle-delay-max">+10s</div>
+                <div class="player-subtitle-delay-slider">
+                    <slider model="playerState.subtitle_delay" text="subTooltip" min="-10" max="10" step="0.1" on-end-change="changeSubtitleOffset"></slider>
+                </div>
+            </div>
+            <div class="player-subtitle-tracks">
+                <div class="player-subtitle" ng-click="changeSub(sub[0])" ng-class="{'selected-sub': sub[0] == playerState.selected_sub}" ng-repeat="sub in playerState.subtitles">
+                    <div class="player-subtitle-name truncate">{{sub[1]}}</div>
+                    <div class="player-subtitle-checkbox">
+                        <input type="radio" name="subtitle-track" ng-model="playerState.selected_sub" ng-value="sub[0]" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

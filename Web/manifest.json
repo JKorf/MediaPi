@@ -1,0 +1,8 @@
+{
+  "name": "Mediaplayer",
+  "short_name": "Mediaplayer",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fff",
+  "scope": "/"
+}

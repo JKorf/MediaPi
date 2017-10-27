@@ -1,0 +1,144 @@
+﻿.list-holder{
+    background: #fff;
+    padding: 10px;
+    margin-bottom: 15px;
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    vertical-align: top;
+}
+
+@media only screen and (min-device-width: 768px){
+    .list-holder{
+        width: calc(50% - 8px);
+    }
+
+    .list-holder:first-child{
+        margin-right: 5px;
+    }
+
+    .list-holder:last-child{
+        margin-left: 5px;
+    }
+}
+
+.list-item-wrapper{
+    display: flex;
+    overflow: auto;
+}
+
+.list-show-info{
+    padding: 6px;
+    height: 52px;
+    margin-top: -52px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.8) 30%);
+    color: #eee;
+    position: relative;
+}
+
+.file-show-info{
+    height: 32px;
+    margin-top: -32px;
+}
+
+
+.list-image{
+    width: 120px;
+    cursor: pointer;
+}
+
+.favorites .list-image{
+    height: 180px;
+}
+
+.favorites .list-item{
+    height: 180px;
+}
+
+.last-watched-files .list-image{
+    height: 120px;
+}
+
+.last-watched-files .list-item{
+    height: 120px;
+}
+
+.list-image-img{
+    width: 120px;
+}
+
+
+.list-title{
+    font-weight: bold;
+    padding-bottom: 4px;
+    color: #aaa;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 6px;
+}
+
+.list-item{
+    position: relative;
+    width: 120px;
+    align-self: flex-start;
+    margin-right: 5px;
+}
+
+.list-info-title{
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+.list-info-subtitle{
+    max-width: calc(100% - 12px);
+    bottom: 6px;
+    position:absolute;
+    left: 6px;
+}
+
+.list-watched-at{
+    margin-left: -2px;
+    font-size: 12px;
+    position:absolute;
+    right: 2px;
+    top: 2px;
+    padding: 3px;
+    background: rgba(255,255,255, 0.9);
+    border: 1px solid #ccc;
+}
+
+.last-watched-files{
+    margin-bottom: 0;
+}
+
+.last-watched-file{
+    position: relative;
+    width: 90px;
+    margin-right: 10px;
+}
+
+.last-watched-file-title{
+    font-weight: bold;
+    margin-top: 4px;
+}
+
+.list-more-fade{
+    width: 14px;
+    background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1));
+    position:absolute;
+    right:10px;
+    top:34px;
+    bottom:10px;
+}
+
+.list-refreshed-icon{
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    vertical-align: top;
+    margin-top: 1px;
+}
+
+.list-last-updated{
+    display: inline-block;
+
+}

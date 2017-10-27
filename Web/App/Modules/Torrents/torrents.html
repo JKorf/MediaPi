@@ -1,0 +1,36 @@
+<div class="view-torrent-overview sub-view">
+    <div class="torrent-overview-nothing" ng-if="torrents.length == 0">
+        Nothing downloading
+    </div>
+
+    <div class="torrent-overview-torrent" ng-class="{'streaming': torrent.streaming}" ng-repeat="torrent in torrents">
+        <div class="torrent-title truncate">{{torrent.name}}</div>
+        <div class="torrent-streaming" ng-if="torrent.streaming">
+            <img src="/Images/play-open.png" />
+        </div>
+        <div class="remove-torrent" ng-click="removeTorrent(torrent)"><img src="/Images/close.png" /></div>
+        <div class="torrent-info-peers torrent-info">
+            <div class="torrent-progress">
+                 <progress-bar text="{{torrentStates[torrent.state]}}" percentage="torrent.percentage_done"></progress-bar>
+            </div>
+
+            <div class="torrent-info-download">
+                <div class="torrent-info-value">{{torrent.downloaded}} ({{torrent.speed}}/ps)</div>
+                <div class="torrent-info-value torrent-size">{{torrent.left}}</div>
+            </div>
+        </div>
+        <div class="torrent-info-peers torrent-info">
+            <div class="torrent-info">
+                <div class="torrent-info-value">Connected peers: </div>
+                <div class="torrent-info-value torrent-info-value-right">{{torrent.connected_peers}} ({{torrent.potential_peers}})</div>
+            </div>
+        </div>
+
+        <div class="torrent-info-stream torrent-info" ng-if="torrent.streaming">
+            <div class="torrent-info-stream-value">
+                <div class="torrent-info-value">Stream ready: </div>
+                <div class="torrent-info-value torrent-info-value-right">{{torrent.stream_buffer_ready}} ({{torrent.stream_buffer_total}})</div>
+            </div>
+        </div>
+    </div>
+</div>

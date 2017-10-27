@@ -1,0 +1,10 @@
+﻿<div class="view-radio sub-view">
+    <view-loader promise="promise"></view-loader>
+
+    <div class="radio-wrapper">
+        <div class="radio-box" ng-repeat="radio in radios" ripple ng-click="playRadio(radio)">
+            <div class="radio-img"><img ng-src="{{radio.image}}" /></div>
+            <div class="radio-name truncate">{{radio.name}}</div>
+        </div>
+    </div>
+</div>

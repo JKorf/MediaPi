@@ -1,0 +1,56 @@
+<div class="player">
+    <div class="html-player">
+        <video id="html-player" src="media.mp4" loop muted>
+        </video>
+    </div>
+
+    <div class="player-large" ng-if="playerState.state && playerState.state != 'Nothing' && playerState.state != 'disconnected'">
+        <div ng-if="playerState.type != 'Image'">
+            <div class="player-controls">
+                <div class="player-pause-resume" ng-click="playPause()">
+                    <img ng-if="playerState.state == 'Playing' || playerState.state == 'Buffering'|| playerState.state == 'Opening'" src="/Images/pause-open.png" />
+                    <img ng-if="playerState.state == 'Paused'" src="/Images/play-open.png" />
+                </div>
+                <div class="player-stop" ng-click="stop()">
+                    <img src="/Images/stop-open.png" />
+                </div>
+                <div class="player-settings-button" ng-click="settings()">
+                    <img src="/Images/settings-blue.png" />
+                </div>
+            </div>
+        </div>
+
+        <div ng-if="playerState.state == 'Buffering' || playerState.state == 'Opening'" class="player-loading">
+            <img src="/Images/loader.gif" />
+        </div>
+        <div class="player-title" ng-class="{'player-image-title': playerState.type == 'Image'}" sliding-text text="{{playerState.title}}" transtime="4s" intervaltime="6000">
+        </div>
+
+        <div class="player-image">
+            <protected-img ng-if="playerState.img && !isLocalImage(playerState.img)" src="playerState.img" imgclass="player-image-img"></protected-img>
+            <img ng-if="!playerState.img" ng-src="/Images/unknown.png" class="player-image-img" />
+            <img ng-if="playerState.img && isLocalImage(playerState.img)" ng-src="{{playerState.img}}" class="player-image-img" />
+        </div>
+
+        <div class="player-image-controls" ng-if="playerState.type == 'Image'">
+            <div class="player-image-controls-back" ng-click="prevImage()">
+                <img src="/Images/left.png" />
+            </div>
+            <div class="player-image-controls-stop" ng-click="stop()">
+                <img src="/Images/stop-open.png" />
+            </div>
+            <div class="player-image-controls-next" ng-click="nextImage()">
+                 <img src="/Images/right.png" />
+            </div>
+        </div>
+
+        <div class="player-seek" ng-if="playerState.type != 'Image'">
+            <slider model="playerState.playing_for" text="seekToolTip" buffer="playerState.buffered" min="0" max="{{playerState.length}}" on-end-change="seek"></slider>
+        </div>
+
+        <div class="player-timings" ng-if="playerState.type != 'Image'">
+            <div class="player-current-time">{{playerState.playing_for | secondsToDateTime | date:'HH:mm:ss'}}</div>
+            <div ng-if="playerState.type != 'Radio'" class="player-length">{{playerState.length | secondsToDateTime | date:'HH:mm:ss'}}</div>
+        </div>
+    </div>
+</div>
