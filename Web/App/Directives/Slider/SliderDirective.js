@@ -14,19 +14,36 @@
                 tooltipBottom: "="
             },
             templateUrl: '/App/Directives/Slider/slider.html',
-            link: function ($scope, element, attrs) {
-                $scope.text_value = $scope.text($scope.value);
+            link: function ($scope, element, attrs, ctrl) {
+                $scope.text_value = $scope.text($scope.actualModel);
+                var changing = false;
 
                 $timeout(function(){
                     if($scope.tooltipBottom){
                         $(element).find(".slider-tooltip").css("margin-top", "24px");
                     }
+
                     $(element).find(".range-slider").on("touchstart mousedown", function(event){
+                        changing = true;
                         $(element).find(".slider-tooltip").css("display", "block");
                         if($scope.onStartChange)
                             $scope.onStartChange();
                     });
                     $(element).find(".range-slider").on("touchend mouseup", function(event){
+                        changing = false;
+
+                        // split by . to split by objects
+                        var split = attrs.model.split(".");
+                        // start searching for right scope at parent scope since it's never this scope
+                        var obj = $scope.$parent;
+                        if(split.length > 1)
+                        {
+                            for(var i = 0; i < split.length - 1; i++){
+                                obj = obj[split[i]];
+                            }
+                        }
+                        obj[split[split.length-1]] = $scope.actualModel;
+
                         $(element).find(".slider-tooltip").css("display", "none");
                         if($scope.onEndChange)
                             $scope.onEndChange();
@@ -36,9 +53,15 @@
                         update_buffer(newv);
                     });
 
+                    $scope.$watch("actualModel", function(newv, oldv) {
+                         $scope.text_value = $scope.text($scope.actualModel);
+                    });
+
                     $scope.$watch("model", function(newv, oldv){
+                        if(!changing)
+                            $scope.actualModel = newv;
+
                         update_buffer($scope.buffer);
-                        $scope.text_value = $scope.text($scope.model);
                     });
                 }, 10);
 
