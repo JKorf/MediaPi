@@ -17,20 +17,21 @@ class RadioProvider:
         Radio(3, "3FM", "http://icecast.omroep.nl/3fm-bb-aac", "/Images/radios/3fm.gif"),
         Radio(5, "QMusic", "http://icecast-qmusic.cdp.triple-it.nl/Qmusic_nl_live_96.mp3",
               "/Images/radios/qmusic.gif"),
-        Radio(1, "538", "http://vip-icecast.538.lw.triple-it.nl:80/RADIO538_MP3",
+        Radio(1, "538", "http://playerservices.streamtheworld.com/api/livestream-redirect/RADIO538.mp3",
               "/Images/radios/538.gif"),
-        Radio(2, "SkyRadio", "http://8623.live.streamtheworld.com:80/SKYRADIOAAC_SC",
+        Radio(2, "SkyRadio", "http://19993.live.streamtheworld.com:80/SKYRADIO_SC",
               "/Images/radios/skyradio.gif"),
-        Radio(4, "Veronica", "http://8543.live.streamtheworld.com/VERONICACMP3",
+        Radio(4, "Veronica", "http://20103.live.streamtheworld.com:80/VERONICA_SC",
               "/Images/radios/veronica.gif"),
-        Radio(8, "Veronica Rock", "http://19133.live.streamtheworld.com/SRGSTR11.mp3",
+        Radio(8, "Veronica Rock", "http://20403.live.streamtheworld.com/SRGSTR11.mp3",
               "/Images/radios/veronicarockradio.gif"),
-        Radio(11, "Veronica Top 1000", "http://live.icecast.kpnstreaming.nl/skyradiolive-SRGSTR10.mp3",
+        Radio(11, "Veronica Top 1000", "http://19373.live.streamtheworld.com/SRGSTR10.mp3",
               "/Images/radios/top1000.gif"),
         Radio(6, "Arrow classic rock", "http://stream-nederland.arrow.nl//;stream/1",
               "/Images/radios/arrowclassicrock.gif"),
-        Radio(7, "SlamFM", "http://vip-icecast.538.lw.triple-it.nl:80/SLAMFM_MP3",
-              "/Images/radios/slam.gif")]
+        Radio(7, "SlamFM", "http://stream.slam.nl/slam",
+              "/Images/radios/slam.gif")
+    ]
 
     @staticmethod
     def get_list():

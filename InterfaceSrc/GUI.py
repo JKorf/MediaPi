@@ -163,6 +163,7 @@ class InfoWidget(QtGui.QWidget):
         self.set_label_image(image, self.label1)
         max_width = max(self.label2.fontMetrics().boundingRect(text).width(), 100)
         self.label1.setFixedWidth(max_width)
+        self.label1.setAlignment(QtCore.Qt.AlignLeft)
         self.label2.setFixedWidth(max_width)
         self.setFixedWidth(max_width)
         self.setFixedHeight(160)
