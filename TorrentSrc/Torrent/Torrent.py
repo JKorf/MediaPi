@@ -81,6 +81,20 @@ class Torrent:
         return self.output_manager.output_writer.listener.bytes_send
 
     @property
+    def bytes_missing_for_buffering(self):
+        missing = 5000000
+        for piece in self.data_manager.pieces:
+            if piece.start_byte > 5000000:
+                return missing
+            for block in piece.blocks:
+                if block.start_byte_total > 5000000:
+                    return missing
+                if block.done:
+                    missing -= block.length
+
+        return 0
+
+    @property
     def end_game(self):
         # TODO setting
         if self.left < 2000000:

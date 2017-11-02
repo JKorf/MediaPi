@@ -2,12 +2,14 @@ import os
 import sys
 from random import randint
 
+import math
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import QGraphicsOpacityEffect
 
 from InterfaceSrc.VLCPlayer import PlayerState
 from Shared.Events import EventManager, EventType
+from TorrentSrc.Util.Util import write_size
 
 
 class Communicate(QtCore.QObject):
@@ -30,6 +32,7 @@ class GUI(QtGui.QMainWindow):
         self.effect = None
         self.info_widget = None
         self.moving = False
+        self.update_buffering = False
 
         self.com = Communicate()
 
@@ -78,6 +81,7 @@ class GUI(QtGui.QMainWindow):
         self.info_widget.set_text("MediaPlayer", self.address)
         self.info_widget.move(self.width / 2 - (self.info_widget.width() / 2), self.height / 2 - (self.info_widget.height() / 2))
         self.moving = True
+        self.update_buffering = False
         self.info_widget.show()
 
     def set_opening(self, title):
@@ -85,9 +89,39 @@ class GUI(QtGui.QMainWindow):
         self.info_widget.move(self.width / 2 - (self.info_widget.width() / 2),
                               self.height / 2 - (self.info_widget.height() / 2))
         self.moving = False
+        self.update_buffering = True
         self.info_widget.show()
+        self.update_buffer_info()
+
+    def update_buffer_info(self):
+        if not self.update_buffering:
+            return
+
+        if not self.start.stream_torrent:
+            status = "Loading data"
+        else:
+            if not self.start.stream_torrent.media_file:
+                status = "Requesting meta data"
+            else:
+                percentage_done = math.floor(min(((5000000 - self.start.stream_torrent.bytes_missing_for_buffering) / 5000000) * 100, 100))
+                status = str(percentage_done) + "% buffered (" + write_size(self.start.stream_torrent.download_counter.value) +"ps)"
+
+        self.info_widget.set_text_label2(status)
+
+        QtCore.QTimer.singleShot(1000, lambda: self.update_buffer_info())
+
+    def get_media_length(self):
+        actual = self.start.player.get_length()
+        if actual:
+            return actual
+
+        if self.start.player.type == "Movie":
+            return 120 * 60
+        else:
+            return 20 * 60
 
     def set_none(self):
+        self.update_buffering = False
         self.info_widget.set_none()
 
     def set_radio(self, title, image):
@@ -95,11 +129,13 @@ class GUI(QtGui.QMainWindow):
         self.info_widget.move(self.width / 2 - (self.info_widget.width() / 2),
                               self.height / 2 - (self.info_widget.height() / 2))
         self.moving = True
+        self.update_buffering = False
         self.info_widget.show()
 
     def animation_loop(self):
         if self.info_widget is not None and self.moving:
-            self.animate_start(randint(0, self.width - self.info_widget.width()), randint(0, self.height - self.info_widget.height()))
+            randomX = (-(self.width / 2) + self.info_widget.actual_width / 2) + randint(0, self.width - self.info_widget.actual_width)
+            self.animate_start(randomX, randint(0, self.height - self.info_widget.height()))
         QtCore.QTimer.singleShot(15000, self.animation_loop)
 
     def animate_start(self, new_x, new_y):
@@ -138,6 +174,7 @@ class InfoWidget(QtGui.QWidget):
     def __init__(self, parent):
         super(InfoWidget, self).__init__(parent)
 
+        self.parent = parent
         self.label1 = QtGui.QLabel(self)
         self.label1.setFont(QtGui.QFont("Lucida", 30))
         self.label1.setStyleSheet("color: white;")
@@ -145,30 +182,36 @@ class InfoWidget(QtGui.QWidget):
         self.label2.setFont(QtGui.QFont("Lucida", 20))
         self.label2.setStyleSheet("color: white;")
 
+        self.label1.setFixedWidth(self.parent.width)
+        self.label2.setFixedWidth(self.parent.width)
+        self.setFixedWidth(self.parent.width)
+        self.actual_width = 0
+
     def set_text(self, text1, text2):
         self.set_label_text(text1, self.label1)
         self.label1.move(0, 0)
         self.set_label_text(text2, self.label2)
         self.label2.move(0, 50)
-
-        max_width = max(self.label1.fontMetrics().boundingRect(text1).width(), self.label2.fontMetrics().boundingRect(text2).width())
-        self.label1.setFixedWidth(max_width)
-        self.label2.setFixedWidth(max_width)
-        self.setFixedWidth(max_width)
         self.setFixedHeight(100)
+        self.update_actual_width()
+
+    def set_text_label2(self, text):
+        self.set_label_text(text, self.label2)
+        self.label2.move(0, 50)
+        self.update_actual_width()
+
+    def update_actual_width(self):
+        self.actual_width = max(self.label1.fontMetrics().boundingRect(self.label1.text()).width(),
+                                self.label2.fontMetrics().boundingRect(self.label2.text()).width())
 
     def set_radio(self, text, image):
         self.set_label_text(text, self.label2)
         self.label2.move(0,  120)
         self.set_label_image(image, self.label1)
-        max_width = max(self.label2.fontMetrics().boundingRect(text).width(), 100)
-        self.label1.setFixedWidth(max_width)
-        self.label1.setAlignment(QtCore.Qt.AlignLeft)
-        self.label2.setFixedWidth(max_width)
-        self.setFixedWidth(max_width)
-        self.setFixedHeight(160)
 
-        self.label1.move(max_width / 2 - 50, 0)
+        self.label1.setAlignment(QtCore.Qt.AlignCenter)
+        self.update_actual_width()
+        self.setFixedHeight(160)
 
     def set_none(self):
         self.label2.hide()

@@ -109,7 +109,6 @@ class StreamManager:
 
         new_index = int(math.floor(start_byte / self.torrent.piece_length))
         old_stream_pos = self.stream_position_piece_index
-        byte_jump = abs(start_byte - self.last_request)
 
         if self.seeking:
             if self.seek_start + 2000 > current_time():
