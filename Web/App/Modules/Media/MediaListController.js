@@ -1,12 +1,12 @@
 (function () {
 
     angular.module('pi-test').controller('MediaListController', function ($scope, $rootScope, $http, $state, $timeout, $stateParams, SearchHistoryFactory, CacheFactory) {
-        var loadedUntilPage = 0;
-        var showPerResult = 16;
-        var serverResult = 50;
         var initial = true;
 
-        $scope.showUntil = 0;
+        $scope.localPage = 0;
+        $scope.serverPage = 0;
+        $scope.resultsPerLocalPage = 10;
+        $scope.resultsPerServerPage = 50;
         $scope.done = false;
         $scope.loadingMore = false;
         $scope.mediaList = [];
@@ -26,12 +26,7 @@
 
         $scope.$watch('search.orderby', function(newv, oldv){
             if(oldv && newv && oldv != newv){
-                $scope.done = false;
-                loadedUntilPage = 0;
-                $scope.showUntil = 0;
-                $scope.mediaList = [];
-                initial = true;
-                LoadMore();
+                 Reset();
             }
         });
 
@@ -43,22 +38,22 @@
         }
 
         $scope.searchMedia = function(){
-            $scope.done = false;
-            loadedUntilPage = 0;
-            $scope.showUntil = 0;
-            $scope.mediaList = [];
-            initial = true;
-
-            ShowLoadMore();
-            LoadMore();
+            Reset();
         }
 
         function Init(){
-            var search = SearchHistoryFactory.GetMediaSearch();
+            var search = SearchHistoryFactory.GetMediaSearch($scope.mediaType);
             if(search)
             {
                 $scope.search.keywords = search.keywords;
                 $scope.search.orderby = search.orderBy;
+                LoadResults(search.localPage, search.serverPage, search.scrollOffset);
+            }
+            else{
+                $timeout(function(){
+                    ShowLoadMore();
+                });
+                LoadResults(1, 1);
             }
 
             var view = $(".view");
@@ -66,43 +61,50 @@
                 if($scope.loadingMore)
                         return;
 
+                SearchHistoryFactory.SetMediaSearch($scope.mediaType, $scope.search.keywords, $scope.search.orderby, $scope.serverPage, $scope.localPage, view[0].scrollTop);
+
+                var moreServerResults = true;
+                if($scope.mediaList.length % $scope.resultsPerServerPage != 0){
+                    moreServerResults = false;
+                }
+
                 if(view[0].scrollHeight - view[0].scrollTop == view[0].offsetHeight)
                 {
-                    console.log("Scrolled to bot")
-                    $scope.loadingMore = true;
+                    var localResults = $scope.localPage * $scope.resultsPerLocalPage;
+                    var serverResults =  $scope.serverPage * $scope.resultsPerServerPage;
+                    console.log(localResults +" - " + serverResults);
 
-                    if($scope.showUntil == $scope.mediaList.length)
-                        return;
+                    if(localResults == serverResults){
+                        if(!moreServerResults)
+                            return;
 
-                    if($scope.showUntil + showPerResult > $scope.mediaList.length)
-                    {
-                        if($scope.mediaList.length % serverResult != 0)
-                        {
-                            $scope.showUntil = $scope.mediaList.length;
-                            $scope.$apply();
-                            ShowLoadMore();
-                            HideLoadMore();
-                        }
-                        else{
-                            console.log("Loading new page")
-                            $scope.done = false;
-                            ShowLoadMore();
-                            LoadMore();
-                        }
+                        LoadResults($scope.serverPage + 1, $scope.localPage + 1);
                     }
-                    else if ($scope.mediaList.length > $scope.showUntil){
-                        $scope.showUntil = Math.min($scope.showUntil + showPerResult, $scope.mediaList.length);
-                        $scope.$apply();
-                        ShowLoadMore();
-                        HideLoadMore();
+
+                    if(localResults < serverResults){
+                        if($scope.localPage * $scope.resultsPerLocalPage > $scope.mediaList.length)
+                            return;
+
+                        LoadResults($scope.serverPage, $scope.localPage + 1);
                     }
+
+                    $scope.$apply();
                 }
             });
+        }
 
+        function Reset()
+        {
+            $scope.serverPage = 0;
+            $scope.localPage = 0;
+            $scope.done = false;
+            $scope.loadingMore = false;
+            $scope.mediaList = [];
+            initial = true;
             $timeout(function(){
                 ShowLoadMore();
             });
-            LoadMore();
+            LoadResults(1,1);
         }
 
         function ShowLoadMore(){
@@ -110,41 +112,62 @@
             $(".media-more").hide();
         }
 
-        function HideLoadMore(){
+        function HideLoadMore(scrollOffset){
             $timeout(function(){
                 $(".media-more-loader").hide();
                 $(".media-more").show();
-
                 $scope.loadingMore = false;
                 $(".media-box").removeClass("hide");
+                if(scrollOffset){
+                    $timeout(function(){
+                        $(".view")[0].scrollTop = parseInt(scrollOffset);
+                    });
+                }
             }, 1000);
         }
 
-        function LoadMore() {
-            SearchHistoryFactory.SetMediaSearch($scope.search.keywords, $scope.search.orderby);
-            loadedUntilPage += 1;
+        function LoadResults(serverPage, localPage, scrollOffset)
+        {
+            ShowLoadMore();
+            $scope.loadingMore = true;
+            SearchHistoryFactory.SetMediaSearch($scope.mediaType, $scope.search.keywords, $scope.search.orderby, serverPage, localPage, $(".view")[0].scrollTop);
+            $(".media-search-box input").blur();
+            if(serverPage > $scope.serverPage)
+            {
+                $scope.done = false;
+                // Load more from server
+                console.log(GetUri(serverPage));
+                $scope.promise = CacheFactory.Get(GetUri(serverPage), 900).then(function (response) {
+                    $scope.mediaList.push.apply($scope.mediaList, response);
+                    $scope.serverPage = serverPage;
+                    $scope.localPage = localPage;
 
+                    initial = false;
+                    $scope.done = true;
+
+                    HideLoadMore(scrollOffset);
+                }, function (err) {
+                    $scope.done = true;
+                    console.log(err);
+                });
+            }
+            else
+            {
+                $scope.localPage = localPage;
+                HideLoadMore();
+            }
+        }
+
+        function GetUri(page)
+        {
             var base = '/movies/get_movies';
             if ($scope.mediaType == 'shows')
                 base = '/shows/get_shows';
 
-            var baseUri = base + '?page='+ loadedUntilPage +'&orderby=' + encodeURIComponent($scope.search.orderby) + '&keywords=' + encodeURIComponent($scope.search.keywords);
+            if(initial)
+                base += "_all"
 
-            console.log("Getting new media list");
-
-            $(".media-search-box input").blur();
-
-            $scope.promise = CacheFactory.Get(baseUri, 900).then(function (response) {
-                $scope.mediaList.push.apply($scope.mediaList, response);
-                $scope.showUntil = Math.min($scope.showUntil + showPerResult, $scope.mediaList.length);
-                                        console.log($scope.showUntil);
-
-                $scope.done = true;
-                HideLoadMore();
-            }, function (err) {
-                $scope.done = true;
-                console.log(err);
-            });
+            return base + '?page='+ page +'&orderby=' + encodeURIComponent($scope.search.orderby) + '&keywords=' + encodeURIComponent($scope.search.keywords);
         }
     });
 

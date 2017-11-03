@@ -10,9 +10,17 @@ class ShowProvider:
     shows_data = []
 
     @staticmethod
-    def get_list(page, orderby):
+    def get_list(page, orderby, all=False):
         Logger.write(2, "Get shows list")
-        data = RequestFactory.make_request(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby)
+        if all:
+            data = b""
+            for i in range(int(page)):
+                new_data = RequestFactory.make_request(ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby)
+                if new_data is not None:
+                    data = ShowProvider.append_result(data, new_data)
+        else:
+            data = RequestFactory.make_request(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby)
+
         if data is not None:
             ShowProvider.shows_data = data
         else:
@@ -23,11 +31,28 @@ class ShowProvider:
         return ShowProvider.shows_data
 
     @staticmethod
-    def search(page, orderby, keywords):
+    def search(page, orderby, keywords, all=False):
         Logger.write(2, "Search shows " + keywords)
-        return RequestFactory.make_request(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby + "&keywords="+keywords)
+        if all:
+            data = b""
+            for i in range(int(page)):
+                new_data = RequestFactory.make_request(
+                    ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby + "&keywords=" + keywords)
+                if new_data is not None:
+                    data = ShowProvider.append_result(data, new_data)
+            return data
+        else:
+            return RequestFactory.make_request(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby + "&keywords="+keywords)
 
     @staticmethod
     def get_by_id(id):
         Logger.write(2, "Get show by id " + id)
         return RequestFactory.make_request(ShowProvider.shows_api_path + "show/" + id)
+
+    @staticmethod
+    def append_result(data, new_data):
+        if len(data) != 0:
+            data = data[:-1] + b"," + new_data[1:]
+        else:
+            data += new_data
+        return data

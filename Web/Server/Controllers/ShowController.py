@@ -25,6 +25,14 @@ class ShowController:
             callback(ShowProvider.search(page, orderby, urllib.parse.quote(keywords)))
 
     @staticmethod
+    @return_future
+    def get_shows_all(page, orderby, keywords, callback=None):
+        if len(keywords) == 0:
+            callback(ShowProvider.get_list(page, orderby, True))
+        else:
+            callback(ShowProvider.search(page, orderby, urllib.parse.quote(keywords), True))
+
+    @staticmethod
     def get_show(id):
         return ShowProvider.get_by_id(id)
 

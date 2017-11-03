@@ -85,7 +85,7 @@
 
 .media-more{
     width: calc(100% - 8px);
-    margin: 8px 4px 0 4px;
+    margin: 8px 4px 40px 4px;
     background: #fff;
     padding: 10px;
     position: relative;
@@ -106,7 +106,7 @@
 
 .media-more-loader{
     width: calc(100% - 8px);
-    margin: 8px 4px 0 4px;
+    margin: 8px 4px 40px 4px;
     background: #fff;
     padding: 10px;
     position: relative;

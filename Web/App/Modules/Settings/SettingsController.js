@@ -8,7 +8,6 @@
             "raspberry=" + $scope.settings.raspberry +
             "&gui=" + $scope.settings.gui +
             "&external_trackers=" + $scope.settings.external_trackers +
-            "&yts_movie_api=" + $scope.settings.use_yts +
             "&os_subs=" + $scope.settings.use_os_subs +
             "&yify_subs=" + $scope.settings.use_yify_subs +
             "&max_subs=" + $scope.settings.max_sub_files);

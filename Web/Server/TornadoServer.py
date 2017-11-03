@@ -189,6 +189,11 @@ class MovieHandler(web.RequestHandler):
             data = yield(MovieController.get_movies(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords")))
             self.write(data)
             self.finish()
+        if url == "get_movies_all":
+            data = yield (MovieController.get_movies_all(self.get_argument("page"), self.get_argument("orderby"),
+                                                     self.get_argument("keywords")))
+            self.write(data)
+            self.finish()
         elif url == "get_movie":
             data = yield (MovieController.get_movie(self.get_argument("id")))
             self.write(data)
@@ -207,6 +212,11 @@ class ShowHandler(web.RequestHandler):
     def get(self, url):
         if url == "get_shows":
             data = yield (ShowController.get_shows(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords")))
+            self.write(data)
+            self.finish()
+        if url == "get_shows_all":
+            data = yield (ShowController.get_shows_all(self.get_argument("page"), self.get_argument("orderby"),
+                                                   self.get_argument("keywords")))
             self.write(data)
             self.finish()
         elif url == "get_show":
