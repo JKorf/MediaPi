@@ -79,8 +79,7 @@ class PeerDownloadManager:
                 continue
 
             prio_timeout = 0
-            if self.peer.peer_speed == PeerSpeed.Low and (
-                    self.peer.torrent.peer_manager.medium_speed_peers > 0 or self.peer.torrent.peer_manager.high_speed_peers > 0):
+            if self.peer.peer_speed == PeerSpeed.Low and self.peer.torrent.peer_manager.are_fast_peers_available():
                 prio = self.peer.torrent.data_manager.pieces[peer_download.block_download.block.piece_index].priority
                 prio_timeout = (prio / 2) * 1000
 

@@ -102,3 +102,4 @@ ENV/
 *.txt
 *.data
 .idea/
+*.srt

@@ -84,7 +84,7 @@ class Block:
 
 class Piece:
 
-    def __init__(self, index, block_start_index, start_byte, length):
+    def __init__(self, index, block_start_index, start_byte, length, persistent):
         self.index = index
         self.block_start_index = block_start_index
         self.start_byte = start_byte
@@ -95,6 +95,7 @@ class Piece:
         self.block_size = Settings.get_int("block_size")
         self.priority = 0
         self.init_blocks()
+        self.persistent = persistent
 
     def init_blocks(self):
         partial_block = self.length % self.block_size
@@ -119,6 +120,9 @@ class Piece:
         return data
 
     def clear(self):
+        if self.persistent:
+            raise Exception("Can't clear persistent pieces")
+
         for block in self.blocks:
             block.clear()
 

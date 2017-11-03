@@ -38,13 +38,9 @@ class StreamManager:
         self.listener = StreamListener(torrent, 50009)
         self.buffer = None
         self.end_piece = 0
-        self.stream_end_buffer_pieces = 0
         self.init = False
         self.start_buffer = 0
         self.last_request = 0
-        self.end_buffer_bytes = 0
-        self.end_buffer = 0
-        self.start_buffer_bytes = 0
         self.seeking = False
         self.seek_start = 0
         self.initial_play = False
@@ -73,13 +69,6 @@ class StreamManager:
         if not self.init:
             self.init = True
             self.end_piece = int(math.floor(self.torrent.media_file.end_byte / self.torrent.piece_length))
-            self.end_buffer_bytes = Settings.get_int("stream_end_buffer")
-            self.stream_end_buffer_pieces = math.ceil(self.end_buffer_bytes / self.torrent.piece_length)
-            self.start_buffer_bytes = Settings.get_int("stream_start_buffer")
-
-            self.start_buffer = math.ceil(self.start_buffer_bytes / self.torrent.piece_length)
-            self.end_buffer = math.ceil(self.torrent.media_file.end_byte - self.end_buffer_bytes / self.torrent.piece_length)
-
             self.buffer = StreamBuffer(self, self.torrent.piece_length)
 
         if self.consecutive_pieces_total_length >= self.max_in_buffer \
@@ -159,7 +148,6 @@ class StreamBuffer:
         self.__lock = Lock()
         self.last_consecutive_piece = 0
         self.last_consecutive_piece_dirty = True
-        self.stream_start_buffer_bytes = math.ceil(Settings.get_int("stream_start_buffer") / piece_length)
         self.end_piece = math.ceil(
             self.stream_manager.torrent.media_file.end_byte / self.stream_manager.torrent.piece_length)
         self.piece_count_end_buffer = math.ceil(
@@ -220,10 +208,10 @@ class StreamBuffer:
 
     def clear(self, stream_position):
         self.__lock.acquire()
-        for item in self.data_ready:
-            if item.index < (stream_position - 1) and item.index > self.stream_start_buffer_bytes and item.index < self.buffer_end_start_piece:
-                item.clear()
-                self.data_ready.remove(item)
+        for piece in self.data_ready:
+            if piece.index < (stream_position - 1) and not piece.persistent:
+                piece.clear()
+                self.data_ready.remove(piece)
 
         self.__lock.release()
 

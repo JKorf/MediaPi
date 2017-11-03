@@ -166,6 +166,9 @@ class TorrentPeerManager:
     def get_peers_for_sending(self):
         return list([x for x in self.connected_peers if len(x.connection_manager.to_send_bytes) > 0 and x.connection_manager.connection_state == ConnectionState.Connected])
 
+    def are_fast_peers_available(self):
+        return self.high_speed_peers > 0 or self.medium_speed_peers > 1
+
     def stop(self):
         EventManager.deregister_event(self.seek_event_id)
 

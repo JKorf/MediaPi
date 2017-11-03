@@ -20,7 +20,6 @@ class TorrentDownloadManager:
         self.prio = False
         self.queue = []
         self.queue_lock = Lock()
-        self.piece_index_start_end_buffer = None
         self.slow_peer_block_offset = 0
         self.ticks = 0
 
@@ -75,9 +74,7 @@ class TorrentDownloadManager:
             for block in piece.blocks:
                 self.queue.append(BlockDownload(block))
 
-        self.piece_index_start_end_buffer = self.torrent.data_manager.get_piece_by_offset(
-            self.torrent.media_file.end_byte - Settings.get_int("stream_end_buffer")).index
-        self.slow_peer_block_offset = 30000000 // self.torrent.data_manager.block_size # TODO Setting
+        self.slow_peer_block_offset = 15000000 // self.torrent.data_manager.block_size # TODO Setting
         Logger.write(2, "Initial queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
 
         self.update_priority(True)
@@ -92,10 +89,9 @@ class TorrentDownloadManager:
         to_remove = []
         result = []
         block_offset = 0
-        self.queue_lock.acquire()
 
         if peer.peer_speed == PeerSpeed.Low:
-            if self.torrent.peer_manager.high_speed_peers > 0 or self.torrent.peer_manager.medium_speed_peers > 1:
+            if self.torrent.peer_manager.are_fast_peers_available():
                 # Slow peer; get block further down the queue
                 block_offset = self.slow_peer_block_offset
                 if len(self.queue) < block_offset:
@@ -103,6 +99,8 @@ class TorrentDownloadManager:
 
         skipped = 0
         removed = 0
+
+        self.queue_lock.acquire()
         start = current_time()
 
         queue = self.queue[block_offset:]
@@ -152,18 +150,22 @@ class TorrentDownloadManager:
     def can_download_priority_pieces(self, block_download, peer):
         if peer in block_download.peers:
             return False
-
+        currently_downloading = len(block_download.peers)
         if self.torrent.end_game:
-            if len(block_download.peers) > 5:
+            if currently_downloading > 5:
                 return False
         else:
             if self.torrent.data_manager.pieces[block_download.block.piece_index].priority < 100:
                 if self.download_mode != DownloadMode.ImportantOnly:
                     return False
-            if len(block_download.peers) > 2:
-                return False
-            if peer.peer_speed == PeerSpeed.Low and (self.torrent.peer_manager.high_speed_peers > 0 or self.torrent.peer_manager.medium_speed_peers > 1):
-                return False
+
+            if currently_downloading > 3:
+                if peer.peer_speed == PeerSpeed.Low:
+                    return False
+            else:
+                if currently_downloading > 1:
+                    if peer.peer_speed == PeerSpeed.Low and self.torrent.peer_manager.are_fast_peers_available():
+                        return False
 
         return True
 
@@ -190,13 +192,23 @@ class TorrentDownloadManager:
         else:
             # Seeking back
             Logger.write(2, "Seeking backwards")
-            for piece in self.torrent.data_manager.pieces[new_piece_index: old_index]:
-                piece.done = False
-                for block in piece.blocks:
-                    self.torrent.left += block.length
-                    block.done = False
-                    block_download = BlockDownload(block)
-                    self.queue.append(block_download)
+            blocks_to_redo = []
+            for piece in self.torrent.data_manager.pieces[new_piece_index: old_index + 1]:
+                if not piece.persistent:
+                    piece.done = False
+                    for block in piece.blocks:
+                        self.torrent.left += block.length
+                        block.done = False
+                        blocks_to_redo.append(block)
+
+            Logger.write(2, "Need to redo " + str(len(blocks_to_redo)))
+            Logger.write(2, "Queue before: " + str(len(self.queue)))
+            self.queue = [x for x in self.queue if x.block not in blocks_to_redo]
+            Logger.write(2, "Queue after1: " + str(len(self.queue)))
+
+            for block in blocks_to_redo:
+                self.queue.append(BlockDownload(block))
+            Logger.write(2, "Queue after2: " + str(len(self.queue)))
 
         self.prio = False
 
