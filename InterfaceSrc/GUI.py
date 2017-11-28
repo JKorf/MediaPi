@@ -103,7 +103,7 @@ class GUI(QtGui.QMainWindow):
             if not self.start.stream_torrent.media_file:
                 status = "Requesting meta data"
             else:
-                percentage_done = math.floor(min(((5000000 - self.start.stream_torrent.bytes_missing_for_buffering) / 5000000) * 100, 100))
+                percentage_done = math.floor(min(((7500000 - self.start.stream_torrent.bytes_missing_for_buffering) / 7500000) * 100, 99))
                 status = str(percentage_done) + "% buffered (" + write_size(self.start.stream_torrent.download_counter.value) +"ps)"
 
         self.info_widget.set_text_label2(status)

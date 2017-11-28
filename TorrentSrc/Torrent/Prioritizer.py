@@ -20,7 +20,7 @@ class StreamPrioritizer:
             self.start_piece = int(math.floor(self.torrent.media_file.start_byte / self.torrent.piece_length))
             self.end_piece = int(math.floor(self.torrent.media_file.end_byte / self.torrent.piece_length))
             self.stream_end_buffer_pieces = self.torrent.data_manager.get_piece_by_offset(self.torrent.media_file.end_byte - Settings.get_int("stream_end_buffer")).index
-            self.stream_play_buffer_high_priority = 4000000 // self.torrent.piece_length # TODO setting
+            self.stream_play_buffer_high_priority = 1000000 // self.torrent.piece_length # TODO setting
 
         if piece_index < self.start_piece or piece_index > self.end_piece:
             return 0

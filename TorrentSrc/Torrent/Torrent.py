@@ -82,17 +82,22 @@ class Torrent:
 
     @property
     def bytes_missing_for_buffering(self):
-        missing = 5000000
+        missing = 7500000
         for piece in self.data_manager.pieces:
             if piece.start_byte > 5000000:
-                return missing
+                break
             for block in piece.blocks:
                 if block.start_byte_total > 5000000:
                     return missing
                 if block.done:
                     missing -= block.length
 
-        return 0
+        for piece in self.data_manager.pieces[-(2500000 // self.piece_length)]:
+            for block in piece.blocks:
+                if block.start_byte_total > self.media_file.end_byte or block.done:
+                    missing -= block.length
+
+        return missing
 
     @property
     def end_game(self):
