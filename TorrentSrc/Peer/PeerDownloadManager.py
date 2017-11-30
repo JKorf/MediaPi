@@ -15,17 +15,7 @@ class PeerDownloadManager:
         self.downloading = []
         self.lock = Lock()
 
-        self.low_max = Settings.get_int("low_speed_max_blocks")
-        self.medium_max = Settings.get_int("medium_speed_max_blocks")
-        self.high_max = Settings.get_int("high_speed_max_blocks")
-
-    def get_max_blocks(self):
-        if self.peer.peer_speed == PeerSpeed.Low:
-            return self.low_max
-        elif self.peer.peer_speed == PeerSpeed.Medium:
-            return self.medium_max
-        else:
-            return self.high_max
+        self.max_blocks = Settings.get_int("peer_max_download_buffer") // Settings.get_int("block_size")
 
     def update(self):
         if self.peer.connection_manager.connection_state != ConnectionState.Connected:
@@ -42,7 +32,7 @@ class PeerDownloadManager:
         if self.peer.communication_state.out_interest == PeerInterestedState.Uninterested:
             return True
 
-        if len(self.downloading) >= self.get_max_blocks():
+        if len(self.downloading) >= self.max_blocks:
             return True
 
         self.lock.acquire()
@@ -50,7 +40,7 @@ class PeerDownloadManager:
             self.lock.release()
             return False
 
-        new_blocks = self.get_max_blocks() - len(self.downloading)
+        new_blocks = self.max_blocks - len(self.downloading)
         to_download = self.get_next_blocks_to_download(new_blocks)
         for block_download in to_download:
             request = RequestMessage(block_download.block.piece_index, block_download.block.start_byte_in_piece, block_download.block.length)

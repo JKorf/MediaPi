@@ -5,6 +5,8 @@ import cProfile
 
 from shutil import copytree, rmtree
 
+from Web.Server.Controllers.MovieController import MovieController
+
 os.chdir(os.path.dirname(__file__))
 
 from TorrentSrc.TorrentManager import TorrentManager
@@ -67,6 +69,7 @@ class StartUp:
         self.init_sound()
         self.subtitle_provider = SubtitleProvider(self)
         self.start_subtitle_provider()
+        self.init_folders()
 
         version = json.loads(UtilController.version())
         Logger.write(3, "MediaPlayer version " + version['version_number'] + " (" + version['build_date'] + ")")
@@ -115,6 +118,12 @@ class StartUp:
 
             time.sleep(5)
 
+    def init_folders(self):
+        folder = Settings.get_string("base_folder")
+        directory = os.path.dirname(folder) + "/" + "subs"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
     def hook_events(self):
         self.player.on_state_change(self.player_state_change)
 
@@ -127,6 +136,7 @@ class StartUp:
         EventManager.register_event(EventType.SetSubtitleFile, self.set_subtitle_file)
         EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_id)
         EventManager.register_event(EventType.SetSubtitleOffset, self.set_subtitle_offset)
+        EventManager.register_event(EventType.SubtitleDownloaded, self.set_subtitle_file)
 
         EventManager.register_event(EventType.SetAudioId, self.set_audio_id)
 

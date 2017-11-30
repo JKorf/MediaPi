@@ -27,6 +27,7 @@ class EventType(Enum):
     SetSubtitleFile = 12,
     SetSubtitleId = 13,
     SetSubtitleOffset = 14,
+    SubtitleDownloaded = 32,
 
     SetAudioId = 24,
 
@@ -42,7 +43,7 @@ class EventType(Enum):
     Log = 28,
     StreamTorrentStarted = 29,
     StreamTorrentStopped = 30,
-    StopStreamTorrent = 31
+    StopStreamTorrent = 31,
 
 
 class EventManager:

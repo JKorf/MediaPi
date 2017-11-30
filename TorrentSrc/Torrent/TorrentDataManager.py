@@ -106,6 +106,9 @@ class TorrentDataManager:
     def get_piece_by_offset(self, offset):
         return [x for x in self.pieces if x.start_byte <= offset and x.end_byte >= offset][0]
 
+    def get_pieces_by_range(self, start, end):
+        return [x for x in self.pieces if x.start_byte > start - self.piece_length and x.end_byte <= end + self.piece_length]
+
     def block_done(self, piece_index, offset, data):
         self.blocks_done.append((piece_index, offset, data))
 

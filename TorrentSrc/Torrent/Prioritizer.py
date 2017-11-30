@@ -13,6 +13,7 @@ class StreamPrioritizer:
         self.end_piece = 0
         self.stream_end_buffer_pieces = 0
         self.stream_play_buffer_high_priority = 0
+        self.subtitle_pieces = []
 
     def prioritize_piece_index(self, piece_index):
         if not self.init_done:
@@ -20,7 +21,17 @@ class StreamPrioritizer:
             self.start_piece = int(math.floor(self.torrent.media_file.start_byte / self.torrent.piece_length))
             self.end_piece = int(math.floor(self.torrent.media_file.end_byte / self.torrent.piece_length))
             self.stream_end_buffer_pieces = self.torrent.data_manager.get_piece_by_offset(self.torrent.media_file.end_byte - Settings.get_int("stream_end_buffer")).index
-            self.stream_play_buffer_high_priority = 1000000 // self.torrent.piece_length # TODO setting
+            self.stream_play_buffer_high_priority = max(1500000 // self.torrent.piece_length, 2) # TODO setting
+
+            for sub in self.torrent.subtitles:
+                start_piece = self.torrent.data_manager.get_piece_by_offset(sub.start_byte).index
+                end_piece = self.torrent.data_manager.get_piece_by_offset(sub.end_byte).index
+                for i in range(start_piece, end_piece + 1):
+                    if i not in self.subtitle_pieces:
+                        self.subtitle_pieces.append(i)
+
+        if piece_index in self.subtitle_pieces:
+            return 100
 
         if piece_index < self.start_piece or piece_index > self.end_piece:
             return 0
@@ -31,7 +42,7 @@ class StreamPrioritizer:
             return 0
 
         if piece_index >= self.stream_end_buffer_pieces:
-            return 100
+            return 99
 
         if piece_index == self.start_piece:
             return 101

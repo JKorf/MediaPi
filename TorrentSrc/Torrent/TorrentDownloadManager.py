@@ -22,8 +22,15 @@ class TorrentDownloadManager:
         self.queue_lock = Lock()
         self.slow_peer_block_offset = 0
         self.ticks = 0
+        self.ticks_prio = 0
 
         self.download_mode = DownloadMode.Full
+        self.peers_per_piece = [
+            {100, 2, 5},
+            {95, 1, 2},
+            {90, 1, 1},
+            {0, 1, 1}
+        ]
 
     def update(self):
         if self.torrent.state != TorrentState.Downloading:
@@ -55,13 +62,17 @@ class TorrentDownloadManager:
         if full:
             self.queue = sorted(self.queue, key=lambda x: self.torrent.data_manager.pieces[x.block.piece_index].priority, reverse=True)
 
-        if self.queue:
-            block_download = self.queue[0]
-            Logger.write(1, "Highest prio: " + str(block_download.block.piece_index) + "("+str(self.torrent.data_manager.pieces[block_download.block.piece_index].priority)+"%)")
+        if self.ticks_prio > 2:
+            self.ticks_prio = 0
+
+            if self.queue:
+                block_download = self.queue[0]
+                Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + "("+str(self.torrent.data_manager.pieces[block_download.block.piece_index].priority)+"%)")
 
         if lock:
             self.queue_lock.release()
         self.prio = True
+        self.ticks_prio += 1
 
         return True
 
@@ -150,24 +161,28 @@ class TorrentDownloadManager:
     def can_download_priority_pieces(self, block_download, peer):
         if peer in block_download.peers:
             return False
+
         currently_downloading = len(block_download.peers)
+        prio = self.torrent.data_manager.pieces[block_download.block.piece_index].priority
         if self.torrent.end_game:
-            if currently_downloading > 5:
-                return False
-        else:
-            if self.torrent.data_manager.pieces[block_download.block.piece_index].priority < 100:
-                if self.download_mode != DownloadMode.ImportantOnly:
-                    return False
+            return True
 
-            if currently_downloading > 3:
-                if peer.peer_speed == PeerSpeed.Low:
-                    return False
+        if self.download_mode == DownloadMode.ImportantOnly and prio == 100:
+            return True
+
+        return self.allowed_download(prio, currently_downloading, peer.peer_speed)
+
+    def allowed_download(self, priority, current, speed):
+        for prio, slow, fast in self.peers_per_piece:
+            if priority < prio:
+                continue
+            if speed == PeerSpeed.Low:
+                if current < slow:
+                    return True
             else:
-                if currently_downloading > 1:
-                    if peer.peer_speed == PeerSpeed.Low and self.torrent.peer_manager.are_fast_peers_available():
-                        return False
-
-        return True
+                if current < fast:
+                    return True
+        return False
 
     def seek(self, old_index, new_piece_index):
         start_time = current_time()

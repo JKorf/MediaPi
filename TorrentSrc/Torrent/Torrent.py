@@ -7,6 +7,8 @@ from threading import Lock
 
 import math
 
+from shutil import rmtree
+
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from TorrentSrc.Engine import Engine
@@ -44,41 +46,41 @@ class Torrent:
     def bytes_ready_in_buffer(self):
         if self.output_mode == OutputMode.File:
             return 0
-        return self.output_manager.output_writer.consecutive_pieces_total_length
+        return self.output_manager.stream_manager.consecutive_pieces_total_length
 
     @property
     def bytes_total_in_buffer(self):
         if self.output_mode == OutputMode.File:
             return 0
-        return self.output_manager.output_writer.bytes_in_buffer
+        return self.output_manager.stream_manager.bytes_in_buffer
 
     @property
     def stream_position(self):
         if self.output_mode == OutputMode.File:
             return 0
-        return self.output_manager.output_writer.stream_position_piece_index
+        return self.output_manager.stream_manager.stream_position_piece_index
 
     @property
     def stream_buffer_position(self):
         if self.output_mode == OutputMode.File:
             return 0
-        return self.output_manager.output_writer.consecutive_pieces_last_index
+        return self.output_manager.stream_manager.consecutive_pieces_last_index
 
     @property
     def last_byte_requested(self):
         if self.output_mode == OutputMode.File:
             return 0
-        return self.output_manager.output_writer.last_request
+        return self.output_manager.stream_manager.last_request
 
     @property
     def streamserver_running(self):
-        return self.output_manager.output_writer.listener.running
+        return self.output_manager.stream_manager.listener.running
 
     @property
     def bytes_streamed(self):
         if self.output_mode == OutputMode.File:
             return 0
-        return self.output_manager.output_writer.listener.bytes_send
+        return self.output_manager.stream_manager.listener.bytes_send
 
     @property
     def bytes_missing_for_buffering(self):
@@ -122,6 +124,7 @@ class Torrent:
         self.output_mode = output_mode
         self.__lock = Lock()
         self.media_file = None
+        self.subtitles = []
         self.stream_file_hash = None
         self.to_download_bytes = 0
         self.outstanding_requests = 0
@@ -227,16 +230,24 @@ class Torrent:
         self.engine.queue_repeating_work_item("data_manager", 200, self.data_manager.update_write_blocks)
         self.engine.queue_repeating_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
         if self.output_mode == OutputMode.Stream:
-            self.engine.queue_repeating_work_item("output_writer", 1000, self.output_manager.output_writer.update)
+            self.engine.queue_repeating_work_item("stream_manager", 1000, self.output_manager.stream_manager.update)
 
         self.engine.start()
         self.network_manager.start()
+        self.clear_subs_folder()
         Logger.write(3, "Torrent started")
+
+    def clear_subs_folder(self):
+        folder = Settings.get_string("base_folder") + "/subs/"
+        for the_file in os.listdir(folder):
+            file_path = os.path.join(folder, the_file)
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
 
     def parse_info_dictionary(self, info_dict):
         self.name = info_dict[b'name'].decode('ascii')
         to_disk = self.output_mode == OutputMode.File
-        download_folder = Settings.get_string("download_folder")
+        base_folder = Settings.get_string("base_folder")
 
         if b'files' in info_dict:
             # Multifile
@@ -244,7 +255,7 @@ class Torrent:
             total_length = 0
             for file in files:
                 file_length = file[b'length']
-                path = download_folder + self.name
+                path = base_folder + self.name
                 path_list = file[b'path']
                 last_path = ""
                 for path_part in path_list:
@@ -256,11 +267,14 @@ class Torrent:
                 ext = os.path.splitext(path)[1]
                 if (ext == ".mp4" or ext == ".mkv" or ext == ".avi") and (self.media_file is None or self.media_file.length < file_length):
                     self.media_file = fi
+                if ext == ".srt":
+                    self.subtitles.append(fi)
+                    fi.path = base_folder + "/subs/" + last_path + ext
                 total_length += file_length
         else:
             # Singlefile
             total_length = info_dict[b'length']
-            file = TorrentDownloadFile(total_length, 0, self.name, download_folder + self.name, to_disk)
+            file = TorrentDownloadFile(total_length, 0, self.name, base_folder + self.name, to_disk)
             self.media_file = file
             self.files.append(file)
 
@@ -310,7 +324,7 @@ class Torrent:
         self.state = TorrentState.Downloading
 
     def get_data_bytes_for_stream(self, start_byte, length):
-        return self.output_manager.output_writer.get_data_for_stream(start_byte + self.media_file.start_byte, length)
+        return self.output_manager.stream_manager.get_data_for_stream(start_byte + self.media_file.start_byte, length)
 
     def get_data_bytes_for_hash(self, start_byte, length):
         return self.data_manager.get_data_bytes_for_hash(start_byte + self.media_file.start_byte, length)
@@ -365,6 +379,7 @@ class TorrentDownloadFile:
         self.path = path
         self.name = name
         self.stream = None
+        self.done = False
         self.__lock = Lock()
 
         if output_to_disk:
@@ -382,10 +397,18 @@ class TorrentDownloadFile:
     def end_piece(self, piece_length):
         return math.floor(self.end_byte / piece_length)
 
-    def write(self, offset_in_file, data):
-        self.open()
+    def write_file(self, data):
+        offset = 0
+        for piece in data:
+            self.write(offset, piece.get_data())
+            offset += piece.length
+        self.stream.close()
+        self.done = True
+        Logger.write(2, "File " + self.name + " done")
 
+    def write(self, offset_in_file, data):
         self.__lock.acquire()
+        self.open()
 
         self.stream.seek(offset_in_file)
         can_write = len(data)

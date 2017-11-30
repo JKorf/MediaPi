@@ -2,6 +2,7 @@ from threading import Lock
 
 import math
 
+from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from TorrentSrc.Streaming.StreamManager import StreamManager
 from TorrentSrc.Util.Enums import OutputMode
@@ -14,10 +15,8 @@ class TorrentOutputManager:
         self.torrent = torrent
         self.pieces_to_output = []
         self.__lock = Lock()
-        if self.torrent.output_mode == OutputMode.File:
-            self.output_writer = DiskWriter(self.torrent)
-        else:
-            self.output_writer = StreamManager(self.torrent)
+        self.file_writer = DiskWriter(self.torrent)
+        self.stream_manager = StreamManager(self.torrent)
 
     def add_piece_to_output(self, piece):
         self.__lock.acquire()
@@ -41,12 +40,25 @@ class TorrentOutputManager:
 
         for item in to_write:
             self.torrent.peer_manager.piece_done(item.index)
-            self.output_writer.write_piece(item)
+            if self.torrent.output_mode == OutputMode.Stream:
+                self.stream_manager.write_piece(item)
+            else:
+                self.file_writer.write_piece(item)
+
+            self.check_subtitles()
 
             # Check if first and last piece(s) are done to calculate the hash
             self.check_stream_file_hash()
 
         return True
+
+    def check_subtitles(self):
+        for sub in [x for x in self.torrent.subtitles if not x.done]:
+            sub_pieces = self.torrent.data_manager.get_pieces_by_range(sub.start_byte, sub.end_byte)
+            if all(piece.done for piece in sub_pieces):
+                Logger.write(2, "Subtitle done, going to write")
+                sub.write_file(sub_pieces)
+                EventManager.throw_event(EventType.SubtitleDownloaded, [sub.path])
 
     def check_stream_file_hash(self):
         if self.torrent.output_mode == OutputMode.File:
@@ -78,7 +90,7 @@ class TorrentOutputManager:
             calculate_file_hash_torrent(self.torrent)
 
     def stop(self):
-        self.output_writer.stop()
+        self.stream_manager.stop()
 
 
 class DiskWriter:
@@ -106,7 +118,4 @@ class DiskWriter:
                 return file
 
         return None
-
-    def stop(self):
-        pass
 
