@@ -167,8 +167,10 @@ class TorrentDownloadManager:
         if self.torrent.end_game:
             return True
 
-        if self.download_mode == DownloadMode.ImportantOnly and prio == 100:
-            return True
+        if self.download_mode == DownloadMode.ImportantOnly:
+            if prio == 100:
+                return True
+            return currently_downloading < 5
 
         return self.allowed_download(prio, currently_downloading, peer.peer_speed)
 
