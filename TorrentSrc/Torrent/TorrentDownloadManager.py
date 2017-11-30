@@ -26,10 +26,9 @@ class TorrentDownloadManager:
 
         self.download_mode = DownloadMode.Full
         self.peers_per_piece = [
-            {100, 2, 5},
-            {95, 1, 2},
-            {90, 1, 1},
-            {0, 1, 1}
+            (100, 2, 5),
+            (95, 1, 2),
+            (0, 1, 1)
         ]
 
     def update(self):
@@ -137,6 +136,7 @@ class TorrentDownloadManager:
                 elif self.can_download_priority_pieces(block_download, peer):
                     result.append(block_download)
                     block_download.add_peer(peer)
+
                 elif self.download_mode == DownloadMode.ImportantOnly:
                     if block_download.block.start_byte_total - self.torrent.stream_position * self.torrent.data_manager.piece_length > 100000000:
                         # The block is more than 100mb from our current position; don't download this
@@ -177,12 +177,9 @@ class TorrentDownloadManager:
             if priority < prio:
                 continue
             if speed == PeerSpeed.Low:
-                if current < slow:
-                    return True
+                return current < slow
             else:
-                if current < fast:
-                    return True
-        return False
+                return current < fast
 
     def seek(self, old_index, new_piece_index):
         start_time = current_time()
