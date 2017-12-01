@@ -72,25 +72,32 @@ class SubtitleProvider:
         dic['moviehash'] = str(file_hash)
         dic['sublanguageid'] = 'eng'
         Logger.write(2, "Subs searching, bytesize: " + str(size) + ", hash: " + str(file_hash))
-        try:
-            result = self.xml_client.SearchSubtitles(self.OS_token, [dic])
-        except Exception as e:
+        retry = 2
+        current = 0
+        result = None
+
+        while current <= retry:
+            try:
+                result = self.xml_client.SearchSubtitles(self.OS_token, [dic])
+            except Exception as e:
+                Logger.write(2, 'Error fetching OpenSubtitles subs 2 for hash ' + str(file_hash) + ', size ' + str(size) + ", error: " + str(e))
+                current += 1
+                continue
+            if 'data' not in result:
+                Logger.write(2, 'Error fetching OpenSubtitles subs 3 for hash ' + str(file_hash) + ', size ' + str(size) + ", status: " + result['status'])
+                current += 1
+                continue
+            else:
+                break
+
+        if result is None or 'data' not in result:
             EventManager.throw_event(EventType.Error, ["get_error", "Could not get subtitles from OpenSubtitles"])
-            Logger.write(2, 'Error fetching OpenSubtitles subs 2 for hash ' + str(file_hash) + ', size ' + str(size) + ", error: " + str(e))
-            return
-        subs_done = 0
-        if 'data' not in result:
-            EventManager.throw_event(EventType.Error, ["get_error", "Could not get subtitles from OpenSubtitles"])
-            Logger.write(2, 'Error fetching OpenSubtitles subs 3 for hash ' + str(file_hash) + ', size ' + str(size) + ", status: " + result['status'])
             return
 
         sorted_subs = sorted(result['data'], key=lambda x: x['SubRating'], reverse=True)
         Logger.write(2, "Subs count returned: " + str(len(sorted_subs)))
 
-        for sub in sorted_subs:
-            if subs_done == self.max_sub_files:
-                break
-
+        for sub in sorted_subs[0:self.max_sub_files]:
             try:
                 sub_result = self.xml_client.DownloadSubtitles(self.OS_token, [sub['IDSubtitleFile']])
             except Exception as e:
@@ -110,9 +117,8 @@ class SubtitleProvider:
 
             # Add to current media
             self.start.player.set_subtitle_file(filename)
-            subs_done += 1
 
         time.sleep(1)
         self.start.player.set_subtitle_track(2)
-        Logger.write(2, "Added " + str(subs_done) + " OpenSubtitles subtitle files")
+        Logger.write(2, "Added " + str(len(sorted_subs[0:self.max_sub_files])) + " OpenSubtitles subtitle files")
 

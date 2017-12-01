@@ -102,7 +102,7 @@ class UtilController:
 
     @staticmethod
     def version():
-        return to_JSON(Version("03/11/2017", "1.6.2"))
+        return to_JSON(Version("01/12/2017", "1.6.3"))
 
     @staticmethod
     @gen.coroutine
