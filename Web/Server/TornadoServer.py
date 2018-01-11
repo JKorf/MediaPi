@@ -1,5 +1,6 @@
 import os
 import socket
+import urllib.request
 
 import tornado
 from tornado import gen
@@ -7,6 +8,7 @@ from tornado import ioloop, web, websocket
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Settings import Settings
 from Shared.Util import to_JSON
 from TorrentSrc.Util.Threading import CustomThread
 from Web.Server.Controllers.HDController import HDController
@@ -37,6 +39,7 @@ class TornadoServer:
             (r"/youtube/(.*)", YoutubeHandler),
             (r"/torrents/(.*)", TorrentHandler),
             (r"/realtime", RealtimeHandler),
+            (r"/database/(.*)", DatabaseHandler),
             (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Web", "default_filename": "index.html"})
         ])
 
@@ -319,3 +322,29 @@ class RealtimeHandler(websocket.WebSocketHandler):
         if self in TornadoServer.clients:
             Logger.write(2, "Connection closed")
             TornadoServer.clients.remove(self)
+
+
+class DatabaseHandler(web.RequestHandler):
+    @gen.coroutine
+    def get(self, url):
+        if url == "add_favorite":
+            if not Settings.get_bool("slave"):
+                Logger.write(2, "Adding to favorites")
+                TornadoServer.start_obj.database.add_favorite(self.get_argument("id"))
+            else:
+                urllib.request.urlopen("192.168.1.100/add_favorites?id=" + self.get_argument("id"))
+
+        if url == "remove_favorite":
+            if not Settings.get_bool("slave"):
+                Logger.write(2, "Removing from favorites")
+                TornadoServer.start_obj.database.remove_favorite(self.get_argument("id"))
+            else:
+                urllib.request.urlopen("192.168.1.100/remove_favorites?id=" + self.get_argument("id"))
+
+        if url == "get_favorites":
+            if not Settings.get_bool("slave"):
+                Logger.write(2, "Getting favorites")
+                data = TornadoServer.start_obj.database.get_favorites()
+                self.write(to_JSON(data))
+            else:
+                self.write(urllib.request.urlopen("192.168.1.100/get_favorites").read())

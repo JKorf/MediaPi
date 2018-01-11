@@ -71,15 +71,21 @@
         }
 
         $scope.isFavorite = function(){
-            return FavoritesFactory.IsFavorite($stateParams.id);
+            for(var i = 0 ; i < $scope.favs.length; i++)
+                if($scope.favs[i] == $stateParams.id)
+                    return true;
+            return false;
         }
 
         $scope.toggleFavorite = function(){
             console.log($stateParams.id);
-            if(!FavoritesFactory.IsFavorite($stateParams.id))
+            if(!$scope.isFavorite())
             {
                 FavoritesFactory.Add($stateParams.id);
-            }else{
+                console.log($scope.favs);
+            }
+            else
+            {
                 FavoritesFactory.Remove($stateParams.id);
             }
         }
@@ -96,6 +102,10 @@
         Init();
 
         function Init(){
+            FavoritesFactory.GetAll().then(function(data) {
+                $scope.favs = data;
+            });
+
             var url = '/shows/get_show?id=' + $stateParams.id;
             $scope.promise = CacheFactory.Get(url, 900).then(function(response){
                 $scope.show = response;

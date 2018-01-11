@@ -45,16 +45,19 @@
 
         function Init(){
             $scope.watchedEpisodes = EpisodesWatchedFactory.GetWatched();
-            var favs = FavoritesFactory.GetAll();
+            var favs = FavoritesFactory.GetAll().then(function(favs){
+                console.log("Init favs home");
+                    console.log(favs);
 
-            for(var i = 0 ; i < favs.length ; i++){
-                CacheFactory.Get('/shows/get_show?id=' + favs[i].id, 900).then(function (response) {
-                    DetermineLastEpisodeRelease(response);
-                    $scope.favorites.push(response);
-                }, function (er) {
-                    console.log(er);
-                });
-            }
+                for(var i = 0 ; i < favs.length ; i++){
+                    CacheFactory.Get('/shows/get_show?id=' + favs[i], 900).then(function (response) {
+                        DetermineLastEpisodeRelease(response);
+                        $scope.favorites.push(response);
+                    }, function (er) {
+                        console.log(er);
+                    });
+                }
+            });
 
             var watchedFiles = FilesWatchedFactory.GetWatchedFiles();
             if(watchedFiles.length > 0){

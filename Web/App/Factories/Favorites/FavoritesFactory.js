@@ -1,52 +1,45 @@
 (function () {
 
-    angular.module('pi-test').factory('FavoritesFactory', function (MemoryFactory) {
+    angular.module('pi-test').factory('FavoritesFactory', function ($q, $http) {
         var factory = {};
         var favs;
 
         factory.Add = function(id){
-            if(!favs){
-                factory.GetAll();
-            }
-
-            favs.push({id: id, addedAt: new Date()});
-            MemoryFactory.SetValue("Favorites", favs);
+            console.log("Adding fav " + id);
+            factory.GetAll().then(function(){
+                favs.push(id);
+                $http.get("/database/add_favorite?id=" + id);
+            });
         }
 
         factory.Remove = function(id){
-            if(!favs){
-                factory.GetAll();
-            }
-
-            for(var i = 0 ; i < favs.length; i++){
-                if(favs[i].id == id){
-                    favs.splice(i, 1);
-                    MemoryFactory.SetValue("Favorites", favs);
-                    return;
+            console.log("Remove");
+            factory.GetAll().then(function(){
+                for(var i = 0 ; i < favs.length; i++){
+                    if(favs[i] == id){
+                        favs.splice(i, 1);
+                        return;
+                    }
                 }
-            }
 
+                $http.get("/database/remove_favorite?id=" + id);
+            });
         }
 
         factory.GetAll = function(){
+            var promise = $q.defer();
             if(!favs){
-                favs = MemoryFactory.GetValue("Favorites");
-                if(!favs)
-                    favs = [];
+                $http.get("/database/get_favorites").then(function(data){
+                    console.log("Favs retrieved");
+                    favs = data.data;
+                    promise.resolve(data.data);
+                });
+            }else
+            {
+                promise.resolve(favs);
             }
 
-            return favs;
-        }
-
-        factory.IsFavorite = function(id){
-            if(!favs)
-                factory.GetAll();
-
-            for(var i = 0 ; i < favs.length; i++){
-                if(favs[i].id == id)
-                    return true;
-            }
-            return false;
+            return promise.promise;
         }
 
         return factory;

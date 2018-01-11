@@ -6,6 +6,7 @@ import cProfile
 from shutil import copytree, rmtree
 
 from Web.Server.Controllers.MovieController import MovieController
+from database import Database
 
 os.chdir(os.path.dirname(__file__))
 
@@ -49,13 +50,19 @@ class StartUp:
         self.server = None
         self.torrent_manager = TorrentManager()
         self.stream_torrent = None
-
+        self.database = Database()
         self.running = True
         self.youtube_end_counter = 0
         sys.excepthook = self.handle_exception
 
         if Settings.get_bool("show_gui"):
             self.start_gui()
+
+        if Settings.get_bool("slave"):
+            self.database.init_database()
+            self.database.add_watched_episode(1, "test", 1, 2, "test ep", "/url/somthing", current_time())
+            data=  self.database.get_watched_episodes()
+            s = ""
 
         self.dht_enabled = Settings.get_bool("dht")
         if self.dht_enabled:
