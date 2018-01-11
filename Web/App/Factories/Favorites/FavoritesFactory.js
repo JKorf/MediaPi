@@ -18,7 +18,7 @@
                 for(var i = 0 ; i < favs.length; i++){
                     if(favs[i] == id){
                         favs.splice(i, 1);
-                        return;
+                        break;
                     }
                 }
 
