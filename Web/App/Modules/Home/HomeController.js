@@ -44,7 +44,10 @@
         Init();
 
         function Init(){
-            $scope.watchedEpisodes = EpisodesWatchedFactory.GetWatched();
+            EpisodesWatchedFactory.GetWatched().then(function(data){
+                $scope.watchedEpisodes = data;
+            });
+
             var favs = FavoritesFactory.GetAll().then(function(favs){
                 console.log("Init favs home");
                     console.log(favs);
@@ -59,15 +62,16 @@
                 }
             });
 
-            var watchedFiles = FilesWatchedFactory.GetWatchedFiles();
-            if(watchedFiles.length > 0){
-                watchedFiles.sort(function(a, b) {
-                    a = new Date(a.watchedAt);
-                    b = new Date(b.watchedAt);
-                    return a>b ? -1 : a<b ? 1 : 0;
-                });
-            }
-            $scope.lastWatchedFiles = watchedFiles;
+            FilesWatchedFactory.GetWatchedFiles().then(function(data) {
+                if(data.length > 0){
+                    data.sort(function(a, b) {
+                        a = new Date(a.watchedAt);
+                        b = new Date(b.watchedAt);
+                        return a>b ? -1 : a<b ? 1 : 0;
+                    });
+                }
+                $scope.lastWatchedFiles = data;
+            });
 
             $timeout(function(){
                 var elem3 = $(".favorites");

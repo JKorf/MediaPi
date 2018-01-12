@@ -5,6 +5,7 @@
         $scope.selectedResolution = { resolution: '720p' };
         $scope.selectedSeason;
         $scope.selectedEpisode;
+        $scope.favs = [];
 
         $scope.keys = function(obj){
           return obj? Object.keys(obj) : [];
@@ -66,7 +67,9 @@
                 $http.post('/shows/play_episode?url=' + encodeURIComponent(episode.torrents[$scope.selectedResolution.resolution].url) + '&title=' + encodeURIComponent($scope.show.title) + '&img=' + encodeURIComponent($scope.show.images.poster));
 
                 EpisodesWatchedFactory.AddWatched($scope.show._id, $scope.show.title, episode.season, episode.episode, episode.title, $scope.show.images.poster, new Date());
-                $scope.watched = EpisodesWatchedFactory.GetWatchedForShow($stateParams.id);
+                EpisodesWatchedFactory.GetWatchedForShow($stateParams.id).then(function(data){
+                    $scope.watched = data;
+                });
             });
         }
 
@@ -113,8 +116,9 @@
             }, function(er){
                 console.log("rejected: " + er);
             });
-
-            $scope.watched = EpisodesWatchedFactory.GetWatchedForShow($stateParams.id);
+            EpisodesWatchedFactory.GetWatchedForShow($stateParams.id).then(function(data){
+                $scope.watched = data;
+            });
         }
 
         function selectHighestRes(episode){

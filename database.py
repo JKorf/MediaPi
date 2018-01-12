@@ -58,8 +58,8 @@ class Database:
 
         self.connection.execute("INSERT INTO WatchedEpisodes " +
                                 "(ShowId, ShowTitle, EpisodeSeason, EpisodeNumber, EpisodeTitle, ShowImage, WatchedAt)" +
-                                " VALUES (" + str(showId) + ", '" + str(showTitle) + "', " + str(episodeSeason) + ", " +
-                                str(episodeNumber) + ", '" + str(episodeTitle) + "', '" + str(showImage) + "', " + str(watchedAt) + ")")
+                                " VALUES ('" + str(showId) + "', '" + str(showTitle) + "', " + str(episodeSeason) + ", " +
+                                str(episodeNumber) + ", '" + str(episodeTitle) + "', '" + str(showImage) + "', '" + str(watchedAt) + "')")
 
         self.database.commit()
         self.disconnect()

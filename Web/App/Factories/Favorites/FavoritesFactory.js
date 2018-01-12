@@ -30,9 +30,8 @@
             var promise = $q.defer();
             if(!favs){
                 $http.get("/database/get_favorites").then(function(data){
-                    console.log("Favs retrieved");
                     favs = data.data;
-                    promise.resolve(data.data);
+                    promise.resolve(favs);
                 });
             }else
             {

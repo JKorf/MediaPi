@@ -9,6 +9,7 @@
         $scope.showVideos = true;
         $scope.showSubtitles = false;
         $scope.showImages = false;
+        $scope.watchedFiles = [];
 
         $(document).mouseup(function (e)
         {
@@ -139,7 +140,6 @@
                 $http.post("/hd/play_file?filename=" + encodeURIComponent(file)+"&path=" + encodeURIComponent(path));
 
                 FilesWatchedFactory.AddWatchedFile(path, new Date());
-                $scope.watchedFiles = FilesWatchedFactory.GetWatchedFiles()
             });
         }
 
@@ -189,7 +189,9 @@
             console.log("Getting dir for " + path);
             $scope.promise = $http.get("/hd/directory?path=" + encodeURIComponent(path)).then(function (response) {
                 $scope.filestructure = response.data;
-                $scope.watchedFiles = FilesWatchedFactory.GetWatchedFiles()
+                FilesWatchedFactory.GetWatchedFiles().then(function(data){
+                    $scope.watchedFiles = data;
+                });
                 console.log($scope.filestructure);
             }, function (err) {
                 console.log("error: " + err);

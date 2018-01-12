@@ -348,3 +348,46 @@ class DatabaseHandler(web.RequestHandler):
                 self.write(to_JSON(data))
             else:
                 self.write(urllib.request.urlopen("192.168.1.100/get_favorites").read())
+
+        if url == "add_watched_file":
+            if not Settings.get_bool("slave"):
+                Logger.write(2, "Adding to watched files")
+                TornadoServer.start_obj.database.add_watched_file(self.get_argument("url"), self.get_argument("watchedAt"))
+            else:
+                urllib.request.urlopen("192.168.1.100/add_watched_file?url=" + self.get_argument("url") + "&watchedAt=" + self.get_argument("watchedAt"))
+
+        if url == "get_watched_files":
+            if not Settings.get_bool("slave"):
+                Logger.write(2, "Getting watched files")
+                data = TornadoServer.start_obj.database.get_watched_files()
+                self.write(to_JSON(data))
+            else:
+                self.write(urllib.request.urlopen("192.168.1.100/get_watched_files").read())
+
+        if url == "add_watched_episode":
+            if not Settings.get_bool("slave"):
+                Logger.write(2, "Adding to watched episodes")
+                TornadoServer.start_obj.database.add_watched_episode(
+                    self.get_argument("showId"),
+                    self.get_argument("showTitle"),
+                    self.get_argument("episodeSeason"),
+                    self.get_argument("episodeNumber"),
+                    self.get_argument("episodeTitle"),
+                    self.get_argument("showImage"),
+                    self.get_argument("watchedAt"))
+            else:
+                urllib.request.urlopen("192.168.1.100/add_watched_episode?showId=" + self.get_argument("showId")
+                                       + "&showTitle=" + self.get_argument("showTitle")
+                                       + "&episodeSeason=" + self.get_argument("episodeSeason")
+                                       + "&episodeNumber=" + self.get_argument("episodeNumber")
+                                       + "&episodeTitle=" + self.get_argument("episodeTitle")
+                                       + "&showImage=" + self.get_argument("showImage")
+                                       + "&watchedAt=" + self.get_argument("watchedAt"))
+
+        if url == "get_watched_episodes":
+            if not Settings.get_bool("slave"):
+                Logger.write(2, "Getting watched episodes")
+                data = TornadoServer.start_obj.database.get_watched_episodes()
+                self.write(to_JSON(data))
+            else:
+                self.write(urllib.request.urlopen("192.168.1.100/get_watched_episodes").read())
