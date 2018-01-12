@@ -58,11 +58,8 @@ class StartUp:
         if Settings.get_bool("show_gui"):
             self.start_gui()
 
-        if Settings.get_bool("slave"):
+        if not Settings.get_bool("slave"):
             self.database.init_database()
-            self.database.add_watched_episode(1, "test", 1, 2, "test ep", "/url/somthing", current_time())
-            data=  self.database.get_watched_episodes()
-            s = ""
 
         self.dht_enabled = Settings.get_bool("dht")
         if self.dht_enabled:
