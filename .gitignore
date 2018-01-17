@@ -99,7 +99,7 @@ ENV/
 .mypy_cache/
 
 .bat
-*.txt
+test.txt
 *.data
 .idea/
 *.srt

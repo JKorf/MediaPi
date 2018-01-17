@@ -1,0 +1,10 @@
+1.  Install VLC with hardware acceleration: https://www.raspberrypi.org/forums/viewtopic.php?f=66&t=195221
+2.  Set static IP: https://www.raspberrypi.org/forums/viewtopic.php?t=191140
+3.  Enable SSH: sudo update-rc.d ssh defaults
+4.  Copy over scripts
+5.  Install dependencies:
+sudo pip3 install tornado
+sudo pip3 install psutil
+sudo apt-get install python3-pyqt4
+6.  Disable screensaver: sudo apt-get install xscreensaver -> menu preferences -> screensaver -> disable
+7.  Set script as auto startup: https://www.raspberrypi-spy.co.uk/2015/02/how-to-autorun-a-python-script-on-raspberry-pi-boot/
