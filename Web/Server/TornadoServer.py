@@ -24,10 +24,12 @@ from Web.Server.Models import WebSocketMessage
 
 class TornadoServer:
     start_obj = None
+    master_ip = None
     clients = []
 
     def __init__(self, start):
         self.port = 80
+        TornadoServer.master_ip = Settings.get_string("master_ip")
         TornadoServer.start_obj = start
         self.application = web.Application([
             (r"/util/(.*)", UtilHandler),
@@ -332,14 +334,14 @@ class DatabaseHandler(web.RequestHandler):
                 Logger.write(2, "Adding to favorites")
                 TornadoServer.start_obj.database.add_favorite(self.get_argument("id"))
             else:
-                urllib.request.urlopen("192.168.1.100/add_favorites?id=" + self.get_argument("id"))
+                urllib.request.urlopen(str(TornadoServer.master_ip) + "/add_favorites?id=" + self.get_argument("id"))
 
         if url == "remove_favorite":
             if not Settings.get_bool("slave"):
                 Logger.write(2, "Removing from favorites")
                 TornadoServer.start_obj.database.remove_favorite(self.get_argument("id"))
             else:
-                urllib.request.urlopen("192.168.1.100/remove_favorites?id=" + self.get_argument("id"))
+                urllib.request.urlopen(str(TornadoServer.master_ip) + "/remove_favorites?id=" + self.get_argument("id"))
 
         if url == "get_favorites":
             if not Settings.get_bool("slave"):
@@ -347,14 +349,14 @@ class DatabaseHandler(web.RequestHandler):
                 data = TornadoServer.start_obj.database.get_favorites()
                 self.write(to_JSON(data))
             else:
-                self.write(urllib.request.urlopen("192.168.1.100/get_favorites").read())
+                self.write(urllib.request.urlopen(str(TornadoServer.master_ip) + "/get_favorites").read())
 
         if url == "add_watched_file":
             if not Settings.get_bool("slave"):
                 Logger.write(2, "Adding to watched files")
                 TornadoServer.start_obj.database.add_watched_file(self.get_argument("url"), self.get_argument("watchedAt"))
             else:
-                urllib.request.urlopen("192.168.1.100/add_watched_file?url=" + self.get_argument("url") + "&watchedAt=" + self.get_argument("watchedAt"))
+                urllib.request.urlopen(str(TornadoServer.master_ip) + "/add_watched_file?url=" + self.get_argument("url") + "&watchedAt=" + self.get_argument("watchedAt"))
 
         if url == "get_watched_files":
             if not Settings.get_bool("slave"):
@@ -362,7 +364,7 @@ class DatabaseHandler(web.RequestHandler):
                 data = TornadoServer.start_obj.database.get_watched_files()
                 self.write(to_JSON(data))
             else:
-                self.write(urllib.request.urlopen("192.168.1.100/get_watched_files").read())
+                self.write(urllib.request.urlopen(str(TornadoServer.master_ip) + "/get_watched_files").read())
 
         if url == "add_watched_episode":
             if not Settings.get_bool("slave"):
@@ -376,7 +378,7 @@ class DatabaseHandler(web.RequestHandler):
                     self.get_argument("showImage"),
                     self.get_argument("watchedAt"))
             else:
-                urllib.request.urlopen("192.168.1.100/add_watched_episode?showId=" + self.get_argument("showId")
+                urllib.request.urlopen(str(TornadoServer.master_ip) + "/add_watched_episode?showId=" + self.get_argument("showId")
                                        + "&showTitle=" + self.get_argument("showTitle")
                                        + "&episodeSeason=" + self.get_argument("episodeSeason")
                                        + "&episodeNumber=" + self.get_argument("episodeNumber")
@@ -390,4 +392,4 @@ class DatabaseHandler(web.RequestHandler):
                 data = TornadoServer.start_obj.database.get_watched_episodes()
                 self.write(to_JSON(data))
             else:
-                self.write(urllib.request.urlopen("192.168.1.100/get_watched_episodes").read())
+                self.write(urllib.request.urlopen(str(TornadoServer.master_ip) + "/get_watched_episodes").read())

@@ -2,11 +2,13 @@ import os
 
 import sqlite3
 
+from Shared.Settings import Settings
+
 
 class Database:
-    path = "C:/test/data.db"
 
     def __init__(self):
+        self.path = Settings.get_string("base_folder") + "database.data"
         self.database = None
         self.connection = None
 
