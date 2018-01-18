@@ -1,0 +1,23 @@
+--- ON HOLD ---
+    Youtube seeking -> vlc bug? lijkt hetzelfde als stream incorrect seeking
+        Fixed in vlc 3.0..
+        Youtube uitbreiden
+
+    spotify
+        https://eltechs.com/run-spotify-on-raspberry-pi/
+
+--- TODO ---
+    Bij meerdere files kunnen selecteren welke streamen?
+
+    Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
+		Kan in database
+
+    Automatisch settings naar/van gui
+
+    speed graph
+
+    memory loopt soms op
+
+    Meerdere mediaplayers:
+		Master met database
+		Slaves kunnen aan master database dingen vragen

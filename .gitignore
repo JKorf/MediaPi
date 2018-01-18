@@ -103,3 +103,4 @@ test.txt
 *.data
 .idea/
 *.srt
+trackers.txt
