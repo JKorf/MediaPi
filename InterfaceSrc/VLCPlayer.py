@@ -132,7 +132,8 @@ class VLCPlayer:
         tracks = self.__player.video_get_spu_description()
         result = []
         for trackid, trackname in tracks:
-            result.append((trackid, trackname.decode('ascii')))
+
+            result.append((trackid, trackname.decode('utf-8')))
         return result
 
     def get_subtitle_delay(self):
