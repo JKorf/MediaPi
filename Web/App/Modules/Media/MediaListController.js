@@ -148,6 +148,7 @@
                     HideLoadMore(scrollOffset);
                 }, function (err) {
                     $scope.done = true;
+                    HideLoadMore();
                     console.log(err);
                 });
             }
