@@ -106,7 +106,8 @@ class UdpTracker:
             return False
 
         announce_message = TrackerMessages.TrackerAnnounceMessage.for_udp(self.connection_id, self.transaction_id, torrent.info_hash, 2,
-                                                                          torrent.download_counter.total, torrent.left, torrent.uploaded, self.tracker_peer_request_amount)
+                                                                          torrent.download_counter.total, torrent.left, torrent.uploaded, self.tracker_peer_request_amount,
+                                                                          6881)
 
         response_message_bytes = self.connection.send_receive(announce_message.as_bytes())
         if response_message_bytes is None:

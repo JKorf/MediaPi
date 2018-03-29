@@ -83,7 +83,7 @@ class TrackerResponseMessage:
 
 class TrackerAnnounceMessage:
 
-    def __init__(self, connection_id, transaction_id, info_hash, message_event, downloaded, left, uploaded, num_want):
+    def __init__(self, connection_id, transaction_id, info_hash, message_event, downloaded, left, uploaded, num_want, port):
         self.connection_id = connection_id
         self.transaction_id = transaction_id
         self.info_hash = info_hash
@@ -96,7 +96,7 @@ class TrackerAnnounceMessage:
         self.ip = 0
         self.key = 0
         self.num_want = num_want
-        self.port = 0
+        self.port = port
         self.Extensions = 0
 
     @classmethod
@@ -104,8 +104,8 @@ class TrackerAnnounceMessage:
         return cls(0, 0, info_hash, message_event, downloaded, left, uploaded, num_want)
 
     @classmethod
-    def for_udp(cls, connection_id, transaction_id, info_hash, message_event, downloaded, left, uploaded, num_want):
-        return cls(connection_id, transaction_id, info_hash, message_event, downloaded, left, uploaded, num_want)
+    def for_udp(cls, connection_id, transaction_id, info_hash, message_event, downloaded, left, uploaded, num_want, port):
+        return cls(connection_id, transaction_id, info_hash, message_event, downloaded, left, uploaded, num_want, port)
 
     def as_bytes(self):
         offset = 0

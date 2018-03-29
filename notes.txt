@@ -12,11 +12,15 @@
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database
 
-    Automatisch settings naar/van gui
+    Meer subs kunnen downloaden via GUI als de 3 niet kloppen
+    Niet auto nieuwe sub aanzetten
+
+    Zoeken verbeteren
+    Download Queue verbeteren
+        Niet verder dan x vooruit kijken bij het zoeken naar blocks to download
+
 
     speed graph
-
-    memory loopt soms op
 
     Meerdere mediaplayers:
 		Master met database
