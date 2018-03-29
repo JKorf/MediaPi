@@ -96,12 +96,10 @@ class Status:
 
 class Settings:
 
-    def __init__(self, raspberry, gui, external_trackers, use_os, use_yify, max_sub_files):
+    def __init__(self, raspberry, gui, external_trackers, max_sub_files):
         self.raspberry = raspberry
         self.gui = gui
         self.external_trackers = external_trackers
-        self.use_os_subs = use_os
-        self.use_yify_subs = use_yify
         self.max_sub_files = max_sub_files
 
 

@@ -35,7 +35,7 @@
 
             <div class="movie-synopsis multiline-truncate" ng-click="synopsisClick()">{{movie.synopsis}}</div>
 
-            <div class="episode-torrents" ng-if="movie.torrents.length > 1">
+            <div class="episode-torrents">
                 <div class="episode-torrent" ng-if="key != '0'" ng-repeat="torrent in movie.torrents | orderBy:sortResolutions"
                      ng-class="{'selected-torrent': selectedTorrent.url == torrent.url}" ng-click="selectTorrent(torrent); $event.stopPropagation();">
                     <div class="episode-torrent-title">{{torrent.quality}} ({{torrent.seeds}})</div>

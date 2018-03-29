@@ -46,7 +46,7 @@
                             <div class="show-episode-view-episode-aired-on"  ng-if="episode==selectedEpisode">{{episode.first_aired | secondsToDateTime | date:'dd MMM yyyy'}}</div>
                             <div class="show-episode-view-episode-info-overview multiline-truncate" ng-click="showFullEpisodeOverview($event); $event.stopPropagation();">{{episode.overview}}</div>
 
-                            <div class="episode-torrents" ng-if="keys(episode.torrents).length > 2">
+                            <div class="episode-torrents">
                                 <div class="episode-torrent" ng-if="key != '0'" ng-repeat="key in keys(episode.torrents) | orderBy:sortResolutions"
                                      ng-class="{'selected-torrent': selectedResolution.resolution == '{{key}}'}" ng-click="selectResolution(key); $event.stopPropagation();">
                                     <div class="episode-torrent-title">{{key}} ({{episode.torrents[key].seeds}})</div>

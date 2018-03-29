@@ -118,20 +118,16 @@ class UtilController:
         set = Settings(AppSettings.get_bool("raspberry"),
                        AppSettings.get_bool("show_gui"),
                        AppSettings.get_bool("use_external_trackers"),
-                       AppSettings.get_bool("yts_movie_api"),
-                       AppSettings.get_bool("OS_subtitles"),
                        AppSettings.get_int("max_subtitles_files"))
         return to_JSON(set)
 
     @staticmethod
-    def save_settings(raspberry, gui, external_trackers, os_subs, yify_subs, max_subs):
+    def save_settings(raspberry, gui, external_trackers, max_subs):
         Logger.write(2, 'Saving new settings')
 
         AppSettings.set_setting("raspberry", parse_bool(raspberry))
         AppSettings.set_setting("show_gui", parse_bool(gui))
         AppSettings.set_setting("use_external_trackers", parse_bool(external_trackers))
-        AppSettings.set_setting("OS_subtitles", parse_bool(os_subs))
-        AppSettings.set_setting("yify_subtitles", parse_bool(yify_subs))
         AppSettings.set_setting("max_subtitles_files", int(max_subs))
 
     @staticmethod

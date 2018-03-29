@@ -8,8 +8,6 @@
             "raspberry=" + $scope.settings.raspberry +
             "&gui=" + $scope.settings.gui +
             "&external_trackers=" + $scope.settings.external_trackers +
-            "&os_subs=" + $scope.settings.use_os_subs +
-            "&yify_subs=" + $scope.settings.use_yify_subs +
             "&max_subs=" + $scope.settings.max_sub_files);
 
             if(confirm("The changes will only take effect after restarting the media player. Do you wish to restart now?")){

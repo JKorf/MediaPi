@@ -54,12 +54,13 @@ class Movie:
         movie.genres = movie_data['genres']
         movie.synopsis = movie_data['synopsis']
         movie.youtube_trailer = movie_data['trailer']
-        if 'poster' in movie_data['images']:
-            movie.poster = movie_data['images']['poster']
-        elif len(movie_data['images']) > 0:
-          movie.poster = movie_data['images'][0]
-        else:
-            movie.poster = ""
+        if 'images' in movie_data:
+            if 'poster' in movie_data['images']:
+                movie.poster = movie_data['images']['poster']
+            elif len(movie_data['images']) > 0:
+              movie.poster = movie_data['images'][0]
+            else:
+                movie.poster = ""
         movie.released = movie_data['released']
         movie.torrents = []
         for torrent_data in movie_data['torrents']['en']:
