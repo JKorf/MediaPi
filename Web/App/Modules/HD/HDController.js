@@ -103,7 +103,14 @@
             if (lastIndex == 2 || lastIndex == 0)
                 GetDirectory("");
             else
-                GetDirectory($scope.current.path.substr(0, lastIndex));
+            {
+                if(lastIndex == $scope.current.path.length - 1){
+                    $scope.current.path = $scope.current.path.substr(0, lastIndex);
+                    $scope.directoryUp();
+                }
+                else
+                    GetDirectory($scope.current.path.substr(0, lastIndex));
+            }
         }
 
         $scope.playFile = function(file){
