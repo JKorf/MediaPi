@@ -5,10 +5,10 @@ import cProfile
 
 from shutil import copytree, rmtree
 
+os.chdir(os.path.dirname(__file__))
+
 from Web.Server.Controllers.MovieController import MovieController
 from database import Database
-
-os.chdir(os.path.dirname(__file__))
 
 from TorrentSrc.TorrentManager import TorrentManager
 from TorrentSrc.Util.Stats import PyStats
