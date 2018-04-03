@@ -5,6 +5,8 @@ import os
 from xmlrpc import client
 
 import time
+
+from InterfaceSrc.VLCPlayer import PlayerState
 from Shared.Settings import Settings
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -16,11 +18,15 @@ class SubtitleProvider:
     os_sub_server_path = "http://api.opensubtitles.org:80/xml-rpc"
 
     def __init__(self, start):
+        self.is_done = True
         self.start = start
-        self.use_os_subtitles = Settings.get_bool("OS_subtitles")
         self.max_sub_files = Settings.get_int("max_subtitles_files")
         self.sub_file_directory = os.path.dirname(os.path.realpath(__file__)) + "/subs/"
         self.last_communication = 0
+        self.sub_files = []
+
+        self.hash = None
+        self.length = 0
 
         # create subtitles directory
         if not os.path.exists(self.sub_file_directory):
@@ -34,7 +40,9 @@ class SubtitleProvider:
         self.xml_client = None
         self.OS_token = None
 
-        EventManager.register_event(EventType.StreamFileHashKnown, self.get_os_subtitles)
+        EventManager.register_event(EventType.StreamFileHashKnown, lambda size, hash: self.get_subtitles(size, hash, False))
+        EventManager.register_event(EventType.SearchAdditionalSubs, lambda: self.get_subtitles(self.length, self.hash, True))
+        EventManager.register_event(EventType.PlayerStateChange, self.apply_subtitles)
 
     def update(self):
         self.Login()
@@ -61,11 +69,18 @@ class SubtitleProvider:
             EventManager.throw_event(EventType.Error, ["get_error", "Could not get subtitles from OpenSubtitles"])
             Logger.write(2, 'Error creating xml_client: ' + str(e))
 
-    def get_os_subtitles(self, size, file_hash):
-        if not self.use_os_subtitles:
-            return
+    def apply_subtitles(self,  old_state, new_state):
+        self.add_subs()
+
+    def get_subtitles(self, size, file_hash, more):
+        if not more:
+            self.sub_files = []
 
         Logger.write(2, "Getting OpenSubtitles subtitles")
+        self.hash = file_hash
+        self.length = size
+        self.is_done = False
+        EventManager.throw_event(EventType.SubsDoneChange, [False])
 
         dic = dict()
         dic['moviebytesize'] = str(size)
@@ -94,31 +109,64 @@ class SubtitleProvider:
             EventManager.throw_event(EventType.Error, ["get_error", "Could not get subtitles from OpenSubtitles"])
             return
 
-        sorted_subs = sorted(result['data'], key=lambda x: x['SubRating'], reverse=True)
+        sorted_subs = sorted(result['data'], key=lambda x: float(x['SubRating']), reverse=True)
         Logger.write(2, "Subs count returned: " + str(len(sorted_subs)))
+        subnr = 0
+        additional_subs = self.max_sub_files
 
-        for sub in sorted_subs[0:self.max_sub_files]:
+        for sub in sorted_subs:
+            sub_id = sub['IDSubtitleFile']
+            if sub_id in [x.id for x in self.sub_files]:
+                continue
+
             try:
-                sub_result = self.xml_client.DownloadSubtitles(self.OS_token, [sub['IDSubtitleFile']])
+                sub_result = self.xml_client.DownloadSubtitles(self.OS_token, [sub_id])
             except Exception as e:
                 EventManager.throw_event(EventType.Error, ["get_error", "Could not download subtitles from OpenSubtitles"])
                 Logger.write(2, 'Error fetching OpenSubtitles subs 3 for hash ' + str(file_hash) + ', size ' + str(size) + ", error: " + str(e))
                 continue
 
+            Logger.write(2, "downloaded " + str(sub_id) + ", rating: " + sub['SubRating'])
+            subnr += 1
             Stats['subs_downloaded'].add(1)
 
             sub_data = base64.b64decode(sub_result['data'][0]['data'])
             sub_act_data = gzip.decompress(sub_data)
 
-            filename = self.sub_file_directory + sub['SubFileName']
+            filename = self.sub_file_directory + str(subnr) + "-" + sub['SubFileName']
+            self.sub_files.append(Subtitle(sub_id, filename, False))
+
             with open(filename, "wb") as f:
                 f.write(sub_act_data)
             f.close()
 
-            # Add to current media
-            self.start.player.set_subtitle_file(filename)
+            if subnr >= additional_subs:
+                break
 
-        time.sleep(1)
+        Logger.write(2, "Downloaded " + str(subnr) + " subtitle files")
+        self.add_subs()
+        EventManager.throw_event(EventType.SubsDoneChange, [True])
+        self.is_done = True
+
+    def add_subs(self):
+        to_add = [x for x in self.sub_files if not x.added]
+        if (self.start.player.state != PlayerState.Playing and self.start.player.state != PlayerState.Paused) or len(to_add) == 0:
+            return
+
+        # Add to current media
+        added = 0
+        for sub in to_add:
+            self.start.player.set_subtitle_file(sub.path)
+            added += 1
+            sub.added = True
+
+        Logger.write(2, "Added " + str(added) + " subtitle files")
         self.start.player.set_subtitle_track(2)
-        Logger.write(2, "Added " + str(len(sorted_subs[0:self.max_sub_files])) + " OpenSubtitles subtitle files")
 
+
+class Subtitle:
+
+    def __init__(self, id, path, added):
+        self.id = id
+        self.path = path
+        self.added = added

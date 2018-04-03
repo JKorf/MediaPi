@@ -8,7 +8,7 @@ from TorrentSrc.Util.Util import write_size
 
 class current_media:
 
-    def __init__(self, state, type, title, path, img, playing_for, play_time, volume, length, selected_sub, subtitles, sub_delay, audio_tracks, current_audio_track, buffered_percentage):
+    def __init__(self, state, type, title, path, img, playing_for, play_time, volume, length, selected_sub, subtitles, sub_delay, subs_done, audio_tracks, current_audio_track, buffered_percentage):
         self.state = state
         self.type = type
         self.title = title
@@ -18,6 +18,7 @@ class current_media:
         self.play_time = play_time
         self.volume = volume
         self.length = length
+        self.subs_done = subs_done
         self.selected_sub = selected_sub
         self.subtitles = subtitles
         self.subtitle_delay = sub_delay

@@ -40,6 +40,11 @@
                     });
                 }
 
+                $scope.searchAdditionalSubs = function(){
+                    $scope.playerState.subs_done = false
+                    $http.post("/player/search_subs");
+                }
+
                 $scope.playPause = function(){
                     $http.post("/player/pause_resume_player");
                     if ($scope.playerState.state == 'Playing')
@@ -131,6 +136,10 @@
                         }
                         if(event == "subtitle_id"){
                             $scope.playerState.selected_sub = parseInt(data);
+                        }
+                        if(event == "subs_done_change"){
+                            $scope.playerState.subs_done = data;
+                            RequestFactory.InvokeNow(playerInterval);
                         }
                         if(event == "subtitle_offset"){
                             $scope.playerState.subtitle_delay = parseFloat(data);

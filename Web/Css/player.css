@@ -391,3 +391,28 @@ player.open-settings{
 #html-player{
     display: none;
 }
+
+.player-subtitle-search{
+    margin-top: 10px;
+    background: #3d7ed3;
+
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    color: #fff;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    position: relative;
+    vertical-align: top;
+    cursor: pointer;
+    padding: 0 12px ;
+}
+
+.player-no-subs-text{
+    margin-left: 2px;
+}
+
+.player-subtitle-search-disable{
+    background: #aecbef;
+    cursor: not-allowed;
+}

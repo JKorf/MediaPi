@@ -26,7 +26,9 @@
 
     <div class="player-subtitles" ng-if="playerState.type != 'Radio'">
         <div class="player-settings-subtitle">Subtitles</div>
-        <div ng-if="playerState.subtitles.length == 0" class="player-no-subs">No subtitles available</div>
+        <div ng-if="playerState.subtitles.length == 0" class="player-no-subs">
+            <div class="player-no-subs-text">No subtitles available</div>
+        </div>
         <div ng-if="playerState.subtitles.length != 0" class="player-subs-wrapper">
             <div class="player-subtitle-delay">
                 <div class="player-subtitle-delay-min">-10s</div>
@@ -44,5 +46,7 @@
                 </div>
             </div>
         </div>
+        <div ng-if="playerState.state && playerState.state == 'Paused' || playerState.state == 'Playing'"
+                class="player-subtitle-search" ng-class="{'player-subtitle-search-disable': playerState.subs_done !== true }"  ng-click="searchAdditionalSubs()">Search for more subtitles</div>
     </div>
 </div>

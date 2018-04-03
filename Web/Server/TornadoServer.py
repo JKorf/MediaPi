@@ -51,6 +51,7 @@ class TornadoServer:
         EventManager.register_event(EventType.SetVolume, self.player_volume)
         EventManager.register_event(EventType.SetSubtitleId, self.player_subtitle_id)
         EventManager.register_event(EventType.SetSubtitleOffset, self.player_subtitle_offset)
+        EventManager.register_event(EventType.SubsDoneChange, self.player_subs_done_change)
         EventManager.register_event(EventType.Error, self.application_error)
 
     def start(self):
@@ -126,6 +127,10 @@ class TornadoServer:
         for client in self.clients:
             client.write_message(to_JSON(WebSocketMessage('player_event', 'subtitle_id', id)))
 
+    def player_subs_done_change(self, done):
+        for client in self.clients:
+            client.write_message(to_JSON(WebSocketMessage('player_event', 'subs_done_change', done)))
+
     def player_subtitle_offset(self, offset):
         for client in self.clients:
             client.write_message(to_JSON(WebSocketMessage('player_event', 'subtitle_offset', float(offset) / 1000 / 1000)))
@@ -166,8 +171,7 @@ class UtilHandler(web.RequestHandler):
     @gen.coroutine
     def post(self, url):
         if url == "save_settings":
-            UtilController.save_settings(self.get_argument("raspberry"), self.get_argument("gui"), self.get_argument("external_trackers"),
-                                         self.get_argument("yts_movie_api"), self.get_argument("os_subs"), self.get_argument("yify_subs"), self.get_argument("max_subs"))
+            UtilController.save_settings(self.get_argument("raspberry"), self.get_argument("gui"), self.get_argument("external_trackers"), self.get_argument("max_subs"))
         elif url == "shutdown":
             UtilController.shutdown(TornadoServer.start_obj)
         elif url == "restart_pi":
@@ -256,6 +260,8 @@ class PlayerHandler(web.RequestHandler):
             PlayerController.change_volume(self.get_argument("vol"))
         elif url == "change_subtitle_offset":
             PlayerController.change_subtitle_offset(self.get_argument("offset"))
+        elif url == "search_subs":
+            PlayerController.search_subs()
         elif url == "seek":
             PlayerController.seek(self.get_argument("pos"))
         elif url == "set_audio_id":

@@ -269,8 +269,9 @@ class Torrent:
                     self.media_file = fi
                 if ext == ".srt":
                     self.subtitles.append(fi)
-                    fi.path = base_folder + "/subs/" + last_path + ext
+                    fi.path = base_folder + "subs/" + last_path + ext
                 total_length += file_length
+                Logger.write(2, "File: " + fi.path)
         else:
             # Singlefile
             total_length = info_dict[b'length']

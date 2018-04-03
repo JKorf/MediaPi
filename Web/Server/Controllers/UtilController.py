@@ -29,7 +29,7 @@ class UtilController:
     def player_state(start):
         ret = [0, 5, 6]
         if start.player is None or start.player.get_state().value in ret:
-            return to_JSON(current_media(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, [], 0, 0)).encode('ascii')
+            return to_JSON(current_media(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)).encode('ascii')
 
         title = start.player.title
         if start.stream_torrent is not None and start.stream_torrent.metadata_manager.metadata_done:
@@ -52,6 +52,7 @@ class UtilController:
                               start.player.get_length(), start.player.get_selected_sub(),
                               start.player.get_subtitle_tracks(),
                               start.player.get_subtitle_delay() / 1000 / 1000,
+                              start.subtitle_provider.is_done,
                               start.player.get_audio_tracks(),
                               start.player.get_audio_track(),
                               percentage)

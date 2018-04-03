@@ -7,7 +7,6 @@ class PlayerController:
     @staticmethod
     def set_subtitle_file(file):
         Logger.write(2, "Setting subtitle file: " + file)
-        # file = file.replace('/', '\\')
         EventManager.throw_event(EventType.SetSubtitleFile, [file])
 
     @staticmethod
@@ -35,6 +34,11 @@ class PlayerController:
     def change_subtitle_offset(offset):
         Logger.write(2, "Change subtitle offset: " + offset)
         EventManager.throw_event(EventType.SetSubtitleOffset, [int(float(offset) * 1000 * 1000)])
+
+    @staticmethod
+    def search_subs():
+        Logger.write(2, "Search subs")
+        EventManager.throw_event(EventType.SearchAdditionalSubs, [])
 
     @staticmethod
     def seek(pos):
