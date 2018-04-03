@@ -118,6 +118,12 @@ class Version:
         self.version_number = version_number
 
 
+class StartUp:
+
+    def __init__(self, instance_name):
+        self.instance_name = instance_name
+
+
 class TorrentDetailModel:
 
     def __init__(self):

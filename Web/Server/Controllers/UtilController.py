@@ -14,7 +14,7 @@ from Shared.Stats import Stats
 from Shared.Util import to_JSON, parse_bool, RequestFactory, current_time
 from TorrentSrc.Util.Threading import ThreadManager
 from TorrentSrc.Util.Util import write_size
-from Web.Server.Models import DebugInfo, current_media, Version, Settings, Info, Status
+from Web.Server.Models import DebugInfo, current_media, Version, Settings, Info, Status, StartUp
 
 from TorrentSrc.Util.Enums import TorrentState
 
@@ -59,7 +59,6 @@ class UtilController:
 
     @staticmethod
     def debug(start):
-        # torrent = start.stream_torrent
         torrent = None
         if len(start.torrent_manager.torrents) > 0:
             torrent = start.torrent_manager.torrents[0]
@@ -102,7 +101,7 @@ class UtilController:
 
     @staticmethod
     def version():
-        return to_JSON(Version("01/12/2017", "1.6.3"))
+        return to_JSON(Version("03/04/2017", "1.64"))
 
     @staticmethod
     @gen.coroutine
@@ -155,6 +154,10 @@ class UtilController:
     def exit(start):
         Logger.write(3, "Exit")
         start.stop()
+
+    @staticmethod
+    def startup():
+        return to_JSON(StartUp(AppSettings.get_string("name")))
 
     @staticmethod
     def update(start):

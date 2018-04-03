@@ -16,14 +16,6 @@
         }
     });
 
-    angular.module('pi-test')
-    .run( [ '$rootScope', '$location', function ($rootScope, $location) {
-        $rootScope.$on('$stateChangeSuccess', function(event, to, toParams, from, fromParams) {
-            $rootScope.$previousState = from;
-            $rootScope.pageTitle = to.pageTitle;
-        });
-      }]);
-
     angular.module('pi-test').factory('Settings', function() {
         var genres = [
             "action",

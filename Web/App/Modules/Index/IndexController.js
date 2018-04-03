@@ -89,5 +89,14 @@
                 $("menu").removeClass("player-open");
             }
         }
+
+        function Init(){
+            $rootScope.pageTitle = "Mediaplayer";
+            $http.get("/util/startup").then(function (response) {
+                $rootScope.pageTitle = response.data.instance_name;
+            });
+        }
+
+        Init();
     });
 })();

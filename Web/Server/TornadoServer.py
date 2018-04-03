@@ -152,6 +152,8 @@ class UtilHandler(web.RequestHandler):
             self.finish()
         elif url == "debug":
             self.write(UtilController.debug(TornadoServer.start_obj))
+        elif url == "startup":
+            self.write(UtilController.startup())
         elif url == "info":
             self.write(UtilController.info())
         elif url == "get_settings":
@@ -329,67 +331,46 @@ class RealtimeHandler(websocket.WebSocketHandler):
 class DatabaseHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
+        if Settings.get_bool("slave"):
+            self.reroute_to_master()
+            return
+
         if url == "add_favorite":
-            if not Settings.get_bool("slave"):
-                Logger.write(2, "Adding to favorites")
-                TornadoServer.start_obj.database.add_favorite(self.get_argument("id"))
-            else:
-                urllib.request.urlopen(str(TornadoServer.master_ip) + "/add_favorites?id=" + self.get_argument("id"))
+            Logger.write(2, "Adding to favorites")
+            TornadoServer.start_obj.database.add_favorite(self.get_argument("id"))
 
         if url == "remove_favorite":
-            if not Settings.get_bool("slave"):
-                Logger.write(2, "Removing from favorites")
-                TornadoServer.start_obj.database.remove_favorite(self.get_argument("id"))
-            else:
-                urllib.request.urlopen(str(TornadoServer.master_ip) + "/remove_favorites?id=" + self.get_argument("id"))
+            Logger.write(2, "Removing from favorites")
+            TornadoServer.start_obj.database.remove_favorite(self.get_argument("id"))
 
         if url == "get_favorites":
-            if not Settings.get_bool("slave"):
-                Logger.write(2, "Getting favorites")
-                data = TornadoServer.start_obj.database.get_favorites()
-                self.write(to_JSON(data))
-            else:
-                self.write(urllib.request.urlopen(str(TornadoServer.master_ip) + "/get_favorites").read())
+            Logger.write(2, "Getting favorites")
+            self.write(to_JSON(TornadoServer.start_obj.database.get_favorites()))
 
         if url == "add_watched_file":
-            if not Settings.get_bool("slave"):
-                Logger.write(2, "Adding to watched files")
-                TornadoServer.start_obj.database.add_watched_file(self.get_argument("url"), self.get_argument("watchedAt"))
-            else:
-                urllib.request.urlopen(str(TornadoServer.master_ip) + "/add_watched_file?url=" + self.get_argument("url") + "&watchedAt=" + self.get_argument("watchedAt"))
+            Logger.write(2, "Adding to watched files")
+            TornadoServer.start_obj.database.add_watched_file(self.get_argument("url"), self.get_argument("watchedAt"))
 
         if url == "get_watched_files":
-            if not Settings.get_bool("slave"):
-                Logger.write(2, "Getting watched files")
-                data = TornadoServer.start_obj.database.get_watched_files()
-                self.write(to_JSON(data))
-            else:
-                self.write(urllib.request.urlopen(str(TornadoServer.master_ip) + "/get_watched_files").read())
+            Logger.write(2, "Getting watched files")
+            self.write(to_JSON(TornadoServer.start_obj.database.get_watched_files()))
 
         if url == "add_watched_episode":
-            if not Settings.get_bool("slave"):
-                Logger.write(2, "Adding to watched episodes")
-                TornadoServer.start_obj.database.add_watched_episode(
-                    self.get_argument("showId"),
-                    self.get_argument("showTitle"),
-                    self.get_argument("episodeSeason"),
-                    self.get_argument("episodeNumber"),
-                    self.get_argument("episodeTitle"),
-                    self.get_argument("showImage"),
-                    self.get_argument("watchedAt"))
-            else:
-                urllib.request.urlopen(str(TornadoServer.master_ip) + "/add_watched_episode?showId=" + self.get_argument("showId")
-                                       + "&showTitle=" + self.get_argument("showTitle")
-                                       + "&episodeSeason=" + self.get_argument("episodeSeason")
-                                       + "&episodeNumber=" + self.get_argument("episodeNumber")
-                                       + "&episodeTitle=" + self.get_argument("episodeTitle")
-                                       + "&showImage=" + self.get_argument("showImage")
-                                       + "&watchedAt=" + self.get_argument("watchedAt"))
+            Logger.write(2, "Adding to watched episodes")
+            TornadoServer.start_obj.database.add_watched_episode(
+                self.get_argument("showId"),
+                self.get_argument("showTitle"),
+                self.get_argument("episodeSeason"),
+                self.get_argument("episodeNumber"),
+                self.get_argument("episodeTitle"),
+                self.get_argument("showImage"),
+                self.get_argument("watchedAt"))
 
         if url == "get_watched_episodes":
-            if not Settings.get_bool("slave"):
                 Logger.write(2, "Getting watched episodes")
-                data = TornadoServer.start_obj.database.get_watched_episodes()
-                self.write(to_JSON(data))
-            else:
-                self.write(urllib.request.urlopen(str(TornadoServer.master_ip) + "/get_watched_episodes").read())
+                self.write(to_JSON(TornadoServer.start_obj.database.get_watched_episodes()))
+
+    def reroute_to_master(self):
+        reroute = str(TornadoServer.master_ip) + self.request.uri
+        Logger.write(2, "Sending request to master at " + reroute)
+        self.write(urllib.request.urlopen(reroute).read())

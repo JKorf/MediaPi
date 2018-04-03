@@ -1,5 +1,7 @@
+# Instance config
+name=Woonkamer
 slave=False
-master_ip=192.168.1.100
+master_ip=http://192.168.1.100:81
 
 # Paths
 log_folder=/home/pi/Scripts/Logs
