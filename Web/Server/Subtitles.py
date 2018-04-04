@@ -155,13 +155,12 @@ class SubtitleProvider:
 
         # Add to current media
         added = 0
-        for sub in to_add:
+        for sub in reversed(to_add):
             self.start.player.set_subtitle_file(sub.path)
             added += 1
             sub.added = True
 
         Logger.write(2, "Added " + str(added) + " subtitle files")
-        self.start.player.set_subtitle_track(2)
 
 
 class Subtitle:
