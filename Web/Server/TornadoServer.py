@@ -365,11 +365,8 @@ class DatabaseHandler(web.RequestHandler):
             Logger.write(2, "Adding to watched episodes")
             TornadoServer.start_obj.database.add_watched_episode(
                 self.get_argument("showId"),
-                self.get_argument("showTitle"),
                 self.get_argument("episodeSeason"),
                 self.get_argument("episodeNumber"),
-                self.get_argument("episodeTitle"),
-                self.get_argument("showImage"),
                 self.get_argument("watchedAt"))
 
         if url == "get_watched_episodes":

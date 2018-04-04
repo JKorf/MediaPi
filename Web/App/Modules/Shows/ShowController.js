@@ -29,6 +29,7 @@
 
         $scope.selectSeason = function(season){
             $scope.selectedSeason = season;
+            scrollToEpisode();
         }
 
         $scope.selectEpisode = function(episode){
@@ -42,7 +43,6 @@
         }
 
         $scope.selectResolution = function(res){
-            console.log(res);
             $scope.selectedResolution.resolution = res;
         }
 
@@ -66,7 +66,7 @@
             ConfirmationFactory.confirm_play().then(function(){
                 $http.post('/shows/play_episode?url=' + encodeURIComponent(episode.torrents[$scope.selectedResolution.resolution].url) + '&title=' + encodeURIComponent($scope.show.title) + '&img=' + encodeURIComponent($scope.show.images.poster));
 
-                EpisodesWatchedFactory.AddWatched($scope.show._id, $scope.show.title, episode.season, episode.episode, episode.title, $scope.show.images.poster, new Date());
+                EpisodesWatchedFactory.AddWatched($scope.show._id, episode.season, episode.episode, new Date());
                 EpisodesWatchedFactory.GetWatchedForShow($stateParams.id).then(function(data){
                     $scope.watched = data;
                 });
@@ -173,7 +173,32 @@
             if($scope.show.Seasons.length == 1)
                 $scope.selectedSeason = $scope.show.Seasons[0];
 
-            console.log($scope.show);
+            $timeout(function(){
+                $(".show-episode-view-seasons").scrollLeft(1000);
+            });
+        }
+
+        function scrollToEpisode(){
+            $timeout(function(){
+                var season = $scope.selectedSeason[0].season;
+                var highestEpisodeSeen = 1;
+                for(var i = 0 ; i < $scope.watched.length; i++){
+                    if($scope.watched[i].season != season)
+                        continue;
+
+                    if($scope.watched[i].episode > highestEpisodeSeen)
+                        highestEpisodeSeen = $scope.watched[i].episode;
+                }
+
+                var episodeNumbers = $(".show-episode-view-episode-number");
+                for(var i = 0; i < episodeNumbers.length; i++){
+                    if(episodeNumbers[i].innerText == (highestEpisodeSeen + ". "))
+                    {
+                        var offsetTop = $(episodeNumbers[i]).parent()[0].offsetTop + $(".show-episode-view-episodes")[0].offsetTop;
+                        $(".view").animate({scrollTop:offsetTop}, 200);
+                    }
+                }
+            });
         }
     });
 

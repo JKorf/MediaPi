@@ -32,11 +32,8 @@ class Database:
         self.connection.execute("CREATE TABLE Instances (Id INTEGER PRIMARY KEY, Name TEXT)")
         self.connection.execute("CREATE TABLE Favorites (Id INTEGER)")
         self.connection.execute("CREATE TABLE WatchedEpisodes (ShowId INTEGER, " +
-                                "ShowTitle TEXT, " +
                                 "EpisodeSeason INTEGER, " +
                                 "EpisodeNumber INTEGER, " +
-                                "EpisodeTitle TEXT, "
-                                "ShowImage TEXT, "
                                 "WatchedAt TEXT)")
         self.connection.execute("CREATE TABLE WatchedFiles (URL TEXT, WatchedAt TEXT)")
 
@@ -55,13 +52,12 @@ class Database:
         self.disconnect()
         return data
 
-    def add_watched_episode(self, showId, showTitle, episodeSeason, episodeNumber, episodeTitle, showImage, watchedAt):
+    def add_watched_episode(self, showId, episodeSeason, episodeNumber, watchedAt):
         self.connect()
 
         self.connection.execute("INSERT INTO WatchedEpisodes " +
-                                "(ShowId, ShowTitle, EpisodeSeason, EpisodeNumber, EpisodeTitle, ShowImage, WatchedAt)" +
-                                " VALUES ('" + str(showId) + "', '" + str(showTitle) + "', " + str(episodeSeason) + ", " +
-                                str(episodeNumber) + ", '" + str(episodeTitle) + "', '" + str(showImage) + "', '" + str(watchedAt) + "')")
+                                "(ShowId, EpisodeSeason, EpisodeNumber, WatchedAt)" +
+                                " VALUES ('" + str(showId) + "', " + str(episodeSeason) + ", " + str(episodeNumber) + ", '" + str(watchedAt) + "')")
 
         self.database.commit()
         self.disconnect()

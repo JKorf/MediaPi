@@ -48,9 +48,6 @@
             });
 
             var favs = FavoritesFactory.GetAll().then(function(favs){
-                console.log("Init favs home");
-                    console.log(favs);
-
                 for(var i = 0 ; i < favs.length ; i++){
                     CacheFactory.Get('/shows/get_show?id=' + favs[i], 900).then(function (response) {
                         DetermineLastEpisodeRelease(response);

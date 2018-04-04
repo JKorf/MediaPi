@@ -4,27 +4,24 @@
         var factory = {};
         var watched;
 
-        factory.AddWatched = function(showId, showTitle, epiSeason, epiNr, epiTitle, showImage, watchedAt){
+        factory.AddWatched = function(showId, epiSeason, epiNr, watchedAt){
             factory.GetWatched().then(function(){
                 var watchedShow = $.grep(watched, function(item){
                     return item.showId == showId;
                 });
 
                 $http.get("/database/add_watched_episode?showId=" + showId
-                        + "&showTitle=" + encodeURIComponent(showTitle)
                         + "&episodeSeason=" + epiSeason
                         + "&episodeNumber=" + epiNr
-                        + "&episodeTitle=" + encodeURIComponent(epiTitle)
-                        + "&showImage=" + encodeURIComponent(showImage)
-                        + "&watchedAt=" + encodeURIComponent(watchedAt));
+                         + "&watchedAt=" + encodeURIComponent(watchedAt));
 
                 if (watchedShow.length == 0){
                     // newly show started
-                    watched.push({showId: showId, showTitle: showTitle, episodes: [{season: epiSeason, episode: epiNr, episodeTitle: epiTitle, showImage: showImage, watchedAt: watchedAt}] });
+                    watched.push({showId: showId, episodes: [{season: epiSeason, episode: epiNr, watchedAt: watchedAt}] });
                     sort();
                 }else{
                     // add episode
-                    watchedShow[0].episodes.push({season: epiSeason, episode: epiNr, episodeTitle: epiTitle, showImage: showImage, watchedAt: watchedAt});
+                    watchedShow[0].episodes.push({season: epiSeason, episode: epiNr, watchedAt: watchedAt});
                     sort();
                 }
             });
@@ -43,21 +40,16 @@
                         if(watchedShow.length == 0){
                            watched.push({
                            showId: data.data[i][0],
-                           showTitle: data.data[i][1],
                            episodes: [
-                                {season: data.data[i][2],
-                                episode: data.data[i][3],
-                                episodeTitle: data.data[i][4],
-                                showImage: data.data[i][5],
-                                watchedAt: new Date(data.data[i][6])}] });
+                                {season: data.data[i][1],
+                                episode: data.data[i][2]}],
+                                watchedAt: new Date(data.data[i][3])});
                         }
                         else{
                             watchedShow[0].episodes.push({
-                                season: data.data[i][2],
-                                episode: data.data[i][3],
-                                episodeTitle: data.data[i][4],
-                                showImage: data.data[i][5],
-                                watchedAt: new Date(data.data[i][6])});
+                                season: data.data[i][1],
+                                episode: data.data[i][2],
+                                watchedAt: new Date(data.data[i][3])});
                         }
                     }
                     sort();
