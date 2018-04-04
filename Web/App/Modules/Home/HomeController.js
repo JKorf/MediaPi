@@ -32,7 +32,6 @@
         }
 
         $scope.goToFile = function(url){
-            url = url.substring(0, url.lastIndexOf("/") + 1);
             console.log(url);
             $state.go("hd", { path: url });
         }
