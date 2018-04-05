@@ -10,3 +10,16 @@ sudo pip3 install tornado
 sudo pip3 install psutil
 sudo apt-get install python3-pyqt4
 6.  Disable screensaver: sudo apt-get install xscreensaver -> menu preferences -> screensaver -> disable
+7.  Enable overclock/sound via hdmi: sudo nano /boot/config.txt
+	hdmi_group=1
+	hdmi_mode=19
+	arm_freq=1350
+	core_freq=500
+	over_voltage=4
+	disable_splash=1
+	gpu_mem=320
+	force_turbo=1
+	boot_delay=1
+
+
+	
