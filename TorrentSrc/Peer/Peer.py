@@ -82,4 +82,5 @@ class PeerCommunicationState:
         self.out_interest = PeerInterestedState.Uninterested
         self.in_interest = PeerInterestedState.Uninterested
 
-
+    def print(self):
+        return "Choke: Out " + str(self.out_choke) + ", In " + str(self.in_choke) + ", Interest: Out " + str(self.out_interest) + ", In " + str(self.in_interest)

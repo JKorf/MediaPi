@@ -12,16 +12,11 @@
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database
 
-    Meer subs kunnen downloaden via GUI als de 3 niet kloppen
-    Niet auto nieuwe sub aanzetten
-
     Zoeken verbeteren
     Download Queue verbeteren
         Niet verder dan x vooruit kijken bij het zoeken naar blocks to download
 
-
     speed graph
 
-    Meerdere mediaplayers:
-		Master met database
-		Slaves kunnen aan master database dingen vragen
+    Volgende aflevering van series automatisch afspelen
+    Bijhouden hoe ver in een aflevering je was? -> homepage verder gaan met

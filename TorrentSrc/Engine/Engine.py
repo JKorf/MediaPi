@@ -23,8 +23,7 @@ class Engine:
         self.overtime = 0
 
         self.timing = dict()
-        self.timing['ticks'] = 0
-        self.timing['engine'] = 0
+        self.own_time = TimingObject(self.name)
 
         self.event_id = EventManager.register_event(EventType.Log, self.log)
 
@@ -67,12 +66,7 @@ class Engine:
                 start_time = current_time()
                 result = work_item.action()
                 test_time = current_time()
-                work_item.last_run_duration = test_time - start_time
                 work_item.last_run_time = test_time
-                if self.tick_time > 100:
-                    if work_item.name not in self.timing:
-                        self.timing[work_item.name] = 0
-                    self.timing[work_item.name] += work_item.last_run_duration
 
                 if work_item.interval == -1:
                     self.work_items.remove(work_item)
@@ -80,28 +74,18 @@ class Engine:
                 elif not result:
                     self.work_items.remove(work_item)
 
-        if self.tick_time > 100:
-            if self.timing['ticks'] > 100:
-                if self.timing['engine'] / self.timing['ticks'] > self.tick_time:
-                    for key, value in self.timing.items():
-                        if key == "ticks":
-                            continue
-                        self.timing[key] = 0
-                self.timing['ticks'] = 0
-                self.timing['engine'] = 0
+                # if work_item.name not in self.timing:
+                #     self.timing[work_item.name] = TimingObject(work_item.name)
+                # self.timing[work_item.name].add_time(current_time() - start_time)
 
-            self.timing['ticks'] += 1
-            self.timing['engine'] += current_time() - tick_time
+        # self.own_time.add_time(current_time() - tick_time)
 
     def log(self):
-        if self.tick_time > 100 and self.timing['ticks'] > 0:
-            Logger.write(2, "Engine " + self.name + " time: " + str(self.timing['engine'] / self.timing['ticks']) + " of " + str(self.tick_time) + ", " + str(self.timing['ticks']) + " ticks")
+        if self.own_time.ticks > 1:
+            Logger.write(2, "Engine: " + self.own_time.print())
             for key, value in self.timing.items():
-                if key == "ticks":
-                    continue
+                Logger.write(2, "    " + value.print())
 
-                Logger.write(2, "Sub " + key + ": " + str(value / self.timing['ticks']))
-                self.timing[key] = 0
 
 class EngineWorkItem:
 
@@ -112,3 +96,19 @@ class EngineWorkItem:
         self.last_run_time = 0
         self.last_run_duration = 0
 
+
+class TimingObject:
+
+    def __init__(self, name):
+        self.name = name
+        self.ticks = 0
+        self.time = 0
+
+    def add_time(self, time):
+        self.ticks += 1
+        self.time += time
+
+    def print(self):
+        if self.ticks > 1:
+            return "Object " + self.name + " averages " + str(self.time/self.ticks) + "ms over " + str(self.ticks) + " ticks"
+        return "Object " + self.name + " no stats yet"

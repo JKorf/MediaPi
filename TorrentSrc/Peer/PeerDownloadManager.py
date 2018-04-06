@@ -4,10 +4,18 @@ from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import current_time
 from TorrentSrc.Peer.PeerMessages import RequestMessage
-from TorrentSrc.Util.Enums import ConnectionState, PeerSpeed, PeerInterestedState, PeerChokeState, TorrentState
+from TorrentSrc.Util.Enums import ConnectionState, PeerSpeed, PeerInterestedState, PeerChokeState
 
 
 class PeerDownloadManager:
+
+    @property
+    def max_blocks(self):
+        if self.peer.peer_speed == PeerSpeed.Low:
+            return self.low_peer_max_blocks
+        elif self.peer.peer_speed == PeerSpeed.Medium:
+            return self.medium_peer_max_blocks
+        return self.fast_peer_max_blocks
 
     def __init__(self, peer):
         self.peer = peer
@@ -15,7 +23,10 @@ class PeerDownloadManager:
         self.downloading = []
         self.lock = Lock()
 
-        self.max_blocks = Settings.get_int("peer_max_download_buffer") // Settings.get_int("block_size")
+        block_size = Settings.get_int("block_size")
+        self.low_peer_max_blocks = Settings.get_int("low_peer_max_download_buffer") // block_size
+        self.medium_peer_max_blocks = Settings.get_int("medium_peer_max_download_buffer") // block_size
+        self.fast_peer_max_blocks = Settings.get_int("fast_peer_max_download_buffer") // block_size
 
     def update(self):
         if self.peer.connection_manager.connection_state != ConnectionState.Connected:

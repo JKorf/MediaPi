@@ -11,15 +11,16 @@ update_source=/mnt/source/src/
 base_folder=/home/pi/Scripts/
 
 # Connections
-max_peers_connecting=30
-max_peers_connected=30
+max_peers_connecting=20
+max_peers_connected=15
 connection_timeout=2000
 peer_timeout=60000
 
 # Downloading
 block_size=16384
-peer_max_download_buffer=500000
-min_download_queue_size=30000000
+low_peer_max_download_buffer=200000
+medium_peer_max_download_buffer=500000
+fast_peer_max_download_buffer=1000000
 metadata_block_size=16384
 
 # Trackers
@@ -46,10 +47,8 @@ show_gui=False
 raspberry=False
 
 # DHT
-dht=False
+dht=True
 dht_request_interval=900000
 
 # Subtitles
-yify_subtitles=False
-OS_subtitles=True
 max_subtitles_files=3
