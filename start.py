@@ -8,7 +8,7 @@ from shutil import copytree, rmtree
 os.chdir(os.path.dirname(__file__))
 
 from Web.Server.Controllers.MovieController import MovieController
-from Database import Database
+from Database.Database import Database
 
 from TorrentSrc.TorrentManager import TorrentManager
 from TorrentSrc.Util.Stats import PyStats

@@ -12,7 +12,6 @@
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database
 
-    Zoeken verbeteren
     Download Queue verbeteren
         Niet verder dan x vooruit kijken bij het zoeken naar blocks to download
 

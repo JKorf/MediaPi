@@ -1,0 +1,1 @@
+CREATE TABLE UnfinishedTorrents (Id INTEGER PRIMARY KEY, URL TEXT, TimeSeconds INTEGER, WatchedAt TEXT);
