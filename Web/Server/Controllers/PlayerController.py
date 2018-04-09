@@ -43,7 +43,7 @@ class PlayerController:
     @staticmethod
     def seek(pos):
         Logger.write(2, "Seek " + pos)
-        EventManager.throw_event(EventType.InitialSeeking, [int(float(pos)) * 1000])
+        EventManager.throw_event(EventType.Seek, [int(float(pos)) * 1000])
 
     @staticmethod
     def set_audio_track(track):

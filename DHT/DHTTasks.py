@@ -66,7 +66,7 @@ class InitializeTask:
     def find_node_completed(self, response_received, message_wrapper):
         self.outstanding_requests -= 1
         if response_received:
-            if b'nodes' in message_wrapper.message.response:
+            if message_wrapper.message.response and b'nodes' in message_wrapper.message.response:
                 self.find_node(Node.from_bytes_multiple(message_wrapper.message.nodes))
         if self.outstanding_requests == 0:
             Logger.write(2, "DHT: Initialize done")

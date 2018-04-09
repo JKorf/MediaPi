@@ -9,6 +9,8 @@ import math
 
 from shutil import rmtree
 
+from InterfaceSrc.VLCPlayer import PlayerState
+from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from TorrentSrc.Engine import Engine
@@ -124,10 +126,13 @@ class Torrent:
         self.output_mode = output_mode
         self.__lock = Lock()
         self.media_file = None
+        self.media_metadata_done = False
         self.subtitles = []
         self.stream_file_hash = None
         self.to_download_bytes = 0
         self.outstanding_requests = 0
+
+        self.player_event_id = EventManager.register_event(EventType.PlayerStateChange, self.player_change)
 
         self.engine = Engine.Engine('Main Engine', Settings.get_int("main_engine_tick_rate"))
         self.download_counter = Counter()
@@ -139,6 +144,10 @@ class Torrent:
         self.output_manager = TorrentOutputManager(self)
         self.metadata_manager = TorrentMetadataManager(self)
         self.network_manager = TorrentNetworkManager(self)
+
+    def player_change(self, old, new):
+        if new == PlayerState.Playing:
+            self.media_metadata_done = True
 
     @classmethod
     def create_torrent(cls, id, url, output_mode):
@@ -338,6 +347,8 @@ class Torrent:
 
     def stop(self):
         Logger.write(2, 'Torrent stopping')
+        EventManager.deregister_event(self.player_event_id)
+
         self.engine.stop()
         self.output_manager.stop()
         self.peer_manager.stop()

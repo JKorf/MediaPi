@@ -107,7 +107,7 @@ class DHTSocket:
             self.socket.sendto(message_wrapper.message.to_bytes(), (message_wrapper.node.ip, message_wrapper.node.port))
         except OSError:
             for handler in self.on_waiting_done:
-                handler[1](True, message_wrapper)
+                handler[1](False, message_wrapper)
             return
 
         self.last_send = current_time()

@@ -38,29 +38,35 @@ class StreamManager:
         self.listener = StreamListener(torrent, 50009)
         self.buffer = None
         self.end_piece = 0
+        self.piece_count_end_buffer = 0
         self.init = False
         self.start_buffer = 0
         self.last_request = 0
-        self.seeking = False
         self.seek_start = 0
         self.initial_play = False
+        self.seek_lock = Lock()
 
         self.max_in_buffer = Settings.get_int("max_bytes_ready_in_buffer")
         self.max_in_buffer_threshold = Settings.get_int("max_bytes_reached_threshold")
         self.stream_tolerance = Settings.get_int("stream_pause_tolerance")
 
-        self.seek_event_id = EventManager.register_event(EventType.ProcessSeeking, self.seek)
-        self.player_event_id = EventManager.register_event(EventType.PlayerStateChange, self.player_change)
-
+        self.request_event_id = EventManager.register_event(EventType.NewRequest, self.new_request)
         self.listener.start_listening()
 
-    def seek(self):
-        self.seek_start = current_time()
-        self.seeking = True
+    def new_request(self, byte_position):
+        if self.torrent.media_metadata_done:
+            self.seek_lock.acquire()
+            old_stream_pos = self.stream_position_piece_index
+            new_index = int(math.floor(byte_position / self.torrent.piece_length))
+            self.stream_position_piece_index = new_index
 
-    def player_change(self, old_state, new_state):
-        if new_state == PlayerState.Playing:
-            self.initial_play = True
+            self.buffer.last_consecutive_piece_dirty = True
+            self.buffer.update_consecutive()
+
+            self.torrent.download_manager.seek(old_stream_pos, self.stream_position_piece_index)
+            if self.torrent.state == TorrentState.Done:
+                self.torrent.unpause()
+            self.seek_lock.release()
 
     def update(self):
         if self.torrent.state == TorrentState.DownloadingMetaData:
@@ -69,6 +75,8 @@ class StreamManager:
         if not self.init:
             self.init = True
             self.end_piece = int(math.floor(self.torrent.media_file.end_byte / self.torrent.piece_length))
+            self.piece_count_end_buffer = math.ceil(
+                Settings.get_int("stream_end_buffer") / self.torrent.piece_length)
             self.buffer = StreamBuffer(self, self.torrent.piece_length)
 
         if self.consecutive_pieces_total_length >= self.max_in_buffer \
@@ -96,24 +104,13 @@ class StreamManager:
         if not self.init:
             return None
 
+        self.seek_lock.acquire()
         new_index = int(math.floor(start_byte / self.torrent.piece_length))
         old_stream_pos = self.stream_position_piece_index
 
-        if self.seeking:
-            if self.seek_start + 2000 > current_time():
-                pass
-            else:
-                Logger.write(2, "Seeking for byte " + str(start_byte))
-                self.stream_position_piece_index = new_index
-                self.seeking = False
-
-                self.buffer.last_consecutive_piece_dirty = True
-                self.buffer.update_consecutive()
-
-                self.torrent.download_manager.seek(old_stream_pos, self.stream_position_piece_index)
-                if self.torrent.state == TorrentState.Done:
-                    self.torrent.unpause()
-        elif self.initial_play:
+        if new_index > self.end_piece - self.piece_count_end_buffer:
+            pass # don't change when in end buffer, we should have activated end game by then and we don't change stream pos vlc looks for metadata
+        else:
             self.stream_position_piece_index = new_index
 
         if self.stream_position_piece_index != old_stream_pos:
@@ -122,13 +119,14 @@ class StreamManager:
 
         success, data = self.buffer.get_data_for_stream(start_byte, length)
         self.last_request = start_byte
+        self.seek_lock.release()
         return data
 
     def write_piece(self, piece):
         self.buffer.write_piece(piece)
 
     def stop(self):
-        EventManager.deregister_event(self.seek_event_id)
+        EventManager.deregister_event(self.request_event_id)
         self.listener.stop()
 
 
@@ -150,9 +148,6 @@ class StreamBuffer:
         self.last_consecutive_piece_dirty = True
         self.end_piece = math.ceil(
             self.stream_manager.torrent.media_file.end_byte / self.stream_manager.torrent.piece_length)
-        self.piece_count_end_buffer = math.ceil(
-            Settings.get_int("stream_end_buffer") / self.stream_manager.torrent.piece_length)
-        self.buffer_end_start_piece = self.end_piece - self.piece_count_end_buffer
 
     def get_consecutive_bytes_in_buffer(self, start_from):
         self.update_consecutive()

@@ -35,11 +35,6 @@ class StreamListener:
         self.bytes_send = 0
         self.seeking = False
 
-        self.seek_event_id = EventManager.register_event(EventType.InitialSeeking, self.seek)
-
-    def seek(self, pos):
-        self.seeking = True
-
     def start_listening(self):
         self.thread = CustomThread(self.server.start, "Stream listener")
         self.running = True
@@ -49,11 +44,6 @@ class StreamListener:
         self.last_request_id = random.randint(0, 99999999)
         self.request_count += 1
         Logger.write(2, "New request, now " + str(self.request_count) + " connections")
-
-        if self.seeking:
-            self.seeking = False
-            Logger.write(2, "New request; processing seek")
-            EventManager.throw_event(EventType.ProcessSeeking, [])
 
         try:
             total_message = b''
@@ -81,7 +71,11 @@ class StreamListener:
 
         if header.range_end == 0 or header.range_end == -1:
             header.range_end = self.torrent.media_file.length - 1
+        range_start = 0
+        if header.range:
+            range_start = header.range_start
 
+        EventManager.throw_event(EventType.NewRequest, [range_start])
         if header.range is None:
             Logger.write(2, 'request without range')
             self.write_header(socket, "200 OK", 0, header.range_end)
@@ -155,7 +149,6 @@ class StreamListener:
 
     def stop(self):
         self.running = False
-        EventManager.deregister_event(self.seek_event_id)
         if self.server is not None:
             self.server.close()
 

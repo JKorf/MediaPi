@@ -55,7 +55,10 @@ class TorrentDownloadManager:
         if full:
             amount = len(self.torrent.data_manager.pieces)
 
-        pieces_to_look_at = self.torrent.data_manager.pieces[self.torrent.stream_position: self.torrent.stream_position + amount]
+        start = self.torrent.stream_position
+        if full:
+            start = 0
+        pieces_to_look_at = self.torrent.data_manager.pieces[start: start + amount]
         for piece in pieces_to_look_at:
             piece.priority = self.prioritizer.prioritize_piece_index(piece.index)
         if full:

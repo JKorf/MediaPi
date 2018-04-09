@@ -14,6 +14,7 @@ class StreamPrioritizer:
         self.stream_end_buffer_pieces = 0
         self.stream_play_buffer_high_priority = 0
         self.subtitle_pieces = []
+        self.max_chunk_size = Settings.get_int("max_chunk_size")
 
     def prioritize_piece_index(self, piece_index):
         if not self.init_done:
@@ -41,11 +42,11 @@ class StreamPrioritizer:
         if dif < 0:
             return 0
 
-        if piece_index >= self.stream_end_buffer_pieces:
-            return 99
+        if not self.torrent.media_metadata_done and piece_index >= self.stream_end_buffer_pieces:
+            return 101 - ((self.end_piece - piece_index) / 1000) # Second highest prio on start, to be able to return metadata at end of file
 
-        if piece_index == self.start_piece:
-            return 101
+        if piece_index <= self.start_piece + math.ceil(self.max_chunk_size / self.torrent.piece_length):
+            return 101 # Highest prio on start, to be able to return the first data
 
         if self.torrent.end_game:
             return 100

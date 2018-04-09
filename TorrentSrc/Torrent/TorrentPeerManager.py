@@ -32,7 +32,6 @@ class TorrentPeerManager:
         self.fast_peers = 0
         self.disconnect_peer_timeout = 0
 
-        self.seek_event_id = EventManager.register_event(EventType.ProcessSeeking, self.handle_seek)
         EventManager.register_event(EventType.Log, self.log_peers)
 
         self.high_speed_peers = 0
@@ -42,9 +41,6 @@ class TorrentPeerManager:
         Logger.write(2, "PEERS")
         for peer in self.connected_peers:
             Logger.write(2, str(peer.id) + " | " + peer.communication_state.print() + " | " + str(peer.peer_speed) + "("+ write_size(peer.counter.value) + ")" + " | Outstanding: " + str(len(peer.download_manager.downloading)))
-
-    def handle_seek(self):
-        self.disconnect_peer_timeout = current_time() + 60000
 
     def add_potential_peers_from_ip_port(self, data):
         for ip, port in data:
@@ -176,8 +172,6 @@ class TorrentPeerManager:
         return self.high_speed_peers > 0 or self.medium_speed_peers > 1
 
     def stop(self):
-        EventManager.deregister_event(self.seek_event_id)
-
         for peer in self.connecting_peers:
             peer.stop()
         for peer in self.connected_peers:

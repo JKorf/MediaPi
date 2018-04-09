@@ -135,7 +135,7 @@ class StartUp:
         EventManager.register_event(EventType.StopPlayer, self.stop_player)
         EventManager.register_event(EventType.PauseResumePlayer, self.pause_resume_player)
         EventManager.register_event(EventType.SetVolume, self.set_volume)
-        EventManager.register_event(EventType.InitialSeeking, self.seek)
+        EventManager.register_event(EventType.Seek, self.seek)
 
         EventManager.register_event(EventType.SetSubtitleFile, self.set_subtitle_file)
         EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_id)
@@ -159,6 +159,7 @@ class StartUp:
         EventManager.throw_event(EventType.PlayerStateChange, [prev_state, new_state])
         if new_state == PlayerState.Ended:
             if self.stream_torrent is not None:
+                Logger.write(2, "Ended " + self.stream_torrent.media_file.name)
                 self.torrent_manager.remove_torrent(self.stream_torrent.id)
             if self.player.type != "YouTube":
                 thread = CustomThread(self.stop_player, "Stopping player")

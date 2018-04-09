@@ -6,8 +6,7 @@ from Shared.Logger import Logger
 
 
 class EventType(Enum):
-    InitialSeeking = 1,
-    ProcessSeeking = 26
+    Seek = 1,
     IMDbKnown = 2,
     StreamFileHashKnown = 3,
 
@@ -46,6 +45,8 @@ class EventType(Enum):
     StreamTorrentStarted = 29,
     StreamTorrentStopped = 30,
     StopStreamTorrent = 31,
+
+    NewRequest = 35
 
 
 class EventManager:

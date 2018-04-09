@@ -20,3 +20,5 @@
 
     Volgende aflevering van series automatisch afspelen
     Bijhouden hoe ver in een aflevering je was? -> homepage verder gaan met
+
+    Harde schijf niet hoeven verplaatsen

@@ -47,7 +47,7 @@ class TornadoServer:
 
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_changed)
         EventManager.register_event(EventType.PlayerError, self.player_error)
-        EventManager.register_event(EventType.InitialSeeking, self.player_seeking)
+        EventManager.register_event(EventType.Seek, self.player_seeking)
         EventManager.register_event(EventType.SetVolume, self.player_volume)
         EventManager.register_event(EventType.SetSubtitleId, self.player_subtitle_id)
         EventManager.register_event(EventType.SetSubtitleOffset, self.player_subtitle_offset)
