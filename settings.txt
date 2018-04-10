@@ -11,7 +11,7 @@ update_source=/mnt/source/src/
 base_folder=/home/pi/Scripts/
 
 # Connections
-max_peers_connecting=20
+max_peers_connecting=30
 max_peers_connected=15
 connection_timeout=2000
 peer_timeout=60000

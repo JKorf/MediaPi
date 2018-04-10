@@ -18,11 +18,11 @@ class TorrentDownloadManager:
 
         self.init = False
         self.prio = False
+        self.reprio_after_media_meta_done = False
         self.queue = []
         self.queue_lock = Lock()
         self.slow_peer_block_offset = 0
         self.ticks = 0
-        self.ticks_prio = 0
 
         self.download_mode = DownloadMode.Full
         self.peers_per_piece = [
@@ -51,6 +51,11 @@ class TorrentDownloadManager:
         if lock:
             self.queue_lock.acquire()
 
+        if not self.reprio_after_media_meta_done and self.torrent.media_metadata_done:
+            # Do a full reprioritize after media metadata is done
+            self.reprio_after_media_meta_done = True
+            full = True
+
         amount = 100
         if full:
             amount = len(self.torrent.data_manager.pieces)
@@ -64,17 +69,13 @@ class TorrentDownloadManager:
         if full:
             self.queue = sorted(self.queue, key=lambda x: self.torrent.data_manager.pieces[x.block.piece_index].priority, reverse=True)
 
-        if self.ticks_prio > 2:
-            self.ticks_prio = 0
-
-            if self.queue:
-                block_download = self.queue[0]
-                Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + "("+str(self.torrent.data_manager.pieces[block_download.block.piece_index].priority)+"%)")
+        if self.queue:
+            block_download = self.queue[0]
+            Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + "("+str(self.torrent.data_manager.pieces[block_download.block.piece_index].priority)+"%)")
 
         if lock:
             self.queue_lock.release()
         self.prio = True
-        self.ticks_prio += 1
 
         return True
 

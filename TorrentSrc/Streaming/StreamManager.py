@@ -109,6 +109,7 @@ class StreamManager:
         old_stream_pos = self.stream_position_piece_index
 
         if new_index > self.end_piece - self.piece_count_end_buffer:
+            self.torrent.media_metadata_done = True
             pass # don't change when in end buffer, we should have activated end game by then and we don't change stream pos vlc looks for metadata
         else:
             self.stream_position_piece_index = new_index
