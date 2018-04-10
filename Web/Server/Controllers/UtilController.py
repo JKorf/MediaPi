@@ -32,9 +32,6 @@ class UtilController:
             return to_JSON(current_media(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)).encode('ascii')
 
         title = start.player.title
-        if start.stream_torrent is not None and start.stream_torrent.metadata_manager.metadata_done:
-            title = start.stream_torrent.name
-
         percentage = 0
         if start.stream_torrent is not None and start.stream_torrent.media_file is not None:
             buffered = start.stream_torrent.bytes_ready_in_buffer
@@ -102,7 +99,7 @@ class UtilController:
 
     @staticmethod
     def version():
-        return to_JSON(Version("03/04/2017", "1.64"))
+        return to_JSON(Version("10/04/2017", "1.6.5"))
 
     @staticmethod
     @gen.coroutine

@@ -373,6 +373,10 @@ class DatabaseHandler(web.RequestHandler):
                 Logger.write(2, "Getting watched episodes")
                 self.write(to_JSON(TornadoServer.start_obj.database.get_watched_episodes()))
 
+        if url == "get_unfinished_torrents":
+                Logger.write(2, "Getting unfinished torrents")
+                self.write(to_JSON(TornadoServer.start_obj.database.get_watching_torrents()))
+
     def reroute_to_master(self):
         reroute = str(TornadoServer.master_ip) + self.request.uri
         Logger.write(2, "Sending request to master at " + reroute)

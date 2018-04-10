@@ -1,6 +1,6 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('HomeController', function ($scope, $rootScope, $http, $state, $timeout, EpisodesWatchedFactory, FilesWatchedFactory, FavoritesFactory, CacheFactory) {
+    angular.module('pi-test').controller('HomeController', function ($scope, $rootScope, $http, $state, $timeout, UnfinishedFactory, EpisodesWatchedFactory, FilesWatchedFactory, FavoritesFactory, CacheFactory) {
         $scope.lastWatched = [];
         $scope.favorites = [];
 
@@ -43,6 +43,17 @@
         Init();
 
         function Init(){
+            UnfinishedFactory.GetUnfinished().then(function(data){
+                if(data.length > 0){
+                    data.sort(function(a, b) {
+                        a = new Date(a.watchedAt);
+                        b = new Date(b.watchedAt);
+                        return a>b ? -1 : a<b ? 1 : 0;
+                    });
+                }
+                $scope.unfinished = data;
+            });
+
             EpisodesWatchedFactory.GetWatched().then(function(data){
                 $scope.watchedEpisodes = data;
             });

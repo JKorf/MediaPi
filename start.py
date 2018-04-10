@@ -120,6 +120,12 @@ class StartUp:
                     if torrent.download_counter.max > current:
                         Stats['max_download_speed'].set(torrent.download_counter.max)
 
+                # Update time for resuming
+                if self.player.get_position() > 0 and self.player.get_length() - self.player.get_position() < 30:
+                    self.database.remove_watching_torrent(self.stream_torrent.uri)
+                else:
+                    self.database.update_watching_torrent(self.stream_torrent.uri, self.player.get_position())
+
             time.sleep(5)
 
     def init_folders(self):
@@ -157,6 +163,9 @@ class StartUp:
     def player_state_change(self, prev_state, new_state):
         Logger.write(2, "State change from " + str(prev_state) + " to " + str(new_state))
         EventManager.throw_event(EventType.PlayerStateChange, [prev_state, new_state])
+        if self.stream_torrent is not None and new_state == PlayerState.Playing:
+            self.database.add_watching_torrent(self.player.title, self.stream_torrent.uri, self.player.img, self.player.get_length(), current_time())
+
         if new_state == PlayerState.Ended:
             if self.stream_torrent is not None:
                 Logger.write(2, "Ended " + self.stream_torrent.media_file.name)

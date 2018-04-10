@@ -1,4 +1,21 @@
-﻿<div class="view-home sub-view" >
+﻿<div class="view-home sub-view">
+    <div class="list-holder" ng-if="unfinished.length > 0">
+        <div class="list-title">Continue with</div>
+        <div class="list-item-wrapper continue">
+            <div class="list-item" ng-repeat="uf in unfinished" ng-click="continue(uf)">
+                <div class="list-image">
+                    <protected-img imgclass="list-image-img" src="uf.image"></protected-img>
+                </div>
+                <div class="list-show-info">
+                    <div class="list-info-title truncate"></div>
+                    <div class="list-info-subtitle">{{uf.name}}</div>
+                </div>
+                <unfinished-line percentage="uf.position / uf.length"></unfinished-line>
+            </div>
+        </div>
+        <div class="list-more-fade"></div>
+    </div>
+
     <div class="list-holder">
         <div class="list-title">Favorite shows</div>
         <div class="list-item-wrapper favorites">

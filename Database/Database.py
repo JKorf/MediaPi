@@ -2,6 +2,7 @@ import os
 import pathlib
 
 import sqlite3
+from threading import Lock
 
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -14,8 +15,10 @@ class Database:
         self.database = None
         self.connection = None
         self.current_version = 1
+        self.lock = Lock()
 
     def init_database(self):
+        self.lock.acquire()
         database_exists = os.path.isfile(self.path)
 
         if not database_exists:
@@ -25,6 +28,7 @@ class Database:
             self.disconnect()
 
         self.check_migration()
+        self.lock.release()
 
     def connect(self):
         self.database = sqlite3.connect(self.path)
@@ -68,21 +72,26 @@ class Database:
         self.connection.executescript(data)
 
     def add_watched_file(self, url, watchedAt):
+        self.lock.acquire()
         self.connect()
 
         self.connection.execute("INSERT INTO WatchedFiles (URL, WatchedAt) VALUES ('" + str(url) + "', '"+watchedAt+"')")
 
         self.database.commit()
         self.disconnect()
+        self.lock.release()
 
     def get_watched_files(self):
+        self.lock.acquire()
         self.connect()
         self.connection.execute('SELECT * FROM WatchedFiles')
         data = self.connection.fetchall()
         self.disconnect()
+        self.lock.release()
         return data
 
     def add_watched_episode(self, showId, episodeSeason, episodeNumber, watchedAt):
+        self.lock.acquire()
         self.connect()
 
         self.connection.execute("INSERT INTO WatchedEpisodes " +
@@ -91,55 +100,94 @@ class Database:
 
         self.database.commit()
         self.disconnect()
+        self.lock.release()
 
     def get_watched_episodes(self):
+        self.lock.acquire()
         self.connect()
         self.connection.execute('SELECT * FROM WatchedEpisodes')
         data = self.connection.fetchall()
         self.disconnect()
+        self.lock.release()
         return data
 
     def add_favorite(self, id):
+        self.lock.acquire()
         self.connect()
 
         self.connection.execute("INSERT INTO Favorites (Id) VALUES ('" + str(id) + "')")
 
         self.database.commit()
         self.disconnect()
+        self.lock.release()
 
     def remove_favorite(self, id):
+        self.lock.acquire()
         self.connect()
 
         self.connection.execute("DELETE FROM Favorites WHERE Id = '"+str(id)+"'")
 
         self.database.commit()
         self.disconnect()
+        self.lock.release()
 
     def get_favorites(self):
+        self.lock.acquire()
         self.connect()
         self.connection.execute('SELECT * FROM Favorites')
         data = self.connection.fetchall()
         self.disconnect()
+        self.lock.release()
         return [x[0] for x in data]
 
-    def add_watching_torrent(self, url, time):
-        self.connect()
+    def add_watching_torrent(self, name, url, image, length, time):
+        if len(self.get_watching_torrent(url)) > 0:
+            return
 
-        self.connection.execute("INSERT INTO UnfinishedTorrents (Url, TimeSeconds, WatchedAt) VALUES ('" + url + "', 0, '" + str(time) + "')")
+        self.lock.acquire()
+        self.connect()
+        self.connection.execute("INSERT INTO UnfinishedTorrents (Url, Name, Image, Time, Length, WatchedAt) " +
+                                "VALUES (?, ?, ?, ?, ?, ?)", [url, name, image, 0, str(length), str(time)])
 
         self.database.commit()
         self.disconnect()
+        self.lock.release()
+
+    def get_watching_torrent(self, url):
+        self.lock.acquire()
+        self.connect()
+
+        self.connection.execute("SELECT * FROM UnfinishedTorrents WHERE Url='"+url+"'")
+        data = self.connection.fetchall()
+        self.database.commit()
+        self.disconnect()
+        self.lock.release()
+        return data
+
+    def get_watching_torrents(self):
+        self.lock.acquire()
+        self.connect()
+
+        self.connection.execute("SELECT * FROM UnfinishedTorrents")
+        data = self.connection.fetchall()
+        self.database.commit()
+        self.disconnect()
+        self.lock.release()
+        return data
 
     def update_watching_torrent(self, url, time):
+        self.lock.acquire()
         self.connect()
 
         self.connection.execute(
-            "UPDATE UnfinishedTorrents SET TimeSeconds="+str(time)+" WHERE URL='"+url+"'")
+            "UPDATE UnfinishedTorrents SET Time="+str(time)+" WHERE URL='"+url+"'")
 
         self.database.commit()
         self.disconnect()
+        self.lock.release()
 
     def remove_watching_torrent(self, url):
+        self.lock.acquire()
         self.connect()
 
         self.connection.execute(
@@ -147,3 +195,4 @@ class Database:
 
         self.database.commit()
         self.disconnect()
+        self.lock.release()

@@ -64,7 +64,8 @@
 
         $scope.watchEpisode = function(episode){
             ConfirmationFactory.confirm_play().then(function(){
-                $http.post('/shows/play_episode?url=' + encodeURIComponent(episode.torrents[$scope.selectedResolution.resolution].url) + '&title=' + encodeURIComponent($scope.show.title) + '&img=' + encodeURIComponent($scope.show.images.poster));
+                var title = "[S"+addLeadingZero(episode.season)+"E"+addLeadingZero(episode.episode)+"]" + encodeURIComponent(" " + $scope.show.title);
+                $http.post('/shows/play_episode?url=' + encodeURIComponent(episode.torrents[$scope.selectedResolution.resolution].url) + '&title=' + title + '&img=' + encodeURIComponent($scope.show.images.poster));
 
                 EpisodesWatchedFactory.AddWatched($scope.show._id, episode.season, episode.episode, new Date());
                 EpisodesWatchedFactory.GetWatchedForShow($stateParams.id).then(function(data){
@@ -103,6 +104,12 @@
         }
 
         Init();
+
+        function addLeadingZero(target){
+            if(target < 10)
+                return "0" + target;
+            return target;
+        }
 
         function Init(){
             FavoritesFactory.GetAll().then(function(data) {

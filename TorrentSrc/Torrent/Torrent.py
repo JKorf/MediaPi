@@ -110,9 +110,10 @@ class Torrent:
             return True
         return False
 
-    def __init__(self, id, output_mode):
+    def __init__(self, id, uri, output_mode):
         self.name = None
         self.id = id
+        self.uri = uri
         self.total_size = 0
         self.uploaded = 0
         self.piece_length = 0
@@ -159,14 +160,14 @@ class Torrent:
             return Torrent.from_file(id, url, output_mode)
 
     @classmethod
-    def from_torrent_url(cls, id, url, output_mode):
-        torrent = Torrent(id, output_mode)
+    def from_torrent_url(cls, id, uri, output_mode):
+        torrent = Torrent(id, uri, output_mode)
         torrent.from_magnet = False
         try:
-            request = urllib.request.Request(urllib.parse.unquote_plus(url), None, headers)
+            request = urllib.request.Request(urllib.parse.unquote_plus(uri), None, headers)
             file = urllib.request.urlopen(request).read()
         except:
-            Logger.write(3, "Error downloading torrent file: " + urllib.parse.unquote_plus(url), 'error')
+            Logger.write(3, "Error downloading torrent file: " + urllib.parse.unquote_plus(uri), 'error')
             return False, torrent
 
         try:
@@ -187,7 +188,7 @@ class Torrent:
 
     @classmethod
     def from_file(cls, id, file_path, output_mode):
-        torrent = Torrent(id, output_mode)
+        torrent = Torrent(id, file_path, output_mode)
         torrent.from_magnet = False
         try:
             file = open(file_path, 'rb')
@@ -213,7 +214,7 @@ class Torrent:
 
     @classmethod
     def from_magnet(cls, id, uri, output_mode):
-        torrent = Torrent(id, output_mode)
+        torrent = Torrent(id, uri, output_mode)
         torrent.from_magnet = True
         if not torrent.parse_magnet_uri(uri):
             return False, torrent
@@ -295,7 +296,8 @@ class Torrent:
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
         self.state = TorrentState.Downloading
         self.to_download_bytes = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
-        Logger.write(2, "To download: " + str(self.to_download_bytes))
+        Logger.write(2, "To download: " + str(self.to_download_bytes) + ", piece length: " + str(self.piece_length))
+        Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte))
         Logger.write(3, "Torrent metadata read")
 
     def parse_torrent_file(self, decoded_dict):

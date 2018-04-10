@@ -768,3 +768,15 @@ input[type="range"]::-webkit-slider-thumb {
     bottom: 0;
     overflow: hidden;
 }
+
+.unfinished-line-outer{
+    height: 6px;
+    background: #ccc;
+    width: 100%;
+}
+
+.unfinished-line{
+    background: #0071bc;
+    min-width: 10px;
+    height: 6px;
+}
