@@ -38,7 +38,7 @@ class StreamManager:
         self.listener = StreamListener(torrent, 50009)
         self.buffer = None
         self.end_piece = 0
-        self.piece_count_end_buffer = 0
+        self.piece_count_end_buffer_tolerance = 0
         self.init = False
         self.start_buffer = 0
         self.last_request = 0
@@ -75,8 +75,8 @@ class StreamManager:
         if not self.init:
             self.init = True
             self.end_piece = int(math.floor(self.torrent.media_file.end_byte / self.torrent.piece_length))
-            self.piece_count_end_buffer = math.ceil(
-                Settings.get_int("stream_end_buffer") / self.torrent.piece_length)
+            self.piece_count_end_buffer_tolerance = math.ceil(
+                Settings.get_int("stream_end_buffer_tolerance") / self.torrent.piece_length)
             self.buffer = StreamBuffer(self, self.torrent.piece_length)
 
         if self.consecutive_pieces_total_length >= self.max_in_buffer \
@@ -108,11 +108,19 @@ class StreamManager:
         new_index = int(math.floor(start_byte / self.torrent.piece_length))
         old_stream_pos = self.stream_position_piece_index
 
-        if new_index > self.end_piece - self.piece_count_end_buffer:
-            self.torrent.media_metadata_done = True
-            pass # don't change when in end buffer, we should have activated end game by then and we don't change stream pos vlc looks for metadata
+        if not self.torrent.media_metadata_done and new_index > self.end_piece - self.piece_count_end_buffer_tolerance:
+            # don't change when in end buffer, we should have activated end game by then and we don't change stream pos vlc looks for metadata
+            if not self.torrent.media_metadata_requested:
+                Logger.write(2, "Media metadata requested")
+                self.torrent.media_metadata_start_byte = start_byte
+                self.torrent.media_metadata_requested = True
+                self.torrent.engine.invoke_work_item("torrent_download_manager_prio")
         else:
             self.stream_position_piece_index = new_index
+            if self.torrent.media_metadata_requested and not self.torrent.media_metadata_done:
+                Logger.write(2, "Media metadata done")
+                self.torrent.media_metadata_done = True
+                self.torrent.engine.invoke_work_item("torrent_download_manager_prio")
 
         if self.stream_position_piece_index != old_stream_pos:
             Logger.write(2, 'Stream position changed: ' + str(old_stream_pos) + ' -> ' + str(self.stream_position_piece_index))

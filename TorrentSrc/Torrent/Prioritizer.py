@@ -21,7 +21,7 @@ class StreamPrioritizer:
             self.init_done = True
             self.start_piece = int(math.floor(self.torrent.media_file.start_byte / self.torrent.piece_length))
             self.end_piece = int(math.floor(self.torrent.media_file.end_byte / self.torrent.piece_length))
-            self.stream_end_buffer_pieces = self.torrent.data_manager.get_piece_by_offset(self.torrent.media_file.end_byte - Settings.get_int("stream_end_buffer")).index
+            self.stream_end_buffer_pieces = self.torrent.data_manager.get_piece_by_offset(self.torrent.media_file.end_byte - Settings.get_int("stream_initial_end_buffer")).index
             self.stream_play_buffer_high_priority = max(1500000 // self.torrent.piece_length, 2) # TODO setting
 
             for sub in self.torrent.subtitles:
@@ -42,8 +42,13 @@ class StreamPrioritizer:
         if dif < 0:
             return 0
 
-        if not self.torrent.media_metadata_done and piece_index >= self.stream_end_buffer_pieces:
+        if not self.torrent.media_metadata_done and not self.torrent.media_metadata_requested and piece_index >= self.stream_end_buffer_pieces:
+            # We haven't received media metadata request yet -> start at the end of the file
             return 101 - ((self.end_piece - piece_index) / 1000) # Second highest prio on start, to be able to return metadata at end of file
+
+        if not self.torrent.media_metadata_done and self.torrent.media_metadata_requested and piece_index >= self.torrent.data_manager.get_piece_by_offset(self.torrent.media_metadata_start_byte).index:
+            # We have received a media metadata request -> highest prio is that piece and later
+            return 100 + ((self.end_piece - piece_index) / 1000)
 
         if piece_index <= self.start_piece + math.ceil(self.max_chunk_size / self.torrent.piece_length):
             return 101 # Highest prio on start, to be able to return the first data

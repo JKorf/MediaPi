@@ -52,6 +52,9 @@ class Engine:
     def queue_single_work_item(self, name, work_item):
         self.work_items.append(EngineWorkItem(name, -1, work_item))
 
+    def invoke_work_item(self, name):
+        [x for x in self.work_items if x.name is name][0].last_run_time = 0
+
     def stop(self):
         self.running = False
         EventManager.deregister_event(self.event_id)

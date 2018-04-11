@@ -39,7 +39,7 @@ class TorrentDataManager:
         blocks_per_piece = int(math.ceil(self.piece_length / self.block_size))
 
         stream_start_buffer = Settings.get_int("stream_start_buffer")
-        stream_end_buffer = Settings.get_int("stream_end_buffer")
+        stream_end_buffer = Settings.get_int("stream_initial_end_buffer")
 
         for index in range(self.total_pieces):
             if self.torrent.output_mode == OutputMode.Stream:

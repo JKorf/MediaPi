@@ -29,11 +29,16 @@ class StreamListener:
         self.request_thread = None
         self.chunk_length = Settings.get_int("max_chunk_size")
         self.server = StreamServer(port, self.handle_request)
+        self.requests = []
         self.running = False
-        self.last_request_id = 0
-        self.request_count = 0
         self.bytes_send = 0
-        self.seeking = False
+        self.id = 0;
+        EventManager.register_event(EventType.Log, self.log_requests)
+
+    def log_requests(self):
+        Logger.write(2, "REQUESTS:")
+        for client in self.requests:
+            Logger.write(2, str(client[0]) + ": " + client[2])
 
     def start_listening(self):
         self.thread = CustomThread(self.server.start, "Stream listener")
@@ -41,9 +46,8 @@ class StreamListener:
         self.thread.start()
 
     def handle_request(self, socket):
-        self.last_request_id = random.randint(0, 99999999)
-        self.request_count += 1
-        Logger.write(2, "New request, now " + str(self.request_count) + " connections")
+        self.add_socket(socket, "")
+        Logger.write(2, "New request, now " + str(len(self.requests)))
 
         try:
             total_message = b''
@@ -53,19 +57,24 @@ class StreamListener:
                     break
                 total_message += rec
         except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
-            Logger.write(2, "Error reading http header")
+            socket.close()
+            self.remove_socket(socket)
+            Logger.write(2, "Error reading http header, now " + str(len(self.requests)))
             return
 
         if not total_message.endswith(b'\r\n\r\n'):
-            Logger.write(2, "Invalid http header, closing. now " + str(self.request_count) + " connections")
+            socket.close()
+            self.remove_socket(socket)
+            Logger.write(2, "Invalid http header, closing, now " + str(len(self.requests)))
             return
 
         header = HttpHeader.from_string(total_message)
 
         while not self.torrent or not self.torrent.media_file:
             if not self.running:
-                self.request_count -= 1
-                Logger.write(2, "Stopping connection, now " + str(self.request_count) + " connections")
+                socket.close()
+                self.remove_socket(socket)
+                Logger.write(2, "Stopping connection because there is no more torrent, now " + str(len(self.requests)))
                 return
             time.sleep(0.5)
 
@@ -75,19 +84,41 @@ class StreamListener:
         if header.range:
             range_start = header.range_start
 
-        EventManager.throw_event(EventType.NewRequest, [range_start])
-        if header.range is None:
-            Logger.write(2, 'request without range')
-            self.write_header(socket, "200 OK", 0, header.range_end)
-            self.write_data(socket, header.range_start, header.range_end - header.range_start + 1, self.last_request_id)
-        else:
-            Logger.write(2, 'request with range')
-            self.write_header(socket, "206 Partial Content", header.range_start, header.range_end)
-            self.write_data(socket, header.range_start, header.range_end - header.range_start + 1, self.last_request_id)
+        if self.in_requests(socket):
+            EventManager.throw_event(EventType.NewRequest, [range_start])
+            if header.range is None:
+                Logger.write(2, 'request without range')
+                self.update_socket(socket, "Without range: 0 - " + str(header.range_end))
+                self.write_header(socket, "200 OK", 0, header.range_end)
+                self.write_data(socket, header.range_start, header.range_end - header.range_start + 1)
+            else:
+                Logger.write(2, 'request with range')
+                self.update_socket(socket, "With range: "+str(header.range_start)+" - " + str(header.range_end))
+                self.write_header(socket, "206 Partial Content", header.range_start, header.range_end)
+                self.write_data(socket, header.range_start, header.range_end - header.range_start + 1)
 
-        self.request_count -= 1
-        Logger.write(2, "Shutting down request, now " + str(self.request_count) + " connections")
-        socket.close()
+        if self.in_requests(socket):
+            socket.close()
+            self.remove_socket(socket)
+            Logger.write(2, "Request finished, now " + str(len(self.requests)))
+
+    def add_socket(self, socket, status):
+        self.requests.append((self.id, socket, status))
+        Logger.write(2, "Added request with id " + str(self.id))
+        self.id += 1
+
+    def update_socket(self, socket, status):
+        tup = [x for x in self.requests if x[1] == socket][0]
+        self.requests.remove(tup)
+        self.requests.append((tup[0], tup[1], status))
+
+    def in_requests(self, socket):
+        return len([x for x in self.requests if x[1] == socket])
+
+    def remove_socket(self, socket):
+        tup = [x for x in self.requests if x[1] == socket][0]
+        self.requests.remove(tup)
+        Logger.write(2, "Removed client with id " + str(tup[0]))
 
     def write_header(self, socket, status, start, end):
         if end == -1:
@@ -114,14 +145,14 @@ class StreamListener:
             Logger.write(2, "Connection closed 2")
             return
 
-    def write_data(self, socket, requested_byte, length, request_id):
+    def write_data(self, socket, requested_byte, length):
         written = 0
         Logger.write(2, "Write data: " + str(requested_byte) + ", length " + str(length))
 
         while written < length:
             part_length = min(length - written, self.chunk_length)
-            if request_id != self.last_request_id:
-                Logger.write(2, "Got data for connection which was not the last one 1 " + str(requested_byte) + ", " + str(length))
+            if not self.in_requests(socket):
+                Logger.write(2, "Socket no longer open 1: " + str(requested_byte) + ", " + str(length))
                 return
 
             data = self.torrent.get_data_bytes_for_stream(requested_byte + written, part_length)
@@ -129,8 +160,8 @@ class StreamListener:
                 Logger.write(2, "Canceling retrieved data because we are no longer running")
                 return
 
-            if request_id != self.last_request_id:
-                Logger.write(2, "Got data for connection which was not the last one 2 " + str(requested_byte) + ", " + str(length))
+            if not self.in_requests(socket):
+                Logger.write(2, "Socket no longer open 2: " + str(requested_byte) + ", " + str(length))
                 return
 
             if data is None:
@@ -138,11 +169,14 @@ class StreamListener:
                 continue
 
             Logger.write(2, 'Data retrieved: ' + str(requested_byte + written) + " - " + str(requested_byte + written + part_length))
-
+            send = 0
             try:
-                socket.sendall(data)
-                written += len(data)
-                self.bytes_send += len(data)
+                while send < len(data):
+                    this_send = data[send: send + 50000]
+                    socket.sendall(this_send)
+                    written += len(this_send)
+                    send += len(this_send)
+                    self.bytes_send += len(this_send)
             except (ConnectionAbortedError, ConnectionResetError) as e:
                 Logger.write(2, "Connection closed 3: " + str(e))
                 return

@@ -126,8 +126,12 @@ class Torrent:
         self.state = TorrentState.Initial
         self.output_mode = output_mode
         self.__lock = Lock()
+
         self.media_file = None
+        self.media_metadata_requested = False
+        self.media_metadata_start_byte = 0
         self.media_metadata_done = False
+
         self.subtitles = []
         self.stream_file_hash = None
         self.to_download_bytes = 0

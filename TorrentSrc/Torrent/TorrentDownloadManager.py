@@ -19,6 +19,8 @@ class TorrentDownloadManager:
         self.init = False
         self.prio = False
         self.reprio_after_media_meta_done = False
+        self.reprio_after_media_meta_request = False
+
         self.queue = []
         self.queue_lock = Lock()
         self.slow_peer_block_offset = 0
@@ -50,11 +52,19 @@ class TorrentDownloadManager:
 
         if lock:
             self.queue_lock.acquire()
+        start_time = current_time()
+
+        if not self.reprio_after_media_meta_request and self.torrent.media_metadata_requested:
+            # Do a full reprioritize after media metadata is requested
+            self.reprio_after_media_meta_request = True
+            full = True
+            Logger.write(2, "Doing full reprioritize after media metadata request")
 
         if not self.reprio_after_media_meta_done and self.torrent.media_metadata_done:
             # Do a full reprioritize after media metadata is done
             self.reprio_after_media_meta_done = True
             full = True
+            Logger.write(2, "Doing full reprioritize after media metadata done")
 
         amount = 100
         if full:
@@ -71,7 +81,9 @@ class TorrentDownloadManager:
 
         if self.queue:
             block_download = self.queue[0]
-            Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + "("+str(self.torrent.data_manager.pieces[block_download.block.piece_index].priority)+"%)")
+            piece = self.torrent.data_manager.pieces[block_download.block.piece_index]
+            Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + ": "+str(self.torrent.data_manager.pieces[block_download.block.piece_index].priority)+"% "
+                            "("+str(piece.start_byte)+"-"+str(piece.end_byte)+"), took " + str(current_time()-start_time)+"ms, full: " + str(full))
 
         if lock:
             self.queue_lock.release()
@@ -156,7 +168,7 @@ class TorrentDownloadManager:
 
         if self.ticks == 100:
             self.ticks = 0
-            Logger.write(2, "Removed " + str(removed) + ", skipped " + str(skipped) + ", took " + str(current_time() - start) + "ms")
+            Logger.write(2, "Removed " + str(removed) + ", skipped " + str(skipped) + ", retrieved " + str(len(result)) + ", took " + str(current_time() - start) + "ms")
 
         self.ticks += 1
         self.queue_lock.release()
@@ -212,21 +224,17 @@ class TorrentDownloadManager:
             Logger.write(2, "Seeking backwards")
             blocks_to_redo = []
             for piece in self.torrent.data_manager.pieces[new_piece_index: old_index + 1]:
-                if not piece.persistent:
+                if not piece.persistent or not piece.done:
                     piece.done = False
                     for block in piece.blocks:
                         self.torrent.left += block.length
                         block.done = False
                         blocks_to_redo.append(block)
 
-            Logger.write(2, "Need to redo " + str(len(blocks_to_redo)))
-            Logger.write(2, "Queue before: " + str(len(self.queue)))
             self.queue = [x for x in self.queue if x.block not in blocks_to_redo]
-            Logger.write(2, "Queue after1: " + str(len(self.queue)))
 
             for block in blocks_to_redo:
                 self.queue.append(BlockDownload(block))
-            Logger.write(2, "Queue after2: " + str(len(self.queue)))
 
         self.prio = False
 
