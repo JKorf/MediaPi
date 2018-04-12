@@ -1,23 +1,32 @@
 ﻿<div class="view-home sub-view">
-    <div class="list-holder" ng-if="unfinished.length > 0">
-        <div class="list-title">Continue with</div>
-        <div class="list-item-wrapper continue">
-            <div class="list-item" ng-repeat="uf in unfinished" ng-click="continue(uf)">
-                <div class="list-image">
-                    <protected-img imgclass="list-image-img" src="uf.image"></protected-img>
+    <div class="home-list unfinished-list" ng-show="unfinished.length > 0">
+        <div class="home-list-title">continue watching</div>
+        <div class="home-list-items">
+            <div class="home-list-loader"><img src='/Images/loader.gif' /></div>
+            <div class="home-list-item" ng-repeat="uf in unfinished" ng-click="continue_torrent(uf)">
+                <div class="home-list-item-content" swipe on-swipe="remove_unfinished" swipe-item="uf" swipe-remove-element="home-list-item">
+                    <div class="home-list-item-image">
+                        <protected-img imgclass="home-list-item-img" src="uf.image"></protected-img>
+                    </div>
+                    <div class="home-list-item-details">
+                        <div class="home-list-item-title">{{uf.name}}</div>
+                        <div class="unfinished-list-ago">{{timeToTimespan(uf.watchedAt)}}</div>
+                        <div class="unfinished-list-times">
+                            <div class="unfinished-list-times-position" style="width:{{(uf.position / uf.length) * 100}}%;">{{uf.position | secondsToTimespan}}</div>
+                            <div class="unfinished-list-times-length">{{uf.length | secondsToTimespan}}</div>
+                        </div>
+                        <unfinished-line percentage="uf.position / uf.length"></unfinished-line>
+                    </div>
                 </div>
-                <div class="list-show-info">
-                    <div class="list-info-title truncate"></div>
-                    <div class="list-info-subtitle">{{uf.name}}</div>
-                </div>
-                <unfinished-line percentage="uf.position / uf.length"></unfinished-line>
             </div>
         </div>
-        <div class="list-more-fade"></div>
+        <div class="home-list-fade" ng-if="unfinished.length > 1"></div>
     </div>
 
-    <div class="list-holder">
-        <div class="list-title">Favorite shows</div>
+    <div class="list-holder favorites-list" ng-class="{'top-list': unfinished.length == 0}">
+        <div class="list-title">favorites</div>
+        <div class="home-list-loader"><img src='/Images/loader.gif' /></div>
+
         <div class="list-item-wrapper favorites">
             <div class="list-item" ng-repeat="fav in favorites" ng-click="goToShow(fav._id)" ng-if="favorites.length > 0">
                 <div class="list-image">
@@ -26,7 +35,7 @@
                 <div class="list-watched-at truncate" ng-if="fav.toWatch > 0">
                     <div class="list-last-updated">
                         {{ fav.toWatch }} to watch
-                    </div>
+                        </div>
                 </div>
                 <div class="list-show-info">
                     <div class="list-info-title truncate"></div>
@@ -40,8 +49,10 @@
         </div>
     </div>
 
-    <div class="list-holder">
-        <div class="list-title">Last watched files</div>
+    <div class="list-holder recent-files-list">
+        <div class="list-title">recently watched</div>
+        <div class="home-list-loader"><img src='/Images/loader.gif' /></div>
+
         <div class="list-item-wrapper last-watched-files" ng-if="lastWatchedFiles.length > 0">
             <div class="list-item" ng-repeat="file in lastWatchedFiles | limitTo: 5 | orderBy: 'watchedAt':true track by $index" ng-click="goToFile(file.url)">
                 <div class="list-image">

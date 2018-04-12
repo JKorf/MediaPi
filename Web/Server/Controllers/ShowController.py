@@ -38,7 +38,7 @@ class ShowController:
 
     @staticmethod
     def play_episode(url, title, img):
-        Logger.write(2, "Play epi: " + title)
+        Logger.write(2, "Play epi: " + url)
 
         EventManager.throw_event(EventType.StopStreamTorrent, [])
         time.sleep(1)

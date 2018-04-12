@@ -62,3 +62,18 @@ class MovieController:
             EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri])
         else:
             EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), urllib.parse.unquote_plus(url)])
+
+    @staticmethod
+    def play_continue(url, title, image, position):
+        Logger.write(2, "Continue " + title + " at " + str(position))
+        url = urllib.parse.unquote_plus(url)
+
+        EventManager.throw_event(EventType.StopStreamTorrent, [])
+        time.sleep(0.2)
+        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.Stream])
+        EventManager.throw_event(EventType.StartPlayer,
+                                 ["Movie",
+                                  urllib.parse.unquote(title),
+                                  MovieController.server_uri,
+                                  urllib.parse.unquote(image),
+                                  int(float(position)) * 1000])

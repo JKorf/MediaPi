@@ -37,6 +37,9 @@ class VLCPlayer:
         self.last_time = 0
         self.trying_subitems = False
 
+        self.start_position = 0
+        self.initial_play = True
+
         thread = CustomThread(self.watch_time_change, "VLC State watcher")
         thread.start()
 
@@ -51,18 +54,22 @@ class VLCPlayer:
 
         Logger.write(3, "VLC version " + libvlc_get_version().decode('ascii'))
 
-    def play(self, type, title, url, img=None):
+    def play(self, type, title, url, img=None, time=0):
         self.type = type
         self.title = title
         self.path = url
         self.img = img
         self.__player.set_mrl(url)
+        self.start_position = time
         return self.__player.play() != -1
 
     def pause_resume(self):
         self.__player.pause()
 
     def stop(self):
+        self.start_position = 0
+        self.initial_play = True
+
         self.__player.stop()
         self.type = None
         self.title = None
@@ -164,9 +171,17 @@ class VLCPlayer:
 
     def state_change_playing(self, event):
         if self.state != PlayerState.Playing:
+            if self.start_position != 0 and self.initial_play:
+                self.initial_play = False
+                thread = CustomThread(self.set_init_time, "Setting player time")
+                thread.start()
+
             old = self.state
             self.state = PlayerState.Playing
             self.state_change_action(old, self.state)
+
+    def set_init_time(self):
+        self.set_time(self.start_position)
 
     def state_change_paused(self, event):
         if self.state != PlayerState.Paused:

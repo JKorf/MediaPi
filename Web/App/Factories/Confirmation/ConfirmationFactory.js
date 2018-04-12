@@ -27,6 +27,19 @@
             return defer.promise;
         }
 
+        factory.confirm_continue = function(name){
+            var defer = $q.defer();
+
+            $rootScope.openPopup();
+            $rootScope.setPopupContent("Continue watching", true, true, true, "Do you want continue to watch " + name + "?", $rootScope).then(function(){
+                defer.resolve();
+            }, function(){
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
         factory.confirm_subtitle = function(){
             var defer = $q.defer();
 

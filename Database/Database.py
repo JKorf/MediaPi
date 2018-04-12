@@ -141,9 +141,6 @@ class Database:
         return [x[0] for x in data]
 
     def add_watching_torrent(self, name, url, image, length, time):
-        if len(self.get_watching_torrent(url)) > 0:
-            return
-
         self.lock.acquire()
         self.connect()
         self.connection.execute("INSERT INTO UnfinishedTorrents (Url, Name, Image, Time, Length, WatchedAt) " +
@@ -162,7 +159,9 @@ class Database:
         self.database.commit()
         self.disconnect()
         self.lock.release()
-        return data
+        if len(data) == 0:
+            return None
+        return data[0]
 
     def get_watching_torrents(self):
         self.lock.acquire()

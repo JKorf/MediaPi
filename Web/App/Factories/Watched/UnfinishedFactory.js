@@ -24,6 +24,11 @@
             });
         }
 
+        factory.Remove = function(obj){
+            unfinished.splice(unfinished.indexOf(obj), 1);
+            $http.get("/database/remove_unfinished?url=" + encodeURIComponent(obj.url));
+        }
+
         return factory;
     });
 

@@ -9,6 +9,7 @@ body{
     overflow:hidden;
     background: #eee;
     font-size: 14px;
+    color: #222;
 }
 
 
@@ -265,7 +266,7 @@ protected-img{
     right: 0;
     top: 0;
     bottom: 0;
-    min-height: 180px;
+    min-height: 100%;
     background: black;
     opacity: 0.5
 }

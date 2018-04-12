@@ -14,7 +14,7 @@ from Shared.Events import EventManager
 
 class StreamListener:
 
-    wait_for_data = 0.150
+    wait_for_data = 0.5
 
     mime_mapping = {
         ".mp4": "video/mp4",
@@ -32,7 +32,7 @@ class StreamListener:
         self.requests = []
         self.running = False
         self.bytes_send = 0
-        self.id = 0;
+        self.id = 0
         EventManager.register_event(EventType.Log, self.log_requests)
 
     def log_requests(self):
@@ -165,9 +165,16 @@ class StreamListener:
                 return
 
             if data is None:
-                time.sleep(self.wait_for_data)
+                try:
+                    socket.settimeout(self.wait_for_data)
+                    socket.recv(1)
+                except OSError as e:
+                    if e.args[0] != 'timed out':
+                        Logger.write(2, "Socket no longer open 3: " + str(type(e)) + "" + str(requested_byte) + ", " + str(length))
+                        return
                 continue
 
+            socket.settimeout(None)
             Logger.write(2, 'Data retrieved: ' + str(requested_byte + written) + " - " + str(requested_byte + written + part_length))
             send = 0
             try:
@@ -177,7 +184,7 @@ class StreamListener:
                     written += len(this_send)
                     send += len(this_send)
                     self.bytes_send += len(this_send)
-            except (ConnectionAbortedError, ConnectionResetError) as e:
+            except (ConnectionAbortedError, ConnectionResetError, OSError) as e:
                 Logger.write(2, "Connection closed 3: " + str(e))
                 return
 

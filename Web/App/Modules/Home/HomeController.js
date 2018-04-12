@@ -1,6 +1,6 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('HomeController', function ($scope, $rootScope, $http, $state, $timeout, UnfinishedFactory, EpisodesWatchedFactory, FilesWatchedFactory, FavoritesFactory, CacheFactory) {
+    angular.module('pi-test').controller('HomeController', function ($scope, $rootScope, $http, $state, $timeout, ConfirmationFactory, UnfinishedFactory, EpisodesWatchedFactory, FilesWatchedFactory, FavoritesFactory, CacheFactory) {
         $scope.lastWatched = [];
         $scope.favorites = [];
 
@@ -17,7 +17,7 @@
             if (deltaS < 60)
                 return 'just now';
             else if (deltaS < 3600)
-                return Math.round((deltaS / 60)) + " minutes ago";
+                return Math.round((deltaS / 60)) + " mins ago";
             else if (deltaS < 86400)
                 return Math.round((deltaS / 3600)) + " hours ago";
             else if (deltaS < 172800)
@@ -40,10 +40,22 @@
             $state.go("show", { id: id });
         }
 
+        $scope.continue_torrent = function(uf){
+            ConfirmationFactory.confirm_continue(uf.name).then(function(){
+                $http.post("/movies/play_continue?url=" + encodeURIComponent(uf.url) + "&title=" + encodeURIComponent(uf.name) + "&image=" + encodeURIComponent(uf.image) + "&position=" + uf.position);
+            })
+        }
+
+        $scope.remove_unfinished = function( uf){
+            $scope.unfinished.splice($scope.unfinished.indexOf(uf), 1);
+            UnfinishedFactory.Remove(uf);
+        }
+
         Init();
 
         function Init(){
             UnfinishedFactory.GetUnfinished().then(function(data){
+                $(".unfinished-list .home-list-loader").remove();
                 if(data.length > 0){
                     data.sort(function(a, b) {
                         a = new Date(a.watchedAt);
@@ -59,8 +71,14 @@
             });
 
             var favs = FavoritesFactory.GetAll().then(function(favs){
+                if (favs.length == 0){
+                     $(".favorites-list .home-list-loader").remove();
+                     $(".favorites-list .list-no-items").css("display", "block");
+                 }
+
                 for(var i = 0 ; i < favs.length ; i++){
                     CacheFactory.Get('/shows/get_show?id=' + favs[i], 900).then(function (response) {
+                        $(".favorites-list .home-list-loader").remove();
                         DetermineLastEpisodeRelease(response);
                         $scope.favorites.push(response);
                     }, function (er) {
@@ -70,6 +88,7 @@
             });
 
             FilesWatchedFactory.GetWatchedFiles().then(function(data) {
+                $(".recent-files-list .home-list-loader").remove();
                 if(data.length > 0){
                     data.sort(function(a, b) {
                         a = new Date(a.watchedAt);

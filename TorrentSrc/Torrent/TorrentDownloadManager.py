@@ -47,9 +47,6 @@ class TorrentDownloadManager:
         if not self.init:
             return True
 
-        if self.torrent.state == TorrentState.Done:
-            return True
-
         if lock:
             self.queue_lock.acquire()
         start_time = current_time()
@@ -84,6 +81,8 @@ class TorrentDownloadManager:
             piece = self.torrent.data_manager.pieces[block_download.block.piece_index]
             Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + ": "+str(self.torrent.data_manager.pieces[block_download.block.piece_index].priority)+"% "
                             "("+str(piece.start_byte)+"-"+str(piece.end_byte)+"), took " + str(current_time()-start_time)+"ms, full: " + str(full))
+        else:
+            Logger.write(2, "No prio: queue empty")
 
         if lock:
             self.queue_lock.release()
@@ -168,7 +167,7 @@ class TorrentDownloadManager:
 
         if self.ticks == 100:
             self.ticks = 0
-            Logger.write(2, "Removed " + str(removed) + ", skipped " + str(skipped) + ", retrieved " + str(len(result)) + ", took " + str(current_time() - start) + "ms")
+            Logger.write(2, "Removed " + str(removed) + ", skipped " + str(skipped) + ", retrieved " + str(len(result)) + ", queue length: " + str(len(self.queue)) + " took " + str(current_time() - start) + "ms")
 
         self.ticks += 1
         self.queue_lock.release()
@@ -201,7 +200,7 @@ class TorrentDownloadManager:
 
     def seek(self, old_index, new_piece_index):
         start_time = current_time()
-        Logger.write(2, "Seeking " + str(old_index) + " to " + str(new_piece_index))
+        Logger.write(2, "Seeking " + str(old_index) + " to " + str(new_piece_index) + ", now " + str(len(self.queue)) + " items")
         self.queue_lock.acquire()
 
         if new_piece_index > old_index:
@@ -211,8 +210,6 @@ class TorrentDownloadManager:
             for block_download in self.queue:
                 if block_download.block.piece_index < new_piece_index:
                     to_remove.append(block_download)
-                else:
-                    break
 
             for block_download in to_remove:
                 self.queue.remove(block_download)
