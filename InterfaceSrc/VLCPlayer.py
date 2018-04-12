@@ -59,7 +59,10 @@ class VLCPlayer:
         self.title = title
         self.path = url
         self.img = img
-        self.__player.set_mrl(url)
+        if type == "YouTube":
+            self.__player.set_mrl(url, "lua-intf=youtube")
+        else:
+            self.__player.set_mrl(url, "demux=avformat")
         self.start_position = time
         return self.__player.play() != -1
 
@@ -221,6 +224,7 @@ class VLCPlayer:
             return
 
         if len(subs) == 1:
+            subs[0].add_options("demux=avformat")
             self.__player.set_media(subs[0])
             self.__player.play()
 
