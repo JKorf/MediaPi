@@ -215,18 +215,21 @@ class VLCPlayer:
     def try_play_subitem(self):
         media = self.__player.get_media()
         if media is None:
-            print("No media")
+            self.trying_subitems = False
+            self.stop()
             return
 
         subs = media.subitems()
         if subs is None:
-            print("No subs")
+            self.trying_subitems = False
+            self.stop()
             return
 
         if len(subs) == 1:
             subs[0].add_options("demux=avformat")
             self.__player.set_media(subs[0])
             self.__player.play()
+            self.trying_subitems = False
 
     def watch_time_change(self):
         while True:
