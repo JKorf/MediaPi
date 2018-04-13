@@ -2,6 +2,7 @@
 import json
 import os
 import cProfile
+import urllib.parse
 
 from shutil import copytree, rmtree
 
@@ -50,15 +51,20 @@ class StartUp:
         self.server = None
         self.torrent_manager = TorrentManager()
         self.stream_torrent = None
-        self.database = Database()
         self.running = True
         self.youtube_end_counter = 0
+        self.is_slave = Settings.get_bool("slave")
+
+        self.added_unfinished = False
+        self.removed_unfinished = False
+
         sys.excepthook = self.handle_exception
 
         if Settings.get_bool("show_gui"):
             self.start_gui()
 
-        if not Settings.get_bool("slave"):
+        if not self.is_slave:
+            self.database = Database()
             self.database.init_database()
 
         self.dht_enabled = Settings.get_bool("dht")
@@ -122,12 +128,29 @@ class StartUp:
 
                 # Update time for resuming
                 if self.player.get_position() > 0 and self.player.get_length() - self.player.get_position() < 30:
-                    self.database.remove_watching_torrent(self.stream_torrent.uri)
-                elif self.player.get_position() > 10 and self.database.get_watching_torrent(self.stream_torrent.uri) is None:
-                    self.database.add_watching_torrent(self.player.title, self.stream_torrent.uri, self.player.img,
+                    if self.added_unfinished and not self.removed_unfinished:
+                        self.removed_unfinished = True
+                        if self.is_slave:
+                            self.server.notify_master("/database/remove_unfinished?url=" + urllib.parse.quote(self.stream_torrent.uri))
+                        else:
+                            self.database.remove_watching_torrent(self.stream_torrent.uri)
+                elif self.player.get_position() > 10 and not self.added_unfinished:
+                    self.added_unfinished = True
+                    if self.is_slave:
+                        self.server.notify_master("/database/add_unfinished?url="
+                                                  + urllib.parse.quote(self.stream_torrent.uri)
+                                                  + "&name=" + urllib.parse.quote(self.player.title)
+                                                  + "&length=" + str(self.player.get_length())
+                                                  + "&time=" + str(current_time())
+                                                  + "&image=" + urllib.parse.quote(self.player.img))
+                    else:
+                        self.database.add_watching_torrent(self.player.title, self.stream_torrent.uri, self.player.img,
                                                        self.player.get_length(), current_time())
-                else:
-                    self.database.update_watching_torrent(self.stream_torrent.uri, self.player.get_position())
+                elif self.player.get_position() > 10:
+                    if self.is_slave:
+                        self.server.notify_master("/database/update_unfinished?url=" + urllib.parse.quote(self.stream_torrent.uri) + "&position=" + str(self.player.get_position()))
+                    else:
+                        self.database.update_watching_torrent(self.stream_torrent.uri, self.player.get_position())
 
             time.sleep(5)
 
@@ -185,6 +208,8 @@ class StartUp:
         self.stop_player()
 
     def stream_torrent_started(self, torrent):
+        self.added_unfinished = False
+        self.removed_unfinished = False
         self.stream_torrent = torrent
 
     def request_dht_peers(self, torrent):

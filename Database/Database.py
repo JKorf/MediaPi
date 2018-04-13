@@ -141,6 +141,9 @@ class Database:
         return [x[0] for x in data]
 
     def add_watching_torrent(self, name, url, image, length, time):
+        if self.get_watching_torrent(url) is not None:
+            return
+
         self.lock.acquire()
         self.connect()
         self.connection.execute("INSERT INTO UnfinishedTorrents (Url, Name, Image, Time, Length, WatchedAt) " +

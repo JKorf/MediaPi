@@ -72,6 +72,14 @@ class TornadoServer:
     def stop(self):
         ioloop.IOLoop.instance().stop()
 
+    def notify_master(self, url):
+        try:
+            reroute = str(TornadoServer.master_ip) + url
+            Logger.write(2, "Sending notification to master at " + reroute)
+            urllib.request.urlopen(reroute).read()
+        except Exception as e:
+            Logger.write(2, "Failed to notify master: " + str(e))
+
     def get_actual_address(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("gmail.com", 80))
@@ -384,6 +392,21 @@ class DatabaseHandler(web.RequestHandler):
             Logger.write(2, "Removing unfinished")
             TornadoServer.start_obj.database.remove_watching_torrent(
                 self.get_argument("url"))
+
+        if url == "add_unfinished":
+            Logger.write(2, "Adding unfinished")
+            TornadoServer.start_obj.database.add_watching_torrent(
+                self.get_argument("name"),
+                self.get_argument("url"),
+                self.get_argument("image"),
+                int(self.get_argument("length")),
+                self.get_argument("time"))
+
+        if url == "update_unfinished":
+            Logger.write(2, "Updating unfinished")
+            TornadoServer.start_obj.database.update_watching_torrent(
+                self.get_argument("url"),
+                int(self.get_argument("position")))
 
     def reroute_to_master(self):
         reroute = str(TornadoServer.master_ip) + self.request.uri
