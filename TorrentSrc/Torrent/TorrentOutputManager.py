@@ -79,7 +79,7 @@ class TorrentOutputManager:
             if start_piece.done:
                 start_done = True
 
-        if end_piece.start_byte - self.torrent.media_file.end_byte < 65536:
+        if self.torrent.media_file.end_byte - end_piece.start_byte < 65536:
             if end_piece.done and self.torrent.data_manager.pieces[self.torrent.media_file.end_piece(self.torrent.data_manager.piece_length) - 1].done:
                 end_done = True
         else:

@@ -50,8 +50,8 @@ class StreamPrioritizer:
             # We have received a media metadata request -> highest prio is that piece and later
             return 100 + ((self.end_piece - piece_index) / 1000)
 
-        if piece_index <= self.start_piece + math.ceil(self.max_chunk_size / self.torrent.piece_length):
-            return 101 # Highest prio on start, to be able to return the first data
+        if piece_index <= self.start_piece + math.ceil(self.max_chunk_size / self.torrent.piece_length) or piece_index > self.end_piece - math.ceil(self.max_chunk_size / self.torrent.piece_length):
+            return 101 # Highest prio on start, to be able to return the first data, and end to be able to calc hash
 
         if self.torrent.end_game:
             return 100

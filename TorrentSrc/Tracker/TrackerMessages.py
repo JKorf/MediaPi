@@ -101,7 +101,7 @@ class TrackerAnnounceMessage:
 
     @classmethod
     def for_http(cls, info_hash, message_event, downloaded, left, uploaded, num_want):
-        return cls(0, 0, info_hash, message_event, downloaded, left, uploaded, num_want)
+        return cls(0, 0, info_hash, message_event, downloaded, left, uploaded, num_want, 0)
 
     @classmethod
     def for_udp(cls, connection_id, transaction_id, info_hash, message_event, downloaded, left, uploaded, num_want, port):
