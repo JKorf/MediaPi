@@ -300,6 +300,7 @@ class Torrent:
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
         self.state = TorrentState.Downloading
         self.to_download_bytes = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
+        EventManager.throw_event(EventType.TorrentMetadataDone, [self])
         Logger.write(2, "To download: " + str(self.to_download_bytes) + ", piece length: " + str(self.piece_length))
         Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte))
         Logger.write(3, "Torrent metadata read")

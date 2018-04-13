@@ -6,7 +6,8 @@
             <div class="home-list-item" ng-repeat="uf in unfinished" ng-click="continue_torrent(uf)">
                 <div class="home-list-item-content" swipe on-swipe="remove_unfinished" swipe-item="uf" swipe-remove-element="home-list-item">
                     <div class="home-list-item-image">
-                        <protected-img imgclass="home-list-item-img" src="uf.image"></protected-img>
+                        <protected-img ng-if="uf.image" imgclass="home-list-item-img" src="uf.image"></protected-img>
+                        <img ng-if="!uf.image" ng-src="/Images/unknown.png" class="home-list-item-img" />
                     </div>
                     <div class="home-list-item-details">
                         <div class="home-list-item-title">{{uf.name}}</div>

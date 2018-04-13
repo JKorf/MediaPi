@@ -156,6 +156,7 @@ class StartUp:
         EventManager.register_event(EventType.InvalidTorrent, self.invalid_torrent)
         EventManager.register_event(EventType.StreamTorrentStarted, self.stream_torrent_started)
         EventManager.register_event(EventType.StreamTorrentStopped, self.stream_torrent_stopped)
+        EventManager.register_event(EventType.TorrentMetadataDone, self.torrent_metadata_done)
 
         EventManager.register_event(EventType.NewDHTNode, self.new_dht_node)
 
@@ -173,6 +174,11 @@ class StartUp:
             if self.player.type != "YouTube":
                 thread = CustomThread(self.stop_player, "Stopping player")
                 thread.start()
+
+    def torrent_metadata_done(self, torrent):
+        if torrent.id == self.stream_torrent.id:
+            if self.player.title == "Direct Link":
+                self.player.title = torrent.name
 
     def stream_torrent_stopped(self, torrent):
         self.stream_torrent = None

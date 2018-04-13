@@ -46,7 +46,8 @@ class EventType(Enum):
     StreamTorrentStopped = 30,
     StopStreamTorrent = 31,
 
-    NewRequest = 35
+    NewRequest = 35,
+    TorrentMetadataDone = 36
 
 
 class EventManager:

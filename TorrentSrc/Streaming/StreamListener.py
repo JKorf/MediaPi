@@ -34,6 +34,11 @@ class StreamListener:
         self.bytes_send = 0
         self.id = 0
         EventManager.register_event(EventType.Log, self.log_requests)
+        EventManager.register_event(EventType.Seek, self.seek)
+
+    def seek(self, pos):
+        for (id, socket, status) in self.requests:
+            socket.close()
 
     def log_requests(self):
         Logger.write(2, "REQUESTS:")
