@@ -13,11 +13,12 @@
 		Kan in database
 
     Download Queue verbeteren
-        Niet verder dan x vooruit kijken bij het zoeken naar blocks to download
 
     speed graph
 
     Volgende aflevering van series automatisch afspelen
-    Bijhouden hoe ver in een aflevering je was? -> homepage verder gaan met
 
     Harde schijf niet hoeven verplaatsen
+        Master een static file handler die op /master staat met een base folder
+        Op pi die base folder op de ext harde schijf locatie zetten
+        HD de files/folders laten ophalen van die locatie op master

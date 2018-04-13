@@ -82,7 +82,7 @@ class StartUp:
         self.init_folders()
 
         version = json.loads(UtilController.version())
-        Logger.write(3, "MediaPlayer version " + version['version_number'] + " (" + version['build_date'] + ")")
+        Logger.write(3, "MediaPlayer version " + version['version_number'] + " (" + version['build_date'] + ") Slave=" + str(Settings.get_bool("slave")))
 
         if self.gui is not None:
             self.gui.showFullScreen()

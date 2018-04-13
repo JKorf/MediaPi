@@ -2,6 +2,7 @@
 name=Master
 slave=False
 master_ip=http://192.168.1.100:81
+master_base_folder=C:/
 
 # Paths
 log_folder=/home/pi/Scripts/Logs

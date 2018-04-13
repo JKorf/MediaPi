@@ -31,7 +31,7 @@ class TornadoServer:
         self.port = 80
         TornadoServer.master_ip = Settings.get_string("master_ip")
         TornadoServer.start_obj = start
-        self.application = web.Application([
+        handlers = [
             (r"/util/(.*)", UtilHandler),
             (r"/movies/(.*)", MovieHandler),
             (r"/shows/(.*)", ShowHandler),
@@ -43,7 +43,12 @@ class TornadoServer:
             (r"/realtime", RealtimeHandler),
             (r"/database/(.*)", DatabaseHandler),
             (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Web", "default_filename": "index.html"})
-        ])
+        ]
+
+        if not Settings.get_bool("slave"):
+            handlers.append((r"/master/(.*)", StaticFileHandler, {"path": Settings.get_string("master_base_folder")}))
+
+        self.application = web.Application(handlers)
 
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_changed)
         EventManager.register_event(EventType.PlayerError, self.player_error)
