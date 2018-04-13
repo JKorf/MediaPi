@@ -1,7 +1,7 @@
 ﻿<div class="view-home sub-view">
     <div class="home-list unfinished-list" ng-show="unfinished.length > 0">
         <div class="home-list-title">continue watching</div>
-        <div class="home-list-items">
+        <div class="home-list-items unfinished-items">
             <div class="home-list-loader"><img src='/Images/loader.gif' /></div>
             <div class="home-list-item" ng-repeat="uf in unfinished" ng-click="continue_torrent(uf)">
                 <div class="home-list-item-content" swipe on-swipe="remove_unfinished" swipe-item="uf" swipe-remove-element="home-list-item">
