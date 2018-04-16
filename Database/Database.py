@@ -58,7 +58,7 @@ class Database:
         new_version = number + 1
         Logger.write(2, "Upgrading database from " + str(number) + " to " + str(new_version))
 
-        with open(str(pathlib.Path(__file__).parent) + '\\Upgrade_'+str(new_version)+'.sql', 'r') as script:
+        with open(str(pathlib.Path(__file__).parent) + '/Upgrade_'+str(new_version)+'.sql', 'r') as script:
             data = script.read().replace('\n', '')
 
         self.connection.executescript(data)
