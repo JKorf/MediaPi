@@ -1,6 +1,8 @@
+import json
 import os
 import socket
 import urllib.request
+import urllib.parse
 
 import tornado
 from tornado import gen
@@ -11,6 +13,7 @@ from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
 from TorrentSrc.Util.Threading import CustomThread
+from TorrentSrc.Util.Util import calculate_file_hash_file
 from Web.Server.Controllers.HDController import HDController
 from Web.Server.Controllers.MovieController import MovieController
 from Web.Server.Controllers.PlayerController import PlayerController
@@ -20,6 +23,7 @@ from Web.Server.Controllers.TorrentController import TorrentController
 from Web.Server.Controllers.UtilController import UtilController
 from Web.Server.Controllers.YoutubeController import YoutubeController
 from Web.Server.Models import WebSocketMessage
+from Web.Server.StaticFileHandlerUnQuote import StaticFileHandlerUnQuote
 
 
 class TornadoServer:
@@ -41,12 +45,13 @@ class TornadoServer:
             (r"/youtube/(.*)", YoutubeHandler),
             (r"/torrents/(.*)", TorrentHandler),
             (r"/realtime", RealtimeHandler),
-            (r"/database/(.*)", DatabaseHandler),
-            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Web", "default_filename": "index.html"})
+            (r"/database/(.*)", DatabaseHandler)
         ]
 
         if not Settings.get_bool("slave"):
-            handlers.append((r"/master/(.*)", StaticFileHandler, {"path": Settings.get_string("master_base_folder")}))
+            handlers.append((r"/master/(.*)", StaticFileHandlerMaster, {"path": Settings.get_string("master_base_folder")}))
+
+        handlers.append((r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Web", "default_filename": "index.html"}))
 
         self.application = web.Application(handlers)
 
@@ -154,6 +159,11 @@ class TornadoServer:
 
 
 class StaticFileHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        # Disable cache
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+
+class StaticFileHandlerMaster(StaticFileHandlerUnQuote):
     def set_extra_headers(self, path):
         # Disable cache
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -286,18 +296,40 @@ class PlayerHandler(web.RequestHandler):
 
 class HDHandler(web.RequestHandler):
     def get(self, url):
+        if Settings.get_bool("slave"):
+            self.reroute_to_master()
+            return
+
         if url == "drives":
             self.write(HDController.drives())
+        if url == "get_hash":
+            length, hash = calculate_file_hash_file(self.get_argument("path"), False)
+            self.write("{\"length\": "+str(length)+", \"hash\": \""+str(hash)+"\" }")
         elif url == "directory":
             self.write(HDController.directory(self.get_argument("path")))
 
     def post(self, url):
         if url == "play_file":
-            HDController.play_file(self.get_argument("filename"), self.get_argument("path"))
+            if Settings.get_bool("slave"):
+                Logger.write(2, self.get_argument("path"))
+                HDController.play_file(self.get_argument("filename"), TornadoServer.master_ip + "/master/" + self.get_argument("path"))
+                json_data = urllib.request.urlopen(Settings.get_string("master_ip") + "/hd/get_hash?path=" + urllib.parse.quote_plus(self.get_argument("path")))
+                json_obj = json.loads(json_data.read().decode())
+                EventManager.throw_event(EventType.StreamFileHashKnown, [json_obj["length"], json_obj["hash"]])
+
+            else:
+                HDController.play_file(self.get_argument("filename"), self.get_argument("path"))
+                calculate_file_hash_file(urllib.parse.unquote(self.get_argument("path")))
+
         elif url == "next_image":
             HDController.next_image(self.get_argument("current_path"))
         elif url == "prev_image":
             HDController.prev_image(self.get_argument("current_path"))
+
+    def reroute_to_master(self):
+        reroute = str(TornadoServer.master_ip) + self.request.uri
+        Logger.write(2, "Sending request to master at " + reroute)
+        self.write(urllib.request.urlopen(reroute).read())
 
 
 class YoutubeHandler(web.RequestHandler):

@@ -52,7 +52,7 @@ def calculate_file_hash_torrent(torrent):
     EventManager.throw_event(EventType.StreamFileHashKnown, [torrent.media_file.length, torrent.stream_file_hash])
 
 
-def calculate_file_hash_file(file):
+def calculate_file_hash_file(file, throw_event=True):
     longlongformat = '<q'  # little-endian long long
     bytesize = struct.calcsize(longlongformat)
 
@@ -79,7 +79,9 @@ def calculate_file_hash_file(file):
 
     f.close()
     returnedhash = "%016x" % hash
-    EventManager.throw_event(EventType.StreamFileHashKnown, [filesize, returnedhash])
+    if throw_event:
+        EventManager.throw_event(EventType.StreamFileHashKnown, [filesize, returnedhash])
+    return filesize, returnedhash
 
 
 def write_size(data):

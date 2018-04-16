@@ -3,11 +3,13 @@ import os
 import subprocess
 import sys
 import urllib.parse
+import urllib.request
 
 import time
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Settings import Settings
 from Shared.Util import to_JSON
 from TorrentSrc.Util.Util import calculate_file_hash_file
 from Web.Server.Models import FileStructure
@@ -49,7 +51,7 @@ class HDController:
             EventManager.throw_event(EventType.StartPlayer, ["Image", urllib.parse.unquote(filename), file])
         else:
             EventManager.throw_event(EventType.StartPlayer, ["File", urllib.parse.unquote(filename), file])
-            calculate_file_hash_file(file)
+
 
     @staticmethod
     def next_image(currentPath):

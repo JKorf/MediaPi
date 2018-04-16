@@ -82,7 +82,11 @@ class StartUp:
         self.init_folders()
 
         version = json.loads(UtilController.version())
-        Logger.write(3, "MediaPlayer version " + version['version_number'] + " (" + version['build_date'] + ") Slave=" + str(Settings.get_bool("slave")))
+        Logger.write(3, "MediaPlayer version " + version['version_number'] + " (" + version['build_date'] + ")")
+        Logger.write(3, "Slave: " + str(self.is_slave))
+        if self.is_slave:
+            Logger.write(3, "Master ip: " + str(Settings.get_string("master_ip")))
+        Logger.write(3, "Pi: " + str(Settings.get_bool("raspberry")))
 
         if self.gui is not None:
             self.gui.showFullScreen()
