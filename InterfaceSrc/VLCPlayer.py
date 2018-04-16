@@ -61,7 +61,7 @@ class VLCPlayer:
         self.img = img
         if type == "YouTube":
             self.__player.set_mrl(url, "lua-intf=youtube")
-        if type == "Image":
+        elif type == "Image":
             self.__player.set_mrl(url)
         else:
             self.__player.set_mrl(url, "demux=avformat")
