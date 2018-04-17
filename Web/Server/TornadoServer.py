@@ -11,7 +11,7 @@ from tornado import ioloop, web, websocket
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from Shared.Util import to_JSON
+from Shared.Util import to_JSON, RequestFactory
 from TorrentSrc.Util.Threading import CustomThread
 from TorrentSrc.Util.Util import calculate_file_hash_file
 from Web.Server.Controllers.HDController import HDController
@@ -177,7 +177,6 @@ class UtilHandler(web.RequestHandler):
         elif url == "get_protected_img":
             data = yield UtilController.get_protected_img(self.get_argument("url"))
             self.write(data)
-            self.finish()
         elif url == "debug":
             self.write(UtilController.debug(TornadoServer.start_obj))
         elif url == "startup":
@@ -222,25 +221,21 @@ class MovieHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
         if url == "get_movies":
-            data = yield(MovieController.get_movies(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords")))
+            data = yield MovieController.get_movies(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
             self.write(data)
-            self.finish()
         if url == "get_movies_all":
-            data = yield (MovieController.get_movies_all(self.get_argument("page"), self.get_argument("orderby"),
-                                                     self.get_argument("keywords")))
+            data = yield MovieController.get_movies_all(self.get_argument("page"), self.get_argument("orderby"),
+                                                     self.get_argument("keywords"))
             self.write(data)
-            self.finish()
         elif url == "get_movie":
-            data = yield (MovieController.get_movie(self.get_argument("id")))
+            data = yield MovieController.get_movie(self.get_argument("id"))
             self.write(data)
-            self.finish()
         elif url == "play_from_extension":
             MovieController.play_direct_link(self.get_argument("url"), self.get_argument("title"))
 
 
-
 class ShowHandler(web.RequestHandler):
-    @gen.coroutine
+
     def post(self, url):
         if url == "play_episode":
             ShowController.play_episode(self.get_argument("url"), self.get_argument("title"), self.get_argument("img", ""))
@@ -248,18 +243,16 @@ class ShowHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
         if url == "get_shows":
-            data = yield (ShowController.get_shows(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords")))
+            data = yield ShowController.get_shows(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
             self.write(data)
-            self.finish()
         if url == "get_shows_all":
-            data = yield (ShowController.get_shows_all(self.get_argument("page"), self.get_argument("orderby"),
-                                                   self.get_argument("keywords")))
+            data = yield ShowController.get_shows_all(self.get_argument("page"), self.get_argument("orderby"),
+                                                   self.get_argument("keywords"))
             self.write(data)
-            self.finish()
         elif url == "get_show":
-            self.write(ShowController.get_show(self.get_argument("id")))
-        elif url == "play_episode":
-            ShowController.play_episode(self.get_argument("url"), self.get_argument("title"), self.get_argument("img", ""))
+            show = yield ShowController.get_show(self.get_argument("id"))
+            self.write(show)
+
 
 class RadioHandler(web.RequestHandler):
     @gen.coroutine
@@ -295,9 +288,10 @@ class PlayerHandler(web.RequestHandler):
 
 
 class HDHandler(web.RequestHandler):
+    @gen.coroutine
     def get(self, url):
         if Settings.get_bool("slave"):
-            self.reroute_to_master()
+            yield self.reroute_to_master()
             return
 
         if url == "drives":
@@ -308,13 +302,14 @@ class HDHandler(web.RequestHandler):
         elif url == "directory":
             self.write(HDController.directory(self.get_argument("path")))
 
+    @gen.coroutine
     def post(self, url):
         if url == "play_file":
             if Settings.get_bool("slave"):
                 Logger.write(2, self.get_argument("path"))
                 HDController.play_file(self.get_argument("filename"), TornadoServer.master_ip + "/master/" + self.get_argument("path"))
-                json_data = urllib.request.urlopen(Settings.get_string("master_ip") + "/hd/get_hash?path=" + urllib.parse.quote_plus(self.get_argument("path")))
-                json_obj = json.loads(json_data.read().decode())
+                json_data = yield RequestFactory.make_request_async(Settings.get_string("master_ip") + "/hd/get_hash?path=" + urllib.parse.quote_plus(self.get_argument("path")))
+                json_obj = json.loads(json_data.decode())
                 EventManager.throw_event(EventType.StreamFileHashKnown, [json_obj["length"], json_obj["hash"]])
 
             else:
@@ -326,10 +321,12 @@ class HDHandler(web.RequestHandler):
         elif url == "prev_image":
             HDController.prev_image(self.get_argument("current_path"))
 
+    @gen.coroutine
     def reroute_to_master(self):
         reroute = str(TornadoServer.master_ip) + self.request.uri
         Logger.write(2, "Sending request to master at " + reroute)
-        self.write(urllib.request.urlopen(reroute).read())
+        result = yield RequestFactory.make_request_async(reroute)
+        self.write(result)
 
 
 class YoutubeHandler(web.RequestHandler):
@@ -386,7 +383,7 @@ class DatabaseHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
         if Settings.get_bool("slave"):
-            self.reroute_to_master()
+            yield self.reroute_to_master()
             return
 
         if url == "add_favorite":
@@ -445,7 +442,9 @@ class DatabaseHandler(web.RequestHandler):
                 self.get_argument("url"),
                 int(self.get_argument("position")))
 
+    @gen.coroutine
     def reroute_to_master(self):
         reroute = str(TornadoServer.master_ip) + self.request.uri
         Logger.write(2, "Sending request to master at " + reroute)
-        self.write(urllib.request.urlopen(reroute).read())
+        result = yield RequestFactory.make_request_async(reroute)
+        self.write(result)

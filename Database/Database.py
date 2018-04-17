@@ -182,7 +182,7 @@ class Database:
         self.connect()
 
         self.connection.execute(
-            "UPDATE UnfinishedTorrents SET Time="+str(time)+" WHERE URL='"+url+"'")
+            "UPDATE UnfinishedTorrents SET Time="+str(time)+" WHERE Url='"+url+"'")
 
         self.database.commit()
         self.disconnect()
@@ -193,7 +193,7 @@ class Database:
         self.connect()
 
         self.connection.execute(
-            "DELETE FROM UnfinishedTorrents WHERE URL='" + url + "'")
+            "DELETE FROM UnfinishedTorrents WHERE Url='" + url + "'")
 
         self.database.commit()
         self.disconnect()

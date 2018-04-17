@@ -5,6 +5,7 @@ from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import current_time, RequestFactory
 from Web.Server.Providers.Movies.Movie import Movie
+from tornado import gen
 
 
 class PopcornMovieProvider:
@@ -13,16 +14,17 @@ class PopcornMovieProvider:
     movies_data = None
 
     @staticmethod
+    @gen.coroutine
     def get_list(page, orderby, all=False):
         Logger.write(2, "Get movies list")
         if all:
             data = b""
             for i in range(int(page)):
-                new_data = RequestFactory.make_request(PopcornMovieProvider.movies_api_path + "movies/"+str(i + 1)+"?sort=" + urllib.parse.quote(orderby))
+                new_data = yield RequestFactory.make_request_async(PopcornMovieProvider.movies_api_path + "movies/"+str(i + 1)+"?sort=" + urllib.parse.quote(orderby))
                 if new_data is not None:
                     data = PopcornMovieProvider.append_result(data, new_data)
         else:
-            data = RequestFactory.make_request(PopcornMovieProvider.movies_api_path + "movies/"+page+"?sort=" + urllib.parse.quote(orderby))
+            data = yield RequestFactory.make_request_async(PopcornMovieProvider.movies_api_path + "movies/"+page+"?sort=" + urllib.parse.quote(orderby))
 
         if data is not None:
             PopcornMovieProvider.movies_data = data
@@ -33,24 +35,28 @@ class PopcornMovieProvider:
         return Movie.parse_list_from_popcorn_time(PopcornMovieProvider.movies_data.decode('utf-8')).encode('utf-8')
 
     @staticmethod
+    @gen.coroutine
     def search(page, orderby, keywords, all=False):
         Logger.write(2, "Search movies " + keywords)
         if all:
             data = b""
             for i in range(int(page)):
-                new_data = RequestFactory.make_request(
+                new_data = yield RequestFactory.make_request_async(
                     PopcornMovieProvider.movies_api_path + "movies/" + page + "?keywords=" + keywords + "&sort=" + urllib.parse.quote(
                         orderby))
                 if new_data is not None:
                     data = PopcornMovieProvider.append_result(data, new_data)
             return Movie.parse_list_from_popcorn_time(data.decode('utf-8')).encode('utf-8')
         else:
-            return Movie.parse_list_from_popcorn_time(RequestFactory.make_request(PopcornMovieProvider.movies_api_path + "movies/"+page+"?keywords="+keywords+"&sort="+urllib.parse.quote(orderby)).decode('utf-8')).encode('utf-8')
+            data = yield RequestFactory.make_request_async(PopcornMovieProvider.movies_api_path + "movies/"+page+"?keywords="+keywords+"&sort="+urllib.parse.quote(orderby))
+            return Movie.parse_list_from_popcorn_time(data.decode('utf-8')).encode('utf-8')
 
     @staticmethod
+    @gen.coroutine
     def get_by_id(id):
         Logger.write(2, "Get movie by id " + id)
-        return Movie.parse_item_from_popcorn_time(RequestFactory.make_request(PopcornMovieProvider.movies_api_path + "movie/" + id).decode('utf-8')).encode('utf-8')
+        data = yield RequestFactory.make_request_async(PopcornMovieProvider.movies_api_path + "movie/" + id)
+        return Movie.parse_item_from_popcorn_time(data.decode('utf-8')).encode('utf-8')
 
     @staticmethod
     def append_result(data, new_data):

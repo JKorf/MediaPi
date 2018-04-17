@@ -1,3 +1,5 @@
+from tornado import gen
+
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -10,16 +12,17 @@ class ShowProvider:
     shows_data = []
 
     @staticmethod
+    @gen.coroutine
     def get_list(page, orderby, all=False):
         Logger.write(2, "Get shows list")
         if all:
             data = b""
             for i in range(int(page)):
-                new_data = RequestFactory.make_request(ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby)
+                new_data = yield RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby)
                 if new_data is not None:
                     data = ShowProvider.append_result(data, new_data)
         else:
-            data = RequestFactory.make_request(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby)
+            data = yield RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby)
 
         if data is not None:
             ShowProvider.shows_data = data
@@ -36,18 +39,20 @@ class ShowProvider:
         if all:
             data = b""
             for i in range(int(page)):
-                new_data = RequestFactory.make_request(
+                new_data = RequestFactory.make_request_async(
                     ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby + "&keywords=" + keywords)
                 if new_data is not None:
                     data = ShowProvider.append_result(data, new_data)
             return data
         else:
-            return RequestFactory.make_request(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby + "&keywords="+keywords)
+            return RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby + "&keywords="+keywords)
 
     @staticmethod
+    @gen.coroutine
     def get_by_id(id):
         Logger.write(2, "Get show by id " + id)
-        return RequestFactory.make_request(ShowProvider.shows_api_path + "show/" + id)
+        response = yield RequestFactory.make_request_async(ShowProvider.shows_api_path + "show/" + id)
+        return response
 
     @staticmethod
     def append_result(data, new_data):

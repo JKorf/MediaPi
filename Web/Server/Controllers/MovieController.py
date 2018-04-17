@@ -2,7 +2,7 @@ import urllib.parse
 import urllib.request
 
 import time
-from tornado.concurrent import return_future
+from tornado import gen
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -19,25 +19,30 @@ class MovieController:
     server_uri = "http://localhost:50009"
 
     @staticmethod
-    @return_future
-    def get_movies(page, orderby, keywords, callback=None):
+    @gen.coroutine
+    def get_movies(page, orderby, keywords):
         if len(keywords) == 0:
-            callback(PopcornMovieProvider.get_list(page, orderby))
+            result = yield PopcornMovieProvider.get_list(page, orderby)
+            return result
         else:
-            callback(PopcornMovieProvider.search(page, orderby, urllib.parse.quote(keywords)))
+            result = yield PopcornMovieProvider.search(page, orderby, urllib.parse.quote(keywords))
+            return result
 
     @staticmethod
-    @return_future
-    def get_movies_all(page, orderby, keywords, callback=None):
+    @gen.coroutine
+    def get_movies_all(page, orderby, keywords):
         if len(keywords) == 0:
-            callback(PopcornMovieProvider.get_list(page, orderby, True))
+            result = yield PopcornMovieProvider.get_list(page, orderby, True)
+            return result
         else:
-            callback(PopcornMovieProvider.search(page, orderby, urllib.parse.quote(keywords), True))
+            result = yield PopcornMovieProvider.search(page, orderby, urllib.parse.quote(keywords), True)
+            return result
 
     @staticmethod
-    @return_future
-    def get_movie(id, callback=None):
-        callback(PopcornMovieProvider.get_by_id(id))
+    @gen.coroutine
+    def get_movie(id):
+        result = yield PopcornMovieProvider.get_by_id(id)
+        return result
 
     @staticmethod
     def play_movie(url, id, title, img):

@@ -2,7 +2,7 @@ import urllib.request
 import urllib.parse
 
 import time
-from tornado.concurrent import return_future
+from tornado import gen
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -17,24 +17,30 @@ class ShowController:
     server_uri = "http://localhost:50009"
 
     @staticmethod
-    @return_future
-    def get_shows(page, orderby, keywords, callback=None):
+    @gen.coroutine
+    def get_shows(page, orderby, keywords):
         if len(keywords) == 0:
-            callback(ShowProvider.get_list(page, orderby))
+            response = yield ShowProvider.get_list(page, orderby)
+            return response
         else:
-            callback(ShowProvider.search(page, orderby, urllib.parse.quote(keywords)))
+            response = yield ShowProvider.search(page, orderby, urllib.parse.quote(keywords))
+            return response
 
     @staticmethod
-    @return_future
-    def get_shows_all(page, orderby, keywords, callback=None):
+    @gen.coroutine
+    def get_shows_all(page, orderby, keywords):
         if len(keywords) == 0:
-            callback(ShowProvider.get_list(page, orderby, True))
+            response = yield ShowProvider.get_list(page, orderby, True)
+            return response
         else:
-            callback(ShowProvider.search(page, orderby, urllib.parse.quote(keywords), True))
+            response = yield ShowProvider.search(page, orderby, urllib.parse.quote(keywords), True)
+            return response
 
     @staticmethod
+    @gen.coroutine
     def get_show(id):
-        return ShowProvider.get_by_id(id)
+        response = yield ShowProvider.get_by_id(id)
+        return response
 
     @staticmethod
     def play_episode(url, title, img):
