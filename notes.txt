@@ -17,8 +17,3 @@
     speed graph
 
     Volgende aflevering van series automatisch afspelen
-
-    Harde schijf niet hoeven verplaatsen
-        Master een static file handler die op /master staat met een base folder
-        Op pi die base folder op de ext harde schijf locatie zetten
-        HD de files/folders laten ophalen van die locatie op master
