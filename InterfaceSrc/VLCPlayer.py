@@ -1,10 +1,6 @@
-import ctypes
-import ctypes.util
 import datetime
 import time
 from enum import Enum
-
-import sys
 
 from InterfaceSrc import vlc
 from InterfaceSrc.vlc import EventType, libvlc_get_version
@@ -48,10 +44,12 @@ class VLCPlayer:
         network_caching = " --network-caching=" + str(Settings.get_int("network_caching"))
         ip_timeout = " --ipv4-timeout=500"
         if Settings.get_bool("raspberry"):
-            self.__vlc_instance = vlc.Instance("vlc -V omxil_vout --codec omxil --image-duration=-1 --file-caching=5000" + log_level + network_caching + ip_timeout)
-        else:
-            self.__vlc_instance = vlc.Instance("--image-duration=-1 " + log_level + network_caching + ip_timeout)
+            log_path = Settings.get_string("log_folder")
+            file_path = log_path + '/log_'+datetime.date.today().strftime('%d-%m-%Y') + ".txt"
 
+            self.__vlc_instance = vlc.Instance("vlc -V omxil_vout --codec omxil --file-logging --logfile="+file_path+" --image-duration=-1 --file-caching=5000" + log_level + network_caching + ip_timeout)
+        else:
+            self.__vlc_instance = vlc.Instance("--image-duration=-1" + log_level + network_caching + ip_timeout)
         Logger.write(3, "VLC version " + libvlc_get_version().decode('ascii'))
 
     def play(self, type, title, url, img=None, time=0):

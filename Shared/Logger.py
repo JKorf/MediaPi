@@ -2,6 +2,7 @@ import datetime
 import inspect
 import ntpath
 import os
+import sys
 
 from Shared.Settings import Settings
 
@@ -42,7 +43,8 @@ class Logger:
             if log_priority == 3:
                 strInfo = '\033[1m' + strInfo + '\033[0m'
 
-            print(strInfo)
+            if not Settings.get_bool("raspberry"):
+                print(strInfo)
 
             Logger.file.write((file_log + "\r\n").encode('ascii'))
 

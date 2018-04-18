@@ -314,6 +314,9 @@ else:
     stats.enable()
     try:
         StartUp()
+    except Exception as e:
+        Logger.write(3, "Exception during startup: " + str(e))
+        Logger.write(3, traceback.format_exc())
     finally:
         stats.disable()
         PyStats.add_stats(stats)
