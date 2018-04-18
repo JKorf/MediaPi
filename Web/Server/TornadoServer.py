@@ -307,7 +307,7 @@ class HDHandler(web.RequestHandler):
         if url == "play_file":
             if Settings.get_bool("slave"):
                 Logger.write(2, self.get_argument("path"))
-                HDController.play_file(self.get_argument("filename"), TornadoServer.master_ip + "/master/" + self.get_argument("path"))
+                HDController.play_file(self.get_argument("filename"), TornadoServer.master_ip + "/master" + urllib.parse.quote_plus(self.get_argument("path")))
                 json_data = yield RequestFactory.make_request_async(Settings.get_string("master_ip") + "/hd/get_hash?path=" + urllib.parse.quote_plus(self.get_argument("path")))
                 json_obj = json.loads(json_data.decode())
                 EventManager.throw_event(EventType.StreamFileHashKnown, [json_obj["length"], json_obj["hash"]])

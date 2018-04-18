@@ -2,7 +2,7 @@
 2.  Set static IP: https://www.raspberrypi.org/forums/viewtopic.php?t=191140+
 3.  Enable SSH and auto script start on startup
     sudo nano /etc/profile, add to end:
-    sudo python3 /home/pi/Sripts/start.py &
+    sudo python3 /home/pi/Scripts/start.py &
     sudo /etc/init.d/ssh start
 4.  Copy over scripts
 5.  Install dependencies:
