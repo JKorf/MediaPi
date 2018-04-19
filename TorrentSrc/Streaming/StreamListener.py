@@ -2,6 +2,7 @@ import os
 import random
 import socket
 import time
+from threading import Lock
 
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -23,7 +24,11 @@ class StreamListener:
     }
 
     def __init__(self, torrent, port):
+
         self.torrent = torrent
+        self.file = None
+        self.file_read_lock = Lock()
+
         self.port = port
         self.thread = None
         self.request_thread = None
@@ -74,33 +79,60 @@ class StreamListener:
             return
 
         header = HttpHeader.from_string(total_message)
+        if header.path == "/torrent":
+            while not self.torrent or not self.torrent.media_file:
+                if not self.running:
+                    socket.close()
+                    self.remove_socket(socket)
+                    Logger.write(2, "Stopping connection because there is no more torrent, now " + str(len(self.requests)))
+                    return
+                time.sleep(0.5)
 
-        while not self.torrent or not self.torrent.media_file:
-            if not self.running:
+            if header.range_end == 0 or header.range_end == -1:
+                header.range_end = self.torrent.media_file.length - 1
+            range_start = 0
+            if header.range:
+                range_start = header.range_start
+
+            if self.in_requests(socket):
+                EventManager.throw_event(EventType.NewRequest, [range_start])
+                if header.range is None:
+                    Logger.write(2, 'request without range')
+                    self.update_socket(socket, "Without range: 0 - " + str(header.range_end))
+                    self.write_header(socket, "200 OK", 0, header.range_end, self.torrent.media_file.length, self.torrent.media_file.path)
+                    self.write_data(socket, header.range_start, header.range_end - header.range_start + 1, self.get_bytes_torrent)
+                else:
+                    Logger.write(2, 'request with range')
+                    self.update_socket(socket, "With range: "+str(header.range_start)+" - " + str(header.range_end))
+                    self.write_header(socket, "206 Partial Content", header.range_start, header.range_end, self.torrent.media_file.length, self.torrent.media_file.path)
+                    self.write_data(socket, header.range_start, header.range_end - header.range_start + 1, self.get_bytes_torrent)
+
+        elif header.path.startswith("/file"):
+            file_path = header.path[6:]
+            if not os.path.exists(file_path):
+                Logger.write(2, "File not found: " + file_path)
                 socket.close()
                 self.remove_socket(socket)
-                Logger.write(2, "Stopping connection because there is no more torrent, now " + str(len(self.requests)))
                 return
-            time.sleep(0.5)
 
-        if header.range_end == 0 or header.range_end == -1:
-            header.range_end = self.torrent.media_file.length - 1
-        range_start = 0
-        if header.range:
-            range_start = header.range_start
+            file_size = os.path.getsize(file_path)
+            if header.range_end == 0 or header.range_end == -1:
+                header.range_end = file_size - 1
 
-        if self.in_requests(socket):
-            EventManager.throw_event(EventType.NewRequest, [range_start])
+            self.file = open(file_path, 'rb')
             if header.range is None:
                 Logger.write(2, 'request without range')
                 self.update_socket(socket, "Without range: 0 - " + str(header.range_end))
-                self.write_header(socket, "200 OK", 0, header.range_end)
-                self.write_data(socket, header.range_start, header.range_end - header.range_start + 1)
+                self.write_header(socket, "200 OK", 0, header.range_end, file_size, file_path)
+                self.write_data(socket, header.range_start, header.range_end - header.range_start + 1, self.get_bytes_file)
             else:
                 Logger.write(2, 'request with range')
-                self.update_socket(socket, "With range: "+str(header.range_start)+" - " + str(header.range_end))
-                self.write_header(socket, "206 Partial Content", header.range_start, header.range_end)
-                self.write_data(socket, header.range_start, header.range_end - header.range_start + 1)
+                self.update_socket(socket, "With range: " + str(header.range_start) + " - " + str(header.range_end))
+                self.write_header(socket, "206 Partial Content", header.range_start, header.range_end, file_size, file_path)
+                self.write_data(socket, header.range_start, header.range_end - header.range_start + 1, self.get_bytes_file)
+            self.file.close()
+        else:
+            Logger.write(2, "Received unknown request: " + header.path)
 
         if self.in_requests(socket):
             socket.close()
@@ -125,17 +157,14 @@ class StreamListener:
         self.requests.remove(tup)
         Logger.write(2, "Removed client with id " + str(tup[0]))
 
-    def write_header(self, socket, status, start, end):
-        if end == -1:
-            end = self.torrent.media_file.length - 1
-
+    def write_header(self, socket, status, start, end, length, path):
         response_header = HttpHeader()
         Logger.write(2, "stream requested: " + str(start) + "-" + str(end))
 
         response_header.status_code = status
         response_header.content_length = end - start + 1
-        response_header.set_range(start, end, self.torrent.media_file.length)
-        filename, file_extension = os.path.splitext(self.torrent.media_file.path)
+        response_header.set_range(start, end, length)
+        filename, file_extension = os.path.splitext(path)
         if file_extension not in StreamListener.mime_mapping:
             Logger.write(2, "Unknown video type: " + str(file_extension) + ", defaulting to mp4")
             response_header.mime_type = StreamListener.mime_mapping[".mp4"]
@@ -150,7 +179,17 @@ class StreamListener:
             Logger.write(2, "Connection closed 2")
             return
 
-    def write_data(self, socket, requested_byte, length):
+    def get_bytes_torrent(self, start, length):
+        return self.torrent.get_data_bytes_for_stream(start, length)
+
+    def get_bytes_file(self, start, length):
+        self.file_read_lock.acquire()
+        self.file.seek(start)
+        data = self.file.read(length)
+        self.file_read_lock.release()
+        return data
+
+    def write_data(self, socket, requested_byte, length, data_delegate):
         written = 0
         Logger.write(2, "Write data: " + str(requested_byte) + ", length " + str(length))
 
@@ -160,7 +199,7 @@ class StreamListener:
                 Logger.write(2, "Socket no longer open 1: " + str(requested_byte) + ", " + str(length))
                 return
 
-            data = self.torrent.get_data_bytes_for_stream(requested_byte + written, part_length)
+            data = data_delegate(requested_byte + written, part_length)
             if not self.running:
                 Logger.write(2, "Canceling retrieved data because we are no longer running")
                 return
@@ -250,6 +289,7 @@ class HttpHeader:
         self.range_start = 0
         self.range_end = 0
         self.range_total = 0
+        self.path = None
 
         self.content_length = 0
         self.mime_type = None
@@ -263,6 +303,8 @@ class HttpHeader:
         Logger.write(2, "Received: " + header)
         result = cls()
         split = header.splitlines(False)
+        request = split[0].split(" ")
+        result.path = request[1]
         for head in split:
             keyvalue = head.split(': ')
             if len(keyvalue) != 2:

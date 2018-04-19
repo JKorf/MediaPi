@@ -14,7 +14,7 @@ from Web.Server.Providers.ShowProvider import ShowProvider
 class ShowController:
 
     shows_api_path = Settings.get_string("serie_api")
-    server_uri = "http://localhost:50009"
+    server_uri = "http://localhost:50009/torrent"
 
     @staticmethod
     @gen.coroutine

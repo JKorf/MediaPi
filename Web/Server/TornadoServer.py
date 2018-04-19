@@ -23,7 +23,6 @@ from Web.Server.Controllers.TorrentController import TorrentController
 from Web.Server.Controllers.UtilController import UtilController
 from Web.Server.Controllers.YoutubeController import YoutubeController
 from Web.Server.Models import WebSocketMessage
-from Web.Server.StaticFileHandlerUnQuote import StaticFileHandlerUnQuote
 
 
 class TornadoServer:
@@ -45,13 +44,9 @@ class TornadoServer:
             (r"/youtube/(.*)", YoutubeHandler),
             (r"/torrents/(.*)", TorrentHandler),
             (r"/realtime", RealtimeHandler),
-            (r"/database/(.*)", DatabaseHandler)
+            (r"/database/(.*)", DatabaseHandler),
+            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Web", "default_filename": "index.html"})
         ]
-
-        if not Settings.get_bool("slave"):
-            handlers.append((r"/master/(.*)", StaticFileHandlerMaster, {"path": Settings.get_string("master_base_folder")}))
-
-        handlers.append((r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Web", "default_filename": "index.html"}))
 
         self.application = web.Application(handlers)
 
@@ -159,11 +154,6 @@ class TornadoServer:
 
 
 class StaticFileHandler(tornado.web.StaticFileHandler):
-    def set_extra_headers(self, path):
-        # Disable cache
-        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-
-class StaticFileHandlerMaster(StaticFileHandlerUnQuote):
     def set_extra_headers(self, path):
         # Disable cache
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -292,11 +282,9 @@ class HDHandler(web.RequestHandler):
     def get(self, url):
         if Settings.get_bool("slave"):
             yield self.reroute_to_master()
-            return
-
-        if url == "drives":
+        elif url == "drives":
             self.write(HDController.drives())
-        if url == "get_hash":
+        elif url == "get_hash":
             length, hash = calculate_file_hash_file(self.get_argument("path"), False)
             self.write("{\"length\": "+str(length)+", \"hash\": \""+str(hash)+"\" }")
         elif url == "directory":
@@ -307,10 +295,20 @@ class HDHandler(web.RequestHandler):
         if url == "play_file":
             if Settings.get_bool("slave"):
                 Logger.write(2, self.get_argument("path"))
-                HDController.play_file(self.get_argument("filename"), TornadoServer.master_ip + "/master" + urllib.parse.quote_plus(self.get_argument("path")))
+
+                # play file from master
+                file_location = TornadoServer.master_ip + ":50010/file"
+                if not self.get_argument("path").startswith("/"):
+                    file_location += "/"
+                HDController.play_file(self.get_argument("filename"), file_location + urllib.parse.quote_plus(self.get_argument("path")))
+
+                # request hash from master
                 json_data = yield RequestFactory.make_request_async(Settings.get_string("master_ip") + "/hd/get_hash?path=" + urllib.parse.quote_plus(self.get_argument("path")))
-                json_obj = json.loads(json_data.decode())
-                EventManager.throw_event(EventType.StreamFileHashKnown, [json_obj["length"], json_obj["hash"]])
+                if json_data:
+                    json_obj = json.loads(json_data.decode())
+                    EventManager.throw_event(EventType.StreamFileHashKnown, [json_obj["length"], json_obj["hash"]])
+                else:
+                    Logger.write(2, "Failed to retrieve stream hash from master")
 
             else:
                 HDController.play_file(self.get_argument("filename"), self.get_argument("path"))

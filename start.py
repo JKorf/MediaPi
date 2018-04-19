@@ -8,8 +8,8 @@ from shutil import copytree, rmtree
 
 os.chdir(os.path.dirname(__file__))
 
-from Web.Server.Controllers.MovieController import MovieController
 from Database.Database import Database
+from TorrentSrc.Streaming.StreamListener import StreamListener
 
 from TorrentSrc.TorrentManager import TorrentManager
 from TorrentSrc.Util.Stats import PyStats
@@ -66,6 +66,8 @@ class StartUp:
         if not self.is_slave:
             self.database = Database()
             self.database.init_database()
+            self.file_listener = StreamListener(None, 50010)
+            self.file_listener.start_listening()
 
         self.dht_enabled = Settings.get_bool("dht")
         if self.dht_enabled:
@@ -203,7 +205,7 @@ class StartUp:
                 thread.start()
 
     def torrent_metadata_done(self, torrent):
-        if torrent.id == self.stream_torrent.id:
+        if self.stream_torrent and torrent.id == self.stream_torrent.id:
             if self.player.title == "Direct Link":
                 self.player.title = torrent.name
 

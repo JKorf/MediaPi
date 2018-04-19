@@ -16,7 +16,7 @@ class MovieController:
     movies_api_path = Settings.get_string("movie_api")
     sub_api_path = "http://api.yifysubtitles.com/subs/"
     sub_download_path = "http://yifysubtitles.com/"
-    server_uri = "http://localhost:50009"
+    server_uri = "http://localhost:50009/torrent"
 
     @staticmethod
     @gen.coroutine
