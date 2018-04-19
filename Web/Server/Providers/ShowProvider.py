@@ -34,18 +34,20 @@ class ShowProvider:
         return ShowProvider.shows_data
 
     @staticmethod
+    @gen.coroutine
     def search(page, orderby, keywords, all=False):
         Logger.write(2, "Search shows " + keywords)
         if all:
             data = b""
             for i in range(int(page)):
-                new_data = RequestFactory.make_request_async(
+                new_data = yield RequestFactory.make_request_async(
                     ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby + "&keywords=" + keywords)
                 if new_data is not None:
                     data = ShowProvider.append_result(data, new_data)
             return data
         else:
-            return RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby + "&keywords="+keywords)
+            data = yield RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby + "&keywords="+keywords)
+            return data
 
     @staticmethod
     @gen.coroutine
