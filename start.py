@@ -66,7 +66,7 @@ class StartUp:
         if not self.is_slave:
             self.database = Database()
             self.database.init_database()
-            self.file_listener = StreamListener(None, 50010)
+            self.file_listener = StreamListener("MasterFileServer", 50010)
             self.file_listener.start_listening()
 
         self.dht_enabled = Settings.get_bool("dht")

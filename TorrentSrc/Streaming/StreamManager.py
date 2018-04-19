@@ -35,7 +35,7 @@ class StreamManager:
     def __init__(self, torrent):
         self.torrent = torrent
         self.stream_position_piece_index = 0
-        self.listener = StreamListener(torrent, 50009)
+        self.listener = StreamListener("TorrentServer", 50009, torrent)
         self.buffer = None
         self.end_piece = 0
         self.piece_count_end_buffer_tolerance = 0
