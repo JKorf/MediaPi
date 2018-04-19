@@ -1,5 +1,7 @@
 import os
 import random
+import sys
+import urllib.parse
 import socket
 import time
 from threading import Lock
@@ -103,11 +105,16 @@ class StreamListener:
 
     def handle_file_request(self, socket, header):
         file_path = header.path[6:]
+        if sys.platform == "linux" or sys.platform == "linux2":
+            file_path = "/" + file_path
+
         if not os.path.exists(file_path):
-            Logger.write(2, "File not found: " + file_path)
-            socket.close()
-            self.remove_socket(socket)
-            return
+            file_path = urllib.parse.unquote_plus(file_path)
+            if not os.path.exists(file_path):
+                Logger.write(2, "File not found: " + file_path)
+                socket.close()
+                self.remove_socket(socket)
+                return
 
         read_file = ReadFile(file_path)
         read_file.open()
@@ -263,7 +270,7 @@ class StreamServer:
         self.running = True
 
         try:
-            self.soc.bind(("127.0.0.1", self.port))
+            self.soc.bind(("", self.port))
             Logger.write(2, "StreamServer "+self.name+" running on port " + str(self.port))
         except (socket.error, OSError):
             pass

@@ -1,9 +1,9 @@
 1.  Install VLC with hardware acceleration: https://www.raspberrypi.org/forums/viewtopic.php?f=66&t=195221
 2.  Set static IP: https://www.raspberrypi.org/forums/viewtopic.php?t=191140+
 3.  Enable SSH and auto script start on startup
-    sudo nano /etc/profile, add to end:
+    Enable ssh in desktop -> preferences -> raspberry config -> interfaces -> ssh
+    sudo /home/pi/.config/lxsession/LXDE-pi/autostart, add before screensaver:
     sudo python3 /home/pi/Scripts/start.py &
-    sudo /etc/init.d/ssh start
 4.  Copy over scripts
 5.  Install dependencies:
 sudo pip3 install tornado
