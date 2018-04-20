@@ -25,7 +25,9 @@
         }
 
         factory.Remove = function(obj){
-            unfinished.splice(unfinished.indexOf(obj), 1);
+            unfinished = unfinished.filter(function( item ) {
+                return item.url !== obj.url;
+            });
             $http.get("/database/remove_unfinished?url=" + encodeURIComponent(obj.url));
         }
 
