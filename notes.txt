@@ -19,3 +19,4 @@
     Volgende aflevering van series automatisch afspelen
 
     Directive toevoegen voor fade van dingen die kunnen scrollen (home widgets)
+    Home widgets iets minder breed als er een scrollbalk is op grotere schermen
