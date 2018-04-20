@@ -206,7 +206,7 @@ class MovieHandler(web.RequestHandler):
         elif url == "play_direct_link":
             MovieController.play_direct_link(self.get_argument("url"), self.get_argument("title"))
         elif url == "play_continue":
-            MovieController.play_continue(self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"))
+            yield MovieController.play_continue(self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"))
 
     @gen.coroutine
     def get(self, url):
@@ -295,20 +295,7 @@ class HDHandler(web.RequestHandler):
         if url == "play_file":
             if Settings.get_bool("slave"):
                 Logger.write(2, self.get_argument("path"))
-
-                # play file from master
-                file_location = TornadoServer.master_ip + ":50010/file"
-                if not self.get_argument("path").startswith("/"):
-                    file_location += "/"
-                HDController.play_file(self.get_argument("filename"), file_location + urllib.parse.quote_plus(self.get_argument("path")))
-
-                # request hash from master
-                json_data = yield RequestFactory.make_request_async(Settings.get_string("master_ip") + "/hd/get_hash?path=" + urllib.parse.quote_plus(self.get_argument("path")))
-                if json_data:
-                    json_obj = json.loads(json_data.decode())
-                    EventManager.throw_event(EventType.StreamFileHashKnown, [json_obj["length"], json_obj["hash"], os.path.basename(self.get_argument("path"))])
-                else:
-                    Logger.write(2, "Failed to retrieve stream hash from master")
+                play_master_file(self.get_argument("path"), self.get_argument("filename"), 0)
 
             else:
                 HDController.play_file(self.get_argument("filename"), self.get_argument("path"))
@@ -323,8 +310,29 @@ class HDHandler(web.RequestHandler):
     def reroute_to_master(self):
         reroute = str(TornadoServer.master_ip) + self.request.uri
         Logger.write(2, "Sending request to master at " + reroute)
-        result = yield RequestFactory.make_request_async(reroute)
-        self.write(result)
+        result = yield RequestFactory.make_request_async(reroute, self.request.method)
+        if result:
+            self.write(result)
+
+@gen.coroutine
+def play_master_file(path, file, position):
+    # play file from master
+    file_location = TornadoServer.master_ip + ":50010/file"
+    if not path.startswith("/"):
+        file_location += "/"
+    HDController.play_file(file,
+                           file_location + urllib.parse.quote_plus(path),
+                           position)
+
+    # request hash from master
+    json_data = yield RequestFactory.make_request_async(
+        Settings.get_string("master_ip") + "/hd/get_hash?path=" + urllib.parse.quote_plus(path))
+    if json_data:
+        json_obj = json.loads(json_data.decode())
+        EventManager.throw_event(EventType.StreamFileHashKnown,
+                                 [json_obj["length"], json_obj["hash"], os.path.basename(path)])
+    else:
+        Logger.write(2, "Failed to retrieve stream hash from master")
 
 
 class YoutubeHandler(web.RequestHandler):
@@ -396,9 +404,9 @@ class DatabaseHandler(web.RequestHandler):
             Logger.write(2, "Getting watched episodes")
             self.write(to_JSON(TornadoServer.start_obj.database.get_watched_episodes()))
 
-        if url == "get_unfinished_torrents":
-            Logger.write(2, "Getting unfinished torrents")
-            self.write(to_JSON(TornadoServer.start_obj.database.get_watching_torrents()))
+        if url == "get_unfinished_items":
+            Logger.write(2, "Getting unfinished items")
+            self.write(to_JSON(TornadoServer.start_obj.database.get_watching_items()))
 
     @gen.coroutine
     def post(self, url):
@@ -428,12 +436,13 @@ class DatabaseHandler(web.RequestHandler):
 
         if url == "remove_unfinished":
             Logger.write(2, "Removing unfinished")
-            TornadoServer.start_obj.database.remove_watching_torrent(
+            TornadoServer.start_obj.database.remove_watching_item(
                 self.get_argument("url"))
 
         if url == "add_unfinished":
             Logger.write(2, "Adding unfinished")
-            TornadoServer.start_obj.database.add_watching_torrent(
+            TornadoServer.start_obj.database.add_watching_item(
+                self.get_argument("type"),
                 self.get_argument("name"),
                 self.get_argument("url"),
                 self.get_argument("image"),
@@ -442,7 +451,7 @@ class DatabaseHandler(web.RequestHandler):
 
         if url == "update_unfinished":
             Logger.write(2, "Updating unfinished")
-            TornadoServer.start_obj.database.update_watching_torrent(
+            TornadoServer.start_obj.database.update_watching_item(
                 self.get_argument("url"),
                 int(self.get_argument("position")))
 
@@ -450,5 +459,6 @@ class DatabaseHandler(web.RequestHandler):
     def reroute_to_master(self):
         reroute = str(TornadoServer.master_ip) + self.request.uri
         Logger.write(2, "Sending request to master at " + reroute)
-        result = yield RequestFactory.make_request_async(reroute)
-        self.write(result)
+        result = yield RequestFactory.make_request_async(reroute, self.request.method)
+        if result:
+            self.write(result)

@@ -14,7 +14,7 @@ class Database:
         self.path = Settings.get_string("base_folder") + "database.data"
         self.database = None
         self.connection = None
-        self.current_version = 1
+        self.current_version = 2
         self.lock = Lock()
 
     def init_database(self):
@@ -140,24 +140,24 @@ class Database:
         self.lock.release()
         return [x[0] for x in data]
 
-    def add_watching_torrent(self, name, url, image, length, time):
-        if self.get_watching_torrent(url) is not None:
+    def add_watching_item(self, type, name, url, image, length, time):
+        if self.get_watching_item(url) is not None:
             return
 
         self.lock.acquire()
         self.connect()
-        self.connection.execute("INSERT INTO UnfinishedTorrents (Url, Name, Image, Time, Length, WatchedAt) " +
-                                "VALUES (?, ?, ?, ?, ?, ?)", [url, name, image, 0, str(length), str(time)])
+        self.connection.execute("INSERT INTO UnfinishedItems (Type, Url, Name, Image, Time, Length, WatchedAt) " +
+                                "VALUES (?, ?, ?, ?, ?, ?, ?)", [type, url, name, image, 0, str(length), str(time)])
 
         self.database.commit()
         self.disconnect()
         self.lock.release()
 
-    def get_watching_torrent(self, url):
+    def get_watching_item(self, url):
         self.lock.acquire()
         self.connect()
 
-        self.connection.execute("SELECT * FROM UnfinishedTorrents WHERE Url='"+url+"'")
+        self.connection.execute("SELECT * FROM UnfinishedItems WHERE Url='"+url+"'")
         data = self.connection.fetchall()
         self.database.commit()
         self.disconnect()
@@ -166,34 +166,34 @@ class Database:
             return None
         return data[0]
 
-    def get_watching_torrents(self):
+    def get_watching_items(self):
         self.lock.acquire()
         self.connect()
 
-        self.connection.execute("SELECT * FROM UnfinishedTorrents")
+        self.connection.execute("SELECT * FROM UnfinishedItems")
         data = self.connection.fetchall()
         self.database.commit()
         self.disconnect()
         self.lock.release()
         return data
 
-    def update_watching_torrent(self, url, time):
+    def update_watching_item(self, url, time):
         self.lock.acquire()
         self.connect()
 
         self.connection.execute(
-            "UPDATE UnfinishedTorrents SET Time="+str(time)+" WHERE Url='"+url+"'")
+            "UPDATE UnfinishedItems SET Time="+str(time)+" WHERE Url='"+url+"'")
 
         self.database.commit()
         self.disconnect()
         self.lock.release()
 
-    def remove_watching_torrent(self, url):
+    def remove_watching_item(self, url):
         self.lock.acquire()
         self.connect()
 
         self.connection.execute(
-            "DELETE FROM UnfinishedTorrents WHERE Url='" + url + "'")
+            "DELETE FROM UnfinishedItems WHERE Url='" + url + "'")
 
         self.database.commit()
         self.disconnect()

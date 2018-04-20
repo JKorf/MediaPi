@@ -37,8 +37,8 @@ class RequestFactory:
             async_http_client = AsyncHTTPClient()
             http_request = HTTPRequest(url, method=method, headers=headers, body=body, request_timeout=5, connect_timeout=5)
             http_response = yield async_http_client.fetch(http_request)
-            raise gen.Return(http_response.body)
-        except (tornado.httpclient.HTTPError, ValueError) as e:
+            return http_response.body
+        except Exception as e:
             Logger.write(2, "Error requesting url " + url + ": " + str(e))
             return None
 

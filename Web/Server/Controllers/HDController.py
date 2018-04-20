@@ -41,7 +41,7 @@ class HDController:
         return to_JSON(dir).encode('ascii')
 
     @staticmethod
-    def play_file(filename, path):
+    def play_file(filename, path, position=None):
         file = urllib.parse.unquote(path)
         Logger.write(2, "Play file: " + file)
         EventManager.throw_event(EventType.StopStreamTorrent, [])
@@ -50,7 +50,7 @@ class HDController:
         if filename.endswith(".jpg"):
             EventManager.throw_event(EventType.StartPlayer, ["Image", urllib.parse.unquote(filename), file])
         else:
-            EventManager.throw_event(EventType.StartPlayer, ["File", urllib.parse.unquote(filename), file])
+            EventManager.throw_event(EventType.StartPlayer, ["File", urllib.parse.unquote(filename), file, None, position])
 
 
     @staticmethod

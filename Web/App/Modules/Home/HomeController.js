@@ -42,7 +42,7 @@
 
         $scope.continue_torrent = function(uf){
             ConfirmationFactory.confirm_continue(uf.name).then(function(){
-                $http.post("/movies/play_continue?url=" + encodeURIComponent(uf.url) + "&title=" + encodeURIComponent(uf.name) + "&image=" + encodeURIComponent(uf.image) + "&position=" + uf.position);
+                $http.post("/movies/play_continue?type="+uf.type+"&url=" + encodeURIComponent(uf.url) + "&title=" + encodeURIComponent(uf.name) + "&image=" + encodeURIComponent(uf.image) + "&position=" + uf.position);
             })
         }
 

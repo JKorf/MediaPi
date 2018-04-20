@@ -54,6 +54,7 @@ class StartUp:
         self.running = True
         self.youtube_end_counter = 0
         self.is_slave = Settings.get_bool("slave")
+        self.master_ip = Settings.get_string("master_ip")
 
         self.added_unfinished = False
         self.removed_unfinished = False
@@ -76,8 +77,8 @@ class StartUp:
             EventManager.register_event(EventType.RequestDHTPeers, self.request_dht_peers)
 
         self.start_webserver()
-        self.start_stat_observer()
         self.init_player()
+        self.start_stat_observer()
         self.init_sound()
         self.subtitle_provider = SubtitleProvider(self)
         self.start_subtitle_provider()
@@ -135,31 +136,51 @@ class StartUp:
                     if torrent.download_counter.max > current:
                         Stats['max_download_speed'].set(torrent.download_counter.max)
 
-                # Update time for resuming
-                if self.player.get_position() > 0 and self.player.get_length() - self.player.get_position() < 30:
-                    if self.added_unfinished and not self.removed_unfinished:
-                        self.removed_unfinished = True
-                        if self.is_slave:
-                            self.server.notify_master("/database/remove_unfinished?url=" + urllib.parse.quote(self.stream_torrent.uri))
-                        else:
-                            self.database.remove_watching_torrent(self.stream_torrent.uri)
-                elif self.player.get_position() > 10 and not self.added_unfinished:
-                    self.added_unfinished = True
+            if not self.player.path:
+                time.sleep(5)
+                continue
+
+            watching_type = "torrent"
+            if self.player.type == "File":
+                watching_type = "file"
+
+            path = self.player.path
+            master_path = self.master_ip + ":50010/file/"
+            if path.startswith(master_path):
+                path = path[len(master_path):]
+
+            img = self.player.img
+            if not img:
+                img = ""
+
+            # Update time for resuming
+            if self.player.get_position() > 0 and self.player.get_length() - self.player.get_position() < 30:
+                if self.added_unfinished and not self.removed_unfinished:
+                    self.removed_unfinished = True
                     if self.is_slave:
-                        self.server.notify_master("/database/add_unfinished?url="
-                                                  + urllib.parse.quote(self.stream_torrent.uri)
-                                                  + "&name=" + urllib.parse.quote(self.player.title)
-                                                  + "&length=" + str(self.player.get_length())
-                                                  + "&time=" + str(current_time())
-                                                  + "&image=" + urllib.parse.quote(self.player.img))
+                        self.server.notify_master("/database/remove_unfinished?url=" + urllib.parse.quote(path))
                     else:
-                        self.database.add_watching_torrent(self.player.title, self.stream_torrent.uri, self.player.img,
-                                                       self.player.get_length(), current_time())
-                elif self.player.get_position() > 10:
-                    if self.is_slave:
-                        self.server.notify_master("/database/update_unfinished?url=" + urllib.parse.quote(self.stream_torrent.uri) + "&position=" + str(self.player.get_position()))
-                    else:
-                        self.database.update_watching_torrent(self.stream_torrent.uri, self.player.get_position())
+                        self.database.remove_watching_item(path)
+            elif self.player.get_position() > 10 and not self.added_unfinished:
+                self.added_unfinished = True
+                if self.is_slave:
+                    self.server.notify_master("/database/add_unfinished?url="
+                                              + urllib.parse.quote(path)
+                                              + "&name=" + urllib.parse.quote(self.player.title)
+                                              + "&length=" + str(self.player.get_length())
+                                              + "&time=" + str(current_time())
+                                              + "&image=" + urllib.parse.quote(img)
+                                              + "&type=" + watching_type)
+                else:
+                    self.database.add_watching_item(watching_type, self.player.title, path, self.player.img,
+                                                    self.player.get_length(), current_time())
+            elif self.player.get_position() > 10:
+                if self.is_slave:
+                    self.server.notify_master(
+                        "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(
+                            self.player.get_position()))
+                else:
+                    self.database.update_watching_item(path, self.player.get_position())
 
             time.sleep(5)
 
@@ -217,7 +238,6 @@ class StartUp:
         self.stop_player()
 
     def stream_torrent_started(self, torrent):
-        self.added_unfinished = False
         self.removed_unfinished = False
         self.stream_torrent = torrent
 
@@ -241,6 +261,7 @@ class StartUp:
     def start_player(self, type, title, url, img=None, position=0):
         self.stop_player()
         self.player.play(type, title, url, img, position)
+        self.added_unfinished = False
 
     def stop_player(self):
         self.youtube_end_counter = 0

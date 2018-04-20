@@ -8,6 +8,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from TorrentSrc.Util.Enums import OutputMode
+from Web.Server import TornadoServer
 from Web.Server.Providers.Movies.PopcornMovieProvider import PopcornMovieProvider
 
 
@@ -69,16 +70,27 @@ class MovieController:
             EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), urllib.parse.unquote_plus(url)])
 
     @staticmethod
-    def play_continue(url, title, image, position):
-        Logger.write(2, "Continue " + title + " at " + str(position))
+    @gen.coroutine
+    def play_continue(type, url, title, image, position):
+        Logger.write(2, "Continue " + title + "("+type+") at " + str(position))
         url = urllib.parse.unquote_plus(url)
-
-        EventManager.throw_event(EventType.StopStreamTorrent, [])
-        time.sleep(0.2)
-        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.Stream])
-        EventManager.throw_event(EventType.StartPlayer,
-                                 ["Movie",
-                                  urllib.parse.unquote(title),
-                                  MovieController.server_uri,
-                                  urllib.parse.unquote(image),
-                                  int(float(position)) * 1000])
+        if type == "torrent":
+            EventManager.throw_event(EventType.StopStreamTorrent, [])
+            time.sleep(0.2)
+            EventManager.throw_event(EventType.StartTorrent, [url, OutputMode.Stream])
+            EventManager.throw_event(EventType.StartPlayer,
+                                     ["Movie",
+                                      urllib.parse.unquote(title),
+                                      MovieController.server_uri,
+                                      urllib.parse.unquote(image),
+                                      int(float(position)) * 1000])
+        else:
+            if Settings.get_bool("slave"):
+                yield TornadoServer.play_master_file(url, title, int(float(position)) * 1000)
+            else:
+                EventManager.throw_event(EventType.StartPlayer,
+                                         ["File",
+                                          urllib.parse.unquote(title),
+                                          url,
+                                          urllib.parse.unquote(image),
+                                          int(float(position)) * 1000])
