@@ -7,7 +7,7 @@
         factory.AddWatchedFile = function(url, watchedAt){
             factory.GetWatchedFiles().then(function(){
                 watchedFiles.push({url: url, watchedAt: watchedAt});
-                $http.get("/database/add_watched_file?url=" + encodeURIComponent(url) + "&watchedAt=" + encodeURIComponent(watchedAt));
+                $http.post("/database/add_watched_file?url=" + encodeURIComponent(url) + "&watchedAt=" + encodeURIComponent(watchedAt));
             });
         }
 

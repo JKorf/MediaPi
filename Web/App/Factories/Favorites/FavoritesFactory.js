@@ -8,7 +8,7 @@
             console.log("Adding fav " + id);
             factory.GetAll().then(function(){
                 favs.push(id);
-                $http.get("/database/add_favorite?id=" + id);
+                $http.post("/database/add_favorite?id=" + id);
             });
         }
 
@@ -22,7 +22,7 @@
                     }
                 }
 
-                $http.get("/database/remove_favorite?id=" + id);
+                $http.post("/database/remove_favorite?id=" + id);
             });
         }
 

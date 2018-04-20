@@ -81,7 +81,7 @@ class TornadoServer:
         try:
             reroute = str(TornadoServer.master_ip) + url
             Logger.write(2, "Sending notification to master at " + reroute)
-            urllib.request.urlopen(reroute).read()
+            RequestFactory.make_request(reroute, "POST")
         except Exception as e:
             Logger.write(2, "Failed to notify master: " + str(e))
 
@@ -384,33 +384,13 @@ class DatabaseHandler(web.RequestHandler):
             yield self.reroute_to_master()
             return
 
-        if url == "add_favorite":
-            Logger.write(2, "Adding to favorites")
-            TornadoServer.start_obj.database.add_favorite(self.get_argument("id"))
-
-        if url == "remove_favorite":
-            Logger.write(2, "Removing from favorites")
-            TornadoServer.start_obj.database.remove_favorite(self.get_argument("id"))
-
         if url == "get_favorites":
             Logger.write(2, "Getting favorites")
             self.write(to_JSON(TornadoServer.start_obj.database.get_favorites()))
 
-        if url == "add_watched_file":
-            Logger.write(2, "Adding to watched files")
-            TornadoServer.start_obj.database.add_watched_file(self.get_argument("url"), self.get_argument("watchedAt"))
-
         if url == "get_watched_files":
             Logger.write(2, "Getting watched files")
             self.write(to_JSON(TornadoServer.start_obj.database.get_watched_files()))
-
-        if url == "add_watched_episode":
-            Logger.write(2, "Adding to watched episodes")
-            TornadoServer.start_obj.database.add_watched_episode(
-                self.get_argument("showId"),
-                self.get_argument("episodeSeason"),
-                self.get_argument("episodeNumber"),
-                self.get_argument("watchedAt"))
 
         if url == "get_watched_episodes":
             Logger.write(2, "Getting watched episodes")
@@ -419,6 +399,32 @@ class DatabaseHandler(web.RequestHandler):
         if url == "get_unfinished_torrents":
             Logger.write(2, "Getting unfinished torrents")
             self.write(to_JSON(TornadoServer.start_obj.database.get_watching_torrents()))
+
+    @gen.coroutine
+    def post(self, url):
+        if Settings.get_bool("slave"):
+            yield self.reroute_to_master()
+            return
+
+        if url == "add_watched_file":
+            Logger.write(2, "Adding to watched files")
+            TornadoServer.start_obj.database.add_watched_file(self.get_argument("url"), self.get_argument("watchedAt"))
+
+        if url == "add_favorite":
+            Logger.write(2, "Adding to favorites")
+            TornadoServer.start_obj.database.add_favorite(self.get_argument("id"))
+
+        if url == "remove_favorite":
+            Logger.write(2, "Removing from favorites")
+            TornadoServer.start_obj.database.remove_favorite(self.get_argument("id"))
+
+        if url == "add_watched_episode":
+            Logger.write(2, "Adding to watched episodes")
+            TornadoServer.start_obj.database.add_watched_episode(
+                self.get_argument("showId"),
+                self.get_argument("episodeSeason"),
+                self.get_argument("episodeNumber"),
+                self.get_argument("watchedAt"))
 
         if url == "remove_unfinished":
             Logger.write(2, "Removing unfinished")

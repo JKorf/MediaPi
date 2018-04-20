@@ -28,7 +28,7 @@
             unfinished = unfinished.filter(function( item ) {
                 return item.url !== obj.url;
             });
-            $http.get("/database/remove_unfinished?url=" + encodeURIComponent(obj.url));
+            $http.post("/database/remove_unfinished?url=" + encodeURIComponent(obj.url));
         }
 
         return factory;

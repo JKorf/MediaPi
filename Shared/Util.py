@@ -43,9 +43,9 @@ class RequestFactory:
             return None
 
     @staticmethod
-    def make_request(path):
+    def make_request(path, method="GET"):
         try:
-            request = urllib.request.Request(path, None, headers)
+            request = urllib.request.Request(path, None, headers, method=method)
             return urllib.request.urlopen(request).read()
         except Exception as e:
             Logger.write(2, "Error requesting url " + path + ": " + str(e))

@@ -10,7 +10,7 @@
                     return item.showId == showId;
                 });
 
-                $http.get("/database/add_watched_episode?showId=" + showId
+                $http.post("/database/add_watched_episode?showId=" + showId
                         + "&episodeSeason=" + epiSeason
                         + "&episodeNumber=" + epiNr
                          + "&watchedAt=" + encodeURIComponent(watchedAt));
