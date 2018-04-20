@@ -195,6 +195,14 @@
     position:relative;
 }
 
+.home-list-item.small-item{
+    height: 70px;
+}
+
+.home-list-item.small-item .home-list-item-content{
+    height: 66px;
+}
+
 .home-list-empty{
     padding: 3px 2px;
     color: #888;
@@ -275,11 +283,20 @@
 }
 
 .recent-files-list .home-list-item{
-    height: 64px;
+    height: 50px;
 }
 
 .recent-files-list .home-list-item-content{
-    height: 60px;
+    height: 44px;
+}
+
+.recent-files-list .home-list-item-details{
+    left: 46px;
+}
+
+.recent-files-list .home-list-item img{
+    height: 44px;
+    width: 44px;
 }
 
 .home-list-fade{
