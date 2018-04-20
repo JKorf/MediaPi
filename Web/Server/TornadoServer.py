@@ -306,7 +306,7 @@ class HDHandler(web.RequestHandler):
                 json_data = yield RequestFactory.make_request_async(Settings.get_string("master_ip") + "/hd/get_hash?path=" + urllib.parse.quote_plus(self.get_argument("path")))
                 if json_data:
                     json_obj = json.loads(json_data.decode())
-                    EventManager.throw_event(EventType.StreamFileHashKnown, [json_obj["length"], json_obj["hash"]])
+                    EventManager.throw_event(EventType.StreamFileHashKnown, [json_obj["length"], json_obj["hash"], os.path.basename(self.get_argument("path"))])
                 else:
                     Logger.write(2, "Failed to retrieve stream hash from master")
 

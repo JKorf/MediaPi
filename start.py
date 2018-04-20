@@ -100,8 +100,11 @@ class StartUp:
     def start_webserver(self):
         self.server = TornadoServer(self)
         self.server.start()
+        actual_address = self.server.get_actual_address()
+        Logger.write(3, "Webserver running on " + actual_address)
+
         if self.gui is not None:
-            self.gui.set_address(self.server.get_actual_address())
+            self.gui.set_address(actual_address)
 
     def init_player(self):
         self.player = VLCPlayer()

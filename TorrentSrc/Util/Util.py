@@ -49,7 +49,7 @@ def calculate_file_hash_torrent(torrent):
         hash &= 0xFFFFFFFFFFFFFFFF
 
     torrent.stream_file_hash = "%016x" % hash
-    EventManager.throw_event(EventType.StreamFileHashKnown, [torrent.media_file.length, torrent.stream_file_hash])
+    EventManager.throw_event(EventType.StreamFileHashKnown, [torrent.media_file.length, torrent.stream_file_hash, os.path.basename(torrent.media_file.path)])
 
 
 def calculate_file_hash_file(file, throw_event=True):
@@ -80,7 +80,7 @@ def calculate_file_hash_file(file, throw_event=True):
     f.close()
     returnedhash = "%016x" % hash
     if throw_event:
-        EventManager.throw_event(EventType.StreamFileHashKnown, [filesize, returnedhash])
+        EventManager.throw_event(EventType.StreamFileHashKnown, [filesize, returnedhash, os.path.basename(file)])
     return filesize, returnedhash
 
 
