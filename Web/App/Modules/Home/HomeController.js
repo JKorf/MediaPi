@@ -98,33 +98,6 @@
                 }
                 $scope.lastWatchedFiles = data;
             });
-
-            $timeout(function(){
-                var elem1 = $(".unfinished-items");
-                elem1.scroll(function(){
-                    if (elem1[0].scrollHeight - elem1.scrollTop() == elem1.outerHeight()){
-                        $(".unfinished-list .home-list-fade").hide();
-                        }
-                    else
-                        $(".unfinished-list .home-list-fade").show();
-                });
-
-                var elem3 = $(".favorites");
-                elem3.scroll(function(){
-                    if (elem3[0].scrollWidth - elem3.scrollLeft() == elem3.outerWidth())
-                        $(elem3).siblings(".list-more-fade").hide();
-                    else
-                        $(elem3).siblings(".list-more-fade").show();
-                });
-
-                var elem2 = $(".last-watched-files");
-                elem2.scroll(function(){
-                    if (elem2[0].scrollWidth - elem2.scrollLeft() == elem2.outerWidth())
-                        $(elem2).siblings(".list-more-fade").hide();
-                    else
-                        $(elem2).siblings(".list-more-fade").show();
-                });
-            }, 10);
         }
 
         function DetermineLastEpisodeRelease(show){

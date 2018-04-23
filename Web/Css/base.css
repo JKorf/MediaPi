@@ -781,3 +781,39 @@ input[type="range"]::-webkit-slider-thumb {
     min-width: 10px;
     height: 6px;
 }
+
+.fader{
+    height: 16px;
+    position:absolute;
+    left:0;
+    right:0px;
+}
+
+.fader-vert{
+    width: 16px;
+    position:absolute;
+    top:0;
+    bottom:0;
+}
+
+.fader-top{
+    background: linear-gradient(to top, rgba(255,255,255,0), rgba(255,255,255,1));
+    display: none;
+    top: 0;
+}
+
+.fader-bottom{
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+    bottom: 0;
+}
+
+.fader-left{
+    background: linear-gradient(to left, rgba(255,255,255,0), rgba(255,255,255,1));
+    display: none;
+    left:0;
+}
+
+.fader-right{
+    background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1));
+    right: 0;
+}

@@ -206,6 +206,7 @@
 }
 
 .home-list-items{
+    position:relative;
     max-height: 124px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -321,15 +322,6 @@
 .recent-files-list .home-list-item img{
     height: 44px;
     width: 44px;
-}
-
-.home-list-fade{
-    height: 16px;
-    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
-    position:absolute;
-    bottom:7px;
-    left:0;
-    right:0px;
 }
 
 .list-no-items{
