@@ -5,41 +5,47 @@
         No videos found :(
     </div>
 
-    <div class="search-bar">
-        <div class="youtube-search-box">
-            <textbox model="search.keywords" enter="searchVideos" placeholder="search.."></textbox>
+    <div class="youtube-items">
+        <div class="youtube-channels">
+            <div class="youtube-channel" ng-repeat="channel in channels | orderBy: 'new':true" ng-click="openChannel(channel)">
+                <div class="youtube-channel-thumbnail"><img class="youtube-channel-thumbnail-img" ng-src="{{channel.thumbnail}}" imageonload/></div>
+                <div class="youtube-channel-details">
+                    <div class="youtube-channel-title truncate">{{channel.title}}</div>
+                    <div class="youtube-channel-description multiline-truncate">{{channel.description}}</div>
+                </div>
+                <div class="youtube-channel-new">
+                    {{channel.new}}
+                </div>
+            </div>
         </div>
-        <div class="youtube-search-button" ng-click="searchVideos()">
-            <img src="/Images/search.png" />
+
+        <div class="youtube-videos">
+            <div class="youtube-video" ng-repeat="video in videos |orderBy: orderByDate:true" ng-click="watchVideo(video)">
+                <div class="youtube-video-thumbnail"><img class="youtube-video-thumbnail-img" ng-src="{{video.thumbnail}}" imageonload/></div>
+                <div class="youtube-video-details">
+                    <div class="youtube-video-upload">{{timeToTimespan(video.uploaded)}}</div>
+                    <div class="youtube-video-channel">{{video.channel_title}}</div>
+                    <div class="youtube-video-title">{{video.title}}</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="youtube-video" ng-class="{'youtube-first-video': $index==0}" ng-repeat="video in videos[serverPage]| orderBy: orderByDate:true | startFrom:(localPage - (serverPage * 5))*10 | limitTo:10" ng-click="watchVideo(video)">
-        <div class="youtube-image">
-            <img ng-src="{{video.thumbnail}}" class="youtube-image-thumbnail" imageonload/>
-            <div class="youtube-video-length-background">
-                {{ parseYoutubeLength(video.length) }}
-            </div>
-            <div class="youtube-video-length">
-                {{ parseYoutubeLength(video.length) }}
-            </div>
+    <div class="youtube-menu">
+        <div class="youtube-menu-item" ng-class="{'youtube-menu-item-active': active=='home'}" ng-click="goHome()">
+            <img src="/images/home.png" />
         </div>
-        <div class="youtube-info">
-            <div class="youtube-title multiline-truncate2">{{video.title}}</div>
-            <div class="youtube-sub-title">
-                <div class="youtube-channel truncate">{{video.channel_title}}</div>
-                <div class="youtube-uploaded">{{timeToTimespan(video.uploaded)}}</div>
-            </div>
+        <div class="youtube-menu-item" ng-class="{'youtube-menu-item-active': active=='channels'}" ng-click="goChannels()">
+            <img src="/images/subs.png" />
         </div>
-    </div>
+        <div class="youtube-menu-item" ng-class="{'youtube-menu-item-active': active=='search'}" ng-click="goSearch()">
+            <img src="/images/search2.png" />
+        </div>
 
-    <div class="pager-wrap" ng-if="videos[serverPage].length > 0">
-        <div class="pager-back" ng-click="prevPage();" ng-if="localPage > 0">
-            <img src="Images/left.png" />
-        </div>
-        <div class="pager-info">Page {{localPage + 1}}</div>
-        <div class="pager-next" ng-click="nextPage();" ng-if="videos[serverPage].length - (localPage - (serverPage * 5))*10 > 10">
-            <img src="Images/right.png" />
+        <div class="youtube-search" ng-show="active=='search'">
+            <div class="youtube-search-box">
+                <textbox model="search.keywords" enter="search" placeholder="search.."></textbox>
+            </div>
         </div>
     </div>
 </div>

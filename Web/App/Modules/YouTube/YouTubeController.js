@@ -1,31 +1,57 @@
 ﻿(function () {
 
     angular.module('pi-test').controller('YouTubeController', function ($scope, $rootScope, $http, $state, ConfirmationFactory, CacheFactory) {
-        var videosPerPageLocal = 10;
-        var videosPerPageServer = 50;
-        var dirty = false;
-
-        $scope.localPage = 0;
-        $scope.serverPage = -1;
-
         $scope.done = false;
         $scope.videos = [];
+        $scope.channels = [];
+        $scope.active = "home";
+
         $scope.search = {
             keywords: ""
         }
 
         Init();
 
-        $scope.nextPage = function(){
-            $scope.localPage++;
-            $('.view').scrollTop(0);
-            GetVideos($scope.localPage);
+        $scope.goHome = function(){
+            $scope.active = "home";
+            $scope.videos = [];
+            $scope.channels = [];
+            GetVideos();
         }
 
-        $scope.prevPage = function(){
-            $scope.localPage--;
-            $('.view').scrollTop(0);
-            GetVideos($scope.localPage);
+        $scope.goChannels = function(){
+            $scope.active = "channels";
+
+            $scope.videos = [];
+            $scope.channels = [];
+            $scope.promise = $http.get( '/youtube/channels').then(function (response) {
+                $scope.done = true;
+                console.log(response.data);
+                $scope.channels = response.data;
+            }, function (err) {
+                $scope.done = true;
+                console.log(err);
+            });
+        }
+
+        $scope.goSearch = function(){
+            $scope.active = "search";
+            $(".youtube-search-box input").focus();
+        }
+
+        $scope.search = function(){
+            $scope.videos = [];
+            $scope.channels = [];
+            $scope.promise = $http.get( '/youtube/search?query=' + encodeURIComponent($scope.search.keywords)).then(function (response) {
+                $scope.active = "search-result"
+                $scope.done = true;
+                console.log(response.data);
+                $scope.videos = response.data.videos;
+                $scope.channels = response.data.channels;
+            }, function (err) {
+                $scope.done = true;
+                console.log(err);
+            });
         }
 
         $scope.timeToTimespan = function(date){
@@ -76,75 +102,45 @@
             return date;
         };
 
+        $scope.openChannel = function(channel){
+            $scope.videos = [];
+            $scope.channels = [];
+            $scope.promise = $http.get( '/youtube/channel_feed?id=' + channel.id).then(function (response) {
+                $scope.done = true;
+                console.log(response.data);
+                $scope.videos = response.data;
+            }, function (err) {
+                $scope.done = true;
+                console.log(err);
+            });
+        }
+
         $scope.watchVideo = function(video){
             ConfirmationFactory.confirm_play().then(function(){
                 $http.post('/youtube/play_youtube?id=' + video.id+'&title=' + encodeURIComponent(video.title));
             });
         }
 
-        $scope.searchVideos = function(){
-            $(".youtube-search-box input").blur();
-
-            if($scope.search.keywords.length == 0){
-                Init();
-                return;
-            }
-
-            $scope.promise = $http.get( '/youtube/search?query=' + encodeURIComponent($scope.search.keywords)).then(function (response) {
-                $scope.done = true;
-                $scope.videos = response.data;
-                console.log($scope.videos);
-            }, function (err) {
-                $scope.done = true;
-                console.log(err);
-            });
-        }
-
         function Init(){
-            GetVideos($scope.localPage);
+            GetVideos();
         }
 
-        function GetVideos(localPage){
-            if(dirty)
-            {
-                $scope.videos = [];
-                $scope.localPage = 0;
-                $scope.serverPage = 0;
-                dirty = false;
-            }
-            else
-            {
-                var newServerPage = LocalPageToServerPage(localPage);
-                if(newServerPage == $scope.serverPage)
-                    return;
-            }
-
-            $scope.serverPage = LocalPageToServerPage(localPage);
-            console.log($scope.serverPage);
-            if($scope.videos[$scope.serverPage])
-                return;
-
-            var baseUri = '/youtube/subscription_feed?page=' + ($scope.serverPage + 1);
+        function GetVideos(){
+            var baseUri = '/youtube/home?page=' + ($scope.serverPage + 1);
             $scope.done = false;
             $(".youtube-search-box input").blur()
             console.log("Getting new videos");
 
             $scope.promise = CacheFactory.Get(baseUri, 900).then(function (response) {
                 $scope.done = true;
-                $scope.videos[$scope.serverPage] = response;
-                console.log($scope.videos);
+                $scope.videos = response.videos;
+                $scope.channels = response.channels;
+                console.log(response);
             }, function (err) {
                 $scope.done = true;
                 console.log(err);
             });
         }
-
-        function LocalPageToServerPage(localPage){
-            var videosStart = localPage * videosPerPageLocal;
-            var serverPage = Math.floor(videosStart / videosPerPageServer);
-            return serverPage;
-        }
-
     });
 
 })();

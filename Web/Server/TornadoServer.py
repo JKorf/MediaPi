@@ -339,11 +339,17 @@ class YoutubeHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
         if url == "search":
-            self.write(YoutubeController.search(self.get_argument("query")))
-        elif url == "subscription_feed":
-            data = yield (YoutubeController.subscription_feed())
+            data = yield YoutubeController.search(self.get_argument("query"))
             self.write(data)
-            self.finish()
+        elif url == "home":
+            data = yield YoutubeController.home()
+            self.write(data)
+        elif url == "channels":
+            data = yield YoutubeController.channels()
+            self.write(data)
+        elif url == "channel_feed":
+            data = yield YoutubeController.channel_feed(self.get_argument("id"))
+            self.write(data)
 
     @gen.coroutine
     def post(self, url):
@@ -351,9 +357,6 @@ class YoutubeHandler(web.RequestHandler):
             YoutubeController.play_youtube(self.get_argument("id"), self.get_argument("title"))
         elif url == "play_youtube_url":
             YoutubeController.play_youtube_url(self.get_argument("url"), self.get_argument("title"))
-
-    def get_done(self, data):
-        self.finish(data)
 
 
 class TorrentHandler(web.RequestHandler):

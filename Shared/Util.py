@@ -32,10 +32,13 @@ class RequestFactory:
 
     @staticmethod
     @gen.coroutine
-    def make_request_async(url, method='GET', body=None):
+    def make_request_async(url, method='GET', body=None, heads=None, request_timeout=10, connect_timeout=10):
         try:
+            com = dict(headers)
+            if heads:
+                com.update(heads)
             async_http_client = AsyncHTTPClient()
-            http_request = HTTPRequest(url, method=method, headers=headers, body=body, request_timeout=5, connect_timeout=5)
+            http_request = HTTPRequest(url, method=method, headers=com, body=body, request_timeout=request_timeout, connect_timeout=connect_timeout)
             http_response = yield async_http_client.fetch(http_request)
             return http_response.body
         except Exception as e:
