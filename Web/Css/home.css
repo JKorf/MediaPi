@@ -190,6 +190,10 @@
     .home-list:last-child{
         margin-left: 5px;
     }
+
+    .home-list-item{
+        margin-right: 10px;
+    }
 }
 
 
