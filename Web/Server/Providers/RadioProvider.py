@@ -21,7 +21,7 @@ class RadioProvider:
               "/Images/radios/538.gif"),
         Radio(2, "SkyRadio", "http://19993.live.streamtheworld.com:80/SKYRADIO_SC",
               "/Images/radios/skyradio.gif"),
-        Radio(4, "Veronica", "http://20103.live.streamtheworld.com:80/VERONICA_SC",
+        Radio(4, "Veronica", "http://playerservices.streamtheworld.com/api/livestream-redirect/VERONICA",
               "/Images/radios/veronica.gif"),
         Radio(8, "Veronica Rock", "http://20403.live.streamtheworld.com/SRGSTR11.mp3",
               "/Images/radios/veronicarockradio.gif"),
