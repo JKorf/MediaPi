@@ -8,7 +8,6 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from TorrentSrc.Util.Enums import OutputMode
-from Web.Server import TornadoServer
 from Web.Server.Providers.Movies.PopcornMovieProvider import PopcornMovieProvider
 
 
@@ -71,7 +70,7 @@ class MovieController:
 
     @staticmethod
     @gen.coroutine
-    def play_continue(type, url, title, image, position):
+    def play_continue(delegate, type, url, title, image, position):
         Logger.write(2, "Continue " + title + "("+type+") at " + str(position))
         url = urllib.parse.unquote_plus(url)
         if type == "torrent":
@@ -86,7 +85,7 @@ class MovieController:
                                       int(float(position)) * 1000])
         else:
             if Settings.get_bool("slave"):
-                yield TornadoServer.play_master_file(url, title, int(float(position)) * 1000)
+                yield delegate(url, title, int(float(position)) * 1000)
             else:
                 EventManager.throw_event(EventType.StartPlayer,
                                          ["File",

@@ -37,6 +37,9 @@ class RequestFactory:
             com = dict(headers)
             if heads:
                 com.update(heads)
+            if method == 'POST' and not body:
+                body = b""
+
             async_http_client = AsyncHTTPClient()
             http_request = HTTPRequest(url, method=method, headers=com, body=body, request_timeout=request_timeout, connect_timeout=connect_timeout)
             http_response = yield async_http_client.fetch(http_request)
@@ -48,7 +51,10 @@ class RequestFactory:
     @staticmethod
     def make_request(path, method="GET"):
         try:
-            request = urllib.request.Request(path, None, headers, method=method)
+            body = None
+            if method == 'POST':
+                body = b""
+            request = urllib.request.Request(path, body, headers, method=method)
             return urllib.request.urlopen(request).read()
         except Exception as e:
             Logger.write(2, "Error requesting url " + path + ": " + str(e))

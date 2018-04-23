@@ -78,12 +78,9 @@ class TornadoServer:
         ioloop.IOLoop.instance().stop()
 
     def notify_master(self, url):
-        try:
-            reroute = str(TornadoServer.master_ip) + url
-            Logger.write(2, "Sending notification to master at " + reroute)
-            RequestFactory.make_request(reroute, "POST")
-        except Exception as e:
-            Logger.write(2, "Failed to notify master: " + str(e))
+        reroute = str(TornadoServer.master_ip) + url
+        Logger.write(2, "Sending notification to master at " + reroute)
+        RequestFactory.make_request(reroute, "POST")
 
     def get_actual_address(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -206,7 +203,7 @@ class MovieHandler(web.RequestHandler):
         elif url == "play_direct_link":
             MovieController.play_direct_link(self.get_argument("url"), self.get_argument("title"))
         elif url == "play_continue":
-            yield MovieController.play_continue(self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"))
+            yield MovieController.play_continue(play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"))
 
     @gen.coroutine
     def get(self, url):
