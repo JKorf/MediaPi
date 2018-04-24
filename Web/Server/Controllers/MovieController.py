@@ -1,3 +1,4 @@
+import sys
 import urllib.parse
 import urllib.request
 
@@ -87,6 +88,9 @@ class MovieController:
             if Settings.get_bool("slave"):
                 yield delegate(url, title, int(float(position)) * 1000)
             else:
+                if sys.platform == "linux" or sys.platform == "linux2":
+                    if not url.startswith("/"):
+                        url = "/" + url
                 EventManager.throw_event(EventType.StartPlayer,
                                          ["File",
                                           urllib.parse.unquote(title),
