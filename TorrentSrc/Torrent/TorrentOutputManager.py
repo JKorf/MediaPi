@@ -1,7 +1,5 @@
 from threading import Lock
 
-import math
-
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from TorrentSrc.Streaming.StreamManager import StreamManager

@@ -126,7 +126,7 @@ class StreamManager:
             Logger.write(2, 'Stream position changed: ' + str(old_stream_pos) + ' -> ' + str(self.stream_position_piece_index))
             self.buffer.last_consecutive_piece_dirty = True
 
-        success, data = self.buffer.get_data_for_stream(start_byte, length)
+        data = self.buffer.get_data_for_stream(start_byte, length)
         self.last_request = start_byte
         self.seek_lock.release()
         return data
@@ -168,8 +168,7 @@ class StreamBuffer:
     def get_data_for_stream(self, start_byte, length):
         result = self.retrieve_data(start_byte, length)
         self.clear(self.stream_manager.stream_position_piece_index)
-
-        return True, result
+        return result
 
     def retrieve_data(self, start_byte, length):
         current_read = 0

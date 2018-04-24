@@ -28,7 +28,6 @@ class TcpClient:
     def send(self, data):
         try:
             self.socket.sendall(data)
-
             return True
         except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
             return False

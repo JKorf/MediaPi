@@ -32,7 +32,6 @@ class StreamListener:
 
         self.port = port
         self.thread = None
-        self.request_thread = None
         self.chunk_length = Settings.get_int("max_chunk_size")
         self.server = StreamServer(self.name, port, self.handle_request)
         self.requests = []
@@ -78,7 +77,6 @@ class StreamListener:
 
         # Request completed, close
         if self.in_requests(socket):
-            socket.close()
             self.remove_socket(socket)
             Logger.write(2, "Request finished, now " + str(len(self.requests)))
 
@@ -91,13 +89,11 @@ class StreamListener:
                     break
                 total_message += rec
         except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
-            socket.close()
             self.remove_socket(socket)
             Logger.write(2, "Error reading http header, now " + str(len(self.requests)))
             return
 
         if not total_message.endswith(b'\r\n\r\n'):
-            socket.close()
             self.remove_socket(socket)
             Logger.write(2, "Invalid http header, closing, now " + str(len(self.requests)))
             return
@@ -112,7 +108,6 @@ class StreamListener:
             file_path = urllib.parse.unquote_plus(file_path)
             if not os.path.exists(file_path):
                 Logger.write(2, "File not found: " + file_path)
-                socket.close()
                 self.remove_socket(socket)
                 return
 
@@ -137,7 +132,6 @@ class StreamListener:
     def handle_torrent_request(self, socket, header):
         while not self.torrent or not self.torrent.media_file:
             if not self.running:
-                socket.close()
                 self.remove_socket(socket)
                 Logger.write(2, "Stopping connection because there is no more torrent, now " + str(len(self.requests)))
                 return
@@ -223,10 +217,11 @@ class StreamListener:
             try:
                 while send < len(data):
                     this_send = data[send: send + 50000]
+                    data_length = len(this_send)
                     socket.sendall(this_send)
-                    written += len(this_send)
-                    send += len(this_send)
-                    self.bytes_send += len(this_send)
+                    written += data_length
+                    send += data_length
+                    self.bytes_send += data_length
             except (ConnectionAbortedError, ConnectionResetError, OSError) as e:
                 Logger.write(2, "Connection closed 3: " + str(e))
                 return
@@ -245,6 +240,7 @@ class StreamListener:
         return len([x for x in self.requests if x[1] == socket])
 
     def remove_socket(self, socket):
+        socket.close()
         tup = [x for x in self.requests if x[1] == socket][0]
         self.requests.remove(tup)
         Logger.write(2, "Removed client with id " + str(tup[0]))
@@ -271,9 +267,9 @@ class StreamServer:
 
         try:
             self.soc.bind(("", self.port))
-            Logger.write(2, "StreamServer "+self.name+" running on port " + str(self.port))
-        except (socket.error, OSError):
-            pass
+            Logger.write(2, "StreamServer "+self.name+" listening on port " + str(self.port))
+        except (socket.error, OSError) as e:
+            Logger.write(2, "Couldn't start StreamServer " + self.name + ": " + str(e))
 
         self.soc.listen(10)
 
@@ -286,8 +282,9 @@ class StreamServer:
                 Logger.write(1, 'New connection from ' + ip + ':' + port)
                 thread = CustomThread(self.client_thread, "Stream thread", [conn])
                 thread.start()
-        except OSError:
-            pass
+        except Exception as e:
+            Logger.write(2, "Unexpected error in StreamServer " + self.name + ": " + str(e))
+
         self.soc.close()
 
     def close(self):
