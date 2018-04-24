@@ -24,6 +24,5 @@
 
     Use flexbox for home screen
     Check images youtube
-    Fade op home is er nu altijd, ook als er niet gescrolled kan worden
 
     youtube desktop sizing

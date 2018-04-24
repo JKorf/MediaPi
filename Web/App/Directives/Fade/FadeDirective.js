@@ -1,5 +1,5 @@
 (function () {
-    angular.module('pi-test').directive('fade', function () {
+    angular.module('pi-test').directive('fade', function ($timeout) {
         return {
             restrict: 'A',
             link: function ($scope, element, attrs) {
@@ -32,12 +32,12 @@
                             $(element).siblings(".fader-bottom").show();
                     });
 
-                    if($(element).scrollHeight <= $(element).outerHeight)
-                    {
-                        $timeout(function(){
+                    $timeout(function(){
+                        if($(element)[0].scrollHeight <= $(element)[0].clientHeight)
+                        {
                             $(element).siblings(".fader-bottom").hide();
-                        });
-                    }
+                        }
+                    }, 100);
                 }
                 else{
                     $(element).after("<div class='fader-vert fader-left' style='left: "+leftOffset+"px; top: "+topOffset+"px; bottom: "+bottomOffset+"px;'></div>");
@@ -56,12 +56,12 @@
                             $(element).siblings(".fader-right").show();
                     });
 
-                    if($(element).scrollWidth <= $(element).outerWidth)
-                    {
-                        $timeout(function(){
+                    $timeout(function(){
+                        if($(element)[0].scrollWidth <= $(element)[0].clientWidth)
+                        {
                             $(element).siblings(".fader-right").hide();
-                        });
-                    }
+                        }
+                    }, 100);
                 }
             }
         };
