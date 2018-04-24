@@ -361,6 +361,8 @@ class Torrent:
         self.peer_manager.stop()
         self.tracker_manager.stop()
         self.network_manager.stop()
+        for file in self.files:
+            file.close()
         Logger.write(3, 'Torrent stopped')
 
 
@@ -409,6 +411,10 @@ class TorrentDownloadFile:
     def open(self):
         if self.stream is None:
             self.stream = open(self.path, 'wb')
+
+    def close(self):
+        if self.stream is not None:
+            self.stream.close()
 
     def start_piece(self, piece_length):
         return math.floor(self.start_byte / piece_length)
