@@ -155,7 +155,8 @@ view-loader img{
     background: #EEE;
 
     transition: height 0.5s ease;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     touch-action: pan-y !important;
 }
 

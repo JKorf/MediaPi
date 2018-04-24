@@ -1,11 +1,12 @@
 ﻿<div class="view-youtube sub-view">
     <view-loader promise="promise"></view-loader>
 
-    <div class="youtube-video youtube-first-video no-videos" ng-if="shows.length == 0 && done">
+    <div class="youtube-no-videos" ng-if="videos.length == 0 && channels.length == 0 && done">
         No videos found :(
     </div>
 
     <div class="youtube-items">
+        <div class="youtube-sub-title" ng-if="channels.length != 0">Channels</div>
         <div class="youtube-channels">
             <div class="youtube-channel" ng-repeat="channel in channels | orderBy: 'new':true" ng-click="openChannel(channel)">
                 <div class="youtube-channel-thumbnail"><img class="youtube-channel-thumbnail-img" ng-src="{{channel.thumbnail}}" imageonload/></div>
@@ -13,12 +14,13 @@
                     <div class="youtube-channel-title truncate">{{channel.title}}</div>
                     <div class="youtube-channel-description multiline-truncate">{{channel.description}}</div>
                 </div>
-                <div class="youtube-channel-new">
+                <div ng-if="channel.new" class="youtube-channel-new">
                     {{channel.new}}
                 </div>
             </div>
         </div>
 
+        <div class="youtube-sub-title" ng-if="videos.length != 0">Videos</div>
         <div class="youtube-videos">
             <div class="youtube-video" ng-repeat="video in videos |orderBy: orderByDate:true" ng-click="watchVideo(video)">
                 <div class="youtube-video-thumbnail"><img class="youtube-video-thumbnail-img" ng-src="{{video.thumbnail}}" imageonload/></div>

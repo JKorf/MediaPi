@@ -21,7 +21,7 @@
 
         $scope.goChannels = function(){
             $scope.active = "channels";
-
+            $scope.done = false;
             $scope.videos = [];
             $scope.channels = [];
             $scope.promise = $http.get( '/youtube/channels').then(function (response) {
@@ -41,6 +41,7 @@
 
         $scope.search = function(){
             $scope.videos = [];
+            $scope.done = false;
             $scope.channels = [];
             $scope.promise = $http.get( '/youtube/search?query=' + encodeURIComponent($scope.search.keywords)).then(function (response) {
                 $scope.active = "search-result"

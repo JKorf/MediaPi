@@ -32,12 +32,14 @@
                             $(element).siblings(".fader-bottom").show();
                     });
 
-                    $timeout(function(){
+                    $(element).resize(function(){
                         if($(element)[0].scrollHeight <= $(element)[0].clientHeight)
                         {
                             $(element).siblings(".fader-bottom").hide();
+                        }else{
+                            $(element).siblings(".fader-bottom").show();
                         }
-                    }, 100);
+                    });
                 }
                 else{
                     $(element).after("<div class='fader-vert fader-left' style='left: "+leftOffset+"px; top: "+topOffset+"px; bottom: "+bottomOffset+"px;'></div>");
@@ -55,13 +57,14 @@
                         else
                             $(element).siblings(".fader-right").show();
                     });
-
-                    $timeout(function(){
+                    $(element).resize(function(){
                         if($(element)[0].scrollWidth <= $(element)[0].clientWidth)
                         {
                             $(element).siblings(".fader-right").hide();
+                        }else{
+                            $(element).siblings(".fader-right").show();
                         }
-                    }, 100);
+                    });
                 }
             }
         };

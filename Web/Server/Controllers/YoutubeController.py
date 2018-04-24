@@ -46,7 +46,7 @@ class YoutubeController:
                 'id': channel['snippet']['channelId'],
                 'title': channel['snippet']['title'],
                 'description': channel['snippet']['description'],
-                'thumbnail': channel['snippet']['thumbnails']['medium']['url'],
+                'thumbnail': channel['snippet']['thumbnails']['medium']['url']
             })
 
         return to_JSON(result).encode('ascii')
