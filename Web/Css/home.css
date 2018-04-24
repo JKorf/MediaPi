@@ -1,29 +1,21 @@
-﻿.list-holder{
+﻿.view-home{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.home-widget{
+    flex: 1 1 0;
+}
+
+.list-holder{
     background: #fff;
     padding: 10px;
-    margin-bottom: 15px;
-    position: relative;
-    display: inline-block;
-    width: 100%;
-    vertical-align: top;
+    margin: 8px;
+    min-width: 270px;
 }
 
 .list-holder:last-child{
     margin-bottom: 0;
-}
-
-@media only screen and (min-device-width: 768px){
-    .list-holder{
-        width: calc(50% - 5px);
-    }
-
-    .list-holder:first-child{
-        margin-right: 5px;
-    }
-
-    .list-holder:last-child{
-        margin-left: 5px;
-    }
 }
 
 .list-item-wrapper{
@@ -172,28 +164,8 @@
 .home-list{
     background: #fff;
     padding: 8px;
-    margin-bottom: 15px;
-    position: relative;
-    display: inline-block;
-    width: 100%;
-}
-
-@media only screen and (min-device-width: 768px){
-    .home-list{
-        width: calc(50% - 5px);
-    }
-
-    .home-list:first-child{
-        margin-right: 5px;
-    }
-
-    .home-list:last-child{
-        margin-left: 5px;
-    }
-
-    .home-list-item{
-        margin-right: 10px;
-    }
+    margin:8px;
+    min-width: 200px;
 }
 
 
