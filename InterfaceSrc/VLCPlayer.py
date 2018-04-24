@@ -53,6 +53,7 @@ class VLCPlayer:
         Logger.write(3, "VLC version " + libvlc_get_version().decode('ascii'))
 
     def play(self, type, title, url, img=None, time=0):
+        Logger.write(2, "VLC Play | Type: " + type + ", title: " + title + ", url: " + url +", img: " + str(img) + ", time: " + str(time))
         self.type = type
         self.title = title
         self.path = url

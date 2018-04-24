@@ -305,15 +305,20 @@ class ReadFile:
         self.path = path
         self.size = os.path.getsize(path)
         self.read_lock = Lock()
+        self.location = 0
         self.file = None
 
     def open(self):
         self.file = open(self.path, 'rb')
+        self.location = 0
 
     def get_bytes(self, start, length):
         self.read_lock.acquire()
-        self.file.seek(start)
+        if self.location != start:
+            Logger.write(2, "Seeking file to " + str(start))
+            self.file.seek(start)
         data = self.file.read(length)
+        self.location = start + len(data)
         self.read_lock.release()
         return data
 

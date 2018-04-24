@@ -41,7 +41,7 @@ class HDController:
         return to_JSON(dir).encode('ascii')
 
     @staticmethod
-    def play_file(filename, path, position=None):
+    def play_file(filename, path, position=0):
         file = urllib.parse.unquote(path)
         Logger.write(2, "Play file: " + file)
         EventManager.throw_event(EventType.StopStreamTorrent, [])
