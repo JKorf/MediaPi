@@ -1,6 +1,7 @@
 ﻿.view-home{
     display: flex;
     flex-wrap: wrap;
+    margin: -6px;
 }
 
 .home-widget{
