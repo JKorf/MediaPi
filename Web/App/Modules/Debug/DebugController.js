@@ -26,24 +26,6 @@
             $scope.tab = tab
         }
 
-        $scope.close = function(){
-            if (confirm('Are you sure you want to exit the application?')) {
-                $http.post("/util/exit");
-            }
-        }
-
-        $scope.restart = function(){
-            if (confirm('Are you sure you want to restart the Raspberry Pi?')) {
-                $http.post("/util/restart_pi");
-            }
-        }
-
-        $scope.shutdown = function(){
-            if (confirm('Are you sure you want to shutdown the Raspberry Pi?')) {
-                $http.post("/util/shutdown");
-            }
-        }
-
         $scope.write_big_number = function(numb){
             if (!numb)
                 return numb;
@@ -57,13 +39,6 @@
             if (confirm('Are you sure you want to clear the cache?')) {
                 CacheFactory.Clear();
                 MemoryFactory.Clear();
-            }
-        }
-
-        $scope.update = function(){
-            if(confirm('Do you want to update?')){
-                console.log("Updating");
-                $http.post("/util/update");
             }
         }
 

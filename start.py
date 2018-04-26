@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
-import cProfile
 import urllib.parse
-
-from shutil import copytree, rmtree
 
 os.chdir(os.path.dirname(__file__))
 
@@ -12,7 +9,6 @@ from Database.Database import Database
 from TorrentSrc.Streaming.StreamListener import StreamListener
 
 from TorrentSrc.TorrentManager import TorrentManager
-from TorrentSrc.Util.Stats import PyStats
 
 from DHT.DHTEngine import DHTEngine
 
@@ -320,30 +316,8 @@ class StartUp:
         sys.exit(1)
 
 
-current_dir = os.path.dirname(__file__)
-if "pi_update_" in current_dir:
-    Logger.write(2, "Update: Copying update back to main folder")
-    base_folder = Settings.get_string("base_folder")
-
-    try:
-        if os.path.exists(base_folder):
-            rmtree(base_folder)
-        copytree(current_dir, base_folder)
-    except Exception as e:
-        Logger.write(3, "Updating failed; couldn't copy back: " + str(e))
-
-    Logger.write(3, "Update: Copying update to main folder completed, restarting from main directory")
-    python = sys.executable
-    os.execl(python, python, base_folder + "/start.py")
-else:
-    stats = cProfile.Profile()
-    stats.enable()
-    try:
-        StartUp()
-    except Exception as e:
-        Logger.write(3, "Exception during startup: " + str(e))
-        Logger.write(3, traceback.format_exc())
-    finally:
-        stats.disable()
-        PyStats.add_stats(stats)
-        PyStats.stats.dump_stats('test.txt')
+try:
+    StartUp()
+except Exception as e:
+    Logger.write(3, "Exception during startup: " + str(e))
+    Logger.write(3, traceback.format_exc())

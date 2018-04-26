@@ -131,52 +131,20 @@ class UtilController:
         AppSettings.set_setting("max_subtitles_files", int(max_subs))
 
     @staticmethod
-    def test(start):
+    def test():
         Logger.write(2, "============== Test ===============")
         EventManager.throw_event(EventType.Log, [])
 
     @staticmethod
-    def shutdown(start):
+    def shutdown():
         Logger.write(3, "Shutdown")
         os.system('sudo shutdown now')
 
     @staticmethod
-    def restart_pi(start):
+    def restart_pi():
         Logger.write(3, "Restart")
-        os.system('sudo shutdown -r now')
-
-    @staticmethod
-    def restart_app():
-        Logger.write(3, "Restart")
-        python = sys.executable
-        os.execl(python, python, *sys.argv)
-
-    @staticmethod
-    def exit(start):
-        Logger.write(3, "Exit")
-        start.stop()
+        os.system('sudo reboot')
 
     @staticmethod
     def startup():
         return to_JSON(StartUp(AppSettings.get_string("name")))
-
-    @staticmethod
-    def update(start):
-        Logger.write(3, "Starting update")
-        source_url = AppSettings.get_string("update_source")
-        base_folder = AppSettings.get_string("base_folder")
-        base_folder_parent = os.path.dirname(base_folder)
-
-        try:
-            if os.path.exists(base_folder_parent + "pi_update_"):
-                rmtree(base_folder_parent + "pi_update_")
-            copytree(source_url, base_folder_parent + "pi_update_")
-        except Exception as e:
-            Logger.write(3, "Update failed; Copying failed with error " + str(e))
-            return
-        Logger.write(3, "Copying to update folder done, restarting from new location")
-
-        start.stop()
-
-        python = sys.executable
-        os.execl(python, python, base_folder_parent + "pi_update_/start.py")

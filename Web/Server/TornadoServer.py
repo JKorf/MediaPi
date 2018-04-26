@@ -182,17 +182,11 @@ class UtilHandler(web.RequestHandler):
         if url == "save_settings":
             UtilController.save_settings(self.get_argument("raspberry"), self.get_argument("gui"), self.get_argument("external_trackers"), self.get_argument("max_subs"))
         elif url == "shutdown":
-            UtilController.shutdown(TornadoServer.start_obj)
+            UtilController.shutdown()
         elif url == "restart_pi":
-            UtilController.restart_pi(TornadoServer.start_obj)
-        elif url == "restart_app":
-            UtilController.restart_app()
-        elif url == "exit":
-            UtilController.exit(TornadoServer.start_obj)
+            UtilController.restart_pi()
         elif url == "test":
-            UtilController.test(TornadoServer.start_obj)
-        elif url == "update":
-            UtilController.update(TornadoServer.start_obj)
+            UtilController.test()
 
 
 class MovieHandler(web.RequestHandler):

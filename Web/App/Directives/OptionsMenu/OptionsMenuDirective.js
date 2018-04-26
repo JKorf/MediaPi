@@ -39,7 +39,7 @@
 
                 $scope.shutdown = function(){
                     if (confirm('Are you sure you want to shutdown the Raspberry Pi?')) {
-                        $http.post("/util/test");
+                        $http.post("/util/shutdown");
                     }
                 }
 
