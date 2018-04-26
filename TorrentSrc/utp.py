@@ -2,11 +2,12 @@ import asyncio
 from collections import namedtuple
 from enum import Enum
 from random import randrange
-from time import time
+from time import time, sleep
 import socket
 
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Util import current_time
 
 
 class UtpClient:
@@ -17,53 +18,49 @@ class UtpClient:
         self.socket = None
         self.con_timeout = Settings.get_int("connection_timeout") / 1000
         self.utpPipe = MicroTransportProtocol(UtpEventHandler(self.on_connection_made, self.on_connection_lost, self.on_data_received))
+        self.connected = False
 
     def on_connection_made(self):
         Logger.write(3, "Connection MADE")
+        self.connected = True
 
     def on_connection_lost(self, exc):
         Logger.write(3, "Connection LOST")
-
-    def on_data_received(self, data):
-        Logger.write(3, "Connection DATA RECEIVED: " + str(data))
+        self.connected = False
 
     def connect(self):
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.socket.settimeout(self.con_timeout)
-            self.socket.settimeout(None)
-            self.utpPipe.connection_made(UtpTransportHandler(self.__send_to))
+            self.utpPipe.initiate_connection(UtpTransportHandler(self.__send_to))
+            start_time = current_time()
+            while not self.connected:
+                if current_time() - start_time > self.con_timeout:
+                    return False
+                sleep(0.1)
             return True
         except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
             return False
-
-    def __send_to(self, data):
-        self.socket.sendto(data, (self.host, self.port))
 
     def send(self, data):
         self.utpPipe.write(data)
 
     def receive_available(self, max):
-        data = self.socket.recv(max)
-        self.utpPipe.datagram_received(data, None)
+        return self.utpPipe.receive_available(max)
+
+    def receive(self, expected):
+        return self.utpPipe.receive(expected)
 
     def disconnect(self):
-        self.socket.close()
-        self.utpPipe.connection_lost(None)
-
-
-class UtpTransportHandler:
-
-    def __init__(self, send_to):
-        self.sendto = send_to
+        if self.socket is not None:
+            self.socket.close()
+        self.utpPipe.close()
 
 
 class UtpEventHandler:
 
-    def __init__(self, on_connect, on_lost, on_data):
+    def __init__(self, on_connect, on_lost):
         self.connection_made = on_connect
         self.connection_lost = on_lost
-        self.data_received = on_data
 
 
 class Type(Enum):
@@ -160,10 +157,12 @@ class ConnectionState(Enum):
     CS_DISCONNECTED = 5
 
 
-class MicroTransportProtocol(asyncio.DatagramProtocol):
-    def __init__(self, user_protocol):
+class MicroTransportProtocol:
+    def __init__(self, user_protocol, host, port):
         self.user_protocol = user_protocol
-        self.transport = None
+        self.socket = None
+        self.host = host
+        self.port = port
         self.status = ConnectionState.CS_UNKNOWN
         self.seq_nr = 1
         self.ack_nr = 0
@@ -171,8 +170,8 @@ class MicroTransportProtocol(asyncio.DatagramProtocol):
         self.conn_id_send = self.conn_id_recv + 1
         self.extensions = [(2, bytes(8))]  # 2 -- EXTENSION_BITS
 
-    def connection_made(self, transport):
-        self.transport = transport
+    def initiate_connection(self, socket):
+        self.socket = socket
 
         packet = uTPPacket(
             type=Type.ST_SYN, ver=1,
@@ -187,8 +186,10 @@ class MicroTransportProtocol(asyncio.DatagramProtocol):
         )
         self.seq_nr += 1
         Logger.write(2, "Sending initial packet")
-        self.transport.sendto(encode_packet(packet))
+        self.socket.sendto(encode_packet(packet), (self.host, self.port))
         self.status = ConnectionState.CS_SYN_SENT
+        received = self.socket.recv(50)
+        self.__handle_package(received)
 
     def write(self, data):
         packet = uTPPacket(
@@ -204,9 +205,31 @@ class MicroTransportProtocol(asyncio.DatagramProtocol):
         )
         self.seq_nr += 1
         Logger.write(2, "Sending data packet")
-        self.transport.sendto(encode_packet(packet))
+        self.socket.sendto(encode_packet(packet), (self.host, self.port))
 
-    def datagram_received(self, data, addr):
+    def receive(self, expected):
+        buffer = bytearray()
+        total_received = 0
+        while total_received < expected:
+            try:
+                data = self.socket.recv(expected - total_received)
+                act_data = self.__handle_package(data)
+            except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+                return None
+
+            if act_data is None or len(act_data) == 0:
+                return None
+
+            buffer.extend(act_data)
+            total_received += len(act_data)
+        return bytes(buffer)
+
+    def receive_available(self, length):
+        data = self.socket.recv(length)
+        act_data = self.__handle_package(data)
+        return act_data
+
+    def __handle_package(self, data):
         packet = decode_packet(data)
         self.ack_nr = packet.seq_nr
         Logger.write(2, "Received packet type " + str(packet.type))
@@ -223,13 +246,13 @@ class MicroTransportProtocol(asyncio.DatagramProtocol):
                 extensions=None,
                 data=None
             )
-            self.transport.sendto(encode_packet(response))
+            self.socket.sendto(encode_packet(response), (self.host, self.port))
 
             if self.status == ConnectionState.CS_SYN_RECV:
                 self.status = ConnectionState.CS_CONNECTED
                 self.user_protocol.connection_made(self)
 
-            self.user_protocol.data_received(packet.data)
+            return packet.data
         elif packet.type == Type.ST_SYN:
             self.conn_id_recv = packet.connection_id + 1
             self.conn_id_send = packet.connection_id
@@ -249,7 +272,7 @@ class MicroTransportProtocol(asyncio.DatagramProtocol):
                 data=None
             )
             self.seq_nr += 1
-            self.transport.sendto(encode_packet(response))
+            self.socket.sendto(encode_packet(response), (self.host, self.port))
         elif packet.type == Type.ST_STATE:
             if self.status == ConnectionState.CS_SYN_SENT:
                 self.status = ConnectionState.CS_CONNECTED
@@ -257,6 +280,8 @@ class MicroTransportProtocol(asyncio.DatagramProtocol):
         elif packet.type == Type.ST_RESET:
             self.status = ConnectionState.CS_DISCONNECTED
             self.user_protocol.connection_lost(None)
+            self.socket.close()
+            return None
         elif packet.type == Type.ST_FIN:
             self.status = ConnectionState.CS_DISCONNECTED
             response = uTPPacket(
@@ -270,11 +295,10 @@ class MicroTransportProtocol(asyncio.DatagramProtocol):
                 extensions=None,
                 data=None
             )
-            self.transport.sendto(encode_packet(response))
+            self.socket.sendto(encode_packet(response), (self.host, self.port))
             self.user_protocol.connection_lost(None)
-
-    def connection_lost(self, exc):
-        self.user_protocol.connection_lost(exc)
+            self.socket.close()
+            return None
 
     def close(self):
         if self.status == ConnectionState.CS_CONNECTED:
@@ -290,5 +314,6 @@ class MicroTransportProtocol(asyncio.DatagramProtocol):
                 extensions=None,
                 data=None
             )
-            self.transport.sendto(encode_packet(response))
+            self.socket.sendto(encode_packet(response), (self.host, self.port))
             self.user_protocol.connection_lost(None)
+            self.socket.close()
