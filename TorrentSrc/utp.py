@@ -1,13 +1,11 @@
-import asyncio
 from collections import namedtuple
 from enum import Enum
 from random import randrange
-from time import time, sleep
+from time import time
 import socket
 
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from Shared.Util import current_time
 
 
 class UtpClient:
@@ -17,7 +15,7 @@ class UtpClient:
         self.port = port
         self.socket = None
         self.con_timeout = Settings.get_int("connection_timeout") / 1000
-        self.utpPipe = MicroTransportProtocol(UtpEventHandler(self.on_connection_made, self.on_connection_lost, self.on_data_received))
+        self.utpPipe = MicroTransportProtocol(UtpEventHandler(self.on_connection_made, self.on_connection_lost))
         self.connected = False
 
     def on_connection_made(self):
@@ -29,20 +27,11 @@ class UtpClient:
         self.connected = False
 
     def connect(self):
-        try:
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.utpPipe.initiate_connection(UtpTransportHandler(self.__send_to))
-            start_time = current_time()
-            while not self.connected:
-                if current_time() - start_time > self.con_timeout:
-                    return False
-                sleep(0.1)
-            return True
-        except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
-            return False
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return self.utpPipe.initiate_connection(self.socket)
 
     def send(self, data):
-        self.utpPipe.write(data)
+        return self.utpPipe.write(data)
 
     def receive_available(self, max):
         return self.utpPipe.receive_available(max)
@@ -51,8 +40,6 @@ class UtpClient:
         return self.utpPipe.receive(expected)
 
     def disconnect(self):
-        if self.socket is not None:
-            self.socket.close()
         self.utpPipe.close()
 
 
@@ -158,11 +145,11 @@ class ConnectionState(Enum):
 
 
 class MicroTransportProtocol:
-    def __init__(self, user_protocol, host, port):
-        self.user_protocol = user_protocol
+    def __init__(self, host, port):
         self.socket = None
         self.host = host
         self.port = port
+        self.header_size = 20
         self.status = ConnectionState.CS_UNKNOWN
         self.seq_nr = 1
         self.ack_nr = 0
@@ -186,10 +173,14 @@ class MicroTransportProtocol:
         )
         self.seq_nr += 1
         Logger.write(2, "Sending initial packet")
-        self.socket.sendto(encode_packet(packet), (self.host, self.port))
-        self.status = ConnectionState.CS_SYN_SENT
-        received = self.socket.recv(50)
-        self.__handle_package(received)
+        try:
+            self.socket.sendto(encode_packet(packet), (self.host, self.port))
+            self.status = ConnectionState.CS_SYN_SENT
+            received = self.socket.recv(50)
+            self.__handle_package(received)
+            return True
+        except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+            return False
 
     def write(self, data):
         packet = uTPPacket(
@@ -205,15 +196,21 @@ class MicroTransportProtocol:
         )
         self.seq_nr += 1
         Logger.write(2, "Sending data packet")
-        self.socket.sendto(encode_packet(packet), (self.host, self.port))
+        try:
+            self.socket.sendto(encode_packet(packet), (self.host, self.port))
+            return True
+        except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+            return False
 
     def receive(self, expected):
         buffer = bytearray()
         total_received = 0
         while total_received < expected:
             try:
-                data = self.socket.recv(expected - total_received)
-                act_data = self.__handle_package(data)
+                act_data = True
+                while act_data is True:
+                    data = self.socket.recv((expected - total_received) + self.header_size)
+                    act_data = self.__handle_package(data)
             except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
                 return None
 
@@ -225,9 +222,14 @@ class MicroTransportProtocol:
         return bytes(buffer)
 
     def receive_available(self, length):
-        data = self.socket.recv(length)
-        act_data = self.__handle_package(data)
-        return act_data
+        try:
+            act_data = True
+            while act_data is True:
+                data = self.socket.recv(length + self.header_size)
+                act_data = self.__handle_package(data)
+            return act_data
+        except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+            return None
 
     def __handle_package(self, data):
         packet = decode_packet(data)
@@ -250,7 +252,6 @@ class MicroTransportProtocol:
 
             if self.status == ConnectionState.CS_SYN_RECV:
                 self.status = ConnectionState.CS_CONNECTED
-                self.user_protocol.connection_made(self)
 
             return packet.data
         elif packet.type == Type.ST_SYN:
@@ -273,13 +274,13 @@ class MicroTransportProtocol:
             )
             self.seq_nr += 1
             self.socket.sendto(encode_packet(response), (self.host, self.port))
+            return True
         elif packet.type == Type.ST_STATE:
             if self.status == ConnectionState.CS_SYN_SENT:
                 self.status = ConnectionState.CS_CONNECTED
-                self.user_protocol.connection_made(self)
+            return True
         elif packet.type == Type.ST_RESET:
             self.status = ConnectionState.CS_DISCONNECTED
-            self.user_protocol.connection_lost(None)
             self.socket.close()
             return None
         elif packet.type == Type.ST_FIN:
@@ -296,7 +297,6 @@ class MicroTransportProtocol:
                 data=None
             )
             self.socket.sendto(encode_packet(response), (self.host, self.port))
-            self.user_protocol.connection_lost(None)
             self.socket.close()
             return None
 
@@ -314,6 +314,8 @@ class MicroTransportProtocol:
                 extensions=None,
                 data=None
             )
-            self.socket.sendto(encode_packet(response), (self.host, self.port))
-            self.user_protocol.connection_lost(None)
+            try:
+                self.socket.sendto(encode_packet(response), (self.host, self.port))
+            except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+                pass
             self.socket.close()
