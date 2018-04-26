@@ -8,6 +8,7 @@ from TorrentSrc.Connections import TcpClient
 from TorrentSrc.Peer.PeerMessages import KeepAliveMessage
 from TorrentSrc.Util.Enums import ConnectionState, ReceiveState
 from TorrentSrc.Util.Network import *
+from TorrentSrc.utp import UtpClient
 
 
 class PeerConnectionManager:
@@ -25,7 +26,10 @@ class PeerConnectionManager:
         self.receiveLock = Lock()
         self.peer_timeout = Settings.get_int("peer_timeout")
 
-        self.connection = TcpClient(uri.hostname, uri.port)
+        if Settings.get_bool("utp"):
+            self.connection = UtpClient(uri.hostname, uri.port)
+        else:
+            self.connection = TcpClient(uri.hostname, uri.port)
 
         self.buffer = bytearray()
         self.next_message_length = 68

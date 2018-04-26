@@ -1,7 +1,5 @@
 --- ON HOLD ---
-    Youtube seeking -> vlc bug? lijkt hetzelfde als stream incorrect seeking
-        Fixed in vlc 3.0..
-        Youtube uitbreiden
+    Update to VLC 3.0
 
     spotify
         https://eltechs.com/run-spotify-on-raspberry-pi/
