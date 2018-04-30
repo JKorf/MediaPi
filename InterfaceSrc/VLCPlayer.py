@@ -252,7 +252,7 @@ class VLCPlayer:
                     self.state_change_action(PlayerState.Buffering, self.state)
                     Logger.write(2, "playing")
 
-            time.sleep(1)
+            time.sleep(1.1)
 
 
 class MediaItem:
