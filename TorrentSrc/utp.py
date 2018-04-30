@@ -20,6 +20,8 @@ class UtpClient:
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.socket.settimeout(self.con_timeout)
         return self.utpPipe.initiate_connection(self.socket)
 
     def send(self, data):
@@ -98,8 +100,10 @@ class MicroTransportProtocol:
             self.status = ConnectionState.CS_SYN_SENT
             received = self.socket.recv(self.header_size)
             self.__handle_package(received)
+            self.socket.settimeout(0)
             return True
-        except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+        except (ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError) as e:
+            Logger.write(2, "Failed to connect: " + str(e))
             return False
 
     def write(self, data):
@@ -117,12 +121,15 @@ class MicroTransportProtocol:
         self.seq_nr += 1
         Logger.write(2, "Sending data packet")
         try:
-            self.socket.sendto(encode_packet(packet), (self.host, self.port))
+            send = self.socket.sendto(encode_packet(packet), (self.host, self.port))
+            Logger.write(2, "Send " + str(send) + " bytes")
             return True
-        except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+        except (ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError) as e:
+            Logger.write(2, "Failed to send data packet: " + str(e))
             return False
 
     def receive(self, expected):
+        Logger.write(2, "Going to try to read for " + str(expected) + " expected bytes")
         buffer = bytearray()
         total_received = 0
         while total_received < expected:
@@ -131,10 +138,14 @@ class MicroTransportProtocol:
                 while act_data is True:
                     data = self.socket.recv((expected - total_received) + self.header_size)
                     act_data = self.__handle_package(data)
-            except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+                    Logger.write(2, "Received 1 " + str(data))
+
+            except (ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError) as e:
+                Logger.write(2, "Failed to received expected: " + str(e))
                 return None
 
             if act_data is None or len(act_data) == 0:
+                Logger.write(2, "Received nothing, closed: " + str(act_data))
                 return None
 
             buffer.extend(act_data)
@@ -142,13 +153,16 @@ class MicroTransportProtocol:
         return bytes(buffer)
 
     def receive_available(self, length):
+        Logger.write(2, "Going to try to read for max " + str(length) + " bytes")
         try:
             act_data = True
             while act_data is True:
                 data = self.socket.recv(length + self.header_size)
                 act_data = self.__handle_package(data)
+                Logger.write(2, "Received 2 " + str(data))
             return act_data
-        except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+        except (ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError) as e:
+            Logger.write(2, "Failed to receive available: " + str(e))
             return None
 
     def __handle_package(self, data):
@@ -236,7 +250,7 @@ class MicroTransportProtocol:
             )
             try:
                 self.socket.sendto(encode_packet(response), (self.host, self.port))
-            except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+            except (ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
                 pass
             self.socket.close()
 
