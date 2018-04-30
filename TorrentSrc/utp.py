@@ -15,15 +15,7 @@ class UtpClient:
         self.port = port
         self.socket = None
         self.con_timeout = Settings.get_int("connection_timeout") / 1000
-        self.utpPipe = MicroTransportProtocol(UtpEventHandler(self.on_connection_made, self.on_connection_lost))
-        self.connected = False
-
-    def on_connection_made(self):
-        Logger.write(3, "Connection MADE")
-        self.connected = True
-
-    def on_connection_lost(self, exc):
-        Logger.write(3, "Connection LOST")
+        self.utpPipe = MicroTransportProtocol(self.host, self.port)
         self.connected = False
 
     def connect(self):
@@ -42,12 +34,10 @@ class UtpClient:
     def disconnect(self):
         self.utpPipe.close()
 
-
-class UtpEventHandler:
-
-    def __init__(self, on_connect, on_lost):
-        self.connection_made = on_connect
-        self.connection_lost = on_lost
+# TODO
+# Better/actual header parameters based on current state!
+# Handle packet loss/resends
+# Handle timeouts
 
 
 class Type(Enum):
@@ -58,80 +48,10 @@ class Type(Enum):
     ST_SYN = 4
 
 
-uTPPacket = namedtuple("uTP_packet", [
-    "type", "ver", "connection_id", "timestamp", "timestamp_diff", "wnd_size", "seq_nr", "ack_nr", "extensions", "data"
-])
-
-
-def decode_packet(data):
-    def _split_bytes(data, lengths):
-        idx = 0
-        for l in lengths:
-            result = data[idx:]
-            yield result[:l] if l else result
-            idx = idx + l if l else len(data)
-
-    def _bytes_to_int(data):
-        return int.from_bytes(data, "big")
-
-    type_ver, next_ext_type, conn_id, tms, tms_diff, wnd, seq, ack, p_data = tuple(
-        _split_bytes(data, (1, 1, 2, 4, 4, 4, 2, 2, 0))
-    )
-
-    p_type, p_ver = Type(type_ver[0] >> 4), type_ver[0] & 0x0f
-    p_conn_id = _bytes_to_int(conn_id)
-    p_timestamp = _bytes_to_int(tms)
-    p_timestamp_diff = _bytes_to_int(tms_diff)
-    p_wnd_size = _bytes_to_int(wnd)
-    p_seq_nr = _bytes_to_int(seq)
-    p_ack_nr = _bytes_to_int(ack)
-
-    # Decode extensions
-    p_extensions = []
-
-    ext_type = next_ext_type[0]
-    while ext_type:
-        next_ext_type, ext_len, p_data = tuple(_split_bytes(p_data, (1, 1, 0)))
-        ext_data, p_data = tuple(_split_bytes(p_data, (int.from_bytes(ext_len, "big"), 0)))
-        p_extensions.append((ext_type, ext_data))
-        ext_type = next_ext_type[0] if next_ext_type else 0
-
-    return uTPPacket(
-        p_type, p_ver, p_conn_id, p_timestamp, p_timestamp_diff, p_wnd_size, p_seq_nr, p_ack_nr, p_extensions, p_data
-    )
-
-
-def encode_packet(packet):
-    def _int_to_bytes(data, bytes_len):
-        return data.to_bytes(bytes_len, "big")
-
-    result = bytes()
-
-    result += _int_to_bytes(packet.type.value << 4 | packet.ver, 1)
-    result += _int_to_bytes(packet.extensions[0][0] if packet.extensions else 0, 1)
-    result += _int_to_bytes(packet.connection_id, 2)
-    result += _int_to_bytes(packet.timestamp, 4)
-    result += _int_to_bytes(packet.timestamp_diff, 4)
-    result += _int_to_bytes(packet.wnd_size, 4)
-    result += _int_to_bytes(packet.seq_nr, 2)
-    result += _int_to_bytes(packet.ack_nr, 2)
-
-    for idx, (_, ext_data) in enumerate(packet.extensions or []):
-        result += (
-            packet.extensions[idx + 1][0] if idx + 1 < len(packet.extensions) else 0
-        ).to_bytes(1, "big")
-        result += _int_to_bytes(len(ext_data), 1) + ext_data
-
-    result += packet.data or b""
-
-    return result
-
-
 def get_tms():
     return int(time() * 10000000) & 0xffffffff
 
 
-# TODO: Make full timestamp diff instead this stub!
 def get_tms_diff():
     return (get_tms() + randrange(10000)) & 0xffffffff
 
@@ -176,7 +96,7 @@ class MicroTransportProtocol:
         try:
             self.socket.sendto(encode_packet(packet), (self.host, self.port))
             self.status = ConnectionState.CS_SYN_SENT
-            received = self.socket.recv(50)
+            received = self.socket.recv(self.header_size)
             self.__handle_package(received)
             return True
         except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
@@ -319,3 +239,72 @@ class MicroTransportProtocol:
             except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
                 pass
             self.socket.close()
+
+
+uTPPacket = namedtuple("uTP_packet", [
+    "type", "ver", "connection_id", "timestamp", "timestamp_diff", "wnd_size", "seq_nr", "ack_nr", "extensions", "data"
+])
+
+
+def decode_packet(data):
+    def _split_bytes(data, lengths):
+        idx = 0
+        for l in lengths:
+            result = data[idx:]
+            yield result[:l] if l else result
+            idx = idx + l if l else len(data)
+
+    def _bytes_to_int(data):
+        return int.from_bytes(data, "big")
+
+    type_ver, next_ext_type, conn_id, tms, tms_diff, wnd, seq, ack, p_data = tuple(
+        _split_bytes(data, (1, 1, 2, 4, 4, 4, 2, 2, 0))
+    )
+
+    p_type, p_ver = Type(type_ver[0] >> 4), type_ver[0] & 0x0f
+    p_conn_id = _bytes_to_int(conn_id)
+    p_timestamp = _bytes_to_int(tms)
+    p_timestamp_diff = _bytes_to_int(tms_diff)
+    p_wnd_size = _bytes_to_int(wnd)
+    p_seq_nr = _bytes_to_int(seq)
+    p_ack_nr = _bytes_to_int(ack)
+
+    # Decode extensions
+    p_extensions = []
+
+    ext_type = next_ext_type[0]
+    while ext_type:
+        next_ext_type, ext_len, p_data = tuple(_split_bytes(p_data, (1, 1, 0)))
+        ext_data, p_data = tuple(_split_bytes(p_data, (int.from_bytes(ext_len, "big"), 0)))
+        p_extensions.append((ext_type, ext_data))
+        ext_type = next_ext_type[0] if next_ext_type else 0
+
+    return uTPPacket(
+        p_type, p_ver, p_conn_id, p_timestamp, p_timestamp_diff, p_wnd_size, p_seq_nr, p_ack_nr, p_extensions, p_data
+    )
+
+
+def encode_packet(packet):
+    def _int_to_bytes(data, bytes_len):
+        return data.to_bytes(bytes_len, "big")
+
+    result = bytes()
+
+    result += _int_to_bytes(packet.type.value << 4 | packet.ver, 1)
+    result += _int_to_bytes(packet.extensions[0][0] if packet.extensions else 0, 1)
+    result += _int_to_bytes(packet.connection_id, 2)
+    result += _int_to_bytes(packet.timestamp, 4)
+    result += _int_to_bytes(packet.timestamp_diff, 4)
+    result += _int_to_bytes(packet.wnd_size, 4)
+    result += _int_to_bytes(packet.seq_nr, 2)
+    result += _int_to_bytes(packet.ack_nr, 2)
+
+    for idx, (_, ext_data) in enumerate(packet.extensions or []):
+        result += (
+            packet.extensions[idx + 1][0] if idx + 1 < len(packet.extensions) else 0
+        ).to_bytes(1, "big")
+        result += _int_to_bytes(len(ext_data), 1) + ext_data
+
+    result += packet.data or b""
+
+    return result
