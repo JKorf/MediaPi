@@ -20,7 +20,8 @@ class UtpClient:
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind((self.host, 0))
         self.socket.settimeout(self.con_timeout)
         return self.utpPipe.initiate_connection(self.socket)
 
@@ -87,7 +88,7 @@ class MicroTransportProtocol:
             connection_id=self.conn_id_recv,
             timestamp=get_tms(),
             timestamp_diff=0,
-            wnd_size=0xf000,
+            wnd_size=0,
             seq_nr=self.seq_nr,
             ack_nr=0,
             extensions=self.extensions,
@@ -100,7 +101,7 @@ class MicroTransportProtocol:
             self.status = ConnectionState.CS_SYN_SENT
             received = self.socket.recv(self.header_size)
             self.__handle_package(received)
-            self.socket.settimeout(0)
+            self.socket.settimeout(None)
             return True
         except (ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError) as e:
             Logger.write(2, "Failed to connect: " + str(e))
