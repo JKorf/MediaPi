@@ -1,7 +1,7 @@
 import random
 import socket
 import threading
-from datetime import datetime
+import time
 from time import sleep
 
 from Shared.Logger import Logger
@@ -15,6 +15,8 @@ class UtpClient:
             self.host = host
         if port is not 0:
             self.port = port
+        else:
+            self.port = 0
 
         self.receive_packet_size = 65535
         self.send_packet_size = 1400
@@ -24,14 +26,12 @@ class UtpClient:
         self.connection_id = random.randint(0, 65535)
         self.receive_connection_id = self.connection_id + 1
 
-        self.seq_nr = 0
+        self.seq_nr = random.randint(0, 65535)
         self.ack_nr = 0
         self.timestamp_dif = 0
 
         self.running = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.setblocking(True)
-        self.socket.settimeout(None)
         self.unacked = []
 
         self.receive_pkt_buffer = [] # holds packages until the can be re-assembled in order
@@ -51,6 +51,8 @@ class UtpClient:
             self.host = host
         if port is not 0:
             self.port = port
+        if self.port == 0:
+            self.port = 6881
         self.running = True
         self.connection_state = ConnectionState.CS_SYN_SENT
         self.__start_loops()
@@ -64,6 +66,7 @@ class UtpClient:
 
     def send(self, data):
         self.send_buffer += data
+        return True
 
     def receive_available(self, max_amount):
         if len(self.receive_buffer) == 0:
@@ -80,7 +83,8 @@ class UtpClient:
         return data
 
     def disconnect(self):
-        self.send_packet(UtpPacket(MessageType.ST_RESET, 1, 0, self.connection_id, 0, 0, 0, 0, 0))
+        if self.connection_state == ConnectionState.CS_CONNECTED:
+            self.send_packet(UtpPacket(MessageType.ST_RESET, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
         self.connection_state = ConnectionState.CS_DISCONNECTED
         self.socket.close()
 
@@ -97,6 +101,9 @@ class UtpClient:
                 continue
 
             pkt = self.receive_packet()
+            if pkt is None:
+                break
+
             self.handle_packet(pkt)
 
     def send_loop(self):
@@ -112,7 +119,7 @@ class UtpClient:
                 to_send = self.send_buffer
                 self.send_buffer = bytes()
 
-            self.send_packet(UtpPacket(MessageType.ST_DATA, 1, 0, self.connection_id, 0, 0, 0, 0, 0, to_send))
+            self.send_packet(UtpPacket(MessageType.ST_DATA, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0, to_send))
 
     def send_packet(self, packet):
         self.__send_lock.acquire()
@@ -124,8 +131,8 @@ class UtpClient:
         packet.timestamp = self.time()
         packet.ack_nr = self.ack_nr
         packet.seq_nr = self.seq_nr
-        packet.wnd_size = sum(pkt.length for pkt in self.unacked)
-        packet.timestamp_dif = self.timestamp_dif
+        packet.wnd_size = 65535 - sum(pkt.length for pkt in self.unacked)
+        packet.timestamp_dif = 0 #self.timestamp_dif
 
         Logger.write(1, "Sending utp packet: " + str(packet))
         self.socket.sendto(packet.to_bytes(), (self.host, self.port))
@@ -133,7 +140,12 @@ class UtpClient:
         self.__send_lock.release()
 
     def receive_packet(self):
-        data, address = self.socket.recvfrom(self.receive_packet_size)
+        try:
+            data, address = self.socket.recvfrom(self.receive_packet_size)
+        except Exception as e:
+            Logger.write(1, "Receive packet ex: " + str(e))
+            return None
+
         if self.host is None:
             self.host = address[0]
             self.port = address[1]
@@ -163,7 +175,7 @@ class UtpClient:
     def process_packet(self, pkt):
         Logger.write(1, "Processing utp packet: " + str(pkt))
         self.ack_nr = pkt.seq_nr
-        self.timestamp_dif = self.time() - pkt.timestamp
+        self.timestamp_dif = abs(self.time() - pkt.timestamp)
 
         if pkt.message_type == MessageType.ST_STATE:
             acked_pkt = [p for p in self.unacked if pkt.ack_nr == p.seq_nr]
@@ -197,8 +209,10 @@ class UtpClient:
             # self.seq_nr += 1 # TODO needed?
 
     def time(self):
-        time = datetime.now()
-        return int(time.strftime("%f")) + (int(time.strftime("%S")) * 1000000)
+        cur_time = int(str(time.time())[-11:].replace('.', ''))
+        while cur_time > 0xFFFFFFFF:
+            cur_time -= 0xFFFFFFFF
+        return cur_time
 
 
 def start_server():
