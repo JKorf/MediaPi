@@ -212,23 +212,23 @@ def start_server():
 
 
 #https://github.com/basarevych/utp-punch/blob/master/connection.js
-
-Logger.set_log_level(1)
-Logger.write(1, "Init")
-thread = threading.Thread(target=start_server)
-thread.daemon = True
-thread.start()
-sleep(1)
-client = UtpClient()
-suc = client.connect("localhost", 50011, 5)
-Logger.write(2, "Connect result: " + str(suc))
-sleep(1)
-data = b"Test data"
-while True:
-    client.write(data)
-    data = client.receive(4)
-    data2 = client.receive(5)
-    data = data + data2
-    Logger.write(1, "Client received echo: " + str(data))
-    sleep(1)
+#
+# Logger.set_log_level(1)
+# Logger.write(1, "Init")
+# thread = threading.Thread(target=start_server)
+# thread.daemon = True
+# thread.start()
+# sleep(1)
+# client = UtpClient()
+# suc = client.connect("localhost", 50011, 5)
+# Logger.write(2, "Connect result: " + str(suc))
+# sleep(1)
+# data = b"Test data"
+# while True:
+#     client.write(data)
+#     data = client.receive(4)
+#     data2 = client.receive(5)
+#     data = data + data2
+#     Logger.write(1, "Client received echo: " + str(data))
+#     sleep(1)
 
