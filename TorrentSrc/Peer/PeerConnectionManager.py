@@ -8,7 +8,7 @@ from TorrentSrc.Connections import TcpClient
 from TorrentSrc.Peer.PeerMessages import KeepAliveMessage
 from TorrentSrc.Util.Enums import ConnectionState, ReceiveState
 from TorrentSrc.Util.Network import *
-from TorrentSrc.utp import UtpClient
+from Utp.UtpClient import UtpClient
 
 
 class PeerConnectionManager:

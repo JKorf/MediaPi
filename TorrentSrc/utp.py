@@ -20,8 +20,6 @@ class UtpClient:
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((self.host, 0))
         self.socket.settimeout(self.con_timeout)
         return self.utpPipe.initiate_connection(self.socket)
 
@@ -169,7 +167,7 @@ class MicroTransportProtocol:
     def __handle_package(self, data):
         packet = decode_packet(data)
         self.ack_nr = packet.seq_nr
-        Logger.write(2, "Received packet type " + str(packet.type))
+        Logger.write(2, "Received packet type " + str(packet.type) + " seq: " + str(packet.seq_nr))
 
         if packet.type == Type.ST_DATA:
             response = uTPPacket(
