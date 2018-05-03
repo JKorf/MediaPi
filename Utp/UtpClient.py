@@ -20,6 +20,7 @@ class UtpClient:
 
         self.receive_packet_size = 65535
         self.send_packet_size = 1400
+        self.max_window_size = 1048576
 
         self.connection_state = ConnectionState.CS_INITIAL
 
@@ -108,7 +109,7 @@ class UtpClient:
 
     def send_loop(self):
         while self.running:
-            if len(self.send_buffer) == 0 or len(self.send_buffer) > 65535: # TODO what is correct limit?
+            if len(self.send_buffer) == 0 or len(self.send_buffer) > self.max_window_size: # TODO what is correct limit?
                 sleep(0.01)
                 continue
 
@@ -125,14 +126,14 @@ class UtpClient:
         self.__send_lock.acquire()
 
         if packet.data is not None or packet.message_type == MessageType.ST_SYN:
-            self.seq_nr += 1 # TODO should we up this for all package or only for data?
+            self.seq_nr += 1
             self.unacked.append(packet)
 
         packet.timestamp = self.time()
         packet.ack_nr = self.ack_nr
         packet.seq_nr = self.seq_nr
-        packet.wnd_size = 65535 - sum(pkt.length for pkt in self.unacked)
-        packet.timestamp_dif = 0 #self.timestamp_dif
+        packet.wnd_size = self.max_window_size - len(self.receive_buffer)
+        packet.timestamp_dif = self.timestamp_dif
 
         Logger.write(1, "Sending utp packet: " + str(packet))
         self.socket.sendto(packet.to_bytes(), (self.host, self.port))
@@ -141,6 +142,7 @@ class UtpClient:
 
     def receive_packet(self):
         try:
+            self.socket.setblocking(True)
             data, address = self.socket.recvfrom(self.receive_packet_size)
         except Exception as e:
             Logger.write(1, "Receive packet ex: " + str(e))
@@ -154,15 +156,8 @@ class UtpClient:
 
     def handle_packet(self, pkt):
         Logger.write(1, "Received utp packet: " + str(pkt))
-        if self.connection_state != ConnectionState.CS_INITIAL and pkt.connection_id != self.connection_id and pkt.connection_id != self.receive_connection_id:
+        if self.connection_state != ConnectionState.CS_INITIAL and pkt.connection_id != self.connection_id:
             Logger.write(1, "Unexpected connection_id: " + str(pkt.connection_id) + ", expected: " + str(self.connection_id))
-
-        if self.ack_nr != 0:
-            if (pkt.data is not None and pkt.seq_nr != self.ack_nr + 1)\
-            or (pkt.data is None and pkt.seq_nr != self.ack_nr):
-                self.receive_pkt_buffer.append(pkt)
-                Logger.write(1, "Received out of order packet, put in in receive buffer for later. SeqNr: " + str(pkt.seq_nr) +", our AckNr: " + str(self.ack_nr))
-                return
 
         self.process_packet(pkt)
         while True:
@@ -187,6 +182,7 @@ class UtpClient:
             if self.connection_state == ConnectionState.CS_SYN_SENT:
                 Logger.write(1, "Received ST_State after sending ST_Syn; CS_CONNECTED")
                 self.connection_state = ConnectionState.CS_CONNECTED
+                self.ack_nr -= 1
                 self.connect_event.set()
 
         elif pkt.message_type == MessageType.ST_DATA:
@@ -194,7 +190,7 @@ class UtpClient:
                 Logger.write(1, "Received ST_Data after receiving ST_Syn; CS_CONNECTED")
                 self.connection_state = ConnectionState.CS_CONNECTED
 
-            self.send_packet(UtpPacket(MessageType.ST_STATE, 1, 0, pkt.connection_id, 0, 0, 0, 0, 0))
+            self.send_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
 
             self.receive_buffer += pkt.data
             self.receive_event.set()
@@ -205,7 +201,7 @@ class UtpClient:
             self.seq_nr = random.randint(0, 65535)
             self.connection_state = ConnectionState.CS_SYN_RECV
             Logger.write(1, "Received ST_Syn; CS_SYN_RECV")
-            self.send_packet(UtpPacket(MessageType.ST_STATE, 1, 0, pkt.connection_id, 0, 0, 0, 0, 0))
+            self.send_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
             # self.seq_nr += 1 # TODO needed?
 
     def time(self):
