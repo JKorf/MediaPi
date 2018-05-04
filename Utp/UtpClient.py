@@ -29,15 +29,18 @@ class UtpClient:
         self.seq_nr = random.randint(0, 65535)
         self.ack_nr = 0
         self.timestamp_dif = 0
+        self.other_window_size = 0
 
         self.running = False
         self.utp_connection = UtpConnection(self.host, self.port)
         self.socket = self.utp_connection.socket
         self.unacked = []
 
+        self.receive_lock = threading.Lock()
         self.receive_pkt_buffer = [] # holds packages until the can be re-assembled in order
         self.receive_buffer = bytes() # received data buffer
         self.send_buffer = bytes() # send data buffer
+        self.send_lock = threading.Lock()
 
         self.connect_event = threading.Event()
         self.receive_event = threading.Event()
@@ -52,7 +55,9 @@ class UtpClient:
         return self.connect_event.wait(timeout)
 
     def send(self, data):
+        self.send_lock.acquire()
         self.send_buffer += data
+        self.send_lock.release()
         return True
 
     def receive_available(self, max_amount):
@@ -60,13 +65,18 @@ class UtpClient:
             self.receive_event.wait()
             self.receive_event.clear()
             return self.receive_available(max_amount)
+
+        self.receive_lock.acquire()
         if len(self.receive_buffer) < max_amount:
             data = self.receive_buffer
             self.receive_buffer = bytes()
+            self.receive_lock.release()
             return data
 
+        self.receive_lock.acquire()
         data = self.receive_buffer[0: max_amount]
         self.receive_buffer = self.receive_buffer[max_amount:]
+        self.receive_lock.release()
         return data
 
     def disconnect(self):
@@ -75,16 +85,17 @@ class UtpClient:
         self.connection_state = ConnectionState.CS_DISCONNECTED
 
     def process_send(self):
-        if len(self.send_buffer) != 0:
-            while len(self.send_buffer) != 0:
-                if len(self.send_buffer) > self.send_packet_size:
-                    to_send = self.send_buffer[0:self.send_packet_size]
-                    self.send_buffer = self.send_buffer[self.send_packet_size:]
-                else:
-                    to_send = self.send_buffer
-                    self.send_buffer = bytes()
+        while len(self.send_buffer) != 0:
+            self.send_lock.acquire()
+            if len(self.send_buffer) > self.send_packet_size:
+                to_send = self.send_buffer[0:self.send_packet_size]
+                self.send_buffer = self.send_buffer[self.send_packet_size:]
+            else:
+                to_send = self.send_buffer
+                self.send_buffer = bytes()
+            self.send_lock.release()
+            self.send_packet(UtpPacket(MessageType.ST_DATA, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0, to_send))
 
-                self.send_packet(UtpPacket(MessageType.ST_DATA, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0, to_send))
         self.utp_connection.flush()
 
     def send_packet(self, packet):
@@ -98,7 +109,6 @@ class UtpClient:
         packet.wnd_size = self.max_window_size - len(self.receive_buffer)
         packet.timestamp_dif = self.timestamp_dif
 
-        Logger.write(1, "Sending utp packet: " + str(packet))
         self.utp_connection.send(packet)
 
     def handle_packet(self, data):
@@ -119,6 +129,7 @@ class UtpClient:
         Logger.write(1, "Processing utp packet: " + str(pkt))
         self.ack_nr = pkt.seq_nr
         self.timestamp_dif = abs(self.time() - pkt.timestamp)
+        self.other_window_size = pkt.wnd_size
 
         if pkt.message_type == MessageType.ST_STATE:
             acked_pkt = [p for p in self.unacked if pkt.ack_nr == p.seq_nr]
