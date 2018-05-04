@@ -23,33 +23,28 @@ class TorrentNetworkManager:
         while self.running:
             try:
                 # Select in/outputs
-                input = self.torrent.peer_manager.get_peers_for_receiving()
-                output = self.torrent.peer_manager.get_peers_for_sending()
+                io_peers = self.torrent.peer_manager.get_peers_for_io()
 
-                if not input and not output:
+                if not io_peers:
                     sleep(0.05)
                     continue
 
-                input_sockets = [x.connection_manager.connection.socket for x in input]
-                output_sockets = [x.connection_manager.connection.socket for x in output]
-                exceptional = []
-                exceptional.extend(input_sockets)
-                exceptional.extend(output_sockets)
+                io_sockets = [x.connection_manager.connection.socket for x in io_peers]
 
                 # Check which ones can read/write
                 readable, writeable, exceptional = \
-                    select.select(input_sockets, output_sockets, exceptional, 0.2)
+                    select.select(io_sockets, io_sockets, io_sockets, 0.2)
             except Exception as e:
                 Logger.write(3, "Select error: " + str(e))
                 continue
 
             for client in readable:
-                [x for x in input if x.connection_manager.connection.socket == client][0].connection_manager.handle_read()
+                [x for x in io_peers if x.connection_manager.connection.socket == client][0].connection_manager.on_readable()
             for client in writeable:
-                [x for x in output if x.connection_manager.connection.socket == client][0].connection_manager.handle_write()
+                [x for x in io_peers if x.connection_manager.connection.socket == client][0].connection_manager.on_writeable()
             for client in exceptional:
                 Logger.write(2, "closing client because of exceptional")
-                [x for x in input if x.connection_manager.connection.socket == client][0].connection_manager.disconnect()
+                [x for x in io_peers if x.connection_manager.connection.socket == client][0].connection_manager.disconnect()
 
     def stop(self):
         self.running = False

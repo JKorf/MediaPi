@@ -7,8 +7,6 @@ from threading import Lock
 
 import math
 
-from shutil import rmtree
-
 from InterfaceSrc.VLCPlayer import PlayerState
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger

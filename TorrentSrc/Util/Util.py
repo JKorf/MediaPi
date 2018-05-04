@@ -102,41 +102,20 @@ def write_time_from_seconds(t):
 
 
 def uri_to_bytes(uri):
-    result = bytearray(6)
-
     uri_port = uri.split(':')
-    split = uri_port[0].split('.')
-    if len(split) < 4:
-        return None
-
-    result[0] = int(split[0])
-    result[1] = int(split[1])
-    result[2] = int(split[2])
-    result[3] = int(split[3])
-
+    result = socket.inet_aton(uri_port[0]) + bytearray(2)
     Network.write_ushort(result, int(uri_port[1]), 4)
     return result
 
 
 def ip_port_to_bytes(ip, port):
-    result = bytearray(6)
-
-    split = ip.split('.')
-    if len(split) < 4:
-        return None
-
-    result[0] = int(split[0])
-    result[1] = int(split[1])
-    result[2] = int(split[2])
-    result[3] = int(split[3])
-
+    result = socket.inet_aton(ip) + bytearray(2)
     Network.write_ushort(result, port, 4)
     return result
 
 
 def ip_port_from_bytes(data):
     ip = socket.inet_ntop(socket.AF_INET, data[0: 4])
-    # offset, ip = read_bytes(data, 4, offset)
     offset, port = read_ushort(data, 4)
     return ip, port
 

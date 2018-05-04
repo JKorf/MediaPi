@@ -110,8 +110,8 @@ class TorrentPeerManager:
             self.potential_peers.remove(peer_to_connect)
             self.__peer_id += 1
             new_peer = Peer(self.__peer_id, self.torrent, urlparse(peer_to_connect[0]), peer_to_connect[1])
-            self.connecting_peers.append(new_peer)
             new_peer.start()
+            self.connecting_peers.append(new_peer)
 
         return True
 
@@ -162,11 +162,9 @@ class TorrentPeerManager:
 
         return True
 
-    def get_peers_for_receiving(self):
-        return list([x for x in self.connected_peers if x.connection_manager.connection_state == ConnectionState.Connected])
-
-    def get_peers_for_sending(self):
-        return list([x for x in self.connected_peers if len(x.connection_manager.to_send_bytes) > 0 and x.connection_manager.connection_state == ConnectionState.Connected])
+    def get_peers_for_io(self):
+        return list([x for x in self.connected_peers if x.connection_manager.check_io]
+                    + [x for x in self.connecting_peers if x.connection_manager.check_io])
 
     def are_fast_peers_available(self):
         return self.high_speed_peers > 0 or self.medium_speed_peers > 1

@@ -54,10 +54,13 @@ class UtpPacket:
         return result
 
     def __str__(self):
-        return "Type: " + str(self.message_type) + ", Version: " + str(self.version) + ", Ext: " + str(self.extensions)\
+        str_rep = "Type: " + str(self.message_type) + ", Version: " + str(self.version) + ", Ext: " + str(self.extensions)\
              + ", ConnectionId: " + str(self.connection_id) + ", Timestamp: " + str(self.timestamp) + ", Timestamp dif"\
              + ": " + str(self.timestamp_dif) + ", WindowSize: " + str(self.wnd_size) + ", SeqNr: " + str(self.seq_nr)\
              + ", AckNr: " + str(self.ack_nr)
+        if self.data is not None:
+            str_rep += ", DataLength: " + str(len(self.data))
+        return str_rep
 
     @classmethod
     def from_bytes(cls, data):

@@ -24,10 +24,13 @@ class PeerConnectionManager:
         self.last_communication = 0
         self.sendLock = Lock()
         self.receiveLock = Lock()
+        self.utp = Settings.get_bool("utp")
         self.peer_timeout = Settings.get_int("peer_timeout")
+        self.check_io = False
 
-        if Settings.get_bool("utp"):
+        if self.utp:
             self.connection = UtpClient(uri.hostname, uri.port)
+            self.check_io = True
         else:
             self.connection = TcpClient(uri.hostname, uri.port)
 
@@ -50,8 +53,21 @@ class PeerConnectionManager:
         self.connected_on = current_time()
         Stats['peers_connect_success'].add(1)
         Logger.write(1, str(self.peer.id) + ' connected to ' + str(self.uri.netloc))
+        self.check_io = True
         self.connection_state = ConnectionState.Connected
         self.connection.socket.setblocking(0)
+
+    def on_readable(self):
+        if self.utp:
+            data = self.connection.utp_connection.receive()
+            self.connection.handle_packet(data)
+
+        self.handle_read()
+
+    def on_writeable(self):
+        self.handle_write()
+        if self.utp:
+            self.connection.process_send()
 
     def handle_read(self):
         if self.connection_state != ConnectionState.Connected:
@@ -102,14 +118,16 @@ class PeerConnectionManager:
             return
 
         self.sendLock.acquire()
-        Logger.write(1, str(self.peer.id) + ' Sending ' + str(len(self.to_send_bytes)) + " bytes of data")
-        success = self.connection.send(self.to_send_bytes)
-        self.to_send_bytes.clear()
-        self.sendLock.release()
-        self.last_communication = current_time()
+        if len(self.to_send_bytes) != 0:
+            Logger.write(1, str(self.peer.id) + ' Sending ' + str(len(self.to_send_bytes)) + " bytes of data")
+            success = self.connection.send(self.to_send_bytes)
+            self.to_send_bytes.clear()
+            self.last_communication = current_time()
 
-        if not success:
-            self.disconnect()
+            if not success:
+                self.disconnect()
+
+        self.sendLock.release()
 
     def send(self, data):
         self.sendLock.acquire()
@@ -150,6 +168,7 @@ class PeerConnectionManager:
         self.received_bytes.clear()
         self.receiveLock.release()
 
+        self.check_io = False
         self.connection.disconnect()
 
         self.peer.stop()

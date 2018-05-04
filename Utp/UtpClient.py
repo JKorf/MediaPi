@@ -1,10 +1,9 @@
 import random
-import socket
 import threading
 import time
-from time import sleep
 
 from Shared.Logger import Logger
+from Utp.UtpConnection import UtpConnection
 from Utp.UtpObjects import UtpPacket, ConnectionState, MessageType
 
 
@@ -32,38 +31,25 @@ class UtpClient:
         self.timestamp_dif = 0
 
         self.running = False
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.utp_connection = UtpConnection(self.host, self.port)
+        self.socket = self.utp_connection.socket
         self.unacked = []
 
         self.receive_pkt_buffer = [] # holds packages until the can be re-assembled in order
         self.receive_buffer = bytes() # received data buffer
-        self.receive_thread = None
-        self.send_thread = None
-
-        self.send_buffer = bytes()
-        self.__send_lock = threading.Lock()
+        self.send_buffer = bytes() # send data buffer
 
         self.connect_event = threading.Event()
         self.receive_event = threading.Event()
 
-    def connect(self, host=None, port=0, timeout=5):
-        self.socket.bind(('', 0))
-        if host is not None:
-            self.host = host
-        if port is not 0:
-            self.port = port
+    def connect(self, timeout=5):
         if self.port == 0:
             self.port = 6881
         self.running = True
         self.connection_state = ConnectionState.CS_SYN_SENT
-        self.__start_loops()
+
         self.send_packet(UtpPacket(MessageType.ST_SYN, 1, 0, self.connection_id, 0, 0, 0, 0, 0))
         return self.connect_event.wait(timeout)
-
-    def listen(self, port):
-        self.socket.bind(('0.0.0.0', port))
-        self.running = True
-        self.__start_loops()
 
     def send(self, data):
         self.send_buffer += data
@@ -87,44 +73,21 @@ class UtpClient:
         if self.connection_state == ConnectionState.CS_CONNECTED:
             self.send_packet(UtpPacket(MessageType.ST_RESET, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
         self.connection_state = ConnectionState.CS_DISCONNECTED
-        self.socket.close()
 
-    def __start_loops(self):
-        self.receive_thread = threading.Thread(target=self.receive_loop)
-        self.receive_thread.start()
-        self.send_thread = threading.Thread(target=self.send_loop)
-        self.send_thread.start()
+    def process_send(self):
+        if len(self.send_buffer) != 0:
+            while len(self.send_buffer) != 0:
+                if len(self.send_buffer) > self.send_packet_size:
+                    to_send = self.send_buffer[0:self.send_packet_size]
+                    self.send_buffer = self.send_buffer[self.send_packet_size:]
+                else:
+                    to_send = self.send_buffer
+                    self.send_buffer = bytes()
 
-    def receive_loop(self):
-        while self.running:
-            if len(self.receive_buffer) > 1000000: # TODO what is correct limit?
-                sleep(0.01)
-                continue
-
-            pkt = self.receive_packet()
-            if pkt is None:
-                break
-
-            self.handle_packet(pkt)
-
-    def send_loop(self):
-        while self.running:
-            if len(self.send_buffer) == 0 or len(self.send_buffer) > self.max_window_size: # TODO what is correct limit?
-                sleep(0.01)
-                continue
-
-            if len(self.send_buffer) > self.send_packet_size:
-                to_send = self.send_buffer[0:self.send_packet_size]
-                self.send_buffer = self.send_buffer[self.send_packet_size:]
-            else:
-                to_send = self.send_buffer
-                self.send_buffer = bytes()
-
-            self.send_packet(UtpPacket(MessageType.ST_DATA, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0, to_send))
+                self.send_packet(UtpPacket(MessageType.ST_DATA, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0, to_send))
+        self.utp_connection.flush()
 
     def send_packet(self, packet):
-        self.__send_lock.acquire()
-
         if packet.data is not None or packet.message_type == MessageType.ST_SYN:
             self.seq_nr += 1
             self.unacked.append(packet)
@@ -136,25 +99,10 @@ class UtpClient:
         packet.timestamp_dif = self.timestamp_dif
 
         Logger.write(1, "Sending utp packet: " + str(packet))
-        self.socket.sendto(packet.to_bytes(), (self.host, self.port))
+        self.utp_connection.send(packet)
 
-        self.__send_lock.release()
-
-    def receive_packet(self):
-        try:
-            self.socket.setblocking(True)
-            data, address = self.socket.recvfrom(self.receive_packet_size)
-        except Exception as e:
-            Logger.write(1, "Receive packet ex: " + str(e))
-            return None
-
-        if self.host is None:
-            self.host = address[0]
-            self.port = address[1]
-            Logger.write(1, "Received packet from new client at " + str(self.host) + ":" + str(self.port))
-        return UtpPacket.from_bytes(data)
-
-    def handle_packet(self, pkt):
+    def handle_packet(self, data):
+        pkt = UtpPacket.from_bytes(data)
         Logger.write(1, "Received utp packet: " + str(pkt))
         if self.connection_state != ConnectionState.CS_INITIAL and pkt.connection_id != self.connection_id:
             Logger.write(1, "Unexpected connection_id: " + str(pkt.connection_id) + ", expected: " + str(self.connection_id))
@@ -202,43 +150,10 @@ class UtpClient:
             self.connection_state = ConnectionState.CS_SYN_RECV
             Logger.write(1, "Received ST_Syn; CS_SYN_RECV")
             self.send_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
-            # self.seq_nr += 1 # TODO needed?
 
     def time(self):
         cur_time = int(str(time.time())[-11:].replace('.', ''))
         while cur_time > 0xFFFFFFFF:
             cur_time -= 0xFFFFFFFF
         return cur_time
-
-
-def start_server():
-    server = UtpClient()
-    server.listen(50011)
-    Logger.write(1, "server started")
-    while True:
-        data = server.receive(50)
-        Logger.write(1, "Server received: " + str(data))
-        server.write(data)
-
-
-#https://github.com/basarevych/utp-punch/blob/master/connection.js
-#
-# Logger.set_log_level(1)
-# Logger.write(1, "Init")
-# thread = threading.Thread(target=start_server)
-# thread.daemon = True
-# thread.start()
-# sleep(1)
-# client = UtpClient()
-# suc = client.connect("localhost", 50011, 5)
-# Logger.write(2, "Connect result: " + str(suc))
-# sleep(1)
-# data = b"Test data"
-# while True:
-#     client.write(data)
-#     data = client.receive(4)
-#     data2 = client.receive(5)
-#     data = data + data2
-#     Logger.write(1, "Client received echo: " + str(data))
-#     sleep(1)
 
