@@ -24,5 +24,9 @@ class UtpConnection:
             self.socket.sendto(pkt.to_bytes(), (self.host, self.port))
 
     def receive(self):
-        data, addr = self.socket.recvfrom(1400)
-        return data
+        try:
+            data, addr = self.socket.recvfrom(1500)
+            return data
+        except Exception as e:
+            Logger.write(1, "Error in receive: " + str(e))
+            return None

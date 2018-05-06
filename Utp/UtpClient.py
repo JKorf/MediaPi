@@ -45,6 +45,9 @@ class UtpClient:
         self.connect_event = threading.Event()
         self.receive_event = threading.Event()
 
+    def data_available(self):
+        return len(self.receive_buffer) != 0
+
     def connect(self, timeout=5):
         if self.port == 0:
             self.port = 6881
@@ -64,22 +67,25 @@ class UtpClient:
         if len(self.receive_buffer) == 0:
             self.receive_event.wait()
             self.receive_event.clear()
-            return self.receive_available(max_amount)
+            return bytes()
 
         self.receive_lock.acquire()
         if len(self.receive_buffer) < max_amount:
             data = self.receive_buffer
             self.receive_buffer = bytes()
             self.receive_lock.release()
+            Logger.write(1, "Removed " + str(len(data)) + " bytes to receive_buffer, now " + str(len(self.receive_buffer)) + " in receive buffer")
             return data
 
-        self.receive_lock.acquire()
         data = self.receive_buffer[0: max_amount]
         self.receive_buffer = self.receive_buffer[max_amount:]
+        Logger.write(1, "Removed " + str(len(data)) + " bytes to receive_buffer, now " + str(
+            len(self.receive_buffer)) + " in receive buffer")
         self.receive_lock.release()
         return data
 
     def disconnect(self):
+        self.receive_event.set()
         if self.connection_state == ConnectionState.CS_CONNECTED:
             self.send_packet(UtpPacket(MessageType.ST_RESET, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
         self.connection_state = ConnectionState.CS_DISCONNECTED
@@ -151,7 +157,10 @@ class UtpClient:
 
             self.send_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
 
+            self.receive_lock.acquire()
             self.receive_buffer += pkt.data
+            Logger.write(1, "Added " + str(len(pkt.data)) + " bytes to receive_buffer, now " + str(len(self.receive_buffer)) + " in receive buffer")
+            self.receive_lock.release()
             self.receive_event.set()
 
         elif pkt.message_type == MessageType.ST_SYN:

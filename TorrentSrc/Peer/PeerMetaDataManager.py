@@ -37,6 +37,7 @@ class PeerMetaDataManager:
 
                 dic = ProtocolExtensionManager.create_extension_dictionary()
                 handshake = ExtensionHandshakeMessage(dic)
+                Logger.write(1, "Sending extension handshake")
                 self.peer.connection_manager.send(handshake.to_bytes())
 
         if self.peer.torrent.state == TorrentState.DownloadingMetaData:
@@ -87,6 +88,7 @@ class PeerMetaDataManager:
                     Logger.write(1, "Got nothing, sending HaveNone")
                     self.peer.connection_manager.send(HaveNoneMessage().to_bytes())
             else:
+                Logger.write(1, "Sending bitfield message")
                 self.peer.connection_manager.send(BitfieldMessage(self.peer.torrent.data_manager.bitfield.get_bitfield()).to_bytes())
 
         if self.peer.communication_state.out_interest == PeerInterestedState.Uninterested and self.peer.download_manager.has_interesting_pieces():
@@ -110,6 +112,7 @@ class PeerMetaDataManager:
         message = HandshakeMessage(self.peer.torrent.info_hash.sha1_hashed_bytes)
         message.reserved = ProtocolExtensionManager.add_extensions_to_handshake(message.reserved)
 
+        Logger.write(1, "Sending handshake")
         self.peer.connection_manager.send(message.to_bytes())
 
         answer = None
@@ -119,7 +122,7 @@ class PeerMetaDataManager:
                 break
 
             answer = self.peer.connection_manager.get_message()
-            if current_time() - start_time > 2000:
+            if current_time() - start_time > 5000:
                 break
             if not answer:
                 sleep(0.2)

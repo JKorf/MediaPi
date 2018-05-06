@@ -60,9 +60,15 @@ class PeerConnectionManager:
     def on_readable(self):
         if self.utp:
             data = self.connection.utp_connection.receive()
-            self.connection.handle_packet(data)
+            if data is None:
+                self.disconnect()
+                return
 
-        self.handle_read()
+            self.connection.handle_packet(data)
+            while self.connection.data_available():
+                self.handle_read()
+        else:
+            self.handle_read()
 
     def on_writeable(self):
         self.handle_write()
@@ -148,6 +154,7 @@ class PeerConnectionManager:
         if self.connection_state == ConnectionState.Initial:
             self.start()
         if self.connection_state == ConnectionState.Connected and self.last_communication < current_time() - self.peer_timeout and self.connected_on < current_time() - 30000:
+            Logger.write(1, "Sending keep alive")
             self.send(KeepAliveMessage().to_bytes())
         if self.connection_state == ConnectionState.Disconnected:
             return False
