@@ -11,8 +11,8 @@ base_folder=/home/pi/Scripts/
 master_base_folder=C:/
 
 # Connections
-max_peers_connecting=30
-max_peers_connected=20
+max_peers_connecting=1
+max_peers_connected=1
 connection_timeout=2000
 peer_timeout=60000
 utp=True

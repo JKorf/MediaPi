@@ -31,6 +31,9 @@ class UtpClient:
         self.timestamp_dif = 0
         self.other_window_size = 0
 
+        self.last_received_ack = 0
+        self.duplicate_acks = 0
+
         self.running = False
         self.utp_connection = UtpConnection(self.host, self.port)
         self.socket = self.utp_connection.socket
@@ -54,7 +57,7 @@ class UtpClient:
         self.running = True
         self.connection_state = ConnectionState.CS_SYN_SENT
 
-        self.send_packet(UtpPacket(MessageType.ST_SYN, 1, 0, self.connection_id, 0, 0, 0, 0, 0))
+        self.send_new_packet(UtpPacket(MessageType.ST_SYN, 1, 0, self.connection_id, 0, 0, 0, 0, 0))
         return self.connect_event.wait(timeout)
 
     def send(self, data):
@@ -87,7 +90,7 @@ class UtpClient:
     def disconnect(self):
         self.receive_event.set()
         if self.connection_state == ConnectionState.CS_CONNECTED:
-            self.send_packet(UtpPacket(MessageType.ST_RESET, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
+            self.send_new_packet(UtpPacket(MessageType.ST_RESET, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
         self.connection_state = ConnectionState.CS_DISCONNECTED
 
     def process_send(self):
@@ -100,18 +103,20 @@ class UtpClient:
                 to_send = self.send_buffer
                 self.send_buffer = bytes()
             self.send_lock.release()
-            self.send_packet(UtpPacket(MessageType.ST_DATA, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0, to_send))
+            self.send_new_packet(UtpPacket(MessageType.ST_DATA, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0, to_send))
 
         self.utp_connection.flush()
 
-    def send_packet(self, packet):
+    def send_new_packet(self, packet):
         if packet.data is not None or packet.message_type == MessageType.ST_SYN:
             self.seq_nr += 1
             self.unacked.append(packet)
+        packet.seq_nr = self.seq_nr
+        self.send_packet(packet)
 
+    def send_packet(self, packet):
         packet.timestamp = self.time()
         packet.ack_nr = self.ack_nr
-        packet.seq_nr = self.seq_nr
         packet.wnd_size = self.max_window_size - len(self.receive_buffer)
         packet.timestamp_dif = self.timestamp_dif
 
@@ -122,6 +127,12 @@ class UtpClient:
         Logger.write(1, "Received utp packet: " + str(pkt))
         if self.connection_state != ConnectionState.CS_INITIAL and pkt.connection_id != self.connection_id:
             Logger.write(1, "Unexpected connection_id: " + str(pkt.connection_id) + ", expected: " + str(self.connection_id))
+            return
+
+        if self.ack_nr != 0 and pkt.seq_nr > self.ack_nr + 1:
+            Logger.write(1, "Received out of sequence packet: " + str(pkt.seq_nr) +", next expected = " + str(self.ack_nr + 1) +". Adding to buffer")
+            self.receive_pkt_buffer.append(pkt)
+            return
 
         self.process_packet(pkt)
         while True:
@@ -131,6 +142,20 @@ class UtpClient:
             Logger.write(1, "Picking up earlier received packet")
             self.process_packet(pkt[0])
 
+    def process_ack(self, ack_nr):
+        if ack_nr == self.last_received_ack and len([p for p in self.unacked if p.seq_nr == ack_nr + 1]) > 0:
+            self.duplicate_acks += 1
+            Logger.write(1, "Received duplicate ack")
+
+            if self.duplicate_acks >= 3:
+                # receive 3 acks for the same packet, assume the packet after that is lost; resend it
+                pkt_to_resend = [p for p in self.unacked if p.seq_nr == ack_nr + 1][0]
+                Logger.write(1, "Received 3 duplicates acks, resending next packet")
+                self.send_packet(pkt_to_resend)
+        else:
+            self.unacked = [p for p in self.unacked if p.seq_nr != ack_nr]
+        self.last_received_ack = ack_nr
+
     def process_packet(self, pkt):
         Logger.write(1, "Processing utp packet: " + str(pkt))
         self.ack_nr = pkt.seq_nr
@@ -138,11 +163,7 @@ class UtpClient:
         self.other_window_size = pkt.wnd_size
 
         if pkt.message_type == MessageType.ST_STATE:
-            acked_pkt = [p for p in self.unacked if pkt.ack_nr == p.seq_nr]
-            if len(acked_pkt) == 0:
-                Logger.write(1, "Received ack for packet we didn't send? AckNr: " + str(pkt.ack_nr))
-            else:
-                self.unacked.remove(acked_pkt[0])
+            self.process_ack(pkt.ack_nr)
 
             if self.connection_state == ConnectionState.CS_SYN_SENT:
                 Logger.write(1, "Received ST_State after sending ST_Syn; CS_CONNECTED")
@@ -155,7 +176,7 @@ class UtpClient:
                 Logger.write(1, "Received ST_Data after receiving ST_Syn; CS_CONNECTED")
                 self.connection_state = ConnectionState.CS_CONNECTED
 
-            self.send_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
+            self.send_new_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
 
             self.receive_lock.acquire()
             self.receive_buffer += pkt.data
@@ -169,7 +190,7 @@ class UtpClient:
             self.seq_nr = random.randint(0, 65535)
             self.connection_state = ConnectionState.CS_SYN_RECV
             Logger.write(1, "Received ST_Syn; CS_SYN_RECV")
-            self.send_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
+            self.send_new_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
 
     def time(self):
         cur_time = int(str(time.time())[-11:].replace('.', ''))
