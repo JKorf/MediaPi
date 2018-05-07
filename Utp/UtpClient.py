@@ -1,6 +1,7 @@
 import random
 import threading
 import time
+from operator import attrgetter
 
 from Shared.Logger import Logger
 from Utp.UtpConnection import UtpConnection
@@ -143,6 +144,10 @@ class UtpClient:
             self.process_packet(pkt[0])
 
     def process_ack(self, ack_nr):
+        yet_to_ack = [p for p in self.unacked if p.seq_nr > ack_nr]
+        if len(yet_to_ack) > 0:
+            Logger.write(1, "Received ack, still unacked: " + ",".join([str(pkt.seq_nr) for pkt in yet_to_ack]))
+
         if ack_nr == self.last_received_ack and len([p for p in self.unacked if p.seq_nr == ack_nr + 1]) > 0:
             self.duplicate_acks += 1
             Logger.write(1, "Received duplicate ack")
@@ -154,6 +159,7 @@ class UtpClient:
                 self.send_packet(pkt_to_resend)
         else:
             self.unacked = [p for p in self.unacked if p.seq_nr != ack_nr]
+            self.duplicate_acks = 0
         self.last_received_ack = ack_nr
 
     def process_packet(self, pkt):
