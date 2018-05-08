@@ -1,7 +1,6 @@
 import random
 import threading
-import time
-from operator import attrgetter
+from datetime import datetime, timezone
 
 from Shared.Logger import Logger
 from Utp.UtpConnection import UtpConnection
@@ -18,6 +17,7 @@ class UtpClient:
         else:
             self.port = 0
 
+        self.epoch = datetime.utcfromtimestamp(0)
         self.receive_packet_size = 65535
         self.send_packet_size = 1400
         self.max_window_size = 1048576
@@ -34,11 +34,16 @@ class UtpClient:
 
         self.last_received_ack = 0
         self.duplicate_acks = 0
+        self.resend_states = 0
+
+        self.reset = False
+        self.received_fin = False
 
         self.running = False
         self.utp_connection = UtpConnection(self.host, self.port)
         self.socket = self.utp_connection.socket
         self.unacked = []
+        self.timeout = 1000
 
         self.receive_lock = threading.Lock()
         self.receive_pkt_buffer = [] # holds packages until the can be re-assembled in order
@@ -47,10 +52,9 @@ class UtpClient:
         self.send_lock = threading.Lock()
 
         self.connect_event = threading.Event()
-        self.receive_event = threading.Event()
 
     def data_available(self):
-        return len(self.receive_buffer) != 0
+        return len(self.receive_buffer) != 0 or self.connection_state == ConnectionState.CS_DISCONNECTED
 
     def connect(self, timeout=5):
         if self.port == 0:
@@ -61,7 +65,21 @@ class UtpClient:
         self.send_new_packet(UtpPacket(MessageType.ST_SYN, 1, 0, self.connection_id, 0, 0, 0, 0, 0))
         return self.connect_event.wait(timeout)
 
+    def check_timeouts(self):
+        if self.connection_state == ConnectionState.CS_DISCONNECTED:
+            return
+
+        check_time = self.time()
+        timed_out_unacks = [pkt for pkt in self.unacked if check_time - pkt.timestamp > (pkt.resends + 1) * self.timeout]
+        for pkt in timed_out_unacks:
+            Logger.write(1, "Resending timed out pkt")
+            pkt.resends += 1
+            self.send_packet(pkt)
+
     def send(self, data):
+        if self.connection_state == ConnectionState.CS_DISCONNECTED:
+            return False
+
         self.send_lock.acquire()
         self.send_buffer += data
         self.send_lock.release()
@@ -69,9 +87,7 @@ class UtpClient:
 
     def receive_available(self, max_amount):
         if len(self.receive_buffer) == 0:
-            self.receive_event.wait()
-            self.receive_event.clear()
-            return bytes()
+                return None
 
         self.receive_lock.acquire()
         if len(self.receive_buffer) < max_amount:
@@ -89,7 +105,6 @@ class UtpClient:
         return data
 
     def disconnect(self):
-        self.receive_event.set()
         if self.connection_state == ConnectionState.CS_CONNECTED:
             self.send_new_packet(UtpPacket(MessageType.ST_RESET, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
         self.connection_state = ConnectionState.CS_DISCONNECTED
@@ -116,6 +131,9 @@ class UtpClient:
         self.send_packet(packet)
 
     def send_packet(self, packet):
+        if self.connection_state == ConnectionState.CS_DISCONNECTED:
+            return
+
         packet.timestamp = self.time()
         packet.ack_nr = self.ack_nr
         packet.wnd_size = self.max_window_size - len(self.receive_buffer)
@@ -128,13 +146,23 @@ class UtpClient:
         Logger.write(1, "Received utp packet: " + str(pkt))
         if self.connection_state != ConnectionState.CS_INITIAL and pkt.connection_id != self.connection_id:
             Logger.write(1, "Unexpected connection_id: " + str(pkt.connection_id) + ", expected: " + str(self.connection_id))
-            return
 
-        if self.ack_nr != 0 and pkt.seq_nr > self.ack_nr + 1:
+        if self.ack_nr != 0 and pkt.seq_nr > self.ack_nr + 1 and pkt.message_type != MessageType.ST_RESET:
             Logger.write(1, "Received out of sequence packet: " + str(pkt.seq_nr) +", next expected = " + str(self.ack_nr + 1) +". Adding to buffer")
             self.receive_pkt_buffer.append(pkt)
             return
 
+        elif self.ack_nr != 0 and pkt.message_type == MessageType.ST_DATA and pkt.seq_nr <= self.ack_nr:
+            Logger.write(1, "Received pkt we already acked: " +str(pkt.seq_nr))
+            self.resend_states += 1
+            if self.resend_states == 2:
+                self.ack_nr -= 1
+            self.send_new_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
+            if self.resend_states == 2:
+                self.ack_nr += 1
+            return
+
+        self.resend_states = 0
         self.process_packet(pkt)
         while True:
             pkts = [pkt for pkt in self.receive_pkt_buffer if pkt.seq_nr == self.ack_nr + 1]
@@ -144,6 +172,7 @@ class UtpClient:
             self.process_packet(pkt[0])
 
     def process_ack(self, ack_nr):
+        self.unacked = [pkt for pkt in self.unacked if pkt.seq_nr > ack_nr]
         yet_to_ack = [p for p in self.unacked if p.seq_nr > ack_nr]
         if len(yet_to_ack) > 0:
             Logger.write(1, "Received ack, still unacked: " + ",".join([str(pkt.seq_nr) for pkt in yet_to_ack]))
@@ -164,7 +193,8 @@ class UtpClient:
 
     def process_packet(self, pkt):
         Logger.write(1, "Processing utp packet: " + str(pkt))
-        self.ack_nr = pkt.seq_nr
+        if pkt.message_type == MessageType.ST_DATA or self.ack_nr == 0:
+            self.ack_nr = pkt.seq_nr
         self.timestamp_dif = abs(self.time() - pkt.timestamp)
         self.other_window_size = pkt.wnd_size
 
@@ -188,7 +218,6 @@ class UtpClient:
             self.receive_buffer += pkt.data
             Logger.write(1, "Added " + str(len(pkt.data)) + " bytes to receive_buffer, now " + str(len(self.receive_buffer)) + " in receive buffer")
             self.receive_lock.release()
-            self.receive_event.set()
 
         elif pkt.message_type == MessageType.ST_SYN:
             self.connection_id = pkt.connection_id
@@ -198,9 +227,17 @@ class UtpClient:
             Logger.write(1, "Received ST_Syn; CS_SYN_RECV")
             self.send_new_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
 
+        elif pkt.message_type == MessageType.ST_RESET:
+            Logger.write(1, "Received ST_Reset; closing")
+            self.connection_state = ConnectionState.CS_DISCONNECTED
+
+        elif pkt.message_type == MessageType.ST_FIN:
+            Logger.write(1, "Received ST_Fin; closing")
+            self.connection_state = ConnectionState.CS_DISCONNECTED
+
     def time(self):
-        cur_time = int(str(time.time())[-11:].replace('.', ''))
-        while cur_time > 0xFFFFFFFF:
-            cur_time -= 0xFFFFFFFF
-        return cur_time
+        time = int((datetime.now() - self.epoch).total_seconds() * 1000.0)
+        while time > 4294967295:
+            time -= 4294967295
+        return time
 
