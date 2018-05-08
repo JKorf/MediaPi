@@ -43,7 +43,10 @@ class UtpClient:
         self.utp_connection = UtpConnection(self.host, self.port)
         self.socket = self.utp_connection.socket
         self.unacked = []
+
         self.timeout = 1000
+        self.rtt = 0
+        self.rtt_var = 0
 
         self.receive_lock = threading.Lock()
         self.receive_pkt_buffer = [] # holds packages until the can be re-assembled in order
@@ -155,11 +158,7 @@ class UtpClient:
         elif self.ack_nr != 0 and pkt.message_type == MessageType.ST_DATA and pkt.seq_nr <= self.ack_nr:
             Logger.write(1, "Received pkt we already acked: " +str(pkt.seq_nr))
             self.resend_states += 1
-            if self.resend_states == 2:
-                self.ack_nr -= 1
             self.send_new_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
-            if self.resend_states == 2:
-                self.ack_nr += 1
             return
 
         self.resend_states = 0
@@ -169,22 +168,38 @@ class UtpClient:
             if len(pkts) == 0:
                 break
             Logger.write(1, "Picking up earlier received packet")
-            self.process_packet(pkt[0])
+            self.process_packet(pkts[0])
 
     def process_ack(self, ack_nr):
+        acked = [pkt for pkt in self.unacked if pkt.seq_nr == ack_nr]
+        if len(acked) > 0 and acked[0].resends == 0:
+            acked_pkt = acked[0]
+            time_passed = self.time() - acked_pkt.timestamp
+            if self.rtt == 0:
+                self.rtt = time_passed
+            else:
+                delta = self.rtt - time_passed
+                self.rtt_var += (abs(delta) - self.rtt_var) / 4
+                self.rtt += (time_passed - self.rtt) / 8
+                self.timeout = max(self.rtt + self.rtt_var * 4, 500)
+                Logger.write(1, "Setting timeout to " + str(self.timeout) + " based on rtt of " + str(self.rtt) + " and rtt_var of " + str(self.rtt_var))
+
         self.unacked = [pkt for pkt in self.unacked if pkt.seq_nr > ack_nr]
         yet_to_ack = [p for p in self.unacked if p.seq_nr > ack_nr]
         if len(yet_to_ack) > 0:
             Logger.write(1, "Received ack, still unacked: " + ",".join([str(pkt.seq_nr) for pkt in yet_to_ack]))
+            for pkt in yet_to_ack:
+                Logger.write(1, "Resending pkt not yet acked ")
+                self.send_packet(pkt)
 
         if ack_nr == self.last_received_ack and len([p for p in self.unacked if p.seq_nr == ack_nr + 1]) > 0:
             self.duplicate_acks += 1
             Logger.write(1, "Received duplicate ack")
 
-            if self.duplicate_acks >= 3:
+            if self.duplicate_acks >= 2:
                 # receive 3 acks for the same packet, assume the packet after that is lost; resend it
                 pkt_to_resend = [p for p in self.unacked if p.seq_nr == ack_nr + 1][0]
-                Logger.write(1, "Received 3 duplicates acks, resending next packet")
+                Logger.write(1, "Received 3 duplicates acks, resending packet")
                 self.send_packet(pkt_to_resend)
         else:
             self.unacked = [p for p in self.unacked if p.seq_nr != ack_nr]
@@ -208,6 +223,8 @@ class UtpClient:
                 self.connect_event.set()
 
         elif pkt.message_type == MessageType.ST_DATA:
+            self.process_ack(pkt.ack_nr)
+
             if self.connection_state == ConnectionState.CS_SYN_RECV:
                 Logger.write(1, "Received ST_Data after receiving ST_Syn; CS_CONNECTED")
                 self.connection_state = ConnectionState.CS_CONNECTED
