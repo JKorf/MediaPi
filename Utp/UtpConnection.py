@@ -17,6 +17,10 @@ class UtpConnection:
             raise Exception("Send is not a packet")
         self.packet_send_queue.append(pkt)
 
+    def send_direct(self, pkt):
+        Logger.write(1, "Sending direct pkt " + str(pkt))
+        self.socket.sendto(pkt.to_bytes(), (self.host, self.port))
+
     def flush(self):
         while len(self.packet_send_queue) > 0:
             pkt = self.packet_send_queue.pop(0)

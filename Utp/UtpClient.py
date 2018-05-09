@@ -111,7 +111,7 @@ class UtpClient:
 
     def disconnect(self):
         if self.connection_state == ConnectionState.CS_CONNECTED:
-            self.send_new_packet(UtpPacket(MessageType.ST_RESET, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
+            self.send_direct_packet(UtpPacket(MessageType.ST_RESET, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
         self.connection_state = ConnectionState.CS_DISCONNECTED
 
     def process_send(self):
@@ -135,6 +135,18 @@ class UtpClient:
             self.unacked.append(packet)
         packet.seq_nr = self.seq_nr
         self.send_packet(packet)
+
+    def send_direct_packet(self, packet):
+        if packet.data is not None or packet.message_type == MessageType.ST_SYN:
+            self.seq_nr += 1
+            self.unacked.append(packet)
+        packet.seq_nr = self.seq_nr
+        packet.timestamp = self.time()
+        packet.ack_nr = self.ack_nr
+        packet.wnd_size = self.max_window_size - len(self.receive_buffer)
+        packet.timestamp_dif = self.timestamp_dif
+
+        self.utp_connection.send_direct(packet)
 
     def send_packet(self, packet):
         if self.connection_state == ConnectionState.CS_DISCONNECTED:
@@ -161,7 +173,7 @@ class UtpClient:
         elif self.ack_nr != 0 and pkt.message_type == MessageType.ST_DATA and pkt.seq_nr <= self.ack_nr:
             Logger.write(1, "Received pkt we already acked: " +str(pkt.seq_nr))
             self.resend_states += 1
-            self.send_new_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
+            self.send_direct_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
             return
 
         self.resend_states = 0
@@ -233,7 +245,7 @@ class UtpClient:
                 Logger.write(1, "Received ST_Data after receiving ST_Syn; CS_CONNECTED")
                 self.connection_state = ConnectionState.CS_CONNECTED
 
-            self.send_new_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
+            self.send_direct_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
 
             self.receive_lock.acquire()
             self.receive_buffer += pkt.data
@@ -246,7 +258,7 @@ class UtpClient:
             self.seq_nr = random.randint(0, 65535)
             self.connection_state = ConnectionState.CS_SYN_RECV
             Logger.write(1, "Received ST_Syn; CS_SYN_RECV")
-            self.send_new_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
+            self.send_direct_packet(UtpPacket(MessageType.ST_STATE, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0))
 
         elif pkt.message_type == MessageType.ST_RESET:
             Logger.write(1, "Received ST_Reset; closing")
