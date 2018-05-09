@@ -3,6 +3,7 @@ import threading
 from datetime import datetime, timezone
 
 from Shared.Logger import Logger
+from Shared.Util import current_time
 from Utp.UtpConnection import UtpConnection
 from Utp.UtpObjects import UtpPacket, ConnectionState, MessageType
 
@@ -17,6 +18,7 @@ class UtpClient:
         else:
             self.port = 0
 
+        self.last_send = 0
         self.epoch = datetime.utcfromtimestamp(0)
         self.receive_packet_size = 65535
         self.send_packet_size = 1400
@@ -124,6 +126,7 @@ class UtpClient:
             self.send_lock.release()
             self.send_new_packet(UtpPacket(MessageType.ST_DATA, 1, 0, self.receive_connection_id, 0, 0, 0, 0, 0, to_send))
 
+        self.last_send = current_time()
         self.utp_connection.flush()
 
     def send_new_packet(self, packet):
@@ -169,6 +172,7 @@ class UtpClient:
                 break
             Logger.write(1, "Picking up earlier received packet")
             self.process_packet(pkts[0])
+            self.receive_pkt_buffer.remove(pkts[0])
 
     def process_ack(self, ack_nr):
         acked = [pkt for pkt in self.unacked if pkt.seq_nr == ack_nr]

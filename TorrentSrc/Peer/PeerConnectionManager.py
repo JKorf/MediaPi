@@ -75,7 +75,8 @@ class PeerConnectionManager:
         self.handle_write()
         if self.utp:
             self.connection.check_timeouts()
-            self.connection.process_send()
+            if current_time() - self.connection.last_send > 25:
+                self.connection.process_send()
 
     def handle_read(self):
         if self.connection_state != ConnectionState.Connected:
