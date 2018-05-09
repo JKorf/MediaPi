@@ -11,11 +11,11 @@ base_folder=/home/pi/Scripts/
 master_base_folder=C:/
 
 # Connections
-max_peers_connecting=1
-max_peers_connected=1
+max_peers_connecting=20
+max_peers_connected=30
 connection_timeout=2000
 peer_timeout=60000
-utp=True
+utp=False
 
 # Downloading
 block_size=16384
@@ -43,7 +43,7 @@ network_caching=10000
 
 # Application
 main_engine_tick_rate=500
-log_level=1
+log_level=2
 vlc_log_level=1
 show_gui=False
 raspberry=False
