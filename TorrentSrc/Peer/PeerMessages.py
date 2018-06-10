@@ -439,7 +439,6 @@ class MetadataMessage(BasePeerMessage):
             self.type = ExtensionProtocolMessageType.Metadata
         else:
             self.type = peer.extension_manager.get_id_for_message(ExtensionName.Metadata)
-        Logger.write(1, "Metadata protocol id for this peer is " + str(self.type))
 
         self.metadata_message_type = type
         self.piece_index = piece_index

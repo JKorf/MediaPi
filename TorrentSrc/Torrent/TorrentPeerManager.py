@@ -72,7 +72,7 @@ class TorrentPeerManager:
 
     def piece_done(self, piece_index):
         for peer in list(self.connected_peers):
-            Logger.write(1, str(peer.id) + "Sending have message for piece " + str(piece_index))
+            Logger.write(1, str(peer.id) + " Sending have message for piece " + str(piece_index))
             peer.connection_manager.send(HaveMessage(piece_index).to_bytes())
 
     def get_peer_by_id(self, peer_id):

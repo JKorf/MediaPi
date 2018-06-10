@@ -26,6 +26,7 @@ class PeerConnectionManager:
         self.receiveLock = Lock()
         self.utp = Settings.get_bool("utp")
         self.peer_timeout = Settings.get_int("peer_timeout")
+        self.connection_timeout = Settings.get_int("connection_timeout") / 1000
         self.check_io = False
 
         if self.utp:
@@ -44,7 +45,7 @@ class PeerConnectionManager:
         Logger.write(1, str(self.peer.id) + ' connecting to ' + str(self.uri.netloc))
         Stats['peers_connect_try'].add(1)
 
-        if not self.connection.connect():
+        if not self.connection.connect(self.connection_timeout):
             Stats['peers_connect_failed'].add(1)
             Logger.write(1, str(self.peer.id) + ' could not connect to ' + str(self.uri.netloc))
             self.disconnect()
@@ -65,7 +66,7 @@ class PeerConnectionManager:
                 return
 
             self.connection.handle_packet(data)
-            while self.connection.data_available():
+            while self.connection.data_available() and self.connection_state != ConnectionState.Disconnected:
                 self.handle_read()
         else:
             self.handle_read()
@@ -73,7 +74,9 @@ class PeerConnectionManager:
     def on_writeable(self):
         self.handle_write()
         if self.utp:
-            self.connection.process_send()
+            self.connection.check_timeouts()
+            if current_time() - self.connection.last_send > 25:
+                self.connection.process_send()
 
     def handle_read(self):
         if self.connection_state != ConnectionState.Connected:
@@ -103,6 +106,8 @@ class PeerConnectionManager:
                 if self.next_message_length < 0 or self.next_message_length > 17000:
                     Logger.write(2, "Invalid next message length: " + str(self.next_message_length))
                     self.disconnect()
+                else:
+                    Logger.write(1, "Next message length: " + str(self.next_message_length))
 
                 return
             else:

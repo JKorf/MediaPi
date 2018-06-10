@@ -10,8 +10,6 @@
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database
 
-    Download Queue verbeteren
-
     speed graph
 
     Volgende aflevering van series automatisch afspelen
@@ -22,8 +20,6 @@
 
     Gui plaatjes
         Moet wel weer op zwart als spelen begint
-
-    Media file information lezen van bytes
 
     zram: https://eltechs.com/overclock-raspberry-pi-3/
     Try with new case:

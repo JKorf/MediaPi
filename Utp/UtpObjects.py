@@ -38,6 +38,8 @@ class UtpPacket:
         if self.data is not None:
             self.length += len(self.data)
 
+        self.resends = 0
+
     def to_bytes(self):
         result = bytearray(20)
         offset = 0
