@@ -140,7 +140,11 @@ class StartUp:
             if self.player.type == "File":
                 watching_type = "file"
 
-            path = self.player.path
+            if self.stream_torrent is not None:
+                path = self.stream_torrent.uri
+            else:
+                path = self.player.path
+
             master_path = self.master_ip + ":50010/file/"
             if path.startswith(master_path):
                 path = path[len(master_path):]
@@ -176,7 +180,7 @@ class StartUp:
                         "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(
                             self.player.get_position()))
                 else:
-                    self.database.update_watching_item(path, self.player.get_position())
+                    self.database.update_watching_item(path, self.player.get_position(), current_time())
 
             time.sleep(5)
 

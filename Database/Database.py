@@ -177,12 +177,12 @@ class Database:
         self.lock.release()
         return data
 
-    def update_watching_item(self, url, time):
+    def update_watching_item(self, url, time, update_time):
         self.lock.acquire()
         self.connect()
 
         self.connection.execute(
-            "UPDATE UnfinishedItems SET Time="+str(time)+" WHERE Url='"+url+"'")
+            "UPDATE UnfinishedItems SET Time="+str(time)+", WatchedAt="+str(update_time)+" WHERE Url='"+url+"'")
 
         self.database.commit()
         self.disconnect()
