@@ -79,6 +79,7 @@ class StartUp:
         self.subtitle_provider = SubtitleProvider(self)
         self.start_subtitle_provider()
         self.init_folders()
+        self.last_play_update_time = 0
 
         version = json.loads(UtilController.version())
         Logger.write(3, "MediaPlayer version " + version['version_number'] + " (" + version['build_date'] + ")")
@@ -155,13 +156,16 @@ class StartUp:
 
             # Update time for resuming
             if self.player.get_position() > 0 and self.player.get_length() - self.player.get_position() < 30:
-                if self.added_unfinished and not self.removed_unfinished:
+                # Remove unfinished, we're < 30 secs from end
+                if not self.removed_unfinished:
                     self.removed_unfinished = True
                     if self.is_slave:
                         self.server.notify_master("/database/remove_unfinished?url=" + urllib.parse.quote(path))
                     else:
                         self.database.remove_watching_item(path)
-            elif self.player.get_position() > 10 and not self.added_unfinished:
+
+            elif self.player.get_position() > 10 and not self.added_unfinished and not self.removed_unfinished:
+                # Add unfinished
                 self.added_unfinished = True
                 if self.is_slave:
                     self.server.notify_master("/database/add_unfinished?url="
@@ -174,13 +178,17 @@ class StartUp:
                 else:
                     self.database.add_watching_item(watching_type, self.player.title, path, self.player.img,
                                                     self.player.get_length(), current_time())
-            elif self.player.get_position() > 10:
-                if self.is_slave:
-                    self.server.notify_master(
-                        "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(
-                            self.player.get_position()))
-                else:
-                    self.database.update_watching_item(path, self.player.get_position(), current_time())
+
+            if not self.removed_unfinished and self.player.get_position() > 10:
+                # Update unfinished
+                pos = self.player.get_position()
+                if self.last_play_update_time != pos:
+                    self.last_play_update_time = pos
+                    if self.is_slave:
+                        self.server.notify_master(
+                            "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(pos))
+                    else:
+                        self.database.update_watching_item(path, pos, current_time())
 
             time.sleep(5)
 
@@ -238,7 +246,6 @@ class StartUp:
         self.stop_player()
 
     def stream_torrent_started(self, torrent):
-        self.removed_unfinished = False
         self.stream_torrent = torrent
 
     def request_dht_peers(self, torrent):
@@ -261,7 +268,9 @@ class StartUp:
     def start_player(self, type, title, url, img=None, position=0):
         self.stop_player()
         self.player.play(type, title, url, img, position)
+
         self.added_unfinished = False
+        self.removed_unfinished = False
 
     def stop_player(self):
         self.youtube_end_counter = 0

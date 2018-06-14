@@ -32,6 +32,4 @@
         sdram_schmoo=0x02000020
         dtparam=sd_overclock=100
 
-    Search failed
-    Continue with failed, wrong url in db for torrent: localhost:xxx/torrent
-    Slave only online after x hour
+    Slave niet online als tv geconnect is?
