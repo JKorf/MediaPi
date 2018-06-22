@@ -4,6 +4,7 @@ import socket
 import urllib.request
 import urllib.parse
 
+import time
 import tornado
 from tornado import gen
 from tornado import ioloop, web, websocket
@@ -83,11 +84,18 @@ class TornadoServer:
         RequestFactory.make_request(reroute, "POST")
 
     def get_actual_address(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("gmail.com", 80))
-        ip = s.getsockname()[0]
-        s.close()
-        return ip + ":" + str(self.port)
+        for i in range(3):
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("gmail.com", 80))
+                ip = s.getsockname()[0]
+                s.close()
+                return ip + ":" + str(self.port)
+
+            except Exception as e:
+                Logger.write(3, "Failed to connect to remote server, try " + str(i))
+                time.sleep(10)
+        return "No internet connection"
 
     def player_state_changed(self, old_state, state):
         for client in self.clients:
