@@ -49,6 +49,12 @@ class TorrentDownloadManager:
 
         if lock:
             self.queue_lock.acquire()
+
+        if self.torrent.state == TorrentState.Done:
+            if self.queue:
+                self.queue = []
+            return
+
         start_time = current_time()
 
         if not self.reprio_after_media_meta_request and self.torrent.media_metadata_requested:
