@@ -452,7 +452,6 @@ class DatabaseHandler(web.RequestHandler):
                 self.get_argument("time"))
 
         if url == "update_unfinished":
-            Logger.write(2, "Updating unfinished")
             TornadoServer.start_obj.database.update_watching_item(
                 self.get_argument("url"),
                 int(self.get_argument("position")))
