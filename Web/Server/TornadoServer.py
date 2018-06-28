@@ -454,7 +454,8 @@ class DatabaseHandler(web.RequestHandler):
         if url == "update_unfinished":
             TornadoServer.start_obj.database.update_watching_item(
                 self.get_argument("url"),
-                int(self.get_argument("position")))
+                int(self.get_argument("position")),
+                self.get_argument("watchedAt"))
 
     @gen.coroutine
     def reroute_to_master(self):

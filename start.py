@@ -186,7 +186,7 @@ class StartUp:
                     self.last_play_update_time = pos
                     if self.is_slave:
                         self.server.notify_master(
-                            "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(pos))
+                            "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(pos) + "&watchedAt=" + current_time())
                     else:
                         self.database.update_watching_item(path, pos, current_time())
 
