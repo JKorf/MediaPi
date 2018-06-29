@@ -61,24 +61,6 @@ class GUI(QtGui.QMainWindow):
         self.cycle_background()
         self.setCursor(Qt.BlankCursor)
 
-    def cycle_background(self):
-        if self.background_index == 2:
-            self.set_none()
-            self.background_index += 1
-            return
-        if self.background_index == 3:
-            self.set_home()
-        if self.hide_background:
-            return
-
-        img = self.base_background_address + str(self.background_index) + ".jpg"
-        self.palette.setBrush(QtGui.QPalette.Background,
-                              QtGui.QBrush(QtGui.QPixmap(img).scaled(QSize(self.width, self.height), QtCore.Qt.IgnoreAspectRatio)))
-        self.setPalette(self.palette)
-        self.background_index += 1
-        if self.background_index > self.background_count:
-            self.background_index = 1
-
     @classmethod
     def new_gui(cls, start):
         GUI.app = QtGui.QApplication(sys.argv)
@@ -99,6 +81,18 @@ class GUI(QtGui.QMainWindow):
             self.com.set_buffering.emit()
         elif new_state == PlayerState.Paused:
             self.com.set_buffering.emit()
+
+    def cycle_background(self):
+        if self.hide_background:
+            return
+
+        img = self.base_background_address + str(self.background_index) + ".jpg"
+        self.palette.setBrush(QtGui.QPalette.Background,
+                              QtGui.QBrush(QtGui.QPixmap(img).scaled(QSize(self.width, self.height), QtCore.Qt.IgnoreAspectRatio)))
+        self.setPalette(self.palette)
+        self.background_index += 1
+        if self.background_index > self.background_count:
+            self.background_index = 1
 
     def set_home(self):
         self.hide_background = False
@@ -206,7 +200,7 @@ class GeneralInfoPanel(InfoWidget):
         self.label2.setText(address)
 
 
-class StatusInfo(InfoWidget):
+class StatusInfoPanel(InfoWidget):
 
     def __init__(self, parent, x, y, width, height):
         InfoWidget.__init__(self, parent, x, y, width, height)
@@ -217,20 +211,6 @@ class StatusInfo(InfoWidget):
         self.set_label_text(text2, self.label2)
         self.label2.move(0, 50)
 
-    def set_text_label2(self, text):
-        self.set_label_text(text, self.label2)
-        self.label2.move(0, 50)
-
-    def set_radio(self, text, image):
-        self.set_label_text(text, self.label2)
-        self.label2.move(0,  120)
-        self.set_label_image(image, self.label1)
-        self.label1.setAlignment(QtCore.Qt.AlignCenter)
-
-    def set_none(self):
-        self.label2.hide()
-        self.label1.hide()
-
     def set_label_text(self, text, label):
         label.hide()
         label.setPixmap(QtGui.QPixmap())
@@ -239,12 +219,4 @@ class StatusInfo(InfoWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         label_size = label.fontMetrics().boundingRect(text)
         label.setGeometry(0, 0, label_size.width(), label_size.height())
-        label.show()
-
-    def set_label_image(self, image, label):
-        label.hide()
-        label.setGeometry(0, 0, 100, 100)
-        label.setText("")
-        image = os.getcwd() + "/Web" + image
-        label.setPixmap(QtGui.QPixmap(image))
         label.show()
