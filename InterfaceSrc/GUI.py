@@ -6,9 +6,11 @@ import math
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import QGraphicsOpacityEffect
+from os.path import isfile, join
 
 from InterfaceSrc.VLCPlayer import PlayerState
 from Shared.Events import EventManager, EventType
+from Shared.Logger import Logger
 from TorrentSrc.Util.Util import write_size
 
 
@@ -25,14 +27,17 @@ class GUI(QtGui.QMainWindow):
     def __init__(self, start):
         super(GUI, self).__init__()
 
+        self.hide_background = False
+        self.background_index = 1
+        self.base_background_address = os.getcwd() + "\\Web\\Images\\backgrounds\\"
+        self.black_address = os.getcwd() + "\\Web\\Images\\black.png"
+        self.background_count = len([f for f in os.listdir(self.base_background_address) if isfile(join(self.base_background_address, f))])
+
+        self.palette = QtGui.QPalette()
         self.start = start
         self.address = None
 
-        self.animation = None
-        self.effect = None
-        self.info_widget = None
-        self.moving = False
-        self.update_buffering = False
+        self.general_info_widget = None
 
         self.com = Communicate()
 
@@ -41,9 +46,6 @@ class GUI(QtGui.QMainWindow):
         self.com.set_radio.connect(self.set_radio)
         self.com.set_opening.connect(self.set_opening)
 
-        p = self.palette()
-        p.setColor(self.backgroundRole(), Qt.black)
-        self.setPalette(p)
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 
         screen_resolution = GUI.app.desktop().screenGeometry()
@@ -51,8 +53,31 @@ class GUI(QtGui.QMainWindow):
 
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
 
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(5000)
+        self.timer.timeout.connect(self.cycle_background)
+        self.timer.start()
+
+        self.cycle_background()
         self.setCursor(Qt.BlankCursor)
-        self.animation_loop()
+
+    def cycle_background(self):
+        if self.background_index == 2:
+            self.set_none()
+            self.background_index += 1
+            return
+        if self.background_index == 3:
+            self.set_home()
+        if self.hide_background:
+            return
+
+        img = self.base_background_address + str(self.background_index) + ".jpg"
+        self.palette.setBrush(QtGui.QPalette.Background,
+                              QtGui.QBrush(QtGui.QPixmap(img).scaled(QSize(self.width, self.height), QtCore.Qt.IgnoreAspectRatio)))
+        self.setPalette(self.palette)
+        self.background_index += 1
+        if self.background_index > self.background_count:
+            self.background_index = 1
 
     @classmethod
     def new_gui(cls, start):
@@ -76,20 +101,16 @@ class GUI(QtGui.QMainWindow):
             self.com.set_buffering.emit()
 
     def set_home(self):
-        if self.info_widget is None:
-            self.info_widget = InfoWidget(self)
-        self.info_widget.set_text("MediaPlayer", self.address)
-        self.info_widget.move(self.width / 2 - (self.info_widget.width() / 2), self.height / 2 - (self.info_widget.height() / 2))
-        self.moving = True
-        self.update_buffering = False
-        self.info_widget.show()
+        self.hide_background = False
+        if self.general_info_widget is None:
+            self.general_info_widget = GeneralInfoPanel(self, self.width - 320, self.height - 120, 300, 100)
+        self.general_info_widget.set_address(self.address)
+        self.general_info_widget.show()
 
     def set_opening(self, title):
         self.info_widget.set_text(title, "Opening")
         self.info_widget.move(self.width / 2 - (self.info_widget.width() / 2),
                               self.height / 2 - (self.info_widget.height() / 2))
-        self.moving = False
-        self.update_buffering = True
         self.info_widget.show()
         self.update_buffer_info()
 
@@ -121,43 +142,18 @@ class GUI(QtGui.QMainWindow):
             return 20 * 60
 
     def set_none(self):
-        self.update_buffering = False
-        self.info_widget.set_none()
+        self.hide_background = True
+        self.palette.setBrush(QtGui.QPalette.Background,
+                              QtGui.QBrush(QtGui.QPixmap(self.black_address).scaled(QSize(self.width, self.height),
+                                                                     QtCore.Qt.IgnoreAspectRatio)))
+        self.setPalette(self.palette)
+        self.general_info_widget.hide()
 
     def set_radio(self, title, image):
         self.info_widget.set_radio(title, image)
         self.info_widget.move(self.width / 2 - (self.info_widget.width() / 2),
                               self.height / 2 - (self.info_widget.height() / 2))
-        self.moving = True
-        self.update_buffering = False
         self.info_widget.show()
-
-    def animation_loop(self):
-        if self.info_widget is not None and self.moving:
-            randomX = (-(self.width / 2) + self.info_widget.actual_width / 2) + randint(0, self.width - self.info_widget.actual_width)
-            self.animate_start(randomX, randint(0, self.height - self.info_widget.height()))
-        QtCore.QTimer.singleShot(15000, self.animation_loop)
-
-    def animate_start(self, new_x, new_y):
-        self.effect = QGraphicsOpacityEffect()
-        self.info_widget.setGraphicsEffect(self.effect)
-        self.animation = QPropertyAnimation(self.effect, "opacity")
-        self.animation.setDuration(500)
-        self.animation.setStartValue(1)
-        self.animation.setEndValue(0)
-        self.animation.start()
-        QtCore.QTimer.singleShot(500, lambda: self.animate_end(new_x, new_y))
-
-    def animate_end(self, new_x, new_y):
-        self.info_widget.move(new_x, new_y)
-
-        self.effect = QGraphicsOpacityEffect()
-        self.info_widget.setGraphicsEffect(self.effect)
-        self.animation = QPropertyAnimation(self.effect, "opacity")
-        self.animation.setDuration(500)
-        self.animation.setStartValue(0)
-        self.animation.setEndValue(1)
-        self.animation.start()
 
     def close(self):
         QCoreApplication.quit()
@@ -171,47 +167,65 @@ class GUI(QtGui.QMainWindow):
 
 class InfoWidget(QtGui.QWidget):
 
-    def __init__(self, parent):
-        super(InfoWidget, self).__init__(parent)
+    def __init__(self, parent, x, y, width, height):
+        QtGui.QWidget.__init__(self, parent)
 
-        self.parent = parent
+        self.setGeometry(x, y, width, height)
+
+    def paintEvent(self, e=None):
+        qp = QtGui.QPainter()
+        qp.begin(self)
+        path = QtGui.QPainterPath()
+        path.addRoundedRect(0, 0, self.rect().width() - 1, self.rect().height() - 1, 5, 5)
+        qp.fillPath(path, QtGui.QBrush(QtGui.QColor(0, 0, 0, 128)))
+        qp.end()
+
+
+class GeneralInfoPanel(InfoWidget):
+
+    def __init__(self, parent, x, y, width, height):
+        InfoWidget.__init__(self, parent, x, y, width, height)
+
         self.label1 = QtGui.QLabel(self)
         self.label1.setFont(QtGui.QFont("Lucida", 30))
         self.label1.setStyleSheet("color: white;")
+        self.label1.setFixedWidth(width)
+        self.label1.setText("Mediaplayer")
+        self.label1.setAlignment(QtCore.Qt.AlignCenter)
+        self.label1.move(0, 6)
+
         self.label2 = QtGui.QLabel(self)
         self.label2.setFont(QtGui.QFont("Lucida", 20))
         self.label2.setStyleSheet("color: white;")
+        self.label2.setFixedWidth(width)
+        self.label2.setText("IP")
+        self.label2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label2.move(0, 54)
 
-        self.label1.setFixedWidth(self.parent.width)
-        self.label2.setFixedWidth(self.parent.width)
-        self.setFixedWidth(self.parent.width)
-        self.actual_width = 0
+    def set_address(self, address):
+        self.label2.setText(address)
+
+
+class StatusInfo(InfoWidget):
+
+    def __init__(self, parent, x, y, width, height):
+        InfoWidget.__init__(self, parent, x, y, width, height)
 
     def set_text(self, text1, text2):
         self.set_label_text(text1, self.label1)
         self.label1.move(0, 0)
         self.set_label_text(text2, self.label2)
         self.label2.move(0, 50)
-        self.setFixedHeight(100)
-        self.update_actual_width()
 
     def set_text_label2(self, text):
         self.set_label_text(text, self.label2)
         self.label2.move(0, 50)
-        self.update_actual_width()
-
-    def update_actual_width(self):
-        self.actual_width = max(self.label1.fontMetrics().boundingRect(self.label1.text()).width(),
-                                self.label2.fontMetrics().boundingRect(self.label2.text()).width())
 
     def set_radio(self, text, image):
         self.set_label_text(text, self.label2)
         self.label2.move(0,  120)
         self.set_label_image(image, self.label1)
-
         self.label1.setAlignment(QtCore.Qt.AlignCenter)
-        self.update_actual_width()
-        self.setFixedHeight(160)
 
     def set_none(self):
         self.label2.hide()
@@ -234,4 +248,3 @@ class InfoWidget(QtGui.QWidget):
         image = os.getcwd() + "/Web" + image
         label.setPixmap(QtGui.QPixmap(image))
         label.show()
-

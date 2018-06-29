@@ -18,7 +18,7 @@
         https://ownyourbits.com/2017/02/02/control-your-raspberry-pi-with-your-tv-remote/
         https://blog.gordonturner.com/2016/12/14/using-cec-client-on-a-raspberry-pi/
 
-    Gui plaatjes
+    Gui aanpassen. Adress/info op vaste plek, mssn wisselende backgrounds?
         Moet wel weer op zwart als spelen begint
 
     zram: https://eltechs.com/overclock-raspberry-pi-3/
@@ -32,4 +32,4 @@
         sdram_schmoo=0x02000020
         dtparam=sd_overclock=100
 
-    Slave niet online als tv geconnect is?
+    Dropbox for uploading log files
