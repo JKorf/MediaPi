@@ -1,5 +1,7 @@
 import os
 import sys
+from random import Random
+
 from PyQt4 import QtSvg
 
 import math
@@ -28,18 +30,19 @@ class GUI(QtGui.QMainWindow):
         super(GUI, self).__init__()
 
         self.hide_background = False
-        self.background_index = 1
         self.base_background_address = os.getcwd() + "\\Web\\Images\\backgrounds\\"
         self.black_address = os.getcwd() + "\\Web\\Images\\black.png"
         self.background_count = len([f for f in os.listdir(self.base_background_address) if isfile(join(self.base_background_address, f))])
+        self.background_index = Random().randint(1, self.background_count)
 
         self.update_buffering = False
         self.palette = QtGui.QPalette()
         self.start = start
         self.address = None
 
-        self.status_widget = None
-        self.info_widget = None
+        self.general_info_panel = None
+        self.loading_panel = None
+        self.radio_panel = None
 
         self.com = Communicate()
 
@@ -55,11 +58,12 @@ class GUI(QtGui.QMainWindow):
 
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
 
-        self.status_widget = GeneralInfoPanel(self, self.width - 320, self.height - 220, 300, 200)
-        self.info_widget = StatusInfoPanel(self, self.width / 2 - 150, self.height / 2 - 100, 300, 200)
+        self.general_info_panel = GeneralInfoPanel(self, self.width - 320, self.height - 220, 300, 200)
+        self.loading_panel = LoadingPanel(self, self.width / 2 - 150, self.height / 2 - 100, 300, 200)
+        self.radio_panel = RadioPanel(self, self.width / 2 - 60, self.height / 2 - 60, 120, 120)
 
         self.timer = QtCore.QTimer(self)
-        self.timer.setInterval(5000)
+        self.timer.setInterval(1000 * 60 * 15)
         self.timer.timeout.connect(self.cycle_background)
         self.timer.start()
 
@@ -102,19 +106,17 @@ class GUI(QtGui.QMainWindow):
     def set_home(self):
         self.hide_background = False
         self.update_buffering = False
-        self.status_widget.set_address(self.address)
 
-        self.status_widget.show()
-        self.info_widget.hide()
+        self.general_info_panel.set_address(self.address)
+        self.general_info_panel.show()
+        self.radio_panel.hide()
+        self.loading_panel.hide()
 
     def set_opening(self):
-        self.info_widget.set_text1("Opening")
-        self.info_widget.set_loading(True)
-        self.info_widget.set_geo(self.width / 2 - 200, self.height / 2 - 100, 400, 200)
-
         self.update_buffering = True
-        self.info_widget.show()
-        self.status_widget.show()
+        self.loading_panel.show()
+        self.general_info_panel.show()
+        self.radio_panel.hide()
         self.update_buffer_info()
 
     def set_none(self):
@@ -124,17 +126,17 @@ class GUI(QtGui.QMainWindow):
                               QtGui.QBrush(QtGui.QPixmap(self.black_address).scaled(QSize(self.width, self.height),
                                                                      QtCore.Qt.IgnoreAspectRatio)))
         self.setPalette(self.palette)
-        self.status_widget.hide()
-        self.info_widget.hide()
+        self.general_info_panel.hide()
+        self.radio_panel.hide()
+        self.loading_panel.hide()
 
     def set_radio(self, image):
         self.update_buffering = False
-        self.info_widget.set_loading(False)
-        self.info_widget.set_image(image)
-        self.info_widget.set_geo(self.width / 2 - 60, self.height / 2 - 60, 120, 120)
 
-        self.info_widget.show()
-        self.status_widget.show()
+        self.loading_panel.hide()
+        self.radio_panel.set_image(image)
+        self.radio_panel.show()
+        self.general_info_panel.show()
 
     def close(self):
         GUI.app.quit()
@@ -143,16 +145,9 @@ class GUI(QtGui.QMainWindow):
         if not self.update_buffering:
             return
 
-        if not self.start.stream_torrent:
-            status = "Accessing data"
-        else:
-            if not self.start.stream_torrent.media_file:
-                status = "Requesting meta data"
-            else:
-                percentage_done = math.floor(min(((7500000 - self.start.stream_torrent.bytes_missing_for_buffering) / 7500000) * 100, 99))
-                status = str(percentage_done) + "% buffered (" + write_size(self.start.stream_torrent.download_counter.value) +"ps)"
-
-        self.info_widget.set_text2(status)
+        if self.start.stream_torrent and self.start.stream_torrent.media_file:
+            percentage_done = math.floor(min(((7500000 - self.start.stream_torrent.bytes_missing_for_buffering) / 7500000) * 100, 99))
+            self.loading_panel.set_percent(percentage_done)
 
         QtCore.QTimer.singleShot(1000, lambda: self.update_buffer_info())
 
@@ -228,7 +223,7 @@ class GeneralInfoPanel(InfoWidget):
 
         self.con_lbl = self.create_label(16, width, "Connectivity")
         self.con_lbl.move(10, 120)
-        self.con_val = self.create_label(16, width - 20, "")
+        self.con_val = self.create_label(16, width - 20, "-")
         self.con_val.move(10, 120)
         self.con_val.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
@@ -236,68 +231,35 @@ class GeneralInfoPanel(InfoWidget):
         self.ip_val.setText(address)
 
 
-class StatusInfoPanel(InfoWidget):
-
+class RadioPanel(InfoWidget):
     def __init__(self, parent, x, y, width, height):
         InfoWidget.__init__(self, parent, x, y, width, height)
-        font = QtGui.QFont("Lucida", 30)
-        font.setStyleStrategy(QtGui.QFont.PreferAntialias)
-        self.label1 = QtGui.QLabel(self)
-        self.label1.setFont(font)
-        self.label1.setStyleSheet("color: white;")
-        self.label1.setFixedWidth(width)
-        self.label1.setAlignment(QtCore.Qt.AlignCenter)
-        self.label1.move(0, 10)
-
-        font = QtGui.QFont("Lucida", 20)
-        font.setStyleStrategy(QtGui.QFont.PreferAntialias)
-        self.label2 = QtGui.QLabel(self)
-        self.label2.setFont(font)
-        self.label2.setStyleSheet("color: white;")
-        self.label2.setFixedWidth(width)
-        self.label2.setAlignment(QtCore.Qt.AlignCenter)
-        self.label2.move(0, 60)
-
-        self.loader = QtSvg.QSvgWidget(os.getcwd() + "\\Web\\Images\\loader.svg")
-        self.loader.setParent(self)
-        self.loader.setGeometry(width / 2 - 40, 110, 80, 80)
 
         self.img = QtGui.QLabel(self)
         self.img.setAlignment(QtCore.Qt.AlignCenter)
         self.img.move(width / 2 - 50, height / 2 - 50)
 
-    def set_geo(self, x, y, width, height):
-        self.label1.setFixedWidth(width)
-        self.label2.setFixedWidth(width)
-        self.loader.setGeometry(width / 2 - 40, 110, 80, 80)
-        self.img.move(width / 2 - 50, height / 2 - 50)
-        self.setGeometry(x, y, width, height)
-
-    def set_text1(self, text1):
-        self.set_label_text(text1, self.label1)
-
-    def set_text2(self, text1):
-        self.set_label_text(text1, self.label2)
-
-    def set_loading(self, loading):
-        if loading:
-            self.loader.show()
-        else:
-            self.loader.hide()
-
     def set_image(self, image):
+        self.img.hide()
         i = os.getcwd() + "\\Web" + image
         self.img.setPixmap(QtGui.QPixmap(i))
         self.img.show()
 
-        self.label1.hide()
-        self.label2.hide()
 
-    def set_label_text(self, text, label):
-        self.img.hide()
-        label.hide()
-        label.setPixmap(QtGui.QPixmap())
+class LoadingPanel(InfoWidget):
+    def __init__(self, parent, x, y, width, height):
+        InfoWidget.__init__(self, parent, x, y, width, height)
 
-        label.setText(text)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        label.show()
+        self.title = self.create_label(20, width, "Loading ..")
+        self.title.setAlignment(Qt.AlignCenter)
+        self.title.move(10, 26)
+        self.title.show()
+
+        self.loader = QtSvg.QSvgWidget(os.getcwd() + "\\Web\\Images\\loader.svg")
+        self.loader.setParent(self)
+        self.loader.setGeometry(width / 2 - 40, 90, 80, 80)
+        self.loader.show()
+
+    def set_percent(self, percent):
+        self.title.setText("Loading "+str(percent)+"%")
+
