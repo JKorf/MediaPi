@@ -2,6 +2,7 @@ import os
 import sys
 from random import Random
 
+import time
 from PyQt4 import QtSvg
 
 import math
@@ -11,9 +12,7 @@ from os.path import isfile, join
 
 from InterfaceSrc.VLCPlayer import PlayerState
 from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
 from Shared.Settings import Settings
-from TorrentSrc.Util.Util import write_size
 
 
 class Communicate(QtCore.QObject):
@@ -61,13 +60,18 @@ class GUI(QtGui.QMainWindow):
         self.general_info_panel = GeneralInfoPanel(self, self.width - 320, self.height - 220, 300, 200)
         self.loading_panel = LoadingPanel(self, self.width / 2 - 150, self.height / 2 - 100, 300, 200)
         self.radio_panel = RadioPanel(self, self.width / 2 - 60, self.height / 2 - 60, 120, 120)
+        self.time_panel = TimePanel(self, 10, self.height - 110, 240, 100)
 
-        self.timer = QtCore.QTimer(self)
-        self.timer.setInterval(1000 * 60 * 15)
-        self.timer.timeout.connect(self.cycle_background)
-        self.timer.start()
+        self.background_timer = QtCore.QTimer(self)
+        self.background_timer.setInterval(1000 * 60 * 15)
+        self.background_timer.timeout.connect(self.cycle_background)
+        self.background_timer.start()
 
-        self.cycle_background()
+        self.time_timer = QtCore.QTimer(self)
+        self.time_timer.setInterval(1000)
+        self.time_timer.timeout.connect(self.update_time)
+        self.time_timer.start()
+
         self.setCursor(Qt.BlankCursor)
 
     @classmethod
@@ -91,6 +95,9 @@ class GUI(QtGui.QMainWindow):
         elif new_state == PlayerState.Paused:
             self.com.set_buffering.emit()
 
+    def update_time(self):
+        self.time_panel.update_time()
+
     def cycle_background(self):
         if self.hide_background:
             return
@@ -109,13 +116,17 @@ class GUI(QtGui.QMainWindow):
 
         self.general_info_panel.set_address(self.address)
         self.general_info_panel.show()
+        self.time_panel.show()
         self.radio_panel.hide()
         self.loading_panel.hide()
+
+        self.cycle_background()
 
     def set_opening(self):
         self.update_buffering = True
         self.loading_panel.show()
         self.general_info_panel.show()
+        self.time_panel.show()
         self.radio_panel.hide()
         self.update_buffer_info()
 
@@ -128,6 +139,7 @@ class GUI(QtGui.QMainWindow):
         self.setPalette(self.palette)
         self.general_info_panel.hide()
         self.radio_panel.hide()
+        self.time_panel.hide()
         self.loading_panel.hide()
 
     def set_radio(self, image):
@@ -136,9 +148,12 @@ class GUI(QtGui.QMainWindow):
         self.loading_panel.hide()
         self.radio_panel.set_image(image)
         self.radio_panel.show()
+        self.time_panel.show()
         self.general_info_panel.show()
 
     def close(self):
+        self.background_timer.stop()
+        self.time_timer.stop()
         GUI.app.quit()
 
     def update_buffer_info(self):
@@ -262,4 +277,26 @@ class LoadingPanel(InfoWidget):
 
     def set_percent(self, percent):
         self.title.setText("Loading "+str(percent)+"%")
+
+
+class TimePanel(InfoWidget):
+    def __init__(self, parent, x, y, width, height):
+        InfoWidget.__init__(self, parent, x, y, width, height)
+
+        self.time_lbl = self.create_label(20, width, "")
+        self.time_lbl.setAlignment(Qt.AlignCenter)
+        self.setFixedWidth(width)
+        self.time_lbl.move(0, 10)
+        self.time_lbl.show()
+
+        self.date_lbl = self.create_label(20, width, "")
+        self.date_lbl.setAlignment(Qt.AlignCenter)
+        self.setFixedWidth(width)
+        self.date_lbl.move(0, 50)
+        self.date_lbl.show()
+
+    def update_time(self):
+        self.time_lbl.setText(time.strftime('%H:%M:%S'))
+        self.date_lbl.setText(time.strftime('%a %d %b %Y'))
+
 
