@@ -2,7 +2,7 @@
 2.  Set static IP: https://www.raspberrypi.org/forums/viewtopic.php?t=191140+
 3.  Enable SSH and auto script start on startup
     Enable ssh in desktop -> preferences -> raspberry config -> interfaces -> ssh
-    sudo /home/pi/.config/lxsession/LXDE-pi/autostart, add before screensaver:
+    sudo nano /home/pi/.config/lxsession/LXDE-pi/autostart, add before screensaver:
     sudo python3 /home/pi/Scripts/start.py &
 4.  Copy over scripts
 5.  Install dependencies:
