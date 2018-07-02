@@ -29,8 +29,8 @@ class GUI(QtGui.QMainWindow):
         super(GUI, self).__init__()
 
         self.hide_background = False
-        self.base_background_address = os.getcwd() + "\\Web\\Images\\backgrounds\\"
-        self.black_address = os.getcwd() + "\\Web\\Images\\black.png"
+        self.base_background_address = os.getcwd() + "/Web/Images/backgrounds/"
+        self.black_address = os.getcwd() + "/Web/Images/black.png"
         self.background_count = len([f for f in os.listdir(self.base_background_address) if isfile(join(self.base_background_address, f))])
         self.background_index = Random().randint(1, self.background_count)
 
@@ -57,10 +57,10 @@ class GUI(QtGui.QMainWindow):
 
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
 
-        self.general_info_panel = GeneralInfoPanel(self, self.width - 320, self.height - 220, 300, 200)
+        self.general_info_panel = GeneralInfoPanel(self, 10, 10, 260, 140)
         self.loading_panel = LoadingPanel(self, self.width / 2 - 150, self.height / 2 - 100, 300, 200)
         self.radio_panel = RadioPanel(self, self.width / 2 - 60, self.height / 2 - 60, 120, 120)
-        self.time_panel = TimePanel(self, 10, self.height - 110, 240, 100)
+        self.time_panel = TimePanel(self, self.width - 250, self.height - 88, 240, 78)
 
         self.background_timer = QtCore.QTimer(self)
         self.background_timer.setInterval(1000 * 60 * 15)
@@ -195,7 +195,7 @@ class InfoWidget(QtGui.QWidget):
         qp.begin(self)
         path = QtGui.QPainterPath()
         path.addRoundedRect(0, 0, self.rect().width() - 1, self.rect().height() - 1, 5, 5)
-        qp.fillPath(path, QtGui.QBrush(QtGui.QColor(0, 0, 0, 128)))
+        qp.fillPath(path, QtGui.QBrush(QtGui.QColor(0, 0, 0, 200)))
         qp.end()
 
     def create_label(self, font_size, width, text):
@@ -214,8 +214,8 @@ class GeneralInfoPanel(InfoWidget):
     def __init__(self, parent, x, y, width, height):
         InfoWidget.__init__(self, parent, x, y, width, height)
 
-        self.title = self.create_label(24, width, "Mediaplayer")
-        self.title.move(10, 6)
+        self.title = self.create_label(20, width, "Mediaplayer")
+        self.title.move(0, 6)
         self.title.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
 
         self.line = QtGui.QFrame(self)
@@ -224,22 +224,22 @@ class GeneralInfoPanel(InfoWidget):
         self.line.setFrameShadow(QtGui.QFrame.Sunken)
         self.line.setStyleSheet("border: 2px solid #bbb;")
 
-        self.name_lbl = self.create_label(16, width, "Name")
+        self.name_lbl = self.create_label(13, width, "Name")
         self.name_lbl.move(10, 56)
-        self.name_val = self.create_label(16, width - 20, Settings.get_string("name"))
+        self.name_val = self.create_label(13, width - 20, Settings.get_string("name"))
         self.name_val.move(10, 56)
         self.name_val.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        self.ip_lbl = self.create_label(16, width, "IP")
-        self.ip_lbl.move(10, 88)
-        self.ip_val = self.create_label(16, width - 20, "")
-        self.ip_val.move(10, 88)
+        self.ip_lbl = self.create_label(13, width, "IP")
+        self.ip_lbl.move(10, 76)
+        self.ip_val = self.create_label(13, width - 20, "")
+        self.ip_val.move(10, 76)
         self.ip_val.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        self.con_lbl = self.create_label(16, width, "Connectivity")
-        self.con_lbl.move(10, 120)
-        self.con_val = self.create_label(16, width - 20, "-")
-        self.con_val.move(10, 120)
+        self.con_lbl = self.create_label(13, width, "Connectivity")
+        self.con_lbl.move(10, 96)
+        self.con_val = self.create_label(13, width - 20, "-")
+        self.con_val.move(10, 96)
         self.con_val.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
     def set_address(self, address):
@@ -256,7 +256,7 @@ class RadioPanel(InfoWidget):
 
     def set_image(self, image):
         self.img.hide()
-        i = os.getcwd() + "\\Web" + image
+        i = os.getcwd() + "/Web" + image
         self.img.setPixmap(QtGui.QPixmap(i))
         self.img.show()
 
@@ -265,7 +265,7 @@ class LoadingPanel(InfoWidget):
     def __init__(self, parent, x, y, width, height):
         InfoWidget.__init__(self, parent, x, y, width, height)
 
-        self.title = self.create_label(20, width, "Loading ..")
+        self.title = self.create_label(16, width, "Loading ..")
         self.title.setAlignment(Qt.AlignCenter)
         self.title.move(10, 26)
         self.title.show()
@@ -283,20 +283,20 @@ class TimePanel(InfoWidget):
     def __init__(self, parent, x, y, width, height):
         InfoWidget.__init__(self, parent, x, y, width, height)
 
-        self.time_lbl = self.create_label(20, width, "")
+        self.time_lbl = self.create_label(16, width, "")
         self.time_lbl.setAlignment(Qt.AlignCenter)
         self.setFixedWidth(width)
         self.time_lbl.move(0, 10)
         self.time_lbl.show()
 
-        self.date_lbl = self.create_label(20, width, "")
+        self.date_lbl = self.create_label(16, width, "")
         self.date_lbl.setAlignment(Qt.AlignCenter)
         self.setFixedWidth(width)
-        self.date_lbl.move(0, 50)
+        self.date_lbl.move(0, 40)
         self.date_lbl.show()
 
     def update_time(self):
-        self.time_lbl.setText(time.strftime('%H:%M:%S'))
+        self.time_lbl.setText(time.strftime('%H:%M'))
         self.date_lbl.setText(time.strftime('%a %d %b %Y'))
 
 
