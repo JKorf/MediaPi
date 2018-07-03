@@ -38,7 +38,7 @@ class GUI(QtGui.QMainWindow):
         self.palette = QtGui.QPalette()
         self.start = start
 
-        self.quality = "-"
+        self.quality = 0
         self.address = "-"
 
         self.general_info_panel = None
@@ -280,7 +280,7 @@ class LoadingPanel(InfoWidget):
         self.title.move(10, 26)
         self.title.show()
 
-        self.loader = QtSvg.QSvgWidget(os.getcwd() + "\\Web\\Images\\loader.svg")
+        self.loader = QtSvg.QSvgWidget(os.getcwd() + "/Web/Images/loader.svg")
         self.loader.setParent(self)
         self.loader.setGeometry(width / 2 - 40, 90, 80, 80)
         self.loader.show()

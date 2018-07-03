@@ -196,7 +196,7 @@ class StartUp:
                     if self.is_slave:
                         self.server.notify_master(
                             "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(
-                                pos) + "&watchedAt=" + current_time())
+                                pos) + "&watchedAt=" + str(current_time()))
                     else:
                         self.database.update_watching_item(path, pos, current_time())
 
@@ -204,6 +204,7 @@ class StartUp:
 
     def watch_wifi(self):
         rasp = Settings.get_bool("raspberry")
+        return
         while self.running:
             if rasp:
                 proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
@@ -212,6 +213,11 @@ class StartUp:
                     if "Quality" in line:
                         fields = line.split("  ")
                         for field in fields:
+                            field.replace(" ", "")
+                            if len(field) <= 2:
+                                continue
+
+                            Logger.write(2, "Field: " + field)
                             key_value = field.split("=")
                             if len(key_value) == 1:
                                 key_value = field.split(":")
