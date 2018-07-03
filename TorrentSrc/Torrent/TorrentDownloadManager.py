@@ -53,6 +53,9 @@ class TorrentDownloadManager:
         if self.torrent.state == TorrentState.Done:
             if self.queue:
                 self.queue = []
+
+            if lock:
+                self.queue_lock.release()
             return
 
         start_time = current_time()
