@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import subprocess
 import urllib.parse
 
 os.chdir(os.path.dirname(__file__))
@@ -123,6 +124,10 @@ class StartUp:
     def start_stat_observer(self):
         thread = CustomThread(self.watch_stats, "Watch playing")
         thread.start()
+        thread = CustomThread(self.update_unfinished, "Watch unfinished")
+        thread.start()
+        thread = CustomThread(self.watch_wifi, "Watch wifi")
+        thread.start()
 
     def watch_stats(self):
         while self.running:
@@ -133,6 +138,10 @@ class StartUp:
                     if torrent.download_counter.max > current:
                         Stats['max_download_speed'].set(torrent.download_counter.max)
 
+            time.sleep(5)
+
+    def update_unfinished(self):
+        while self.running:
             if not self.player.path:
                 time.sleep(5)
                 continue
@@ -186,9 +195,38 @@ class StartUp:
                     self.last_play_update_time = pos
                     if self.is_slave:
                         self.server.notify_master(
-                            "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(pos) + "&watchedAt=" + current_time())
+                            "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(
+                                pos) + "&watchedAt=" + current_time())
                     else:
                         self.database.update_watching_item(path, pos, current_time())
+
+            time.sleep(5)
+
+    def watch_wifi(self):
+        rasp = Settings.get_bool("raspberry")
+        while self.running:
+            if rasp:
+                proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
+                out, err = proc.communicate()
+                for line in out.split("\n"):
+                    if "Quality" in line:
+                        fields = line.split("  ")
+                        for field in fields:
+                            key_value = field.split("=")
+                            if len(key_value) == 1:
+                                key_value = field.split(":")
+
+                            Logger.write(2, "WIFI " + str(key_value[0]) + ": " + str(key_value[1]))
+                            if key_value[0] == "Quality":
+                                self.gui.set_wifi_quality(float(key_value[1]))
+            else:
+                proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
+                out, err = proc.communicate()
+                lines = out.split("\n")
+                for line in lines:
+                    if "Signal" in line:
+                        split = line.split(":")
+                        self.gui.set_wifi_quality(float(split[1].replace("%", "")))
 
             time.sleep(5)
 

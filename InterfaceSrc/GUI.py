@@ -37,7 +37,9 @@ class GUI(QtGui.QMainWindow):
         self.update_buffering = False
         self.palette = QtGui.QPalette()
         self.start = start
-        self.address = None
+
+        self.quality = "-"
+        self.address = "-"
 
         self.general_info_panel = None
         self.loading_panel = None
@@ -57,22 +59,23 @@ class GUI(QtGui.QMainWindow):
 
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
 
-        self.general_info_panel = GeneralInfoPanel(self, 10, 10, 260, 140)
+        self.general_info_panel = GeneralInfoPanel(self, 10, 10, 260, 130)
         self.loading_panel = LoadingPanel(self, self.width / 2 - 150, self.height / 2 - 100, 300, 200)
         self.radio_panel = RadioPanel(self, self.width / 2 - 60, self.height / 2 - 60, 120, 120)
-        self.time_panel = TimePanel(self, self.width - 250, self.height - 88, 240, 78)
+        self.time_panel = TimePanel(self, self.width - 200, self.height - 88, 190, 78)
 
         self.background_timer = QtCore.QTimer(self)
         self.background_timer.setInterval(1000 * 60 * 15)
         self.background_timer.timeout.connect(self.cycle_background)
         self.background_timer.start()
 
-        self.time_timer = QtCore.QTimer(self)
-        self.time_timer.setInterval(1000)
-        self.time_timer.timeout.connect(self.update_time)
-        self.time_timer.start()
+        self.update_timer = QtCore.QTimer(self)
+        self.update_timer.setInterval(1000)
+        self.update_timer.timeout.connect(self.update_time)
+        self.update_timer.start()
 
         self.setCursor(Qt.BlankCursor)
+        self.set_home()
 
     @classmethod
     def new_gui(cls, start):
@@ -97,6 +100,8 @@ class GUI(QtGui.QMainWindow):
 
     def update_time(self):
         self.time_panel.update_time()
+        self.general_info_panel.set_address(self.address)
+        self.general_info_panel.set_wifi_quality(self.quality)
 
     def cycle_background(self):
         if self.hide_background:
@@ -153,7 +158,7 @@ class GUI(QtGui.QMainWindow):
 
     def close(self):
         self.background_timer.stop()
-        self.time_timer.stop()
+        self.update_timer.stop()
         GUI.app.quit()
 
     def update_buffer_info(self):
@@ -180,7 +185,9 @@ class GUI(QtGui.QMainWindow):
         if address.endswith(':80'):
             address = address[:-3]
         self.address = address
-        self.com.set_home.emit()
+
+    def set_wifi_quality(self, quality):
+        self.quality = quality
 
 
 class InfoWidget(QtGui.QWidget):
@@ -236,14 +243,17 @@ class GeneralInfoPanel(InfoWidget):
         self.ip_val.move(10, 76)
         self.ip_val.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        self.con_lbl = self.create_label(13, width, "Connectivity")
+        self.con_lbl = self.create_label(13, width, "WiFi quality")
         self.con_lbl.move(10, 96)
-        self.con_val = self.create_label(13, width - 20, "-")
-        self.con_val.move(10, 96)
-        self.con_val.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+
+        self.wifi_strength_bar = PercentageBar(self, 150, 102, 100, 12)
+        self.wifi_strength_bar.show()
 
     def set_address(self, address):
         self.ip_val.setText(address)
+
+    def set_wifi_quality(self, quality):
+        self.wifi_strength_bar.set_value(quality)
 
 
 class RadioPanel(InfoWidget):
@@ -300,3 +310,28 @@ class TimePanel(InfoWidget):
         self.date_lbl.setText(time.strftime('%a %d %b %Y'))
 
 
+class PercentageBar(QtGui.QWidget):
+    def __init__(self, parent, x, y, width, height):
+        QtGui.QWidget.__init__(self, parent)
+        self.setGeometry(x, y, width, height)
+        self.value = 0
+        self.bar_width = 0
+
+    def paintEvent(self, e=None):
+        qp = QtGui.QPainter()
+        qp.begin(self)
+
+        back_path = QtGui.QPainterPath()
+        back_path.addRect(0, 0, self.rect().width() - 1, self.rect().height() - 1)
+        qp.fillPath(back_path, QtGui.QBrush(QtGui.QColor(128, 128, 128, 128)))
+
+        front_path = QtGui.QPainterPath()
+        front_path.addRect(self.rect().width() - self.bar_width, 0, self.bar_width, self.rect().height() - 1)
+        qp.fillPath(front_path, QtGui.QBrush(QtGui.QColor("#0071bc")))
+
+        qp.end()
+
+    def set_value(self, val):
+        self.value = val
+        self.bar_width = self.rect().width() / 100 * val
+        self.update()
