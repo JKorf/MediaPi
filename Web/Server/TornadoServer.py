@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import socket
@@ -14,7 +15,7 @@ from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import to_JSON, RequestFactory
 from TorrentSrc.Util.Threading import CustomThread
-from TorrentSrc.Util.Util import calculate_file_hash_file
+from TorrentSrc.Util.Util import get_file_info
 from Web.Server.Controllers.HDController import HDController
 from Web.Server.Controllers.MovieController import MovieController
 from Web.Server.Controllers.PlayerController import PlayerController
@@ -283,9 +284,13 @@ class HDHandler(web.RequestHandler):
             yield self.reroute_to_master()
         elif url == "drives":
             self.write(HDController.drives())
-        elif url == "get_hash":
-            length, hash = calculate_file_hash_file(self.get_argument("path"), False)
-            self.write("{\"length\": "+str(length)+", \"hash\": \""+str(hash)+"\" }")
+        elif url == "get_hash_data": # TODO need to do this different
+            file = self.get_argument("path")
+            size, first, last = get_file_info(file)
+            first_base = base64.b64encode(first)
+            last_base = base64.b64encode(last)
+
+            self.write("{\"file\": "+str(file)+", \"size\": "+str(size)+", \"first\": \""+first_base+"\", \"last\": \""+last_base+"\" }")
         elif url == "directory":
             self.write(HDController.directory(self.get_argument("path")))
 
@@ -298,7 +303,9 @@ class HDHandler(web.RequestHandler):
 
             else:
                 HDController.play_file(self.get_argument("filename"), self.get_argument("path"))
-                calculate_file_hash_file(urllib.parse.unquote(self.get_argument("path")))
+                file = urllib.parse.unquote(self.get_argument("path"))
+                size, first_64k, last_64k = get_file_info(file)
+                EventManager.throw_event(EventType.HashDataKnown, [size, file, first_64k, last_64k])
 
         elif url == "next_image":
             HDController.next_image(self.get_argument("current_path"))
@@ -325,11 +332,15 @@ def play_master_file(path, file, position):
 
     # request hash from master
     json_data = yield RequestFactory.make_request_async(
-        Settings.get_string("master_ip") + "/hd/get_hash?path=" + urllib.parse.quote_plus(path))
+        Settings.get_string("master_ip") + "/hd/get_hash_data?path=" + urllib.parse.quote_plus(path))
     if json_data:
         json_obj = json.loads(json_data.decode())
-        EventManager.throw_event(EventType.StreamFileHashKnown,
-                                 [json_obj["length"], json_obj["hash"], os.path.basename(path)])
+        file = json_obj["file"]
+        size = int(json_obj["size"])
+        first = base64.b64decode(json_obj["first"])
+        last = base64.b64decode(json_obj["last"])
+
+        EventManager.throw_event(EventType.HashDataKnown, [size, file, first, last])
     else:
         Logger.write(2, "Failed to retrieve stream hash from master")
 

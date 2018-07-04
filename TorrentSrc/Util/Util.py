@@ -30,58 +30,12 @@ def get_first_x(iterable, amount, default=[]):
     return default
 
 
-def calculate_file_hash_torrent(torrent):
-    longlongformat = '<q'
-    bytesize = struct.calcsize(longlongformat)
-
-    hash = torrent.media_file.length
-    first_64 = torrent.get_data_bytes_for_hash(0, 65536)
-    last_64 = torrent.get_data_bytes_for_hash(torrent.media_file.length - 65536, 65536)
-
-    for x in range(int(65536 / bytesize)):
-        (l_value,) = struct.unpack_from(longlongformat, first_64, x * bytesize)
-        hash += l_value
-        hash &= 0xFFFFFFFFFFFFFFFF
-
-    for x in range(int(65536 / bytesize)):
-        (l_value,) = struct.unpack_from(longlongformat, last_64, x * bytesize)
-        hash += l_value
-        hash &= 0xFFFFFFFFFFFFFFFF
-
-    torrent.stream_file_hash = "%016x" % hash
-    EventManager.throw_event(EventType.StreamFileHashKnown, [torrent.media_file.length, torrent.stream_file_hash, os.path.basename(torrent.media_file.path)])
-
-
-def calculate_file_hash_file(file, throw_event=True):
-    longlongformat = '<q'  # little-endian long long
-    bytesize = struct.calcsize(longlongformat)
-
-    f = open(file, "rb")
-
-    filesize = os.path.getsize(file)
-    hash = filesize
-
-    if filesize < 65536 * 2:
-        return "SizeError"
-
-    for x in range(int(65536 / bytesize)):
-        buffer = f.read(bytesize)
-        (l_value,) = struct.unpack(longlongformat, buffer)
-        hash += l_value
-        hash = hash & 0xFFFFFFFFFFFFFFFF  # to remain as 64bit number
-
-    f.seek(max(0, filesize - 65536), 0)
-    for x in range(int(65536 / bytesize)):
-        buffer = f.read(bytesize)
-        (l_value,) = struct.unpack(longlongformat, buffer)
-        hash += l_value
-        hash = hash & 0xFFFFFFFFFFFFFFFF
-
-    f.close()
-    returnedhash = "%016x" % hash
-    if throw_event:
-        EventManager.throw_event(EventType.StreamFileHashKnown, [filesize, returnedhash, os.path.basename(file)])
-    return filesize, returnedhash
+def get_file_info(filename):
+    f = open(filename, "rb")
+    first = f.read(65536)
+    f.seek(-65536, os.SEEK_END)
+    last = f.read(65536)
+    return os.path.getsize(filename), first, last
 
 
 def write_size(data):

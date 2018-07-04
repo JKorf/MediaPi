@@ -1,10 +1,10 @@
+import os
 from threading import Lock
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from TorrentSrc.Streaming.StreamManager import StreamManager
 from TorrentSrc.Util.Enums import OutputMode
-from TorrentSrc.Util.Util import calculate_file_hash_torrent
 
 
 class TorrentOutputManager:
@@ -85,7 +85,11 @@ class TorrentOutputManager:
                 end_done = True
 
         if start_done and end_done:
-            calculate_file_hash_torrent(self.torrent)
+            EventManager.throw_event(EventType.HashDataKnown,
+                                     [self.torrent.media_file.length,
+                                      os.path.basename(self.torrent.media_file.path),
+                                      self.torrent.get_data_bytes_for_hash(0, 65536),
+                                      self.torrent.get_data_bytes_for_hash(self.torrent.media_file.length - 65536, 65536)])
 
     def stop(self):
         self.stream_manager.stop()

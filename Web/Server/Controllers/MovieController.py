@@ -53,7 +53,6 @@ class MovieController:
         time.sleep(0.2)
         EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.Stream])
         EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, urllib.parse.unquote(img)])
-        EventManager.throw_event(EventType.IMDbKnown, [id])
 
 
     @staticmethod

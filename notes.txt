@@ -18,9 +18,6 @@
         https://ownyourbits.com/2017/02/02/control-your-raspberry-pi-with-your-tv-remote/
         https://blog.gordonturner.com/2016/12/14/using-cec-client-on-a-raspberry-pi/
 
-    Gui aanpassen. Adress/info op vaste plek, mssn wisselende backgrounds?
-        Moet wel weer op zwart als spelen begint
-
     zram: https://eltechs.com/overclock-raspberry-pi-3/
     Try with new case:
         total_mem=1024

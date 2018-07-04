@@ -7,8 +7,7 @@ from Shared.Logger import Logger
 
 class EventType(Enum):
     Seek = 1,
-    IMDbKnown = 2,
-    StreamFileHashKnown = 3,
+    HashDataKnown = 37,
 
     StartPlayer = 4,
     PlayerStarted = 5

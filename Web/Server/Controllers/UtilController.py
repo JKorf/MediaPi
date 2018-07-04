@@ -49,7 +49,7 @@ class UtilController:
                               start.player.get_length(), start.player.get_selected_sub(),
                               start.player.get_subtitle_tracks(),
                               start.player.get_subtitle_delay() / 1000 / 1000,
-                              start.subtitle_provider.is_done,
+                              True,
                               start.player.get_audio_tracks(),
                               start.player.get_audio_track(),
                               percentage)

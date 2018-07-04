@@ -32,7 +32,7 @@ class RequestFactory:
 
     @staticmethod
     @gen.coroutine
-    def make_request_async(url, method='GET', body=None, heads=None, request_timeout=10, connect_timeout=10):
+    def make_request_async(url, method='GET', body=None, heads=None, request_timeout=10, connect_timeout=10, useragent=None):
         try:
             com = dict(headers)
             if heads:
@@ -41,7 +41,7 @@ class RequestFactory:
                 body = b""
 
             async_http_client = AsyncHTTPClient()
-            http_request = HTTPRequest(url, method=method, headers=com, body=body, request_timeout=request_timeout, connect_timeout=connect_timeout)
+            http_request = HTTPRequest(url, method=method, headers=com, body=body, request_timeout=request_timeout, connect_timeout=connect_timeout, user_agent=useragent)
             http_response = yield async_http_client.fetch(http_request)
             return http_response.body
         except Exception as e:
@@ -49,11 +49,16 @@ class RequestFactory:
             return None
 
     @staticmethod
-    def make_request(path, method="GET"):
+    def make_request(path, method="GET", useragent=None):
         try:
             body = None
             if method == 'POST':
                 body = b""
+            if useragent:
+                headers = {
+                    'User-Agent': useragent
+                }
+
             request = urllib.request.Request(path, body, headers, method=method)
             return urllib.request.urlopen(request).read()
         except Exception as e:

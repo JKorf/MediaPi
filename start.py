@@ -22,7 +22,7 @@ from Shared.Settings import Settings
 from TorrentSrc.Util.Threading import CustomThread
 
 from Web.Server.TornadoServer import TornadoServer
-from Web.Server.Subtitles import SubtitleProvider
+from Web.Server.Subtitles.SubtitleProvider import SubtitleProvider
 from Web.Server.Controllers.UtilController import UtilController
 
 import sys
@@ -78,7 +78,6 @@ class StartUp:
         self.start_stat_observer()
         self.init_sound()
         self.subtitle_provider = SubtitleProvider(self)
-        self.start_subtitle_provider()
         self.init_folders()
         self.last_play_update_time = 0
 
@@ -113,10 +112,6 @@ class StartUp:
         if sys.platform == "linux" or sys.platform == "linux2":
             Logger.write(2, "Settings sound to 100%")
             call(["amixer", "sset", "PCM,0", "100%"])
-
-    def start_subtitle_provider(self):
-        thread = CustomThread(self.subtitle_provider.update, "Subtitle loop")
-        thread.start()
 
     def start_gui(self):
         self.app, self.gui = GUI.new_gui(self)
@@ -203,6 +198,9 @@ class StartUp:
             time.sleep(5)
 
     def watch_wifi(self):
+        if not Settings.get_bool("show_gui"):
+            return
+
         rasp = Settings.get_bool("raspberry")
         while self.running:
             if rasp:

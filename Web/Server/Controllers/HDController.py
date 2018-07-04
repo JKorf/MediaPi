@@ -9,9 +9,7 @@ import time
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
-from Shared.Settings import Settings
 from Shared.Util import to_JSON
-from TorrentSrc.Util.Util import calculate_file_hash_file
 from Web.Server.Models import FileStructure
 
 
