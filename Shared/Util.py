@@ -54,12 +54,13 @@ class RequestFactory:
             body = None
             if method == 'POST':
                 body = b""
+            heads = headers
             if useragent:
-                headers = {
+                heads = {
                     'User-Agent': useragent
                 }
 
-            request = urllib.request.Request(path, body, headers, method=method)
+            request = urllib.request.Request(path, body, heads, method=method)
             return urllib.request.urlopen(request).read()
         except Exception as e:
             Logger.write(2, "Error requesting url " + path + ": " + str(e))
