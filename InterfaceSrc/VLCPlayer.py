@@ -1,4 +1,5 @@
 import datetime
+import os
 import time
 from enum import Enum
 
@@ -123,6 +124,7 @@ class VLCPlayer:
         return result
 
     def set_subtitle_file(self, file):
+        file = file.replace("/", os.sep).replace("\\", os.sep)
         # NOTE this must be called after Play()
         return self.__player.video_set_subtitle_file(file)
 

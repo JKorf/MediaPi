@@ -15,6 +15,7 @@ class TorrentOutputManager:
         self.__lock = Lock()
         self.file_writer = DiskWriter(self.torrent)
         self.stream_manager = StreamManager(self.torrent)
+        self.broadcasted_hash_data = False
 
     def add_piece_to_output(self, piece):
         self.__lock.acquire()
@@ -45,8 +46,9 @@ class TorrentOutputManager:
 
             self.check_subtitles()
 
-            # Check if first and last piece(s) are done to calculate the hash
-            self.check_stream_file_hash()
+            if not self.broadcasted_hash_data:
+                # Check if first and last piece(s) are done to calculate the hash
+                self.check_stream_file_hash()
 
         return True
 
@@ -85,6 +87,7 @@ class TorrentOutputManager:
                 end_done = True
 
         if start_done and end_done:
+            self.broadcasted_hash_data = True
             EventManager.throw_event(EventType.HashDataKnown,
                                      [self.torrent.media_file.length,
                                       os.path.basename(self.torrent.media_file.path),

@@ -4,6 +4,7 @@ import os
 from threading import Lock
 
 from InterfaceSrc.VLCPlayer import PlayerState
+from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Events import EventManager, EventType
 from TorrentSrc.Util.Threading import CustomThread
@@ -38,6 +39,7 @@ class SubtitleProvider:
         EventManager.register_event(EventType.PlayerStateChange, self.add_subtitles)
 
     def search_subtitles(self, size, filename, first_64k, last_64k):
+        Logger.write(2, "Hash data known, going to search for subtitles")
         self.sub_files = []
         for source in self.subtitle_sources:
             thread = CustomThread(self.search_subtitles_thread, "Search subtitles", [source, size, filename, first_64k, last_64k])
@@ -51,10 +53,7 @@ class SubtitleProvider:
             if len([x for x in self.sub_files if x.hash == hash]) == 0:
                 self.sub_files.append(Subtitle(hash, path))
         self.sub_files_lock.release()
-
-        # add them now since we've already started
-        if self.start.player.state == PlayerState.Playing:
-            self.add_subtitles(None, PlayerState.Playing)
+        self.add_subtitles(None, PlayerState.Playing)
 
     def add_subtitles(self, old_state, new_state):
         if new_state != PlayerState.Playing:
