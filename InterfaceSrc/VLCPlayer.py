@@ -7,6 +7,7 @@ from InterfaceSrc import vlc
 from InterfaceSrc.vlc import EventType, libvlc_get_version
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Util import current_time
 
 from TorrentSrc.Util.Threading import CustomThread
 
@@ -61,7 +62,11 @@ class VLCPlayer:
         elif type == "Image":
             self.__player.set_mrl(url)
         else:
-            self.__player.set_mrl(url, "demux=avformat", "start-time=" + str(time // 1000))
+            if time == 0:
+                self.__player.set_mrl(url, "demux=avformat", "start-time=" + str(time // 1000))
+            else:
+                self.__player.set_mrl(url, "demux=avformat")
+
         return self.__player.play() != -1
 
     def pause_resume(self):
@@ -162,6 +167,12 @@ class VLCPlayer:
         self.__event_manager.event_attach(EventType.MediaPlayerEndReached, self.state_change_end_reached)
         self.__event_manager.event_attach(EventType.MediaPlayerEncounteredError, self.on_error)
 
+        self.__event_manager.event_attach(EventType.MediaPlayerTimeChanged, self.on_time_change)
+
+    def on_time_change(self, event):
+        Logger.write(2, "Update time: " + str(current_time() - self.last_time))
+        self.last_time = current_time()
+
     def state_change_opening(self, event):
         if self.state != PlayerState.Opening:
             old = self.state
@@ -221,25 +232,21 @@ class VLCPlayer:
 
     def watch_time_change(self):
         while True:
-            new_time = self.__player.get_time()
-            changed = False
-            if new_time != self.last_time:
-                changed = True
-            self.last_time = new_time
+            playing = True
+            if current_time() - self.last_time > 5000:
+                playing = False
 
-            if self.state == PlayerState.Playing:
-                if not changed:
+            if self.state == PlayerState.Playing and not playing:
                     self.state = PlayerState.Buffering
                     self.state_change_action(PlayerState.Playing, self.state)
                     Logger.write(2, "not playing")
 
-            elif self.state == PlayerState.Buffering:
-                if changed:
+            elif self.state == PlayerState.Buffering and playing:
                     self.state = PlayerState.Playing
                     self.state_change_action(PlayerState.Buffering, self.state)
                     Logger.write(2, "playing")
 
-            time.sleep(1.1)
+            time.sleep(1)
 
 
 class MediaItem:
