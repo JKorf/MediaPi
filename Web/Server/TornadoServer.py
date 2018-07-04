@@ -289,8 +289,14 @@ class HDHandler(web.RequestHandler):
             size, first, last = get_file_info(file)
             first_base = base64.b64encode(first)
             last_base = base64.b64encode(last)
+            obj = {
+                "file": file,
+                "size": size,
+                "first": str(first_base),
+                "last": str(last_base)
+            }
 
-            self.write("{\"file\": "+str(file)+", \"size\": "+str(size)+", \"first\": \""+first_base+"\", \"last\": \""+last_base+"\" }")
+            self.write(json.dumps(obj))
         elif url == "directory":
             self.write(HDController.directory(self.get_argument("path")))
 
