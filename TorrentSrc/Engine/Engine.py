@@ -72,6 +72,7 @@ class Engine:
                 self.current_item = work_item
                 self.start_time = current_time()
                 result = work_item.action()
+                self.current_item = None
                 test_time = current_time()
                 work_item.last_run_time = test_time
 
@@ -89,9 +90,14 @@ class Engine:
 
     def log(self):
         if self.own_time.ticks > 1:
-            Logger.write(2, "Engine: " + self.own_time.print()  + ", CT: " + str(current_time() - self.start_time) + " @ " + str(self.current_item.name))
+            Logger.lock.acquire()
+            log_str = "Engine: " + self.own_time.print()
+            if self.current_item:
+                log_str += ", CT: " + str(current_time() - self.start_time) + " @ " + str(self.current_item.name)
+            Logger.write(3, log_str)
             for key, value in self.timing.items():
-                Logger.write(2, "    " + value.print())
+                Logger.write(3, "    " + value.print())
+            Logger.lock.release()
 
 
 class EngineWorkItem:

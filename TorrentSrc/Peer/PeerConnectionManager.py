@@ -8,7 +8,6 @@ from TorrentSrc.Connections import TcpClient
 from TorrentSrc.Peer.PeerMessages import KeepAliveMessage
 from TorrentSrc.Util.Enums import ConnectionState, ReceiveState
 from TorrentSrc.Util.Network import *
-from Utp.UtpClient import UtpClient
 
 
 class PeerConnectionManager:
@@ -24,17 +23,10 @@ class PeerConnectionManager:
         self.last_communication = 0
         self.sendLock = Lock()
         self.receiveLock = Lock()
-        self.utp = Settings.get_bool("utp")
         self.peer_timeout = Settings.get_int("peer_timeout")
         self.connection_timeout = Settings.get_int("connection_timeout") / 1000
-        self.check_io = False
 
-        if self.utp:
-            self.connection = UtpClient(uri.hostname, uri.port)
-            self.check_io = True
-        else:
-            self.connection = TcpClient(uri.hostname, uri.port)
-
+        self.connection = TcpClient(uri.hostname, uri.port)
         self.buffer = bytearray()
         self.next_message_length = 68
         self.buffer_position = 0
@@ -54,29 +46,14 @@ class PeerConnectionManager:
         self.connected_on = current_time()
         Stats['peers_connect_success'].add(1)
         Logger.write(1, str(self.peer.id) + ' connected to ' + str(self.uri.netloc))
-        self.check_io = True
         self.connection_state = ConnectionState.Connected
         self.connection.socket.setblocking(0)
 
     def on_readable(self):
-        if self.utp:
-            data = self.connection.utp_connection.receive()
-            if data is None:
-                self.disconnect()
-                return
-
-            self.connection.handle_packet(data)
-            while self.connection.data_available() and self.connection_state != ConnectionState.Disconnected:
-                self.handle_read()
-        else:
-            self.handle_read()
+        self.handle_read()
 
     def on_writeable(self):
         self.handle_write()
-        if self.utp:
-            self.connection.check_timeouts()
-            if current_time() - self.connection.last_send > 25:
-                self.connection.process_send()
 
     def handle_read(self):
         if self.connection_state != ConnectionState.Connected:
@@ -180,7 +157,6 @@ class PeerConnectionManager:
         self.received_bytes.clear()
         self.receiveLock.release()
 
-        self.check_io = False
         self.connection.disconnect()
 
         self.peer.stop()

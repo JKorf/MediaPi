@@ -46,9 +46,11 @@ class StreamListener:
             socket.close()
 
     def log_requests(self):
-        Logger.write(2, "REQUESTS:")
+        Logger.lock.acquire()
+        Logger.write(3, " REQUESTS "+self.name+":")
         for client in self.requests:
-            Logger.write(2, str(client[0]) + ": " + client[2])
+            Logger.write(3, str(client[0]) + ": " + client[2])
+        Logger.lock.release()
 
     def start_listening(self):
         self.thread = CustomThread(self.server.start, "Stream listener: " + self.name)

@@ -3,6 +3,7 @@ import inspect
 import ntpath
 import os
 import sys
+from threading import RLock
 
 from Shared.Settings import Settings
 
@@ -11,6 +12,7 @@ class Logger:
 
     log_level = 1
     file = None
+    lock = RLock()
 
     @staticmethod
     def set_log_level(level):
@@ -42,11 +44,12 @@ class Logger:
 
             if log_priority == 3:
                 strInfo = '\033[1m' + strInfo + '\033[0m'
-
+            Logger.lock.acquire()
             if not Settings.get_bool("raspberry"):
                 print(strInfo)
 
             Logger.file.write((file_log + "\r\n").encode('ascii'))
+            Logger.lock.release()
 
 
 def get_info():

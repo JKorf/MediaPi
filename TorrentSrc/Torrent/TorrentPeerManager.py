@@ -38,9 +38,11 @@ class TorrentPeerManager:
         self.medium_speed_peers = 0
 
     def log_peers(self):
-        Logger.write(2, "PEERS")
+        Logger.lock.acquire()
+        Logger.write(3, "PEERS")
         for peer in self.connected_peers:
-            Logger.write(2, str(peer.id) + " | " + peer.communication_state.print() + " | " + str(peer.peer_speed) + "("+ write_size(peer.counter.value) + ")" + " | Outstanding: " + str(len(peer.download_manager.downloading)))
+            Logger.write(3, str(peer.id) + " | " + peer.communication_state.print() + " | " + str(peer.peer_speed) + "("+ write_size(peer.counter.value) + ")" + " | Outstanding: " + str(len(peer.download_manager.downloading)))
+        Logger.lock.release()
 
     def add_potential_peers_from_ip_port(self, data):
         for ip, port in data:
@@ -163,8 +165,8 @@ class TorrentPeerManager:
         return True
 
     def get_peers_for_io(self):
-        return list([x for x in self.connected_peers if x.connection_manager.check_io]
-                    + [x for x in self.connecting_peers if x.connection_manager.check_io])
+        return list([x for x in self.connected_peers if x.connection_manager.connection_state == ConnectionState.Connected]), \
+               list([x for x in self.connected_peers if len(x.connection_manager.to_send_bytes) > 0 and x.connection_manager.connection_state == ConnectionState.Connected])
 
     def are_fast_peers_available(self):
         return self.high_speed_peers > 0 or self.medium_speed_peers > 1

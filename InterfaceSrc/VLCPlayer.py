@@ -172,7 +172,6 @@ class VLCPlayer:
             self.state = PlayerState.Playing
             self.state_change_action(old, self.state)
 
-
     def state_change_paused(self, event):
         if self.state != PlayerState.Paused:
             old = self.state

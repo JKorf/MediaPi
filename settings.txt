@@ -15,7 +15,6 @@ max_peers_connecting=20
 max_peers_connected=30
 connection_timeout=2000
 peer_timeout=60000
-utp=False
 
 # Downloading
 block_size=16384

@@ -134,8 +134,11 @@ class UtilController:
     def test():
         Logger.write(2, "============== Test ===============")
         EventManager.throw_event(EventType.Log, [])
+        Logger.lock.acquire()
+        Logger.write(3, "Threads")
         for thread in ThreadManager.threads:
             Logger.write(3, thread.thread_name)
+        Logger.lock.release()
 
     @staticmethod
     def shutdown():

@@ -56,7 +56,7 @@ class TorrentDownloadManager:
 
             if lock:
                 self.queue_lock.release()
-            return
+            return True
 
         start_time = current_time()
 
