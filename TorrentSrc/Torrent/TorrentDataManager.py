@@ -1,5 +1,6 @@
 import math
 
+from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Stats import Stats
@@ -26,6 +27,18 @@ class TorrentDataManager:
         self.piece_hash_validator = TorrentPieceHashValidator()
         self.piece_hash_validator.on_piece_accept = self.piece_hash_valid
         self.piece_hash_validator.on_piece_reject = self.piece_hash_invalid
+
+        EventManager.register_event(EventType.Log, self.log_queue)
+
+    def log_queue(self):
+        unfinished = [x for x in self.pieces if not x.done]
+
+        Logger.lock.acquire()
+        first = ""
+        if unfinished:
+            first = str(unfinished[0].index)
+        Logger.write(3, "Data status: first unfinished=" + first + ", total unfinished=" + str(len(unfinished)) +" pieces")
+        Logger.lock.release()
 
     def set_piece_info(self, piece_length, piece_hashes):
         self.piece_hash_validator.update_hashes(piece_hashes)

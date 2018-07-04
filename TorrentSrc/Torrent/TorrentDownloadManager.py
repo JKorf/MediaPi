@@ -1,5 +1,6 @@
 from threading import Lock
 
+from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import current_time
@@ -32,6 +33,17 @@ class TorrentDownloadManager:
             (95, 1, 2),
             (0, 1, 1)
         ]
+
+        EventManager.register_event(EventType.Log, self.log_queue)
+
+    def log_queue(self):
+        Logger.lock.acquire()
+        first = ""
+        if self.queue:
+            first = str(self.queue[0].block.piece_index) + "-" + str(self.queue[0].block.block_index_in_piece)
+        Logger.write(3, "Queue status: length: " + str(len(self.queue))+ ", init: " + str(self.init) + ", prio: " + str(self.prio))
+        Logger.write(3, "First in queue: " + first)
+        Logger.lock.release()
 
     def update(self):
         if self.torrent.state != TorrentState.Downloading:
