@@ -62,7 +62,7 @@ class VLCPlayer:
         elif type == "Image":
             self.__player.set_mrl(url)
         else:
-            if time == 0:
+            if time != 0:
                 self.__player.set_mrl(url, "demux=avformat", "start-time=" + str(time // 1000))
             else:
                 self.__player.set_mrl(url, "demux=avformat")
@@ -170,7 +170,6 @@ class VLCPlayer:
         self.__event_manager.event_attach(EventType.MediaPlayerTimeChanged, self.on_time_change)
 
     def on_time_change(self, event):
-        Logger.write(2, "Update time: " + str(current_time() - self.last_time))
         self.last_time = current_time()
 
     def state_change_opening(self, event):
