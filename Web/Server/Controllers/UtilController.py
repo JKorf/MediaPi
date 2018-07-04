@@ -12,7 +12,7 @@ from Shared.Settings import Settings as AppSettings
 from Shared.Logger import Logger
 from Shared.Stats import Stats
 from Shared.Util import to_JSON, parse_bool, RequestFactory, current_time
-from TorrentSrc.Util.Threading import ThreadManager
+from TorrentSrc.Util.Threading import ThreadManager, CustomThread
 from TorrentSrc.Util.Util import write_size
 from Web.Server.Models import DebugInfo, current_media, Version, Settings, Info, Status, StartUp
 
@@ -134,6 +134,8 @@ class UtilController:
     def test():
         Logger.write(2, "============== Test ===============")
         EventManager.throw_event(EventType.Log, [])
+        for thread in ThreadManager.threads:
+            Logger.write(3, thread.thread_name)
 
     @staticmethod
     def shutdown():

@@ -22,6 +22,9 @@ class Engine:
         self.work_items = []
         self.overtime = 0
 
+        self.current_item = None
+        self.start_time = 0
+
         self.timing = dict()
         self.own_time = TimingObject(self.name)
 
@@ -66,7 +69,8 @@ class Engine:
             work_item = cur_list[i]
 
             if work_item.last_run_time + work_item.interval < tick_time:
-                start_time = current_time()
+                self.current_item = work_item
+                self.start_time = current_time()
                 result = work_item.action()
                 test_time = current_time()
                 work_item.last_run_time = test_time
@@ -77,15 +81,15 @@ class Engine:
                 elif not result:
                     self.work_items.remove(work_item)
 
-                # if work_item.name not in self.timing:
-                #     self.timing[work_item.name] = TimingObject(work_item.name)
-                # self.timing[work_item.name].add_time(current_time() - start_time)
+                if work_item.name not in self.timing:
+                    self.timing[work_item.name] = TimingObject(work_item.name)
+                self.timing[work_item.name].add_time(current_time() - self.start_time)
 
-        # self.own_time.add_time(current_time() - tick_time)
+        self.own_time.add_time(current_time() - tick_time)
 
     def log(self):
         if self.own_time.ticks > 1:
-            Logger.write(2, "Engine: " + self.own_time.print())
+            Logger.write(2, "Engine: " + self.own_time.print()  + ", CT: " + str(current_time() - self.start_time) + " @ " + str(self.current_item.name))
             for key, value in self.timing.items():
                 Logger.write(2, "    " + value.print())
 
