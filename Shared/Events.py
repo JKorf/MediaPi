@@ -6,44 +6,44 @@ from Shared.Logger import Logger
 
 
 class EventType(Enum):
-    Seek = 1,
-    HashDataKnown = 37,
+    HashDataKnown = 1,
 
-    StartPlayer = 4,
-    PlayerStarted = 5
-    PlayerOpening = 18,
-    PlayerBuffering = 19,
-    PlayerNothingSpecial = 20,
-    PlayerBufferingDone = 21,
-    StopPlayer = 6,
-    PlayerStopped = 7
-    SetVolume = 8,
-    PauseResumePlayer = 9,
-    PlayerPaused = 10,
-    PlayerError = 11,
+    Seek = 2,
+    StartPlayer = 3,
+    PlayerStarted = 4
+    PlayerOpening = 5,
+    PlayerBuffering = 6,
+    PlayerNothingSpecial = 7,
+    PlayerBufferingDone = 8,
+    StopPlayer = 9,
+    PlayerStopped = 10
+    SetVolume = 11,
+    PauseResumePlayer = 12,
+    PlayerPaused = 13,
+    PlayerError = 14,
+    PlayerStateChange = 15,
 
-    SetSubtitleFile = 12,
-    SetSubtitleId = 13,
-    SetSubtitleOffset = 14,
-    SubtitleDownloaded = 32,
-    SubsDoneChange = 33,
-    SearchAdditionalSubs = 34,
+    SetSubtitleFile = 16,
+    SetSubtitleId = 17,
+    SetSubtitleOffset = 18,
+    SubtitleDownloaded = 19,
+    SubsDoneChange = 20,
+    SearchAdditionalSubs = 21,
 
-    SetAudioId = 24,
+    SetAudioId = 22,
 
-    StartTorrent = 16,
-    StopTorrent = 31,
+    StartTorrent = 23,
+    StopTorrent = 24,
+    TorrentMetadataDone = 25
+    TorrentStopped = 26
 
-    Error = 17,
+    Error = 27,
 
-    NewDHTNode = 23,
-    RequestDHTPeers = 25,
-    PlayerStateChange = 27,
-    Log = 28,
+    NewDHTNode = 28,
+    RequestDHTPeers = 29,
+    Log = 30,
 
-    NewRequest = 35,
-    TorrentMetadataDone = 36
-    TorrentStopped = 38
+    NewRequest = 31,
 
 
 class EventManager:

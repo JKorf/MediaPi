@@ -1,10 +1,7 @@
 import os
 import socket
 import time
-import struct
 
-from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
 from TorrentSrc.Util import Network
 from TorrentSrc.Util.Network import read_ushort
 

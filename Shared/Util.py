@@ -1,16 +1,10 @@
 import json
-import os
 import time
 import urllib.request
 import urllib.parse
 
-import struct
-
-import tornado
 from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
-
-from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from TorrentSrc.Util.Util import headers
 

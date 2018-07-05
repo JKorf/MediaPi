@@ -13,10 +13,10 @@ class TcpClient:
             self.port = 6881
         self.socket = None
 
-    def connect(self, connectino_timeout):
+    def connect(self, connection_timeout):
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.settimeout(connectino_timeout)
+            self.socket.settimeout(connection_timeout)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.connect((self.host, self.port))
             self.socket.settimeout(None)

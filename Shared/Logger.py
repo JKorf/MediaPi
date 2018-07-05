@@ -2,7 +2,6 @@ import datetime
 import inspect
 import ntpath
 import os
-import sys
 from threading import RLock
 
 from Shared.Settings import Settings
