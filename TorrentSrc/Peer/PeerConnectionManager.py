@@ -105,17 +105,17 @@ class PeerConnectionManager:
         if self.connection_state != ConnectionState.Connected:
             return
 
+        success = True
         self.sendLock.acquire()
         if len(self.to_send_bytes) != 0:
             Logger.write(1, str(self.peer.id) + ' Sending ' + str(len(self.to_send_bytes)) + " bytes of data")
             success = self.connection.send(self.to_send_bytes)
             self.to_send_bytes.clear()
             self.last_communication = current_time()
-
-            if not success:
-                self.disconnect()
-
         self.sendLock.release()
+
+        if not success:
+            self.disconnect()
 
     def send(self, data):
         self.sendLock.acquire()

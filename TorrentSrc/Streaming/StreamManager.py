@@ -198,6 +198,7 @@ class StreamBuffer:
 
     def write_piece(self, piece):
         self.__lock.acquire()
+
         if piece in self.data_ready:
             self.__lock.release()
             return
@@ -205,8 +206,8 @@ class StreamBuffer:
         Logger.write(1, "Piece " + str(piece.index) + " ready for streaming")
         self.data_ready.append(piece)
         self.__lock.release()
-        self.last_consecutive_piece_dirty = True
 
+        self.last_consecutive_piece_dirty = True
         self.clear(self.stream_manager.stream_position_piece_index)
 
     def clear(self, stream_position):

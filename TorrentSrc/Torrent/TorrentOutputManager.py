@@ -27,6 +27,7 @@ class TorrentOutputManager:
 
     def update(self):
         self.__lock.acquire()
+
         to_write = list(self.pieces_to_output)
         if len(to_write) == 0:
             self.__lock.release()
@@ -39,16 +40,17 @@ class TorrentOutputManager:
 
         for item in to_write:
             self.torrent.peer_manager.piece_done(item.index)
+
             if self.torrent.output_mode == OutputMode.Stream:
                 self.stream_manager.write_piece(item)
             else:
                 self.file_writer.write_piece(item)
 
-            self.check_subtitles()
+        self.check_subtitles()
 
-            if not self.broadcasted_hash_data:
-                # Check if first and last piece(s) are done to calculate the hash
-                self.check_stream_file_hash()
+        if not self.broadcasted_hash_data:
+            # Check if first and last piece(s) are done to calculate the hash
+            self.check_stream_file_hash()
 
         return True
 
