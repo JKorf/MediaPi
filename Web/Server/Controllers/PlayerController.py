@@ -18,7 +18,7 @@ class PlayerController:
     def stop_player():
         Logger.write(2, "Stop player")
         EventManager.throw_event(EventType.StopPlayer, [])
-        EventManager.throw_event(EventType.StopStreamTorrent, [])
+        EventManager.throw_event(EventType.StopTorrent, [])
 
     @staticmethod
     def pause_resume_player():

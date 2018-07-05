@@ -165,8 +165,8 @@ class GUI(QtGui.QMainWindow):
         if not self.update_buffering:
             return
 
-        if self.start.stream_torrent and self.start.stream_torrent.media_file:
-            percentage_done = math.floor(min(((7500000 - self.start.stream_torrent.bytes_missing_for_buffering) / 7500000) * 100, 99))
+        if self.start.torrent and self.start.torrent.media_file:
+            percentage_done = math.floor(min(((7500000 - self.start.torrent.bytes_missing_for_buffering) / 7500000) * 100, 99))
             self.loading_panel.set_percent(percentage_done)
 
         QtCore.QTimer.singleShot(1000, lambda: self.update_buffer_info())

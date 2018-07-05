@@ -18,13 +18,13 @@ class TorrentController:
     @staticmethod
     def get_torrents(start):
         torrents = []
-        for torrent in start.torrent_manager.torrents:
-            torrents.append(TorrentDetailModel.from_torrent(torrent))
+        if start.torrent:
+            torrents.append(TorrentDetailModel.from_torrent(start.torrent))
 
         return to_JSON(torrents)
 
     @staticmethod
     def remove(start, id):
         Logger.write(2, "Remove torrent: " + id)
-
-        start.torrent_manager.remove_torrent(int(id))
+        start.torrent.stop()
+        start.torrent = None

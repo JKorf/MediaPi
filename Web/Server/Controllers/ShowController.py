@@ -46,7 +46,7 @@ class ShowController:
     def play_episode(url, title, img):
         Logger.write(2, "Play epi: " + url)
 
-        EventManager.throw_event(EventType.StopStreamTorrent, [])
+        EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(1)
         EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.Stream])
         EventManager.throw_event(EventType.StartPlayer, ["Show", urllib.parse.unquote(title), ShowController.server_uri, urllib.parse.unquote(img)])

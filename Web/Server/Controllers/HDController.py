@@ -42,7 +42,7 @@ class HDController:
     def play_file(filename, path, position=0):
         file = urllib.parse.unquote(path)
         Logger.write(2, "Play file: " + file)
-        EventManager.throw_event(EventType.StopStreamTorrent, [])
+        EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
 
         if filename.endswith(".jpg"):

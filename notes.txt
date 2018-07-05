@@ -30,3 +30,5 @@
         dtparam=sd_overclock=100
 
     Dropbox for uploading log files
+
+    Seeken nog steeds niet goed..

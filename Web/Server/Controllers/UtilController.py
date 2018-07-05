@@ -33,10 +33,10 @@ class UtilController:
 
         title = start.player.title
         percentage = 0
-        if start.stream_torrent is not None and start.stream_torrent.media_file is not None:
-            buffered = start.stream_torrent.bytes_ready_in_buffer
-            percentage = buffered / start.stream_torrent.media_file.length * 100
-            if start.stream_torrent.state == TorrentState.Done:
+        if start.torrent is not None and start.torrent.media_file is not None:
+            buffered = start.torrent.bytes_ready_in_buffer
+            percentage = buffered / start.torrent.media_file.length * 100
+            if start.torrent.state == TorrentState.Done:
                 percentage = 100
 
         media = current_media(start.player.state.value,
@@ -57,9 +57,7 @@ class UtilController:
 
     @staticmethod
     def debug(start):
-        torrent = None
-        if len(start.torrent_manager.torrents) > 0:
-            torrent = start.torrent_manager.torrents[0]
+        torrent = start.torrent
         if torrent is None:
             de = DebugInfo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ThreadManager.thread_count(), psutil.cpu_percent(), psutil.virtual_memory().percent, 0)
         else:
@@ -86,7 +84,13 @@ class UtilController:
 
     @staticmethod
     def status(start):
-        return to_JSON(Status(write_size(start.torrent_manager.total_speed), start.torrent_manager.stream_buffer_ready, psutil.cpu_percent(), psutil.virtual_memory().percent))
+        speed = 0
+        ready = -1
+        if start.torrent:
+            speed = write_size(start.torrent.download_counter.value)
+            ready = start.torrent.bytes_ready_in_buffer
+
+        return to_JSON(Status(speed, ready, psutil.cpu_percent(), psutil.virtual_memory().percent))
 
     @staticmethod
     def info():
@@ -135,9 +139,9 @@ class UtilController:
         Logger.write(2, "============== Test ===============")
         EventManager.throw_event(EventType.Log, [])
         Logger.lock.acquire()
-        Logger.write(3, "Threads")
+        Logger.write(3, "-- Threads --")
         for thread in ThreadManager.threads:
-            Logger.write(3, thread.thread_name)
+            Logger.write(3, "     " + thread.thread_name)
         Logger.lock.release()
 
     @staticmethod

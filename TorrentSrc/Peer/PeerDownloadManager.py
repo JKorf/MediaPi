@@ -117,6 +117,9 @@ class PeerDownloadManager:
             self.downloading.remove(peer_download[0])
         self.lock.release()
 
+    def log(self):
+        Logger.write(3, "       Currently downloading: " + str(len(self.downloading)))
+
     def stop(self):
         self.stopped = True
         self.lock.acquire()

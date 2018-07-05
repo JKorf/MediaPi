@@ -49,7 +49,7 @@ class MovieController:
     def play_movie(url, id, title, img):
         Logger.write(2, "Play movie: " + urllib.parse.unquote(title))
 
-        EventManager.throw_event(EventType.StopStreamTorrent, [])
+        EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
         EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.Stream])
         EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, urllib.parse.unquote(img)])
@@ -60,7 +60,7 @@ class MovieController:
         Logger.write(2, "Play direct link")
         url = urllib.parse.unquote_plus(url)
 
-        EventManager.throw_event(EventType.StopStreamTorrent, [])
+        EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(1)
         if url.endswith('.torrent') or url.startswith('magnet:'):
             EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.Stream])
@@ -74,7 +74,7 @@ class MovieController:
         Logger.write(2, "Continue " + title + "("+type+") at " + str(position))
         url = urllib.parse.unquote_plus(url)
         if type == "torrent":
-            EventManager.throw_event(EventType.StopStreamTorrent, [])
+            EventManager.throw_event(EventType.StopTorrent, [])
             time.sleep(0.2)
             EventManager.throw_event(EventType.StartTorrent, [url, OutputMode.Stream])
             EventManager.throw_event(EventType.StartPlayer,

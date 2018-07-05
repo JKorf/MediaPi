@@ -4,12 +4,12 @@ import os
 import subprocess
 import urllib.parse
 
+from TorrentSrc.Torrent.Torrent import Torrent
+
 os.chdir(os.path.dirname(__file__))
 
 from Database.Database import Database
 from TorrentSrc.Streaming.StreamListener import StreamListener
-
-from TorrentSrc.TorrentManager import TorrentManager
 
 from DHT.DHTEngine import DHTEngine
 
@@ -46,8 +46,7 @@ class StartUp:
         self.app = None
         self.player = None
         self.server = None
-        self.torrent_manager = TorrentManager()
-        self.stream_torrent = None
+        self.torrent = None
         self.running = True
         self.youtube_end_counter = 0
         self.is_slave = Settings.get_bool("slave")
@@ -126,12 +125,11 @@ class StartUp:
 
     def watch_stats(self):
         while self.running:
-            if self.stream_torrent is not None:
+            if self.torrent is not None:
                 # Check max download speed
                 current = Stats['max_download_speed'].total
-                for torrent in self.torrent_manager.torrents:
-                    if torrent.download_counter.max > current:
-                        Stats['max_download_speed'].set(torrent.download_counter.max)
+                if self.torrent.download_counter.max > current:
+                    Stats['max_download_speed'].set(self.torrent.download_counter.max)
 
             time.sleep(5)
 
@@ -145,8 +143,8 @@ class StartUp:
             if self.player.type == "File":
                 watching_type = "file"
 
-            if self.stream_torrent is not None:
-                path = self.stream_torrent.uri
+            if self.torrent is not None:
+                path = self.torrent.uri
             else:
                 path = self.player.path
 
@@ -202,7 +200,6 @@ class StartUp:
             return
 
         rasp = Settings.get_bool("raspberry")
-        return
         while self.running:
             if rasp:
                 proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
@@ -253,15 +250,32 @@ class StartUp:
         EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_id)
         EventManager.register_event(EventType.SetSubtitleOffset, self.set_subtitle_offset)
         EventManager.register_event(EventType.SubtitleDownloaded, self.set_subtitle_file)
-
         EventManager.register_event(EventType.SetAudioId, self.set_audio_id)
 
-        EventManager.register_event(EventType.InvalidTorrent, self.invalid_torrent)
-        EventManager.register_event(EventType.StreamTorrentStarted, self.stream_torrent_started)
-        EventManager.register_event(EventType.StreamTorrentStopped, self.stream_torrent_stopped)
         EventManager.register_event(EventType.TorrentMetadataDone, self.torrent_metadata_done)
-
+        EventManager.register_event(EventType.StartTorrent, self.start_torrent)
+        EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
         EventManager.register_event(EventType.NewDHTNode, self.new_dht_node)
+
+    def start_torrent(self, url, output_mode):
+        success, torrent = Torrent.create_torrent(1, url, output_mode)
+        if success:
+            self.torrent = torrent
+            torrent.start()
+        else:
+            Logger.write(2, "Invalid torrent")
+            EventManager.throw_event(EventType.Error, ["torrent_error", "Invalid torrent"])
+            if self.torrent is not None:
+                self.torrent.stop()
+                self.torrent = None
+
+            time.sleep(1)
+            self.player.stop()
+
+    def stop_torrent(self):
+        if self.torrent:
+            self.torrent.stop()
+            self.torrent = None
 
     def new_dht_node(self, ip, port):
         if self.dht_enabled:
@@ -271,24 +285,17 @@ class StartUp:
         Logger.write(2, "State change from " + str(prev_state) + " to " + str(new_state))
         EventManager.throw_event(EventType.PlayerStateChange, [prev_state, new_state])
         if new_state == PlayerState.Ended:
-            if self.stream_torrent is not None:
-                Logger.write(2, "Ended " + self.stream_torrent.media_file.name)
-                self.torrent_manager.remove_torrent(self.stream_torrent.id)
+            if self.torrent is not None:
+                self.torrent.stop()
+                Logger.write(2, "Ended " + self.torrent.media_file.name)
             if self.player.type != "YouTube":
                 thread = CustomThread(self.stop_player, "Stopping player")
                 thread.start()
 
-    def torrent_metadata_done(self, torrent):
-        if self.stream_torrent and torrent.id == self.stream_torrent.id:
+    def torrent_metadata_done(self):
+        if self.torrent:
             if self.player.title == "Direct Link":
-                self.player.title = torrent.name
-
-    def stream_torrent_stopped(self, torrent):
-        self.stream_torrent = None
-        self.stop_player()
-
-    def stream_torrent_started(self, torrent):
-        self.stream_torrent = torrent
+                self.player.title = self.torrent.name
 
     def request_dht_peers(self, torrent):
         if self.dht_enabled:
@@ -296,16 +303,6 @@ class StartUp:
 
     def add_peers_from_dht(self, torrent, peers):
         torrent.peer_manager.add_potential_peers_from_ip_port(peers)
-
-    def invalid_torrent(self, reason):
-        Logger.write(2, "Invalid torrent")
-        EventManager.throw_event(EventType.Error, ["torrent_error", "Invalid torrent: " + reason])
-        if self.stream_torrent is not None:
-            self.stream_torrent.stop()
-            self.stream_torrent = None
-
-        time.sleep(1)
-        self.player.stop()
 
     def start_player(self, type, title, url, img=None, position=0):
         self.stop_player()
@@ -343,9 +340,9 @@ class StartUp:
         self.running = False
 
         Logger.write(3, "Stopping")
-        if self.stream_torrent is not None:
+        if self.torrent is not None:
             Logger.write(3, "Stopping torrent")
-            self.stream_torrent.stop()
+            self.torrent.stop()
         if self.player is not None:
             Logger.write(3, "Stopping player")
             self.player.stop()

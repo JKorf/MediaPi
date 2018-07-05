@@ -61,6 +61,10 @@ class Peer:
         self.engine.start()
         Logger.write(1, str(self.id) + ' Peer started')
 
+    def log(self):
+        self.connection_manager.log()
+        self.download_manager.log()
+
     def stop(self):
         if not self.running:
             return

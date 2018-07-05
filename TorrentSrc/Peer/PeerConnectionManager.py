@@ -142,6 +142,11 @@ class PeerConnectionManager:
             return False
         return True
 
+    def log(self):
+        Logger.write(3, "       Last communication: " + str(current_time() - self.last_communication) +"ms ago")
+        Logger.write(3, "       To send buffer length: " + str(len(self.to_send_bytes)))
+        Logger.write(3, "       Receive buffer length: " + str(len(self.received_bytes)))
+
     def disconnect(self):
         if self.connection_state == ConnectionState.Disconnected:
             return

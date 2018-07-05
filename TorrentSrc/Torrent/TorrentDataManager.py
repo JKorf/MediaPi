@@ -28,17 +28,23 @@ class TorrentDataManager:
         self.piece_hash_validator.on_piece_accept = self.piece_hash_valid
         self.piece_hash_validator.on_piece_reject = self.piece_hash_invalid
 
-        EventManager.register_event(EventType.Log, self.log_queue)
+        self.event_id_log = EventManager.register_event(EventType.Log, self.log_queue)
+        self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
 
     def log_queue(self):
         unfinished = [x for x in self.pieces if not x.done]
 
         Logger.lock.acquire()
+        Logger.write(3, "-- TorrentDataManager state --")
         first = ""
         if unfinished:
             first = str(unfinished[0].index)
-        Logger.write(3, "Data status: first unfinished=" + first + ", total unfinished=" + str(len(unfinished)) +" pieces")
+        Logger.write(3, "     Data status: first unfinished=" + first + ", total unfinished=" + str(len(unfinished)) +" pieces")
         Logger.lock.release()
+
+    def unregister(self):
+        EventManager.deregister_event(self.event_id_log)
+        EventManager.deregister_event(self.event_id_stopped)
 
     def set_piece_info(self, piece_length, piece_hashes):
         self.piece_hash_validator.update_hashes(piece_hashes)
@@ -69,6 +75,7 @@ class TorrentDataManager:
             current_byte += self.piece_length
 
         self.init_done = True
+        Logger.write(2, "Pieces initialized, " + str(len(self.pieces)) + " pieces created")
 
     def update_write_blocks(self):
         for piece_index, offset, data in list(self.blocks_done):

@@ -91,12 +91,13 @@ class Engine:
     def log(self):
         if self.own_time.ticks > 1:
             Logger.lock.acquire()
-            log_str = "Engine: " + self.own_time.print()
+            log_str = "-- Engine "+self.own_time.print()
             if self.current_item:
                 log_str += ", CT: " + str(current_time() - self.start_time) + " @ " + str(self.current_item.name)
+            log_str += " --"
             Logger.write(3, log_str)
             for key, value in self.timing.items():
-                Logger.write(3, "    " + value.print())
+                Logger.write(3, "     " + value.print())
             Logger.lock.release()
 
 

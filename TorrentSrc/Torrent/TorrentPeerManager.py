@@ -32,16 +32,22 @@ class TorrentPeerManager:
         self.fast_peers = 0
         self.disconnect_peer_timeout = 0
 
-        EventManager.register_event(EventType.Log, self.log_peers)
+        self.event_id_log = EventManager.register_event(EventType.Log, self.log_peers)
+        self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
 
         self.high_speed_peers = 0
         self.medium_speed_peers = 0
 
+    def unregister(self):
+        EventManager.deregister_event(self.event_id_log)
+        EventManager.deregister_event(self.event_id_stopped)
+
     def log_peers(self):
         Logger.lock.acquire()
-        Logger.write(3, "PEERS")
+        Logger.write(3, "-- TorrentPeerManager state --")
         for peer in self.connected_peers:
-            Logger.write(3, str(peer.id) + " | " + peer.communication_state.print() + " | " + str(peer.peer_speed) + "("+ write_size(peer.counter.value) + ")" + " | Outstanding: " + str(len(peer.download_manager.downloading)))
+            Logger.write(3, "     " + str(peer.id) + " | " + peer.communication_state.print() + " | " + str(peer.peer_speed) + "("+ write_size(peer.counter.value) + ")" + " | Outstanding: " + str(len(peer.download_manager.downloading)))
+            peer.log()
         Logger.lock.release()
 
     def add_potential_peers_from_ip_port(self, data):

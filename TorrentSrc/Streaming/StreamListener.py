@@ -38,8 +38,8 @@ class StreamListener:
         self.running = False
         self.bytes_send = 0
         self.id = 0
-        EventManager.register_event(EventType.Log, self.log_requests)
-        EventManager.register_event(EventType.Seek, self.seek)
+        self.event_id_log = EventManager.register_event(EventType.Log, self.log_requests)
+        self.event_id_seek = EventManager.register_event(EventType.Seek, self.seek)
 
     def seek(self, pos):
         for (id, socket, status) in self.requests:
@@ -47,9 +47,9 @@ class StreamListener:
 
     def log_requests(self):
         Logger.lock.acquire()
-        Logger.write(3, " REQUESTS "+self.name+":")
+        Logger.write(3, "-- Requests "+self.name+" state --")
         for client in self.requests:
-            Logger.write(3, str(client[0]) + ": " + client[2])
+            Logger.write(3, "     " + str(client[0]) + ": " + client[2])
         Logger.lock.release()
 
     def start_listening(self):
@@ -248,6 +248,9 @@ class StreamListener:
         Logger.write(2, "Removed client with id " + str(tup[0]))
 
     def stop(self):
+        EventManager.deregister_event(self.event_id_log)
+        EventManager.deregister_event(self.event_id_seek)
+
         self.running = False
         if self.server is not None:
             self.server.close()

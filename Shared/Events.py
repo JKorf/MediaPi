@@ -31,9 +31,8 @@ class EventType(Enum):
 
     SetAudioId = 24,
 
-    StopTorrent = 15,
     StartTorrent = 16,
-    InvalidTorrent = 22,
+    StopTorrent = 31,
 
     Error = 17,
 
@@ -41,12 +40,10 @@ class EventType(Enum):
     RequestDHTPeers = 25,
     PlayerStateChange = 27,
     Log = 28,
-    StreamTorrentStarted = 29,
-    StreamTorrentStopped = 30,
-    StopStreamTorrent = 31,
 
     NewRequest = 35,
     TorrentMetadataDone = 36
+    TorrentStopped = 38
 
 
 class EventManager:

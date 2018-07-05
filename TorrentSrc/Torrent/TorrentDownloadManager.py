@@ -2,7 +2,6 @@ from threading import Lock
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
-from Shared.Settings import Settings
 from Shared.Util import current_time
 from TorrentSrc.Torrent.Prioritizer import StreamPrioritizer, FilePrioritizer
 from TorrentSrc.Util.Enums import OutputMode, TorrentState, PeerSpeed, DownloadMode
@@ -21,6 +20,7 @@ class TorrentDownloadManager:
         self.prio = False
         self.reprio_after_media_meta_done = False
         self.reprio_after_media_meta_request = False
+        self.last_get_result = 0, 0
 
         self.queue = []
         self.queue_lock = Lock()
@@ -34,15 +34,22 @@ class TorrentDownloadManager:
             (0, 1, 1)
         ]
 
-        EventManager.register_event(EventType.Log, self.log_queue)
+        self.event_id_log = EventManager.register_event(EventType.Log, self.log_queue)
+        self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
+
+    def unregister(self):
+        EventManager.deregister_event(self.event_id_stopped)
+        EventManager.deregister_event(self.event_id_log)
 
     def log_queue(self):
         Logger.lock.acquire()
+        Logger.write(3, "-- TorrentDownloadManager state --")
         first = ""
         if self.queue:
             first = str(self.queue[0].block.piece_index) + "-" + str(self.queue[0].block.block_index_in_piece)
-        Logger.write(3, "Queue status: length: " + str(len(self.queue))+ ", init: " + str(self.init) + ", prio: " + str(self.prio))
-        Logger.write(3, "First in queue: " + first)
+        Logger.write(3, "     Queue status: length: " + str(len(self.queue))+ ", init: " + str(self.init) + ", prio: " + str(self.prio))
+        Logger.write(3, "     First in queue: " + first)
+        Logger.write(3, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]))
         Logger.lock.release()
 
     def update(self):
@@ -112,7 +119,7 @@ class TorrentDownloadManager:
         return True
 
     def initialize(self):
-        Logger.write(2, "Starting init")
+        Logger.write(2, "Starting download queue init")
         start_time = current_time()
         for piece in self.torrent.data_manager.pieces:
             if piece.start_byte > self.torrent.media_file.end_byte or piece.end_byte < self.torrent.media_file.start_byte:
@@ -191,6 +198,7 @@ class TorrentDownloadManager:
             Logger.write(2, "Removed " + str(removed) + ", skipped " + str(skipped) + ", retrieved " + str(len(result)) + ", queue length: " + str(len(self.queue)) + " took " + str(current_time() - start) + "ms")
 
         self.ticks += 1
+        self.last_get_result = amount, len(result)
         self.queue_lock.release()
         return result
 

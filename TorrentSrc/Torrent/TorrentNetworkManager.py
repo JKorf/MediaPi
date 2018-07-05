@@ -1,6 +1,7 @@
 import select
 from time import sleep
 
+from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from TorrentSrc.Util.Threading import CustomThread
 
@@ -11,8 +12,22 @@ class TorrentNetworkManager:
         self.running = True
 
         self.torrent = torrent
-        self.read_from = []
-        self.write_to = []
+
+        self.last_inputs = 0
+        self.last_outputs = 0
+
+        self.event_id_log = EventManager.register_event(EventType.Log, self.log)
+        self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
+
+    def log(self):
+        Logger.lock.acquire()
+        Logger.write(3, "-- TorrentNetworkManager state --")
+        Logger.write(3, "     Network manager: last run input sockets: " + str(self.last_inputs) + ", output: " + str(self.last_outputs))
+        Logger.lock.release()
+
+    def unregister(self):
+        EventManager.deregister_event(self.event_id_stopped)
+        EventManager.deregister_event(self.event_id_log)
 
     def start(self):
         Logger.write(2, "Starting network manager")
@@ -32,6 +47,8 @@ class TorrentNetworkManager:
                 input_sockets = [x.connection_manager.connection.socket for x in input_peers]
                 output_sockets = [x.connection_manager.connection.socket for x in output_peers]
 
+                self.last_inputs = len(input_sockets)
+                self.last_outputs = len(output_sockets)
 
                 # Check which ones can read/write
                 readable, writeable, exceptional = \
