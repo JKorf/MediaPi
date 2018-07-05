@@ -4,11 +4,10 @@ import os
 import subprocess
 import urllib.parse
 
-from TorrentSrc.Torrent.Torrent import Torrent
-
 os.chdir(os.path.dirname(__file__))
 
 from Database.Database import Database
+from TorrentSrc.Torrent.Torrent import Torrent
 from TorrentSrc.Streaming.StreamListener import StreamListener
 
 from DHT.DHTEngine import DHTEngine
@@ -41,6 +40,9 @@ class StartUp:
 
     def __init__(self):
         Logger.set_log_level(Settings.get_int("log_level"))
+        Logger.write(2, "Starting")
+        sys.excepthook = self.handle_exception
+
         Stats['start_time'].add(current_time())
         self.gui = None
         self.app = None
@@ -54,8 +56,6 @@ class StartUp:
 
         self.added_unfinished = False
         self.removed_unfinished = False
-
-        sys.excepthook = self.handle_exception
 
         if Settings.get_bool("show_gui"):
             self.start_gui()
@@ -87,12 +87,13 @@ class StartUp:
             Logger.write(3, "Master ip: " + str(Settings.get_string("master_ip")))
         Logger.write(3, "Pi: " + str(Settings.get_bool("raspberry")))
 
+        Logger.write(2, "Started")
         if self.gui is not None:
             self.gui.showFullScreen()
             sys.exit(self.app.exec_())
         else:
             while self.running:
-                time.sleep(1)
+                time.sleep(10)
 
     def start_webserver(self):
         self.server = TornadoServer(self)

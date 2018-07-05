@@ -49,9 +49,11 @@ class Database:
             self.connection.execute("INSERT INTO Version (version_number) VALUES(0)")
             self.database.commit()
 
-        if db_version != self.current_version:
-            Logger.write(2, "Detected database version " + str(db_version) + ", latest is " + str(self.current_version) + ". Upgrading")
+        while db_version != self.current_version:
+            Logger.write(2, "Database version " + str(db_version) + ", latest is " + str(self.current_version) + ". Upgrading")
             self.upgrade(db_version)
+            db_version+= 1
+
         self.disconnect()
 
     def upgrade(self, number):
