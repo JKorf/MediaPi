@@ -222,12 +222,10 @@ class StartUp:
                             if len(field) <= 2:
                                 continue
 
-                            Logger.write(2, "Field: " + field)
                             key_value = field.split("=")
                             if len(key_value) == 1:
                                 key_value = field.split(":")
 
-                            Logger.write(2, "WIFI " + str(key_value[0]) + ": " + str(key_value[1]))
                             if key_value[0] == "Quality":
                                 value_max = key_value[1].split("/")
                                 self.gui.set_wifi_quality(float(value_max[0]) / float(value_max[1]) * 100)
