@@ -46,6 +46,7 @@ class StreamManager:
         self.end_buffer_start_byte = 0
         self.start_buffer_end_byte = 0
         self.playing = False
+        self.last_request_end = 0
 
         self.max_in_buffer = Settings.get_int("max_bytes_ready_in_buffer")
         self.max_in_buffer_threshold = Settings.get_int("max_bytes_reached_threshold")
@@ -104,8 +105,16 @@ class StreamManager:
         self.seek_lock.acquire()
 
         if self.torrent.media_file.state == StreamFileState.Playing:
-            # normal flow, we are playing and should update the stream position
-            self.change_stream_position(start_byte)
+            if start_byte + length != self.last_request_end\
+                    and self.last_request_end != 0\
+                    and (start_byte > self.start_buffer_end_byte or start_byte + length < self.end_buffer_start_byte)\
+                    and start_byte - self.last_request_end != 0:
+                    Logger.write(2, "Last: " + str(self.last_request_end) + ", this: " + str(start_byte))
+                    # not a follow up request.. Probably seeking
+                    self.seek(start_byte)
+            else:
+                # normal flow, we are playing and should update the stream position
+                self.change_stream_position(start_byte)
 
         elif self.torrent.media_file.state == StreamFileState.MetaData:
             # Requests to search for metadata. Normally the first x bytes and last x bytes of the file. Don't change
@@ -119,6 +128,8 @@ class StreamManager:
                     self.seek(start_byte)
             else:
                 self.seek(start_byte)
+
+        self.last_request_end = start_byte + length
 
         data = self.buffer.get_data_for_stream(start_byte, length)
         self.seek_lock.release()
