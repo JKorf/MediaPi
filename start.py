@@ -4,6 +4,8 @@ import os
 import subprocess
 import urllib.parse
 
+from TorrentSrc.Util.Enums import StreamFileState
+
 os.chdir(os.path.dirname(__file__))
 
 from Database.Database import Database
@@ -267,6 +269,10 @@ class StartUp:
         EventManager.register_event(EventType.NewDHTNode, self.new_dht_node)
 
     def start_torrent(self, url):
+        if self.torrent is not None:
+            Logger.write(2, "Can't start new torrent, still torrent active")
+            return
+
         success, torrent = Torrent.create_torrent(1, url)
         if success:
             self.torrent = torrent
@@ -297,6 +303,7 @@ class StartUp:
             if self.torrent is not None:
                 self.torrent.stop()
                 Logger.write(2, "Ended " + self.torrent.media_file.name)
+                self.torrent = None
             if self.player.type != "YouTube":
                 thread = CustomThread(self.stop_player, "Stopping player")
                 thread.start()
@@ -332,6 +339,7 @@ class StartUp:
 
     def seek(self, pos):
         self.player.set_time(pos)
+        self.torrent.media_file.set_state(StreamFileState.Seeking)
 
     def set_subtitle_file(self, file):
         self.player.set_subtitle_file(file)
@@ -352,6 +360,7 @@ class StartUp:
         if self.torrent is not None:
             Logger.write(3, "Stopping torrent")
             self.torrent.stop()
+            self.torrent = None
         if self.player is not None:
             Logger.write(3, "Stopping player")
             self.player.stop()

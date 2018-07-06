@@ -88,3 +88,9 @@ class ReceiveState:
 class DownloadMode:
     Full = 0
     ImportantOnly = 1
+
+
+class StreamFileState:
+    MetaData = 1,
+    Playing = 2,
+    Seeking = 3

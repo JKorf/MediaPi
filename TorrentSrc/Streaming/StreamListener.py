@@ -39,11 +39,6 @@ class StreamListener:
         self.bytes_send = 0
         self.id = 0
         self.event_id_log = EventManager.register_event(EventType.Log, self.log_requests)
-        self.event_id_seek = EventManager.register_event(EventType.Seek, self.seek)
-
-    def seek(self, pos):
-        for (id, socket, status) in self.requests:
-            socket.close()
 
     def log_requests(self):
         Logger.lock.acquire()
@@ -249,7 +244,6 @@ class StreamListener:
 
     def stop(self):
         EventManager.deregister_event(self.event_id_log)
-        EventManager.deregister_event(self.event_id_seek)
 
         self.running = False
         if self.server is not None:

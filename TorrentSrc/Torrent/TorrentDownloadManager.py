@@ -4,7 +4,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Util import current_time
 from TorrentSrc.Torrent.Prioritizer import StreamPrioritizer
-from TorrentSrc.Util.Enums import TorrentState, PeerSpeed, DownloadMode
+from TorrentSrc.Util.Enums import TorrentState, PeerSpeed, DownloadMode, StreamFileState
 
 
 class TorrentDownloadManager:
@@ -15,8 +15,7 @@ class TorrentDownloadManager:
 
         self.init = False
         self.prio = False
-        self.reprio_after_media_meta_done = False
-        self.reprio_after_media_meta_request = False
+        self.reprio_after_metadata = False
         self.last_get_result = 0, 0
 
         self.queue = []
@@ -76,15 +75,9 @@ class TorrentDownloadManager:
 
         start_time = current_time()
 
-        if not self.reprio_after_media_meta_request and self.torrent.media_metadata_requested:
-            # Do a full reprioritize after media metadata is requested
-            self.reprio_after_media_meta_request = True
-            full = True
-            Logger.write(2, "Doing full reprioritize after media metadata request")
-
-        if not self.reprio_after_media_meta_done and self.torrent.media_metadata_done:
-            # Do a full reprioritize after media metadata is done
-            self.reprio_after_media_meta_done = True
+        if not self.reprio_after_metadata and self.torrent.media_file.state == StreamFileState.Playing:
+            # Do a full reprioritize after metadata is done
+            self.reprio_after_metadata = True
             full = True
             Logger.write(2, "Doing full reprioritize after media metadata done")
 
@@ -246,21 +239,25 @@ class TorrentDownloadManager:
             # Seeking back
             Logger.write(2, "Seeking backwards")
             blocks_to_redo = []
+            any_redo = False
             for piece in self.torrent.data_manager.pieces[new_piece_index: old_index + 1]:
-                if not piece.persistent or not piece.done:
+                if not piece.persistent:
                     piece.done = False
                     for block in piece.blocks:
                         self.torrent.left += block.length
                         block.done = False
                         blocks_to_redo.append(block)
+                        any_redo = True
 
             self.queue = [x for x in self.queue if x.block not in blocks_to_redo]
 
             for block in blocks_to_redo:
                 self.queue.append(BlockDownload(block))
 
-        self.prio = False
+        if self.torrent.state == TorrentState.Done:
+            self.torrent.state = TorrentState.Downloading
 
+        self.prio = False
         self.update_priority(True, False)
 
         self.queue_lock.release()

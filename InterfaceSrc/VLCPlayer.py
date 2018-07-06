@@ -34,6 +34,7 @@ class VLCPlayer:
         self.state_change_action = None
         self.last_time = 0
         self.trying_subitems = False
+        self.buffer_start_time = 0
 
         thread = CustomThread(self.watch_time_change, "VLC State watcher")
         thread.start()
@@ -106,6 +107,9 @@ class VLCPlayer:
     def set_time(self, pos):
         self.__player.set_time(pos)
 
+        self.buffer_start_time = self.last_time
+        self.change_state(PlayerState.Buffering)
+
     def set_position(self, pos):
         self.__player.set_position(pos)
 
@@ -174,36 +178,26 @@ class VLCPlayer:
 
     def state_change_opening(self, event):
         if self.state != PlayerState.Opening:
-            old = self.state
-            self.state = PlayerState.Opening
-            self.state_change_action(old, self.state)
+            self.change_state(PlayerState.Opening)
 
     def state_change_playing(self, event):
         if self.state != PlayerState.Playing:
-            old = self.state
-            self.state = PlayerState.Playing
-            self.state_change_action(old, self.state)
+            self.change_state(PlayerState.Playing)
 
     def state_change_paused(self, event):
         if self.state != PlayerState.Paused:
-            old = self.state
-            self.state = PlayerState.Paused
-            self.state_change_action(old, self.state)
+            self.change_state(PlayerState.Paused)
 
     def state_change_stopped(self, event):
         if self.state != PlayerState.Nothing:
-            old = self.state
-            self.state = PlayerState.Nothing
-            self.state_change_action(old, self.state)
+            self.change_state(PlayerState.Nothing)
 
     def state_change_end_reached(self, event):
         if self.state != PlayerState.Ended:
             if not self.trying_subitems:
                 thread = CustomThread(self.stop, "Stopping player")
                 thread.start()
-                old = self.state
-                self.state = PlayerState.Ended
-                self.state_change_action(old, self.state)
+                self.change_state(PlayerState.Ended)
 
     def on_error(self, event):
         self.trying_subitems = True
@@ -231,21 +225,17 @@ class VLCPlayer:
 
     def watch_time_change(self):
         while True:
-            playing = True
-            if current_time() - self.last_time > 5000:
-                playing = False
 
-            if self.state == PlayerState.Playing and not playing:
-                    self.state = PlayerState.Buffering
-                    self.state_change_action(PlayerState.Playing, self.state)
-                    Logger.write(2, "not playing")
-
-            elif self.state == PlayerState.Buffering and playing:
-                    self.state = PlayerState.Playing
-                    self.state_change_action(PlayerState.Buffering, self.state)
-                    Logger.write(2, "playing")
+            if self.state == PlayerState.Buffering:
+                if self.last_time - self.buffer_start_time > 5000:
+                    self.change_state(PlayerState.Playing)
 
             time.sleep(1)
+
+    def change_state(self, new):
+        old = self.state
+        self.state = new
+        self.state_change_action(old, self.state)
 
 
 class MediaItem:

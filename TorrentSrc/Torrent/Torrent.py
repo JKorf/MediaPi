@@ -22,7 +22,7 @@ from TorrentSrc.Tracker.Tracker import TrackerManager
 from TorrentSrc.Util import Bencode
 from TorrentSrc.Util.Bencode import BTFailure
 from TorrentSrc.Util.Counter import Counter
-from TorrentSrc.Util.Enums import TorrentState
+from TorrentSrc.Util.Enums import TorrentState, StreamFileState
 from TorrentSrc.Util.Util import headers
 
 
@@ -116,9 +116,6 @@ class Torrent:
         self.__lock = Lock()
 
         self.media_file = None
-        self.media_metadata_requested = False
-        self.media_metadata_start_byte = 0
-        self.media_metadata_done = False
 
         self.subtitles = []
         self.stream_file_hash = None
@@ -139,8 +136,8 @@ class Torrent:
         self.network_manager = TorrentNetworkManager(self)
 
     def player_change(self, old, new):
-        if new == PlayerState.Playing:
-            self.media_metadata_done = True
+        if old ==PlayerState.Opening and new == PlayerState.Playing:
+            self.media_file.set_state(StreamFileState.Playing)
 
     @classmethod
     def create_torrent(cls, id, url):
@@ -253,6 +250,7 @@ class Torrent:
             # Multifile
             files = info_dict[b'files']
             total_length = 0
+            temp_media = None
             for file in files:
                 file_length = file[b'length']
                 path = base_folder + self.name
@@ -265,17 +263,18 @@ class Torrent:
                 fi = TorrentDownloadFile(file_length, total_length, last_path, path)
                 self.files.append(fi)
                 ext = os.path.splitext(path)[1]
-                if (ext == ".mp4" or ext == ".mkv" or ext == ".avi") and (self.media_file is None or self.media_file.length < file_length):
-                    self.media_file = fi
+                if (ext == ".mp4" or ext == ".mkv" or ext == ".avi") and (temp_media is None or temp_media.length < file_length):
+                    temp_media = fi
                 if ext == ".srt":
                     self.subtitles.append(fi)
                     fi.path = base_folder + "subs/" + last_path + ext
                 total_length += file_length
                 Logger.write(2, "File: " + fi.path)
+            self.media_file = StreamFile(temp_media.length, temp_media.start_byte, temp_media.name, temp_media.path)
         else:
             # Singlefile
             total_length = info_dict[b'length']
-            file = TorrentDownloadFile(total_length, 0, self.name, base_folder + self.name)
+            file = StreamFile(total_length, 0, self.name, base_folder + self.name)
             self.media_file = file
             self.files.append(file)
 
@@ -428,4 +427,25 @@ class TorrentDownloadFile:
 
         self.__lock.release()
         return can_write
+
+
+class StreamFile(TorrentDownloadFile):
+
+    def __init__(self, length, start_byte, name, path):
+        super().__init__(length, start_byte, name, path)
+
+        self.state = StreamFileState.MetaData
+
+    def set_state(self, new_state):
+        if new_state != self.state:
+            Logger.write(2, "Stream file state changed from " + self.state_name(self.state) + " to " + self.state_name(new_state))
+            self.state = new_state
+
+    def state_name(self, value):
+        if value == StreamFileState.MetaData:
+            return "MetaData"
+        if value == StreamFileState.Playing:
+            return "Playing"
+        if value == StreamFileState.Seeking:
+            return "Seeking"
 
