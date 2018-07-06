@@ -53,6 +53,11 @@ class StreamListener:
         self.thread.start()
 
     def handle_request(self, socket):
+        if len(self.requests) > 0:
+            Logger.write(2, "New request, closing others")
+            for (id, s, status) in self.requests:
+                s.close()
+
         self.add_socket(socket, "")
         Logger.write(2, "New request, now " + str(len(self.requests)))
 

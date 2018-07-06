@@ -30,6 +30,10 @@ class TorrentPieceHashValidator:
 
     def validate_piece(self, piece):
         expected_hash = self.hashes[piece.index]
-        actual_hash = hashlib.sha1(piece.get_data()).digest()
+        data = piece.get_data()
+        if not data:
+            return False
+
+        actual_hash = hashlib.sha1(data).digest()
         return expected_hash[0] == actual_hash[0] and expected_hash[8] == actual_hash[8] and expected_hash[19] == \
                                                                                              actual_hash[19]

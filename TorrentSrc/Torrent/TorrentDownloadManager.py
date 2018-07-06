@@ -54,7 +54,7 @@ class TorrentDownloadManager:
 
         if not self.init:
             self.init = True
-            self.initialize()
+            self.requeue(0)
 
         return True
 
@@ -108,19 +108,27 @@ class TorrentDownloadManager:
 
         return True
 
-    def initialize(self):
-        Logger.write(2, "Starting download queue init")
+    def requeue(self, start_position):
+        Logger.write(2, "Starting download queue queuing")
         start_time = current_time()
+        left = 0
         for piece in self.torrent.data_manager.pieces:
-            if piece.start_byte > self.torrent.media_file.end_byte or piece.end_byte < self.torrent.media_file.start_byte:
+            if piece.start_byte > self.torrent.media_file.end_byte or piece.index < start_position or piece.end_byte < self.torrent.media_file.start_byte:
                 continue
+
+            if piece.persistent and piece.done:
+                continue
+
+            piece.reset()
             for block in piece.blocks:
                 self.queue.append(BlockDownload(block))
+                left += block.length
 
         self.slow_peer_block_offset = 15000000 // self.torrent.data_manager.block_size # TODO Setting
-        Logger.write(2, "Initial queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
+        Logger.write(2, "Queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
+        self.torrent.left = left
 
-        self.update_priority(True)
+        self.update_priority(True, False)
 
     def get_blocks_to_download(self, peer, amount):
         if self.torrent.state != TorrentState.Downloading:
@@ -222,37 +230,8 @@ class TorrentDownloadManager:
         Logger.write(2, "Seeking " + str(old_index) + " to " + str(new_piece_index) + ", now " + str(len(self.queue)) + " items")
         self.queue_lock.acquire()
 
-        if new_piece_index > old_index:
-            # Seeking forwards
-            Logger.write(2, "Seeking forwards")
-            to_remove = []
-            for block_download in self.queue:
-                if block_download.block.piece_index < new_piece_index:
-                    to_remove.append(block_download)
-
-            for block_download in to_remove:
-                self.queue.remove(block_download)
-                if not block_download.block.done:
-                    self.torrent.left -= block_download.block.length
-
-        else:
-            # Seeking back
-            Logger.write(2, "Seeking backwards")
-            blocks_to_redo = []
-            any_redo = False
-            for piece in self.torrent.data_manager.pieces[new_piece_index: old_index + 1]:
-                if not piece.persistent:
-                    piece.done = False
-                    for block in piece.blocks:
-                        self.torrent.left += block.length
-                        block.done = False
-                        blocks_to_redo.append(block)
-                        any_redo = True
-
-            self.queue = [x for x in self.queue if x.block not in blocks_to_redo]
-
-            for block in blocks_to_redo:
-                self.queue.append(BlockDownload(block))
+        self.queue = []
+        self.requeue(new_piece_index)
 
         if self.torrent.state == TorrentState.Done:
             self.torrent.state = TorrentState.Downloading

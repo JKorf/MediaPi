@@ -114,6 +114,9 @@ class Piece:
             self.done = True
 
     def get_data(self):
+        if not self.done:
+            return None
+
         data = bytearray()
         for block in self.blocks:
             data.extend(block.data)

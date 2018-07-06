@@ -113,6 +113,9 @@ class TorrentDataManager:
         self.torrent.output_manager.add_piece_to_output(piece)
 
     def piece_hash_invalid(self, piece):
+        if not piece.done:
+            return
+
         Logger.write(2, "Piece " + str(piece.index) + " has invalid hash, re-downloading it")
         piece.reset()
         self.torrent.download_manager.redownload_piece(piece)

@@ -140,6 +140,7 @@ class StreamManager:
         self.change_stream_position(start_byte)
         self.torrent.download_manager.seek(old_stream_position, self.stream_position_piece_index)
         self.torrent.media_file.set_state(StreamFileState.Playing)
+        self.buffer.seek(self.stream_position_piece_index)
 
     def change_stream_position(self, start_byte):
         new_index = int(math.floor(start_byte / self.torrent.piece_length))
@@ -175,6 +176,12 @@ class StreamBuffer:
         self.end_piece = math.ceil(
             self.stream_manager.torrent.media_file.end_byte / self.stream_manager.torrent.piece_length)
 
+    def seek(self, new_index):
+        self.data_ready = [x for x in self.data_ready
+                           if x.persistent or
+                           (x.index >= new_index
+                           and (x.index - new_index) * self.piece_length < 100000000)]
+
     def get_consecutive_bytes_in_buffer(self, start_from):
         self.update_consecutive()
         return max((self.last_consecutive_piece - start_from) * self.piece_length, 0)
@@ -206,6 +213,9 @@ class StreamBuffer:
                 return None
 
             data = current_piece.get_data()
+            if data is None:
+                return None
+
             can_read_from_piece = current_piece.start_byte + current_piece.length - current_byte_to_search
             offset = current_byte_to_search - current_piece.start_byte
             going_to_copy = min(can_read_from_piece, length - current_read)
