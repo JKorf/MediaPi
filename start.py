@@ -213,7 +213,7 @@ class StartUp:
                 proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
                 out, err = proc.communicate()
                 cells = out.split("Cell ")
-                cell_lines = [x for x in cells if network_ssid in x]
+                cell_lines = [x for x in cells if network_ssid in x][0]
                 for line in cell_lines.split("\n"):
                     if "Quality" in line:
                         fields = line.split("  ")
