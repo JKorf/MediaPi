@@ -22,7 +22,7 @@ from TorrentSrc.Tracker.Tracker import TrackerManager
 from TorrentSrc.Util import Bencode
 from TorrentSrc.Util.Bencode import BTFailure
 from TorrentSrc.Util.Counter import Counter
-from TorrentSrc.Util.Enums import TorrentState, OutputMode
+from TorrentSrc.Util.Enums import TorrentState
 from TorrentSrc.Util.Util import headers
 
 
@@ -44,32 +44,22 @@ class Torrent:
 
     @property
     def bytes_ready_in_buffer(self):
-        if self.output_mode == OutputMode.File:
-            return 0
         return self.output_manager.stream_manager.consecutive_pieces_total_length
 
     @property
     def bytes_total_in_buffer(self):
-        if self.output_mode == OutputMode.File:
-            return 0
         return self.output_manager.stream_manager.bytes_in_buffer
 
     @property
     def stream_position(self):
-        if self.output_mode == OutputMode.File:
-            return 0
         return self.output_manager.stream_manager.stream_position_piece_index
 
     @property
     def stream_buffer_position(self):
-        if self.output_mode == OutputMode.File:
-            return 0
         return self.output_manager.stream_manager.consecutive_pieces_last_index
 
     @property
     def last_byte_requested(self):
-        if self.output_mode == OutputMode.File:
-            return 0
         return self.output_manager.stream_manager.last_request
 
     @property
@@ -78,8 +68,6 @@ class Torrent:
 
     @property
     def bytes_streamed(self):
-        if self.output_mode == OutputMode.File:
-            return 0
         return self.output_manager.stream_manager.listener.bytes_send
 
     @property
@@ -111,7 +99,7 @@ class Torrent:
             return True
         return False
 
-    def __init__(self, id, uri, output_mode):
+    def __init__(self, id, uri):
         self.name = None
         self.id = id
         self.uri = uri
@@ -125,7 +113,6 @@ class Torrent:
         self.info_hash = None
         self.files = []
         self.state = TorrentState.Initial
-        self.output_mode = output_mode
         self.__lock = Lock()
 
         self.media_file = None
@@ -156,17 +143,17 @@ class Torrent:
             self.media_metadata_done = True
 
     @classmethod
-    def create_torrent(cls, id, url, output_mode):
+    def create_torrent(cls, id, url):
         if url.startswith("magnet:"):
-            return Torrent.from_magnet(id, url, output_mode)
+            return Torrent.from_magnet(id, url)
         elif url.startswith("http://"):
-            return Torrent.from_torrent_url(id, url, output_mode)
+            return Torrent.from_torrent_url(id, url)
         else:
-            return Torrent.from_file(id, url, output_mode)
+            return Torrent.from_file(id, url)
 
     @classmethod
-    def from_torrent_url(cls, id, uri, output_mode):
-        torrent = Torrent(id, uri, output_mode)
+    def from_torrent_url(cls, id, uri):
+        torrent = Torrent(id, uri)
         torrent.from_magnet = False
         try:
             request = urllib.request.Request(urllib.parse.unquote_plus(uri), None, headers)
@@ -192,8 +179,8 @@ class Torrent:
         return True, torrent
 
     @classmethod
-    def from_file(cls, id, file_path, output_mode):
-        torrent = Torrent(id, file_path, output_mode)
+    def from_file(cls, id, file_path):
+        torrent = Torrent(id, file_path)
         torrent.from_magnet = False
         try:
             file = open(file_path, 'rb')
@@ -218,8 +205,8 @@ class Torrent:
         return True, torrent
 
     @classmethod
-    def from_magnet(cls, id, uri, output_mode):
-        torrent = Torrent(id, uri, output_mode)
+    def from_magnet(cls, id, uri):
+        torrent = Torrent(id, uri)
         torrent.from_magnet = True
         if not torrent.parse_magnet_uri(uri):
             return False, torrent
@@ -244,8 +231,7 @@ class Torrent:
         self.engine.queue_repeating_work_item("counter", 1000, self.download_counter.update)
         self.engine.queue_repeating_work_item("data_manager", 200, self.data_manager.update_write_blocks)
         self.engine.queue_repeating_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
-        if self.output_mode == OutputMode.Stream:
-            self.engine.queue_repeating_work_item("stream_manager", 1000, self.output_manager.stream_manager.update)
+        self.engine.queue_repeating_work_item("stream_manager", 1000, self.output_manager.stream_manager.update)
 
         self.engine.start()
         self.network_manager.start()
@@ -261,7 +247,6 @@ class Torrent:
 
     def parse_info_dictionary(self, info_dict):
         self.name = info_dict[b'name'].decode('ascii')
-        to_disk = self.output_mode == OutputMode.File
         base_folder = Settings.get_string("base_folder")
 
         if b'files' in info_dict:
@@ -277,7 +262,7 @@ class Torrent:
                     path += "\\" + path_part.decode('ascii')
                     last_path = path_part.decode('ascii')
 
-                fi = TorrentDownloadFile(file_length, total_length, last_path, path, to_disk)
+                fi = TorrentDownloadFile(file_length, total_length, last_path, path)
                 self.files.append(fi)
                 ext = os.path.splitext(path)[1]
                 if (ext == ".mp4" or ext == ".mkv" or ext == ".avi") and (self.media_file is None or self.media_file.length < file_length):
@@ -290,7 +275,7 @@ class Torrent:
         else:
             # Singlefile
             total_length = info_dict[b'length']
-            file = TorrentDownloadFile(total_length, 0, self.name, base_folder + self.name, to_disk)
+            file = TorrentDownloadFile(total_length, 0, self.name, base_folder + self.name)
             self.media_file = file
             self.files.append(file)
 
@@ -396,7 +381,7 @@ class InfoHash:
 
 class TorrentDownloadFile:
 
-    def __init__(self, length, start_byte, name, path, output_to_disk):
+    def __init__(self, length, start_byte, name, path):
         self.length = length
         self.start_byte = start_byte
         self.end_byte = start_byte + length
@@ -405,11 +390,6 @@ class TorrentDownloadFile:
         self.stream = None
         self.done = False
         self.__lock = Lock()
-
-        if output_to_disk:
-            directory = os.path.dirname(self.path)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
 
     def open(self):
         if self.stream is None:

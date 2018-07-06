@@ -29,6 +29,6 @@
         sdram_schmoo=0x02000020
         dtparam=sd_overclock=100
 
-    Dropbox for uploading log files
-
     Seeken nog steeds niet goed..
+
+    Geen buffering state atm

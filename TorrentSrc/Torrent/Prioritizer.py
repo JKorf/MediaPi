@@ -62,14 +62,3 @@ class StreamPrioritizer:
         dif_bytes = dif*self.torrent.piece_length
         return max(10, 100 - (dif_bytes / 1000 / 1000))
 
-
-class FilePrioritizer:
-
-    def __init__(self, torrent):
-        self.torrent = torrent
-
-    def prioritize_piece_index(self, piece_index):
-        if self.torrent.end_game:
-            return 100
-
-        return 90

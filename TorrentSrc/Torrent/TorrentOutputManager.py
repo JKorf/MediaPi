@@ -4,7 +4,6 @@ from threading import Lock
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from TorrentSrc.Streaming.StreamManager import StreamManager
-from TorrentSrc.Util.Enums import OutputMode
 
 
 class TorrentOutputManager:
@@ -40,11 +39,7 @@ class TorrentOutputManager:
 
         for item in to_write:
             self.torrent.peer_manager.piece_done(item.index)
-
-            if self.torrent.output_mode == OutputMode.Stream:
-                self.stream_manager.write_piece(item)
-            else:
-                self.file_writer.write_piece(item)
+            self.stream_manager.write_piece(item)
 
         self.check_subtitles()
 
@@ -63,9 +58,6 @@ class TorrentOutputManager:
                 EventManager.throw_event(EventType.SubtitleDownloaded, [sub.path])
 
     def check_stream_file_hash(self):
-        if self.torrent.output_mode == OutputMode.File:
-            return
-
         if self.torrent.stream_file_hash is not None:
             return
 

@@ -3,7 +3,6 @@ import urllib.parse
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Util import to_JSON
-from TorrentSrc.Util.Enums import OutputMode
 from Web.Server.Models import TorrentDetailModel
 
 
@@ -13,7 +12,7 @@ class TorrentController:
     def download(url, title):
         Logger.write(2, "Download torrent: " + urllib.parse.unquote(title))
 
-        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.File])
+        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url)])
 
     @staticmethod
     def get_torrents(start):

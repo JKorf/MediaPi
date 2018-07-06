@@ -7,7 +7,6 @@ from tornado import gen
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from TorrentSrc.Util.Enums import OutputMode
 from Web.Server.Providers.ShowProvider import ShowProvider
 
 
@@ -48,5 +47,5 @@ class ShowController:
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(1)
-        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.Stream])
+        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url)])
         EventManager.throw_event(EventType.StartPlayer, ["Show", urllib.parse.unquote(title), ShowController.server_uri, urllib.parse.unquote(img)])

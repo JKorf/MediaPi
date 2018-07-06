@@ -266,8 +266,8 @@ class StartUp:
         EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
         EventManager.register_event(EventType.NewDHTNode, self.new_dht_node)
 
-    def start_torrent(self, url, output_mode):
-        success, torrent = Torrent.create_torrent(1, url, output_mode)
+    def start_torrent(self, url):
+        success, torrent = Torrent.create_torrent(1, url)
         if success:
             self.torrent = torrent
             torrent.start()

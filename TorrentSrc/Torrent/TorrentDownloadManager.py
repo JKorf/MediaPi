@@ -3,18 +3,15 @@ from threading import Lock
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Util import current_time
-from TorrentSrc.Torrent.Prioritizer import StreamPrioritizer, FilePrioritizer
-from TorrentSrc.Util.Enums import OutputMode, TorrentState, PeerSpeed, DownloadMode
+from TorrentSrc.Torrent.Prioritizer import StreamPrioritizer
+from TorrentSrc.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 
 
 class TorrentDownloadManager:
 
     def __init__(self, torrent):
         self.torrent = torrent
-        if self.torrent.output_mode == OutputMode.File:
-            self.prioritizer = FilePrioritizer(self.torrent)
-        else:
-            self.prioritizer = StreamPrioritizer(self.torrent)
+        self.prioritizer = StreamPrioritizer(self.torrent)
 
         self.init = False
         self.prio = False

@@ -7,7 +7,7 @@ from Shared.Stats import Stats
 from TorrentSrc.Data import Bitfield, Piece
 from TorrentSrc.Torrent.TorrentPieceHashValidator import TorrentPieceHashValidator
 
-from TorrentSrc.Util.Enums import TorrentState, OutputMode
+from TorrentSrc.Util.Enums import TorrentState
 
 
 class TorrentDataManager:
@@ -61,10 +61,7 @@ class TorrentDataManager:
         stream_end_buffer = Settings.get_int("stream_initial_end_buffer")
 
         for index in range(self.total_pieces):
-            if self.torrent.output_mode == OutputMode.Stream:
-                persistent = current_byte < stream_start_buffer or current_byte > self.torrent.media_file.end_byte - stream_end_buffer
-            else:
-                persistent = False
+            persistent = current_byte < stream_start_buffer or current_byte > self.torrent.media_file.end_byte - stream_end_buffer
 
             if current_byte + self.piece_length > self.torrent.total_size:
                 # last piece, is not full length

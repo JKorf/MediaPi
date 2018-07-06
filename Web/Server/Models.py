@@ -2,7 +2,6 @@ import os
 
 from os.path import isfile, join
 
-from TorrentSrc.Util.Enums import OutputMode
 from TorrentSrc.Util.Util import write_size
 
 
@@ -162,7 +161,7 @@ class TorrentDetailModel:
         model.left = write_size(torrent.left)
         model.speed = write_size(torrent.download_counter.value)
 
-        model.streaming = torrent.output_mode == OutputMode.Stream
+        model.streaming = True
         model.stream_buffer_ready = write_size(torrent.bytes_ready_in_buffer)
         model.stream_buffer_total = write_size(torrent.bytes_total_in_buffer)
         model.streamed = write_size(torrent.bytes_streamed)

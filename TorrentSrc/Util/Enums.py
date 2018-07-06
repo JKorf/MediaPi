@@ -6,11 +6,6 @@ class TorrentState:
     Done = 5
 
 
-class OutputMode:
-    Stream = 1
-    File = 2
-
-
 class PeerMessageType:
     Choke = 0
     Unchoke = 1

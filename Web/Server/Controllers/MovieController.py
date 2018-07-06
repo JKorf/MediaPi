@@ -8,7 +8,6 @@ from tornado import gen
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from TorrentSrc.Util.Enums import OutputMode
 from Web.Server.Providers.Movies.PopcornMovieProvider import PopcornMovieProvider
 
 
@@ -51,7 +50,7 @@ class MovieController:
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
-        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.Stream])
+        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url)])
         EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, urllib.parse.unquote(img)])
 
 
@@ -63,7 +62,7 @@ class MovieController:
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(1)
         if url.endswith('.torrent') or url.startswith('magnet:'):
-            EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), OutputMode.Stream])
+            EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url)])
             EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri])
         else:
             EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), urllib.parse.unquote_plus(url)])
@@ -76,7 +75,7 @@ class MovieController:
         if type == "torrent":
             EventManager.throw_event(EventType.StopTorrent, [])
             time.sleep(0.2)
-            EventManager.throw_event(EventType.StartTorrent, [url, OutputMode.Stream])
+            EventManager.throw_event(EventType.StartTorrent, [url])
             EventManager.throw_event(EventType.StartPlayer,
                                      ["Movie",
                                       urllib.parse.unquote(title),
