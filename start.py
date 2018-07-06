@@ -201,11 +201,18 @@ class StartUp:
             return
 
         rasp = Settings.get_bool("raspberry")
+        if rasp:
+            proc = subprocess.Popen(["iwgetid"], stdout=subprocess.PIPE, universal_newlines=True)
+            out, err = proc.communicate()
+            network_ssid = out.split(":")[1]
+
         while self.running:
             if rasp:
                 proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
                 out, err = proc.communicate()
-                for line in out.split("\n"):
+                cells = out.split("Cell ")
+                cell_lines = [x for x in cells if network_ssid in x]
+                for line in cell_lines.split("\n"):
                     if "Quality" in line:
                         fields = line.split("  ")
                         for field in fields:
@@ -220,7 +227,8 @@ class StartUp:
 
                             Logger.write(2, "WIFI " + str(key_value[0]) + ": " + str(key_value[1]))
                             if key_value[0] == "Quality":
-                                self.gui.set_wifi_quality(float(key_value[1]))
+                                value_max = key_value[1].split("/")
+                                self.gui.set_wifi_quality(float(value_max[0]) / float(value_max[1]) * 100)
             else:
                 proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
                 out, err = proc.communicate()
