@@ -337,7 +337,8 @@ class StartUp:
 
     def seek(self, pos):
         self.player.set_time(pos)
-        self.torrent.media_file.set_state(StreamFileState.Seeking)
+        if self.torrent and self.torrent.media_file:
+            self.torrent.media_file.set_state(StreamFileState.Seeking)
 
     def set_subtitle_file(self, file):
         self.player.set_subtitle_file(file)
