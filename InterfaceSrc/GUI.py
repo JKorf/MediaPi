@@ -18,8 +18,7 @@ from Shared.Settings import Settings
 class Communicate(QtCore.QObject):
 
     set_none = QtCore.pyqtSignal()
-    set_home = QtCore.pyqtSignal()
-    set_radio = QtCore.pyqtSignal([str])
+    set_home = QtCore.pyqtSignal([str])
     set_buffering = QtCore.pyqtSignal()
     set_opening = QtCore.pyqtSignal()
 
@@ -40,16 +39,15 @@ class GUI(QtGui.QMainWindow):
 
         self.quality = 0
         self.address = "-"
+        self.currently_playing = None
 
         self.general_info_panel = None
         self.loading_panel = None
-        self.radio_panel = None
 
         self.com = Communicate()
 
         self.com.set_none.connect(self.set_none)
         self.com.set_home.connect(self.set_home)
-        self.com.set_radio.connect(self.set_radio)
         self.com.set_opening.connect(self.set_opening)
 
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
@@ -59,9 +57,8 @@ class GUI(QtGui.QMainWindow):
 
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
 
-        self.general_info_panel = GeneralInfoPanel(self, 10, 10, 260, 130)
+        self.general_info_panel = GeneralInfoPanel(self, 10, 10, 260, 160)
         self.loading_panel = LoadingPanel(self, self.width / 2 - 150, self.height / 2 - 100, 300, 200)
-        self.radio_panel = RadioPanel(self, self.width / 2 - 60, self.height / 2 - 60, 120, 120)
         self.time_panel = TimePanel(self, self.width - 200, self.height - 88, 190, 78)
 
         self.background_timer = QtCore.QTimer(self)
@@ -75,7 +72,7 @@ class GUI(QtGui.QMainWindow):
         self.update_timer.start()
 
         self.setCursor(Qt.BlankCursor)
-        self.set_home()
+        self.set_home(None)
 
     @classmethod
     def new_gui(cls, start):
@@ -87,12 +84,12 @@ class GUI(QtGui.QMainWindow):
         if new_state == PlayerState.Opening:
             self.com.set_opening.emit()
         elif new_state == PlayerState.Playing:
-            if self.start.player.type == 'Radio':
-                self.com.set_radio.emit(self.start.player.img)
-            else:
+            if self.start.player.type != 'Radio':
                 self.com.set_none.emit()
+            else:
+                self.com.set_home.emit(self.start.player.title)
         elif new_state == PlayerState.Nothing:
-            self.com.set_home.emit()
+            self.com.set_home.emit(None)
         elif new_state == PlayerState.Buffering:
             self.com.set_buffering.emit()
         elif new_state == PlayerState.Paused:
@@ -115,24 +112,24 @@ class GUI(QtGui.QMainWindow):
         if self.background_index > self.background_count:
             self.background_index = 1
 
-    def set_home(self):
+    def set_home(self, currently_playing):
         self.hide_background = False
         self.update_buffering = False
 
+        self.currently_playing = currently_playing
         self.general_info_panel.set_address(self.address)
+        self.general_info_panel.set_currently_playing(self.currently_playing)
         self.general_info_panel.show()
         self.time_panel.show()
-        self.radio_panel.hide()
         self.loading_panel.hide()
-
-        self.cycle_background()
+        if not currently_playing:
+            self.cycle_background()
 
     def set_opening(self):
         self.update_buffering = True
         self.loading_panel.show()
         self.general_info_panel.show()
         self.time_panel.show()
-        self.radio_panel.hide()
         self.update_buffer_info()
 
     def set_none(self):
@@ -143,18 +140,8 @@ class GUI(QtGui.QMainWindow):
                                                                      QtCore.Qt.IgnoreAspectRatio)))
         self.setPalette(self.palette)
         self.general_info_panel.hide()
-        self.radio_panel.hide()
         self.time_panel.hide()
         self.loading_panel.hide()
-
-    def set_radio(self, image):
-        self.update_buffering = False
-
-        self.loading_panel.hide()
-        self.radio_panel.set_image(image)
-        self.radio_panel.show()
-        self.time_panel.show()
-        self.general_info_panel.show()
 
     def close(self):
         self.background_timer.stop()
@@ -249,26 +236,39 @@ class GeneralInfoPanel(InfoWidget):
         self.wifi_strength_bar = PercentageBar(self, 150, 102, 100, 12)
         self.wifi_strength_bar.show()
 
+        self.playing_line = QtGui.QFrame(self)
+        self.playing_line.setGeometry(10, 126, width - 20, 1)
+        self.playing_line.setFrameShape(QtGui.QFrame.HLine)
+        self.playing_line.setFrameShadow(QtGui.QFrame.Sunken)
+        self.playing_line.setStyleSheet("border: 1px solid #777;")
+
+        self.playing_lbl = self.create_label(13, width, "Now playing")
+        self.playing_lbl.move(10, 130)
+        self.playing_val = self.create_label(13, width - 20, "")
+        self.playing_val.move(10, 130)
+        self.playing_val.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+
     def set_address(self, address):
         self.ip_val.setText(address)
 
     def set_wifi_quality(self, quality):
         self.wifi_strength_bar.set_value(quality)
 
+    def set_currently_playing(self, playing):
+        if self.playing_val.isHidden() and not playing:
+            return
 
-class RadioPanel(InfoWidget):
-    def __init__(self, parent, x, y, width, height):
-        InfoWidget.__init__(self, parent, x, y, width, height)
-
-        self.img = QtGui.QLabel(self)
-        self.img.setAlignment(QtCore.Qt.AlignCenter)
-        self.img.move(width / 2 - 50, height / 2 - 50)
-
-    def set_image(self, image):
-        self.img.hide()
-        i = os.getcwd() + "/Web" + image
-        self.img.setPixmap(QtGui.QPixmap(i))
-        self.img.show()
+        if playing:
+            self.setFixedHeight(self.height() + 34)
+            self.playing_val.setText(playing)
+            self.playing_line.show()
+            self.playing_lbl.show()
+            self.playing_val.show()
+        else:
+            self.setFixedHeight(self.height() - 34)
+            self.playing_lbl.hide()
+            self.playing_val.hide()
+            self.playing_line.hide()
 
 
 class LoadingPanel(InfoWidget):
