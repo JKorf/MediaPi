@@ -17,6 +17,7 @@
                 var playStartOffset;
                 var updater;
                 var playerInterval;
+                var playerInvokeInterval;
 
                 var playing = false;
                 var media = false;
@@ -40,11 +41,6 @@
                     });
                 }
 
-                $scope.searchAdditionalSubs = function(){
-                    $scope.playerState.subs_done = false
-                    $http.post("/player/search_subs");
-                }
-
                 $scope.playPause = function(){
                     $http.post("/player/pause_resume_player");
                     if ($scope.playerState.state == 'Playing')
@@ -56,12 +52,14 @@
                 $scope.stop = function(){
                     ConfirmationFactory.confirm_stop_current_media().then(function(){
                         $http.post("/player/stop_player");
+                        ChangeState("Nothing");
                     });
                 }
 
                 $scope.seek = function(){
                     console.log("seek " + $scope.playerState.playing_for);
                     $http.post("/player/seek?pos=" + $scope.playerState.playing_for);
+                    ChangeState("Buffering");
                 }
 
                 $scope.volChanged = function(){
@@ -114,11 +112,14 @@
                             state = playerStates[parseInt(data)];
                             ChangeState(state);
                             console.log("State change: " + state);
-                            RequestFactory.InvokeNow(playerInterval);
-                            $timeout(function(){
-                                // Invoke again after 2 seconds to make sure we got the latest state because invoke wont trigger if already busy
-                                RequestFactory.InvokeNow(playerInterval);
-                            }, 2000);
+                            if(!playerInvokeInterval)
+                            {
+                                playerInvokeInterval = $timeout(function(){
+                                    // Invoke again after 2 seconds to make sure we got the latest state because invoke wont trigger if already busy
+                                    RequestFactory.InvokeNow(playerInterval);
+                                    playerInvokeInterval = false;
+                                }, 2000);
+                            }
                         }
                         if(event == "error"){
                             ChangeState('error');
@@ -129,6 +130,7 @@
                             playStartTime = new Date();
                             playStartOffset = parseInt(data);
                             $scope.playerState.playing_for = parseInt(data);
+                            ChangeState("Buffering")
                             console.log("Seek event: " + parseInt(data));
                         }
                         if(event == "volume"){
@@ -267,8 +269,11 @@
                             return;
                         }
 
-                        if(playing)
+                        if(playing){
                             $scope.playerState.playing_for = ((new Date().getTime() - playStartTime.getTime()) / 1000) + playStartOffset;
+                            if($scope.playerState.playing_for > $scope.playerState.length)
+                                $scope.playerState.playing_for = $scope.playerState.length;
+                        }
                     }, 1000);
                 }
 
