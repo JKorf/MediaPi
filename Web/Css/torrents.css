@@ -28,7 +28,7 @@
     line-height: 40px;
     position:relative;
     display: inline-block;
-    width: calc(100% - 180px);
+    width: calc(100% - 190px);
     vertical-align: top;
 }
 
@@ -58,8 +58,8 @@
     line-height: 40px;
     position:relative;
     display: inline-block;
-    width: 60px;
     vertical-align: top;
+    font-size: 13px;
 }
 
 .torrent-image{

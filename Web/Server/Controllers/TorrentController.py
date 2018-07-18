@@ -16,7 +16,7 @@ from tpb import TPB, ORDERS
 class TorrentController:
     @staticmethod
     def top():
-        t = TPB('https://pirateahoy.net/')
+        t = TPB('https://pirataibay.in/')
         result = []
         for torrent in t.top(CATEGORIES.VIDEO):
             result.append(TorrentModel(torrent.title, torrent.magnet_link, torrent.seeders, torrent.leechers, torrent.size, torrent.sub_category))
@@ -25,9 +25,10 @@ class TorrentController:
 
     @staticmethod
     def search(keywords):
-        t = TPB('https://pirateahoy.net/')
+        t = TPB('https://pirataibay.in/')
         result = []
         for torrent in t.search(urllib.parse.unquote(keywords)).category(CATEGORIES.VIDEO).order(ORDERS.SEEDERS.DES):
+            s = torrent.info
             result.append(TorrentModel(torrent.title, torrent.magnet_link, torrent.seeders, torrent.leechers, torrent.size, torrent.sub_category))
         return to_JSON(result)
 

@@ -131,10 +131,10 @@ class TorrentModel:
         self.magnet_uri = uri
         self.seeders = seeders
         self.leechers = leechers
-        self.size = write_size(size)
-        if category in [201, 202, 203]:
+        self.size = size
+        if "movie" in category:
             self.category = "movie"
-        elif category in [205, 207, 208]:
+        elif "show" in category:
             self.category = "show"
         else:
             self.category = "other"
