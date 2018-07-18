@@ -44,7 +44,7 @@ class TornadoServer:
             (r"/player/(.*)", PlayerHandler),
             (r"/radio/(.*)", RadioHandler),
             (r"/youtube/(.*)", YoutubeHandler),
-            (r"/torrents/(.*)", TorrentHandler),
+            (r"/torrent/(.*)", TorrentHandler),
             (r"/realtime", RealtimeHandler),
             (r"/database/(.*)", DatabaseHandler),
             (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Web", "default_filename": "index.html"})
@@ -203,8 +203,6 @@ class MovieHandler(web.RequestHandler):
     def post(self, url):
         if url == "play_movie":
             MovieController.play_movie(self.get_argument("url"), self.get_argument("id"), self.get_argument("title"), self.get_argument("img", ""))
-        elif url == "play_direct_link":
-            MovieController.play_direct_link(self.get_argument("url"), self.get_argument("title"))
         elif url == "play_continue":
             yield MovieController.play_continue(play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"))
 
@@ -220,8 +218,6 @@ class MovieHandler(web.RequestHandler):
         elif url == "get_movie":
             data = yield MovieController.get_movie(self.get_argument("id"))
             self.write(data)
-        elif url == "play_from_extension":
-            MovieController.play_direct_link(self.get_argument("url"), self.get_argument("title"))
 
 
 class ShowHandler(web.RequestHandler):
@@ -378,15 +374,15 @@ class YoutubeHandler(web.RequestHandler):
 class TorrentHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
-        if url == "get":
-            self.write(TorrentController.get_torrents(TornadoServer.start_obj))
+        if url == "top":
+            self.write(TorrentController.top())
+        elif url == "search":
+            self.write(TorrentController.search(self.get_argument("keywords")))
 
     @gen.coroutine
     def post(self, url):
-        if url == "download":
-            TorrentController.download(self.get_argument("url"), self.get_argument("title"))
-        if url == "remove":
-            TorrentController.remove(TornadoServer.start_obj, self.get_argument("id"))
+        if url == "play_torrent":
+            TorrentController.play_torrent(self.get_argument("url"), self.get_argument("title"))
 
 
 class RealtimeHandler(websocket.WebSocketHandler):

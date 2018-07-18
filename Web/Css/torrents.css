@@ -1,123 +1,81 @@
-.torrent-overview-torrent{
+.view-torrent{
+    margin-top: 40px;
+    background:white;
+}
+
+.torrent-search-box{
+    height: calc(100% - 12px);
+    margin: 6px 15px;
+    width: calc(100% - 70px);
+}
+
+@media only screen and (min-device-width: 1024px){
+    .torrent-search-box{
+        margin: 6px 0px;
+        width: calc(100% - 40px);
+    }
+}
+
+.torrent{
+    border-bottom: 1px solid #eee;
+    height: 40px;
     position: relative;
-    margin-top: 10px;
-    padding-top: 5px;
-    border-top: 1px solid #ddd;
-}
-
-.torrent-overview-torrent:first-child{
-    margin-top: 0;
-    border-top: none;
-}
-
-.view-torrent-overview{
-    position: relative;
-}
-
-.torrent-overview-nothing{
-    background: #fff;
-    padding: 15px;
-}
-
-.torrent-overview-torrent{
-    background: #fff;
-    padding: 15px;
-}
-
-.torrent-overview-torrent-name {
-    font-weight: bold;
-    margin-bottom: 6px;
-    max-width: calc(100% - 26px);
-}
-
-.remove-torrent{
-    position:absolute;
-    right:15px;
-    top: 12px;
-}
-
-.remove-torrent img{
-    width: 14px;
-    height: 14px;
-}
-
-.torrent-overview-torrent-progress{
-    margin: 6px 15px 0 15px;
-}
-
-.torrent-overview-torrent-playing{
-    margin-top:3px;
-    font-style: italic;
-}
-
-.view-torrent-info{
-    padding: 15px;
-    background: #fff;
+    cursor: pointer;
 }
 
 .torrent-title{
-    font-weight: bold;
-    height: 17px;
-    word-wrap: break-word;
-    max-width: calc(100% - 30px);
-}
-
-.streaming .torrent-title{
-    margin-left: 20px;
-    max-width: calc(100% - 40px);
-}
-
-.torrent-info-sub-title{
-    color: #aaa;
-}
-
-.torrent-info-download{
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
-}
-
-.torrent-info{
-    position: relative;
-}
-
-.torrent-progress{
-    margin-top: 4px;
-}
-
-.torrent-info-value{
-    margin-top: 2px;
-}
-
-.torrent-info-value-right{
-    text-align: right;
-    right: 0;
-    top: 0;
-    position:absolute;
-}
-
-.torrent-info-download{
+    height: 40px;
+    line-height: 40px;
     position:relative;
+    display: inline-block;
+    width: calc(100% - 180px);
+    vertical-align: top;
 }
+
+.torrent-seeders-leechers{
+    height: 40px;
+
+    position:relative;
+    width: 66px;
+    display: inline-block;
+    vertical-align: top;
+    font-size: 12px;
+}
+
+.torrent-seeders{
+    height:20px;
+    line-height: 20px;
+}
+
+.torrent-leechers{
+    height:20px;
+    line-height: 20px;
+}
+
 
 .torrent-size{
-    position:absolute;
-    right:0;
-    top: 0;
+    height: 40px;
+    line-height: 40px;
+    position:relative;
+    display: inline-block;
+    width: 60px;
+    vertical-align: top;
 }
 
-.torrent-streaming{
-    display:none;
-    position: absolute;
-    left:15px;
-    top: 12px;
+.torrent-image{
+    width: 40px;
+    position:relative;
+    display: inline-block;
+    padding: 9px;
 }
 
-.streaming .torrent-streaming{
-    display: block;
+.torrent-image img{
+    width: 22px;
+    height: 22px;
 }
 
-.torrent-streaming img{
-    width: 14px;
-    height: 14px;
+.no-torrents{
+    padding: 15px;
+    margin: 4px;
+    background: #fff;
 }

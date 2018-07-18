@@ -124,6 +124,22 @@ class StartUp:
         self.instance_name = instance_name
 
 
+class TorrentModel:
+
+    def __init__(self, title, uri, seeders, leechers, size, category):
+        self.title = title
+        self.magnet_uri = uri
+        self.seeders = seeders
+        self.leechers = leechers
+        self.size = write_size(size)
+        if category in [201, 202, 203]:
+            self.category = "movie"
+        elif category in [205, 207, 208]:
+            self.category = "show"
+        else:
+            self.category = "other"
+
+
 class TorrentDetailModel:
 
     def __init__(self):

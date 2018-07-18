@@ -53,20 +53,6 @@ class MovieController:
         EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url)])
         EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, urllib.parse.unquote(img)])
 
-
-    @staticmethod
-    def play_direct_link(url, title):
-        Logger.write(2, "Play direct link")
-        url = urllib.parse.unquote_plus(url)
-
-        EventManager.throw_event(EventType.StopTorrent, [])
-        time.sleep(1)
-        if url.endswith('.torrent') or url.startswith('magnet:'):
-            EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url)])
-            EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri])
-        else:
-            EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), urllib.parse.unquote_plus(url)])
-
     @staticmethod
     @gen.coroutine
     def play_continue(delegate, type, url, title, image, position):

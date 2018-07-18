@@ -38,11 +38,11 @@
             controller: "ShowController"
         });
 
-        $stateProvider.state('direct', {
-            url: '/direct',
-            templateUrl: '/App/Modules/Direct/direct.html',
+        $stateProvider.state('torrents', {
+            url: '/torrents',
+            templateUrl: '/App/Modules/Torrents/torrents.html',
             cache: false,
-            controller: "DirectController"
+            controller: "TorrentsController"
         });
 
         $stateProvider.state('hd', {
@@ -64,13 +64,6 @@
             templateUrl: '/App/Modules/YouTube/youtube.html',
             cache: false,
             controller: "YouTubeController"
-        });
-
-        $stateProvider.state('torrents', {
-            url: '/torrents',
-            templateUrl: '/App/Modules/Torrents/torrents.html',
-            cache: false,
-            controller: "TorrentsController"
         });
 
         $stateProvider.state('debug', {
