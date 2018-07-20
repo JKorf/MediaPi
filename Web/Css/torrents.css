@@ -36,24 +36,30 @@
     height: 40px;
 
     position:relative;
-    width: 66px;
     display: inline-block;
     vertical-align: top;
     font-size: 12px;
 }
 
 .torrent-seeders{
-    height:20px;
-    line-height: 20px;
+    margin-top: 4px;
+    height:16px;
+    line-height: 16px;
+    position: relative;
+    padding-left: 20px;
+
 }
 
 .torrent-leechers{
-    height:20px;
-    line-height: 20px;
+    height:16px;
+    line-height: 16px;
+    position: relative;
+    padding-left: 20px;
 }
 
-
 .torrent-size{
+    width: 76px;
+
     height: 40px;
     line-height: 40px;
     position:relative;
@@ -78,4 +84,19 @@
     padding: 15px;
     margin: 4px;
     background: #fff;
+}
+
+.torrent-seeders-leechers img{
+    width: 12px;
+    height:  12px;
+    position:absolute;
+    left: 0;
+}
+
+.torrent-seeders img{
+    top: 2px;
+}
+
+.torrent-leechers img{
+    top:2px;
 }

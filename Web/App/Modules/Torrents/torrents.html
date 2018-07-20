@@ -18,11 +18,11 @@
                 <img ng-if="torrent.category == 'other'" src="/Images/other.png" />
             </div>
             <div class="torrent-title truncate">{{torrent.title}}</div>
+            <div class="torrent-size truncate">{{torrent.size}}</div>
             <div class="torrent-seeders-leechers">
-                <div class="torrent-seeders truncate">{{torrent.seeders}} seed</div>
-                <div class="torrent-leechers truncate">{{torrent.leechers}} leech</div>
+                <div class="torrent-seeders truncate">{{torrent.seeders}} <img src="/Images/seeders.png" /></div>
+                <div class="torrent-leechers truncate">{{torrent.leechers}} <img src="/Images/leechers.png" /></div>
             </div>
-            <div class="torrent-size">{{torrent.size}}</div>
         </div>
 
         <div class="no-torrents" ng-if="torrents.length == 0 && done">No torrents found</div>
