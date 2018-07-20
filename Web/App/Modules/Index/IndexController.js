@@ -1,7 +1,23 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('IndexController', function ($scope, $rootScope, $q, $http, $state, $timeout, $compile, RealtimeFactory) {
+    angular.module('pi-test').controller('IndexController', function ($scope, $rootScope, $q, $http, $state, $timeout, $compile, CacheFactory, RealtimeFactory) {
         $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
+
+        RealtimeFactory.register("IndexController", "request", function(event, data){
+            console.log(data);
+            if(event == "media_selection")
+            {
+                $scope.files = data;
+                $rootScope.openPopup();
+                CacheFactory.Get("/App/Modules/Index/mediaselection.html", 900).then(function(data){
+                    $rootScope.setPopupContent("Select file to play", false, false, false, data, $scope);
+                });
+            }
+        });
+
+        $scope.selectFile = function(file){
+            $http.post("/player/select_file?path=" + encodeURIComponent(file.path));
+        }
 
         $rootScope.$watch('playerState', function (newv, oldv){
             SetHeight(newv);

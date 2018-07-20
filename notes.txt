@@ -5,7 +5,7 @@
         https://eltechs.com/run-spotify-on-raspberry-pi/
 
 --- TODO ---
-    Bij meerdere files kunnen selecteren welke streamen?
+    Bij meerdere files kunnen selecteren welke streamen? -> vooral voor torrent streamen handig als je hele seizoenen hebt
 
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database

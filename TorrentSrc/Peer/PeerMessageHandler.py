@@ -39,7 +39,7 @@ class PeerMessageHandler:
                 self.peer.stop()
                 return False
 
-            if self.peer.torrent.state == TorrentState.DownloadingMetaData:
+            if self.peer.torrent.state == TorrentState.DownloadingMetaData or self.peer.torrent.state == TorrentState.WaitingUserFileSelection:
                 if not isinstance(message, MetadataMessage) and not isinstance(message, ExtensionHandshakeMessage):
                     Logger.write(1, str(self.peer.id) + " Adding " + str(message.__class__.__name__) + " to metadata wait list")
                     self.metadata_wait_list.append(message)

@@ -182,3 +182,10 @@ class TorrentDetailModel:
         model.stream_buffer_total = write_size(torrent.bytes_total_in_buffer)
         model.streamed = write_size(torrent.bytes_streamed)
         return model
+
+
+class MediaFile:
+
+    def __init__(self, path, size):
+        self.path = path
+        self.size = write_size(size)

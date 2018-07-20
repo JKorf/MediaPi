@@ -63,6 +63,9 @@ class PeerMetaDataManager:
 
             return True
 
+        if self.peer.torrent.state == TorrentState.WaitingUserFileSelection:
+            return True
+
         if self.peer.torrent.state == TorrentState.Paused:
             if not self.pause_handled:
                 self.pause_handled = True

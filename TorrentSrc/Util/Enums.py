@@ -4,6 +4,7 @@ class TorrentState:
     Downloading = 3
     Paused = 4
     Done = 5
+    WaitingUserFileSelection = 6
 
 
 class PeerMessageType:
