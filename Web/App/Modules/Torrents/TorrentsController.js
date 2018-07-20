@@ -7,7 +7,7 @@
 
         $scope.watch = function(torrent){
             ConfirmationFactory.confirm_play().then(function(){
-                $http.post('/torrent/play_torrent?url=' + encodeURIComponent(torrent.magnet_uri) + '&title=' + encodeURIComponent(torrent.title));
+                $http.post('/torrent/play_torrent?url=' + encodeURIComponent(torrent.url) + '&title=' + encodeURIComponent(torrent.title));
             });
         }
 

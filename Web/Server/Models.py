@@ -126,15 +126,15 @@ class StartUp:
 
 class TorrentModel:
 
-    def __init__(self, title, uri, seeders, leechers, size, category):
+    def __init__(self, title, seeders, leechers, size, url, category):
         self.title = title
-        self.magnet_uri = uri
         self.seeders = seeders
         self.leechers = leechers
         self.size = size
-        if "movie" in category:
+        self.url = url
+        if "movie" in category.lower():
             self.category = "movie"
-        elif "show" in category:
+        elif "show" in category.lower():
             self.category = "show"
         else:
             self.category = "other"

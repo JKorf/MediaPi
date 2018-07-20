@@ -9,8 +9,7 @@ from Shared.Logger import Logger
 from Shared.Util import to_JSON
 from Web.Server.Controllers.MovieController import MovieController
 from Web.Server.Models import TorrentModel
-
-from tpb import TPB, ORDERS
+from Web.Server.Providers.TorrentProvider import TPB, ORDERS, Torrent
 
 
 class TorrentController:
@@ -18,8 +17,8 @@ class TorrentController:
     def top():
         t = TPB('https://pirataibay.in/')
         result = []
-        for torrent in t.top(CATEGORIES.VIDEO):
-            result.append(TorrentModel(torrent.title, torrent.magnet_link, torrent.seeders, torrent.leechers, torrent.size, torrent.sub_category))
+        for torrent in t.top(200):
+            result.append(TorrentModel(torrent.title, torrent.seeders, torrent.leechers, torrent.size, str(torrent.url), torrent.sub_category))
 
         return to_JSON(result)
 
@@ -28,14 +27,14 @@ class TorrentController:
         t = TPB('https://pirataibay.in/')
         result = []
         for torrent in t.search(urllib.parse.unquote(keywords)).category(CATEGORIES.VIDEO).order(ORDERS.SEEDERS.DES):
-            s = torrent.info
-            result.append(TorrentModel(torrent.title, torrent.magnet_link, torrent.seeders, torrent.leechers, torrent.size, torrent.sub_category))
+            result.append(TorrentModel(torrent.title, torrent.seeders, torrent.leechers, torrent.size, str(torrent.url), torrent.sub_category))
         return to_JSON(result)
 
     @staticmethod
     def play_torrent(url, title):
         Logger.write(2, "Play direct link")
         url = urllib.parse.unquote_plus(url)
+        url = Torrent.get_magnet_uri(url)
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(1)
