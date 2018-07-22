@@ -6,6 +6,7 @@
 
 --- TODO ---
     Bij meerdere files kunnen selecteren welke streamen? -> vooral voor torrent streamen handig als je hele seizoenen hebt
+        kijken of er misschien alleen een sample ofzo is, dan gewoon grootste
 
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database
