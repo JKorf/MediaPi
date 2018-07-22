@@ -62,7 +62,7 @@ class StreamManager:
             self.playing = False
 
     def update(self):
-        if self.torrent.state == TorrentState.DownloadingMetaData:
+        if self.torrent.state == TorrentState.DownloadingMetaData or self.torrent.state == TorrentState.WaitingUserFileSelection:
             return True
 
         if not self.init:
@@ -74,6 +74,7 @@ class StreamManager:
             self.piece_count_end_buffer_tolerance = math.ceil(
                 Settings.get_int("stream_end_buffer_tolerance") / self.torrent.piece_length)
             self.buffer = StreamBuffer(self, self.torrent.piece_length)
+            self.change_stream_position(self.torrent.media_file.start_byte)
 
         if self.consecutive_pieces_total_length >= self.max_in_buffer and self.torrent.left > self.stream_tolerance:
             if self.torrent.state == TorrentState.Downloading:

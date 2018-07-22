@@ -90,7 +90,7 @@ class TorrentPeerManager:
         return None
 
     def update_new_peers(self):
-        if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData:
+        if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData and self.torrent.state != TorrentState.WaitingUserFileSelection:
             return True
 
         if len(self.potential_peers) == 0:

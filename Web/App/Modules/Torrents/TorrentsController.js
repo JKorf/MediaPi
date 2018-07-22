@@ -7,6 +7,7 @@
 
         $scope.watch = function(torrent){
             ConfirmationFactory.confirm_play().then(function(){
+                $rootScope.$broadcast("startPlay", {title: torrent.title});
                 $http.post('/torrent/play_torrent?url=' + encodeURIComponent(torrent.url) + '&title=' + encodeURIComponent(torrent.title));
             });
         }

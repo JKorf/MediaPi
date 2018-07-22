@@ -123,6 +123,7 @@ class Torrent:
         self.outstanding_requests = 0
 
         self.player_event_id = EventManager.register_event(EventType.PlayerStateChange, self.player_change)
+        self.user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
 
         self.engine = Engine.Engine('Main Engine', Settings.get_int("main_engine_tick_rate"))
         self.download_counter = Counter()
@@ -245,6 +246,7 @@ class Torrent:
     def parse_info_dictionary(self, info_dict):
         self.name = info_dict[b'name'].decode('ascii')
         base_folder = Settings.get_string("base_folder")
+        media_files = []
 
         if b'files' in info_dict:
             # Multifile
@@ -262,33 +264,56 @@ class Torrent:
 
                 fi = TorrentDownloadFile(file_length, total_length, last_path, path)
                 self.files.append(fi)
+                if self.is_media_file(path):
+                    media_files.append(fi)
+
                 ext = os.path.splitext(path)[1]
-                if (ext == ".mp4" or ext == ".mkv" or ext == ".avi") and (temp_media is None or temp_media.length < file_length):
-                    temp_media = fi
                 if ext == ".srt":
                     self.subtitles.append(fi)
                     fi.path = base_folder + "subs/" + last_path + ext
                 total_length += file_length
                 Logger.write(2, "File: " + fi.path)
-            self.media_file = StreamFile(temp_media.length, temp_media.start_byte, temp_media.name, temp_media.path)
         else:
             # Singlefile
             total_length = info_dict[b'length']
-            file = StreamFile(total_length, 0, self.name, base_folder + self.name)
-            self.media_file = file
+            file = TorrentDownloadFile(total_length, 0, self.name, base_folder + self.name)
             self.files.append(file)
+            Logger.write(2, "File: " + file.path)
+            if self.is_media_file(self.name):
+                media_files.append(file)
 
-        Logger.write(2, "Stream file " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(total_length))
         self.piece_length = info_dict[b'piece length']
         self.piece_hashes = info_dict[b'pieces']
         self.total_size = total_length
+
+        if len(media_files) == 1:
+            self.set_media_file(media_files[0])
+        else:
+            # via event request user which file
+            self.state = TorrentState.WaitingUserFileSelection
+            EventManager.throw_event(EventType.TorrentMediaSelectionRequired, [media_files])
+
+        EventManager.throw_event(EventType.TorrentMetadataDone, [])
+        Logger.write(3, "Torrent metadata read")
+
+    def is_media_file(self, path):
+        ext = os.path.splitext(path)[1].lower()
+        if ext == ".mp4" or ext == ".mkv" or ext == ".avi":
+            return True
+
+    def set_media_file(self, file):
+        self.media_file = StreamFile(file.length, file.start_byte, file.name, file.path)
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
         self.state = TorrentState.Downloading
+        Logger.write(2, "Stream file " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
         self.to_download_bytes = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
-        EventManager.throw_event(EventType.TorrentMetadataDone, [])
         Logger.write(2, "To download: " + str(self.to_download_bytes) + ", piece length: " + str(self.piece_length))
         Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte))
-        Logger.write(3, "Torrent metadata read")
+
+    def user_file_selected(self, file_path):
+        Logger.write(2, "User selected media file: " + file_path)
+        file = [x for x in self.files if x.path == file_path][0]
+        self.set_media_file(file)
 
     def parse_torrent_file(self, decoded_dict):
         for uri_list in decoded_dict[b'announce-list']:
@@ -340,6 +365,7 @@ class Torrent:
     def stop(self):
         Logger.write(2, 'Torrent stopping')
         EventManager.deregister_event(self.player_event_id)
+        EventManager.deregister_event(self.user_file_selected_id)
 
         self.engine.stop()
         self.output_manager.stop()

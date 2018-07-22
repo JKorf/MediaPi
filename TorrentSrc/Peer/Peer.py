@@ -37,7 +37,7 @@ class Peer:
 
     @property
     def bitfield(self):
-        if self.__bitfield is None and self.torrent.state != TorrentState.DownloadingMetaData:
+        if self.__bitfield is None and self.torrent.state != TorrentState.DownloadingMetaData and self.torrent.state != TorrentState.WaitingUserFileSelection:
             self.__bitfield = Bitfield(self.torrent.data_manager.total_pieces)
         return self.__bitfield
 

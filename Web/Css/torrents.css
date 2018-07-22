@@ -16,6 +16,10 @@
     }
 }
 
+.torrents{
+    position: relative;
+}
+
 .torrent{
     border-bottom: 1px solid #eee;
     height: 40px;
@@ -99,4 +103,21 @@
 
 .torrent-leechers img{
     top:2px;
+}
+
+.media-file-selection-path{
+    display:inline-block;
+    vertical-align: top;
+    max-width: calc(100% - 130px);
+}
+
+.media-file-selection-size{
+    display:inline-block;
+    vertical-align: top;
+}
+
+.media-file-selection-checkbox{
+    position:absolute;
+    right: 10px;
+    top: 3px;
 }

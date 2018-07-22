@@ -180,7 +180,7 @@ class StreamListener:
 
         try:
             socket.send(response_header.to_string().encode())
-        except (ConnectionAbortedError, ConnectionResetError):
+        except (ConnectionAbortedError, ConnectionResetError, OSError):
             Logger.write(2, "Connection closed 2")
             return
 

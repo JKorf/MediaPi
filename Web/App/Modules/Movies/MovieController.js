@@ -45,6 +45,8 @@
 
         $scope.watchMovie = function(){
             ConfirmationFactory.confirm_play().then(function(){
+                $rootScope.$broadcast("startPlay", {title: $scope.movie.title});
+
                 $http.post('/movies/play_movie?url=' + encodeURIComponent($scope.selectedTorrent.url) + '&id=' + $scope.movie.id + '&title=' + encodeURIComponent($scope.movie.title) + '&img=' + encodeURIComponent($scope.movie.poster));
             });
         }

@@ -1,0 +1,11 @@
+<div class="media-files">
+    <div class="selection-list-outer">
+        <div class="media-file selection-list-inner" ng-click="selectFile(file)" ng-class="{'selected-item' : selectedFile == file.path}" ng-repeat="file in files" ng-click="selectFile(file)">
+            <div class="media-file-selection-path multiline-truncate">{{file.path}}</div>
+            <div class="media-file-selection-size">{{file.size}}</div>
+            <div class="media-file-selection-checkbox">
+                <input type="radio" name="file-selection" ng-model="selectedFile" value="{{file.path}}" />
+            </div>
+        </div>
+    </div>
+</div>

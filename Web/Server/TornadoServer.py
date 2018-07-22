@@ -24,7 +24,7 @@ from Web.Server.Controllers.ShowController import ShowController
 from Web.Server.Controllers.TorrentController import TorrentController
 from Web.Server.Controllers.UtilController import UtilController
 from Web.Server.Controllers.YoutubeController import YoutubeController
-from Web.Server.Models import WebSocketMessage
+from Web.Server.Models import WebSocketMessage, MediaFile
 
 
 class TornadoServer:
@@ -52,6 +52,7 @@ class TornadoServer:
 
         self.application = web.Application(handlers)
 
+        EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.media_selection_required)
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_changed)
         EventManager.register_event(EventType.PlayerError, self.player_error)
         EventManager.register_event(EventType.Seek, self.player_seeking)
@@ -97,6 +98,10 @@ class TornadoServer:
                 Logger.write(3, "Failed to connect to remote server, try " + str(i))
                 time.sleep(10)
         return "No internet connection"
+
+    def media_selection_required(self, files):
+        for client in self.clients:
+            client.write_message(to_JSON(WebSocketMessage('request', 'media_selection', [MediaFile(x.path, x.length) for x in files])))
 
     def player_state_changed(self, old_state, state):
         for client in self.clients:
@@ -271,6 +276,8 @@ class PlayerHandler(web.RequestHandler):
             PlayerController.seek(self.get_argument("pos"))
         elif url == "set_audio_id":
             PlayerController.set_audio_track(self.get_argument("track"))
+        elif url == "select_file":
+            EventManager.throw_event(EventType.TorrentMediaFileSelection, [urllib.parse.unquote(self.get_argument("path"))])
 
 
 class HDHandler(web.RequestHandler):

@@ -818,3 +818,24 @@ input[type="range"]::-webkit-slider-thumb {
     background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1));
     right: 0;
 }
+
+.selection-list-outer
+{
+    border: 1px solid #eee;
+    border-radius: 8px;
+    -webkit-mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
+    overflow:hidden;
+}
+
+.selection-list-inner{
+    position: relative;
+    padding: 4px;
+    background: linear-gradient(#fCfCfC 0%, #fff 50%, #fCfCfC 100%);
+    border-top: 1px solid #eee;
+    cursor: pointer;
+}
+
+.selection-list-inner.selected-item{
+    background: linear-gradient(#5297ff 10%, #61a0ff 30%, #61a0ff 70%, #5297ff 90%);
+    color:white;
+}

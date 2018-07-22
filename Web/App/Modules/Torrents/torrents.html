@@ -11,7 +11,7 @@
     </div>
 
     <div class="torrents">
-        <div class="torrent" ng-repeat="torrent in torrents" ng-click="watch(torrent)">
+        <div class="torrent" ripple ng-repeat="torrent in torrents" ng-click="watch(torrent)">
             <div class="torrent-image">
                 <img ng-if="torrent.category == 'movie'" src="/Images/movie.png" />
                 <img ng-if="torrent.category == 'show'" src="/Images/show.png" />
