@@ -165,6 +165,17 @@
                     $scope.$on("$destroy", function(){
                         RequestFactory.StopRequesting(playerInterval);
                     });
+
+                    $rootScope.$on("startPlay", function(event, args){
+                        handlePlayerInfo({data: {
+                            state: 1,
+                            title: args.title,
+                            type: "Show",
+                            playing_for: 0,
+                            play_time: 0,
+                            length: 0
+                        }});
+                    });
                 }
 
                 function initMediaSession(){

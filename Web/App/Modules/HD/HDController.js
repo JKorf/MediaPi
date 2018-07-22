@@ -145,6 +145,8 @@
 
         $scope.playMovie = function(file){
             ConfirmationFactory.confirm_play().then(function(){
+                $rootScope.$broadcast("startPlay", {title: file});
+
                 var path = concatPath($scope.current.path, file);
                 $http.post("/hd/play_file?filename=" + encodeURIComponent(file)+"&path=" + encodeURIComponent(path));
 

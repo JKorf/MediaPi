@@ -311,6 +311,7 @@ class Torrent:
         Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte))
 
     def user_file_selected(self, file_path):
+        Logger.write(2, "User selected media file: " + file_path)
         file = [x for x in self.files if x.path == file_path][0]
         self.set_media_file(file)
 

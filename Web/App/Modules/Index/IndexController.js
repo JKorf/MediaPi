@@ -10,13 +10,18 @@
                 $scope.files = data;
                 $rootScope.openPopup();
                 CacheFactory.Get("/App/Modules/Index/mediaselection.html", 900).then(function(data){
-                    $rootScope.setPopupContent("Select file to play", false, false, false, data, $scope);
+                    $rootScope.setPopupContent("Select file to play", false, true, true, data, $scope).then(function(){
+                        $http.post("/player/select_file?path=" + encodeURIComponent($scope.selectedFile));
+                    }, function(){
+                        $http.post("/player/stop_player");
+                    });
                 });
             }
         });
 
         $scope.selectFile = function(file){
-            $http.post("/player/select_file?path=" + encodeURIComponent(file.path));
+            $scope.selectedFile = file.path;
+            console.log(file);
         }
 
         $rootScope.$watch('playerState', function (newv, oldv){
