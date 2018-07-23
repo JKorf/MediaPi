@@ -285,18 +285,32 @@ class Torrent:
         self.piece_length = info_dict[b'piece length']
         self.piece_hashes = info_dict[b'pieces']
         self.total_size = total_length
-
+        if len(media_files) == 0:
+            # No media file, can't play so just stop
+            Logger.write(2, "No media file found in torrent, stopping")
+            EventManager.throw_event(EventType.StopPlayer, [])
         if len(media_files) == 1:
+            # Single media file, just play that
             self.set_media_file(media_files[0])
         else:
-            # via event request user which file
-            self.state = TorrentState.WaitingUserFileSelection
-            EventManager.throw_event(EventType.TorrentMediaSelectionRequired, [media_files])
+            ordered = sorted(media_files, key=lambda x: x.length, reverse=True)[0]
+            biggest = ordered[0]
+            second = ordered[1]
+            if biggest.length > second.length * 8:
+                # One file is significantly bigger than the others, play that
+                self.set_media_file(biggest)
+            else:
+                # Multiple files, let user decide
+                self.state = TorrentState.WaitingUserFileSelection
+                EventManager.throw_event(EventType.TorrentMediaSelectionRequired, [media_files])
 
         EventManager.throw_event(EventType.TorrentMetadataDone, [])
         Logger.write(3, "Torrent metadata read")
 
     def is_media_file(self, path):
+        if not "." in path:
+            return False
+
         ext = os.path.splitext(path)[1].lower()
         if ext == ".mp4" or ext == ".mkv" or ext == ".avi":
             return True
@@ -305,10 +319,9 @@ class Torrent:
         self.media_file = StreamFile(file.length, file.start_byte, file.name, file.path)
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
         self.state = TorrentState.Downloading
-        Logger.write(2, "Stream file " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
         self.to_download_bytes = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
         Logger.write(2, "To download: " + str(self.to_download_bytes) + ", piece length: " + str(self.piece_length))
-        Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte))
+        Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
 
     def user_file_selected(self, file_path):
         Logger.write(2, "User selected media file: " + file_path)
