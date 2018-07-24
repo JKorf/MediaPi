@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import datetime
-import dateutil.parser
 from functools import wraps
 from lxml import html
 import re
@@ -303,30 +302,6 @@ class Torrent(object):
         self.user = user # username of uploader
         self.seeders = seeders # number of seeders
         self.leechers = leechers # number of leechers
-
-    @property
-    def created(self):
-        """
-        Attempt to parse the human readable torrent creation datetime.
-        """
-        timestamp, current = self._created
-        if timestamp.endswith('ago'):
-            quantity, kind, ago = timestamp.split()
-            quantity = int(quantity)
-            if 'sec' in kind:
-                current -= quantity
-            elif 'min' in kind:
-                current -= quantity * 60
-            elif 'hour' in kind:
-                current -= quantity * 60 * 60
-            return datetime.datetime.fromtimestamp(current)
-        current = datetime.datetime.fromtimestamp(current)
-        timestamp = timestamp.replace('Y-day', str(current.date() - datetime.timedelta(days=1)))
-        timestamp = timestamp.replace('Today', current.date().isoformat())
-        try:
-            return dateutil.parser.parse(timestamp)
-        except:
-            return current
 
     def __repr__(self):
         return '{0} by {1}'.format(self.title, self.user)
