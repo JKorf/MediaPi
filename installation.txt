@@ -6,8 +6,8 @@
     sudo python3 /home/pi/Scripts/start.py &
 4.  Copy over scripts
 5.  Install dependencies:
-sudo pip3 install tornado psutil libxml2-dev libxslt-dev
-sudo apt-get install python3-pyqt4
+sudo apt-get install python3-pyqt4 libxml2-dev libxslt-dev
+sudo pip3 install tornado psutil lxml purl
 6.  Disable screensaver: sudo apt-get install xscreensaver -> menu preferences -> screensaver -> disable
 7.  Enable overclock/sound via hdmi: sudo nano /boot/config.txt
 	hdmi_group=1
