@@ -255,7 +255,7 @@ class Torrent:
             temp_media = None
             for file in files:
                 file_length = file[b'length']
-                path = base_folder + self.name
+                path = self.name
                 path_list = file[b'path']
                 last_path = ""
                 for path_part in path_list:
@@ -265,6 +265,7 @@ class Torrent:
                 fi = TorrentDownloadFile(file_length, total_length, last_path, path)
                 self.files.append(fi)
                 if self.is_media_file(path):
+
                     media_files.append(fi)
 
                 ext = os.path.splitext(path)[1]
@@ -293,7 +294,7 @@ class Torrent:
             # Single media file, just play that
             self.set_media_file(media_files[0])
         else:
-            ordered = sorted(media_files, key=lambda x: x.length, reverse=True)[0]
+            ordered = sorted(media_files, key=lambda x: x.length, reverse=True)
             biggest = ordered[0]
             second = ordered[1]
             if biggest.length > second.length * 8:
@@ -302,7 +303,11 @@ class Torrent:
             else:
                 # Multiple files, let user decide
                 self.state = TorrentState.WaitingUserFileSelection
-                EventManager.throw_event(EventType.TorrentMediaSelectionRequired, [media_files])
+                for file in media_files:
+                    season, epi = self.try_parse_season_episode(file.path)
+                    file.season = season
+                    file.episode = epi
+            EventManager.throw_event(EventType.TorrentMediaSelectionRequired, [media_files])
 
         EventManager.throw_event(EventType.TorrentMetadataDone, [])
         Logger.write(3, "Torrent metadata read")
@@ -314,6 +319,53 @@ class Torrent:
         ext = os.path.splitext(path)[1].lower()
         if ext == ".mp4" or ext == ".mkv" or ext == ".avi":
             return True
+
+    def try_parse_season_episode(self, path):
+        path = path.lower()
+        season_number = 0
+        epi_number = 0
+
+        if "s0" in path:
+            season_index = path.index("s0") + 1
+            season_number = self.try_parse_number(path[season_index: season_index + 3])
+        if "s1" in path and season_number == 0:
+            season_index = path.index("s1") + 1
+            season_number = self.try_parse_number(path[season_index: season_index + 3])
+        if "s2" in path and season_number == 0:
+            season_index = path.index("s2") + 1
+            season_number = self.try_parse_number(path[season_index : season_index + 3])
+        if "season" in path and season_number == 0:
+            season_index = path.index("season") + 6
+            season_number = self.try_parse_number(path[season_index: season_index + 3])
+
+        if "e0" in path:
+            epi_index = path.index("e0") + 1
+            epi_number = self.try_parse_number(path[epi_index: epi_index + 3])
+        if "e1" in path and epi_number == 0:
+            epi_index = path.index("e1") + 1
+            epi_number = self.try_parse_number(path[epi_index: epi_index + 3])
+        if "e2" in path and epi_number == 0:
+            epi_index = path.index("e2") + 1
+            epi_number = self.try_parse_number(path[epi_index: epi_index + 3])
+        if "episode" in path and epi_number == 0:
+            epi_index = path.index("episode") + 7
+            epi_number = self.try_parse_number(path[epi_index: epi_index + 3])
+
+        return season_number, epi_number
+
+    def try_parse_number(self, number_string):
+        if number_string.isdigit():
+            return int(number_string)
+
+        if len(number_string) > 1:
+            if number_string[0: 2].isdigit():
+                return int(number_string[0: 2])
+            if number_string[1: 3].isdigit():
+                return int(number_string[1: 3])
+        if number_string[0].isdigit():
+            return int(number_string[0])
+        if number_string[1].isdigit():
+            return int(number_string[1])
 
     def set_media_file(self, file):
         self.media_file = StreamFile(file.length, file.start_byte, file.name, file.path)
@@ -427,6 +479,10 @@ class TorrentDownloadFile:
         self.name = name
         self.stream = None
         self.done = False
+
+        self.season = 0
+        self.episode = 0
+
         self.__lock = Lock()
 
     def open(self):

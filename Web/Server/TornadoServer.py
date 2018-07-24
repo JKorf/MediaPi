@@ -101,7 +101,7 @@ class TornadoServer:
 
     def media_selection_required(self, files):
         for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('request', 'media_selection', [MediaFile(x.path, x.length) for x in files])))
+            client.write_message(to_JSON(WebSocketMessage('request', 'media_selection', [MediaFile(x.path, x.length, x.season, x.episode) for x in files])))
 
     def player_state_changed(self, old_state, state):
         for client in self.clients:

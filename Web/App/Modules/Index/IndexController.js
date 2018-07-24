@@ -7,10 +7,23 @@
             console.log(data);
             if(event == "media_selection")
             {
+                $scope.selectedFile = false;
                 $scope.files = data;
+                for(var i = 0; i < $scope.files.length; i++){
+                    var file = $scope.files[i];
+                    if(file.season != 0 && file.episode != 0){
+                        var s = file.season + "";
+                        var e = file.episode + "";
+                        if(s.length == 1)
+                            s = "0" + s;
+                        if(e.length == 1)
+                            e = "0" + e;
+                        file.se = "S" + s + "E" + e;
+                    }
+                }
                 $rootScope.openPopup();
                 CacheFactory.Get("/App/Modules/Index/mediaselection.html", 900).then(function(data){
-                    $rootScope.setPopupContent("Select file to play", false, true, true, data, $scope).then(function(){
+                    $rootScope.setPopupContent("Select file to play", false, true, true, data, $scope, function() { return $scope.selectedFile; }).then(function(){
                         $http.post("/player/select_file?path=" + encodeURIComponent($scope.selectedFile));
                     }, function(){
                         $http.post("/player/stop_player");
@@ -65,7 +78,7 @@
                 '</div>')($scope));
         }
 
-        $rootScope.setPopupContent = function(title, showCancel, showOk, modal, content, scope){
+        $rootScope.setPopupContent = function(title, showCancel, showOk, modal, content, scope, canConfirmFunc){
             var defer = $q.defer();
 
             $timeout(function(){
@@ -79,6 +92,8 @@
                     defer.reject();
                 }
                 $scope.popupOkClick = function(){
+                    if (canConfirmFunc && !canConfirmFunc())
+                        return;
                     $(".popup").remove();
                     $(".popup-background").remove();
                     defer.resolve();

@@ -108,6 +108,7 @@
 .media-file-selection-path{
     display:inline-block;
     vertical-align: top;
+    font-size: 13px;
     max-width: calc(100% - 130px);
 }
 
@@ -120,4 +121,16 @@
     position:absolute;
     right: 10px;
     top: 3px;
+}
+
+.media-file-selection-path-sub{
+    font-size: 12px;
+}
+
+.media-file-selection-path-title{
+    font-weight: bold;
+}
+
+.media-file-selection-size{
+    font-size: 12px;
 }

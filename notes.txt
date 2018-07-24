@@ -5,9 +5,6 @@
         https://eltechs.com/run-spotify-on-raspberry-pi/
 
 --- TODO ---
-    Bij meerdere files kunnen selecteren welke streamen? -> vooral voor torrent streamen handig als je hele seizoenen hebt
-        kijken of er misschien alleen een sample ofzo is, dan gewoon grootste
-        proberen om season/episode the parsen in torrent
 
     torrent.state logging, alles via 1 methode, iets van set_state
     kijken of lijntjes korter kunnen, niet vanaf meer dan 2 lagen door eigenlijk
