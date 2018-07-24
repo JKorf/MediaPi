@@ -77,7 +77,7 @@ class Database:
         self.lock.acquire()
         self.connect()
 
-        self.connection.execute("INSERT INTO WatchedFiles (URL, WatchedAt) VALUES ('" + str(url) + "', '"+watchedAt+"')")
+        self.connection.execute("INSERT INTO WatchedFiles (URL, WatchedAt) VALUES (?, ?)", [url, watchedAt])
 
         self.database.commit()
         self.disconnect()
@@ -159,7 +159,7 @@ class Database:
         self.lock.acquire()
         self.connect()
 
-        self.connection.execute("SELECT * FROM UnfinishedItems WHERE Url='"+url+"'")
+        self.connection.execute("SELECT * FROM UnfinishedItems WHERE Url=?", [url])
         data = self.connection.fetchall()
         self.database.commit()
         self.disconnect()
@@ -184,7 +184,7 @@ class Database:
         self.connect()
 
         self.connection.execute(
-            "UPDATE UnfinishedItems SET Time="+str(time)+", WatchedAt="+str(update_time)+" WHERE Url='"+url+"'")
+            "UPDATE UnfinishedItems SET Time=?, WatchedAt=? WHERE Url=?", [time, update_time, url])
 
         self.database.commit()
         self.disconnect()
@@ -195,7 +195,7 @@ class Database:
         self.connect()
 
         self.connection.execute(
-            "DELETE FROM UnfinishedItems WHERE Url='" + url + "'")
+            "DELETE FROM UnfinishedItems WHERE Url=?", [url])
 
         self.database.commit()
         self.disconnect()

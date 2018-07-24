@@ -438,7 +438,7 @@ class DatabaseHandler(web.RequestHandler):
 
         if url == "add_watched_file":
             Logger.write(2, "Adding to watched files")
-            TornadoServer.start_obj.database.add_watched_file(self.get_argument("url"), self.get_argument("watchedAt"))
+            TornadoServer.start_obj.database.add_watched_file(urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"))
 
         if url == "add_favorite":
             Logger.write(2, "Adding to favorites")
@@ -459,21 +459,21 @@ class DatabaseHandler(web.RequestHandler):
         if url == "remove_unfinished":
             Logger.write(2, "Removing unfinished")
             TornadoServer.start_obj.database.remove_watching_item(
-                self.get_argument("url"))
+                urllib.parse.unquote(self.get_argument("url")))
 
         if url == "add_unfinished":
             Logger.write(2, "Adding unfinished")
             TornadoServer.start_obj.database.add_watching_item(
                 self.get_argument("type"),
                 self.get_argument("name"),
-                self.get_argument("url"),
+                urllib.parse.unquote(self.get_argument("url")),
                 self.get_argument("image"),
                 int(self.get_argument("length")),
                 self.get_argument("time"))
 
         if url == "update_unfinished":
             TornadoServer.start_obj.database.update_watching_item(
-                self.get_argument("url"),
+                urllib.parse.unquote(self.get_argument("url")),
                 int(self.get_argument("position")),
                 self.get_argument("watchedAt"))
 
