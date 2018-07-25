@@ -6,6 +6,15 @@ class TorrentState:
     Done = 5
     WaitingUserFileSelection = 6
 
+    @staticmethod
+    def get_str(val):
+        if val == TorrentState.Initial: return "Initial"
+        if val == TorrentState.DownloadingMetaData: return "DownloadingMetaData"
+        if val == TorrentState.Downloading: return "Downloading"
+        if val == TorrentState.Paused: return "Paused"
+        if val == TorrentState.Done: return "Done"
+        if val == TorrentState.WaitingUserFileSelection: return "WaitingUserFileSelection"
+
 
 class PeerMessageType:
     Choke = 0

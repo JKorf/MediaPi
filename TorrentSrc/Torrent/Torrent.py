@@ -99,6 +99,10 @@ class Torrent:
             return True
         return False
 
+    @property
+    def state(self):
+        return self.__state
+
     def __init__(self, id, uri):
         self.name = None
         self.id = id
@@ -112,7 +116,7 @@ class Torrent:
         self.announce_uris = []
         self.info_hash = None
         self.files = []
-        self.state = TorrentState.Initial
+        self.__state = TorrentState.Initial
         self.__lock = Lock()
 
         self.media_file = None
@@ -137,7 +141,7 @@ class Torrent:
         self.network_manager = TorrentNetworkManager(self)
 
     def player_change(self, old, new):
-        if old ==PlayerState.Opening and new == PlayerState.Playing:
+        if old == PlayerState.Opening and new == PlayerState.Playing:
             self.media_file.set_state(StreamFileState.Playing)
 
     @classmethod
@@ -215,9 +219,9 @@ class Torrent:
     def start(self):
         Logger.write(2, 'Starting torrent')
         if self.from_magnet:
-            self.state = TorrentState.DownloadingMetaData
+            self.__set_state(TorrentState.DownloadingMetaData)
         else:
-            self.state = TorrentState.Downloading
+            self.__set_state(TorrentState.Downloading)
 
         self.engine.queue_repeating_work_item("tracker_manager", 10000, self.tracker_manager.update)
         self.engine.queue_repeating_work_item("peer_manager_new", 1000, self.peer_manager.update_new_peers)
@@ -302,12 +306,12 @@ class Torrent:
                 self.set_media_file(biggest)
             else:
                 # Multiple files, let user decide
-                self.state = TorrentState.WaitingUserFileSelection
+                self.__set_state(TorrentState.WaitingUserFileSelection)
                 for file in media_files:
                     season, epi = self.try_parse_season_episode(file.path)
                     file.season = season
                     file.episode = epi
-            EventManager.throw_event(EventType.TorrentMediaSelectionRequired, [media_files])
+                EventManager.throw_event(EventType.TorrentMediaSelectionRequired, [media_files])
 
         EventManager.throw_event(EventType.TorrentMetadataDone, [])
         Logger.write(3, "Torrent metadata read")
@@ -370,7 +374,7 @@ class Torrent:
     def set_media_file(self, file):
         self.media_file = StreamFile(file.length, file.start_byte, file.name, file.path)
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
-        self.state = TorrentState.Downloading
+        self.__set_state(TorrentState.Downloading)
         self.to_download_bytes = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
         Logger.write(2, "To download: " + str(self.to_download_bytes) + ", piece length: " + str(self.piece_length))
         Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
@@ -407,25 +411,30 @@ class Torrent:
 
         return True
 
+    def restart_downloading(self):
+        self.__set_state(TorrentState.Downloading)
+
     def pause(self):
-        Logger.write(3, 'Torrent paused')
-        self.state = TorrentState.Paused
+        self.__set_state(TorrentState.Paused)
 
     def unpause(self):
-        Logger.write(3, 'Torrent unpaused')
-        self.state = TorrentState.Downloading
+        self.__set_state(TorrentState.Downloading)
+
+    def torrent_done(self):
+        Logger.write(3, 'Torrent is done')
+        self.output_manager.flush()
+        self.to_download_bytes = 0
+        self.__set_state(TorrentState.Done)
+
+    def __set_state(self, value):
+        Logger.write(2, "Setting torrent state from " + TorrentState.get_str(self.__state) + " to " + TorrentState.get_str(value))
+        self.__state = value
 
     def get_data_bytes_for_stream(self, start_byte, length):
         return self.output_manager.stream_manager.get_data_for_stream(start_byte + self.media_file.start_byte, length)
 
     def get_data_bytes_for_hash(self, start_byte, length):
         return self.data_manager.get_data_bytes_for_hash(start_byte + self.media_file.start_byte, length)
-
-    def torrent_done(self):
-        Logger.write(3, 'Torrent is done')
-        self.output_manager.flush()
-        self.to_download_bytes = 0
-        self.state = TorrentState.Done
 
     def stop(self):
         Logger.write(2, 'Torrent stopping')

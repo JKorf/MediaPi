@@ -234,7 +234,7 @@ class TorrentDownloadManager:
         self.requeue(new_piece_index)
 
         if self.torrent.state == TorrentState.Done:
-            self.torrent.state = TorrentState.Downloading
+            self.torrent.restart_downloading()
 
         self.prio = False
         self.update_priority(True, False)
