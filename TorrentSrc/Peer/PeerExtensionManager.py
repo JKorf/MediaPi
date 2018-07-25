@@ -23,12 +23,12 @@ class PeerExtensionManager:
         dic = data[b'm']
         self.extension_dict = dic
         for key, value in dic.items():
-            extension = ProtocolExtensionManager.get_extension_by_id_name(key.decode('ascii'))
+            extension = ProtocolExtensionManager.get_extension_by_id_name(key.decode('utf8'))
             if extension is not None:
-                Logger.write(1, str(self.peer.id) + ' Peer supports ' + key.decode('ascii'))
+                Logger.write(1, str(self.peer.id) + ' Peer supports ' + key.decode('utf8'))
                 self.supported_peer_extensions[extension.extension_name] = value
             else:
-                Logger.write(1, str(self.peer.id) + ' Unknown peer extension: ' + key.decode('ascii'))
+                Logger.write(1, str(self.peer.id) + ' Unknown peer extension: ' + key.decode('utf8'))
 
     def peer_supports(self, name):
         return name in self.supported_peer_extensions

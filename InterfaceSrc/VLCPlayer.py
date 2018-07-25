@@ -50,7 +50,7 @@ class VLCPlayer:
             self.__vlc_instance = vlc.Instance("vlc -V omxil_vout --codec omxil --file-logging --logfile="+file_path+" --image-duration=-1 --file-caching=5000" + log_level + network_caching + ip_timeout)
         else:
             self.__vlc_instance = vlc.Instance("--image-duration=-1" + log_level + network_caching + ip_timeout)
-        Logger.write(3, "VLC version " + libvlc_get_version().decode('ascii'))
+        Logger.write(3, "VLC version " + libvlc_get_version().decode('utf8'))
 
     def play(self, type, title, url, img=None, time=0):
         Logger.write(2, "VLC Play | Type: " + type + ", title: " + title + ", url: " + url +", img: " + str(img) + ", time: " + str(time))
@@ -129,7 +129,7 @@ class VLCPlayer:
         tracks = self.__player.audio_get_track_description()
         result = []
         for trackid, trackname in tracks:
-            result.append((trackid, trackname.decode('ascii')))
+            result.append((trackid, trackname.decode('utf8')))
         return result
 
     def set_subtitle_file(self, file):

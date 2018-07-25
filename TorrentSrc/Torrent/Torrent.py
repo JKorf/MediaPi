@@ -263,7 +263,7 @@ class Torrent:
                 os.unlink(file_path)
 
     def parse_info_dictionary(self, info_dict):
-        self.name = info_dict[b'name'].decode('ascii')
+        self.name = info_dict[b'name'].decode('utf8')
         base_folder = Settings.get_string("base_folder")
         media_files = []
 
@@ -278,8 +278,8 @@ class Torrent:
                 path_list = file[b'path']
                 last_path = ""
                 for path_part in path_list:
-                    path += "\\" + path_part.decode('ascii')
-                    last_path = path_part.decode('ascii')
+                    path += "\\" + path_part.decode('utf8')
+                    last_path = path_part.decode('utf8')
 
                 fi = TorrentDownloadFile(file_length, total_length, last_path, path)
                 self.files.append(fi)
@@ -401,7 +401,7 @@ class Torrent:
 
     def parse_torrent_file(self, decoded_dict):
         for uri_list in decoded_dict[b'announce-list']:
-            self.announce_uris.append(uri_list[0].decode('ascii'))
+            self.announce_uris.append(uri_list[0].decode('utf8'))
 
         self.parse_info_dictionary(decoded_dict[b'info'])
 

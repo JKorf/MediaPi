@@ -23,7 +23,7 @@ class HDController:
             driveLines = drivelisto.split(b'\n')
             drives = []
             for line in driveLines:
-                line = line.decode('ascii')
+                line = line.decode('utf8')
                 index = line.find(':')
                 if index == -1:
                     continue
@@ -36,7 +36,7 @@ class HDController:
     def directory(path):
         Logger.write(2, path)
         dir = FileStructure(urllib.parse.unquote(path))
-        return to_JSON(dir).encode('ascii')
+        return to_JSON(dir).encode('utf8')
 
     @staticmethod
     def play_file(filename, path, position=0):

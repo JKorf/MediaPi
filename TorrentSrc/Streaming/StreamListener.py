@@ -345,7 +345,7 @@ class HttpHeader:
 
     @classmethod
     def from_string(cls, header):
-        header = header.decode('ascii')
+        header = header.decode('utf8')
         Logger.write(2, "Received: " + header)
         result = cls()
         split = header.splitlines(False)

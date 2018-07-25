@@ -29,7 +29,7 @@ class UtilController:
     def player_state(start):
         ret = [0, 5, 6]
         if start.player is None or start.player.get_state().value in ret:
-            return to_JSON(current_media(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)).encode('ascii')
+            return to_JSON(current_media(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)).encode('utf8')
 
         title = start.player.title
         percentage = 0

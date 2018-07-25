@@ -50,6 +50,6 @@ class ProtocolExtensionManager:
         dic = dict()
         m_dic = dict()
         for ext in [x for x in ProtocolExtensionManager.known_extensions if x.extension_type == ExtensionType.Extension and x.supported]:
-            m_dic[ext.id_name.encode('ascii')] = int(ext.reserved_id)
+            m_dic[ext.id_name.encode('utf8')] = int(ext.reserved_id)
         dic[b'm'] = m_dic
         return Bencode.bencode(dic)

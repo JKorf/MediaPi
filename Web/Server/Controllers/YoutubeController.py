@@ -49,7 +49,7 @@ class YoutubeController:
                 'thumbnail': channel['snippet']['thumbnails']['medium']['url']
             })
 
-        return to_JSON(result).encode('ascii')
+        return to_JSON(result).encode('utf8')
 
     @staticmethod
     @gen.coroutine
@@ -73,7 +73,7 @@ class YoutubeController:
 
         data = {"videos": uploads, "channels": []}
 
-        return to_JSON(data).encode('ascii')
+        return to_JSON(data).encode('utf8')
 
     @staticmethod
     @gen.coroutine
@@ -94,14 +94,14 @@ class YoutubeController:
                  'new': sub['contentDetails']['newItemCount'],
                  })
 
-        return to_JSON(channels).encode('ascii')
+        return to_JSON(channels).encode('utf8')
 
     @staticmethod
     @gen.coroutine
     def channel_feed(channel_id):
         videos = []
         yield YoutubeController.uploads_for_channel(channel_id, videos, 28)
-        return to_JSON(videos).encode('ascii')
+        return to_JSON(videos).encode('utf8')
 
     @staticmethod
     @gen.coroutine
