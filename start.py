@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-import json
 import os
+os.chdir(os.path.dirname(__file__))
+
+import json
 import subprocess
 import urllib.parse
 
 from TorrentSrc.Util.Enums import StreamFileState
-
-os.chdir(os.path.dirname(__file__))
-
 from Database.Database import Database
 from TorrentSrc.Torrent.Torrent import Torrent
 from TorrentSrc.Streaming.StreamListener import StreamListener
@@ -213,22 +212,24 @@ class StartUp:
                 proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
                 out, err = proc.communicate()
                 cells = out.split("Cell ")
-                cell_lines = [x for x in cells if network_ssid in x][0]
-                for line in cell_lines.split("\n"):
-                    if "Quality" in line:
-                        fields = line.split("  ")
-                        for field in fields:
-                            field.replace(" ", "")
-                            if len(field) <= 2:
-                                continue
+                cell_lines = [x for x in cells if network_ssid in x]
+                if len(cell_lines) != 0:
+                    network_lines = cell_lines[0]
+                    for line in network_lines.split("\n"):
+                        if "Quality" in line:
+                            fields = line.split("  ")
+                            for field in fields:
+                                field.replace(" ", "")
+                                if len(field) <= 2:
+                                    continue
 
-                            key_value = field.split("=")
-                            if len(key_value) == 1:
-                                key_value = field.split(":")
+                                key_value = field.split("=")
+                                if len(key_value) == 1:
+                                    key_value = field.split(":")
 
-                            if key_value[0] == "Quality":
-                                value_max = key_value[1].split("/")
-                                self.gui.set_wifi_quality(float(value_max[0]) / float(value_max[1]) * 100)
+                                if key_value[0] == "Quality":
+                                    value_max = key_value[1].split("/")
+                                    self.gui.set_wifi_quality(float(value_max[0]) / float(value_max[1]) * 100)
             else:
                 proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
                 out, err = proc.communicate()
