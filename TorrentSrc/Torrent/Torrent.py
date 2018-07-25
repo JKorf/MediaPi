@@ -103,6 +103,17 @@ class Torrent:
     def state(self):
         return self.__state
 
+    @property
+    def is_executing(self):
+        return self.__state == TorrentState.Downloading \
+               or self.__state == TorrentState.Paused
+
+    @property
+    def is_preparing(self):
+        return self.__state == TorrentState.Initial \
+               or self.__state == TorrentState.DownloadingMetaData \
+               or self.__state == TorrentState.WaitingUserFileSelection
+
     def __init__(self, id, uri):
         self.name = None
         self.id = id
@@ -130,6 +141,7 @@ class Torrent:
         self.user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
 
         self.engine = Engine.Engine('Main Engine', Settings.get_int("main_engine_tick_rate"))
+        self.peer_message_engine = Engine.Engine('Peer Message Engine', 200)
         self.download_counter = Counter()
 
         self.tracker_manager = TrackerManager(self)
@@ -235,7 +247,10 @@ class Torrent:
         self.engine.queue_repeating_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
         self.engine.queue_repeating_work_item("stream_manager", 1000, self.output_manager.stream_manager.update)
 
+        self.peer_message_engine.queue_repeating_work_item("peer_messages", 200, self.peer_manager.process_peer_messages)
+
         self.engine.start()
+        self.peer_message_engine.start()
         self.network_manager.start()
         self.clear_subs_folder()
         Logger.write(3, "Torrent started")
@@ -442,6 +457,7 @@ class Torrent:
         EventManager.deregister_event(self.user_file_selected_id)
 
         self.engine.stop()
+        self.peer_message_engine.stop()
         self.output_manager.stop()
         self.peer_manager.stop()
         self.tracker_manager.stop()

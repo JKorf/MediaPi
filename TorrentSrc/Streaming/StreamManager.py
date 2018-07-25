@@ -62,7 +62,7 @@ class StreamManager:
             self.playing = False
 
     def update(self):
-        if self.torrent.state == TorrentState.DownloadingMetaData or self.torrent.state == TorrentState.WaitingUserFileSelection:
+        if self.torrent.is_preparing:
             return True
 
         if not self.init:

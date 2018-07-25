@@ -15,6 +15,7 @@ class PeerMetaDataManager:
         self.peer = peer
 
         self.handshake_done = False
+        self.handshake_successful = False
         self.bitfield_done = False
         self.metadata_requested = False
         self.pause_handled = False
@@ -145,4 +146,5 @@ class PeerMetaDataManager:
 
         self.peer.extension_manager.parse_extension_bytes(response.reserved)
         Logger.write(1, "Received valid handshake response")
+        self.handshake_successful = True
         return True

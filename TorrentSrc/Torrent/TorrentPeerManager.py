@@ -177,6 +177,12 @@ class TorrentPeerManager:
     def are_fast_peers_available(self):
         return self.high_speed_peers > 0 or self.medium_speed_peers > 1
 
+    def process_peer_messages(self):
+        for peer in self.connected_peers:
+            peer.message_handler.update()
+
+        return True
+
     def stop(self):
         for peer in self.connecting_peers:
             peer.stop()

@@ -10,6 +10,7 @@ class PeerExtensionManager:
         self.supported_peer_extensions = dict()
         self.extension_bytes = None
         self.extension_dict = None
+        self.original_data = None
 
     def parse_extension_bytes(self, data):
         self.original_data = data

@@ -17,12 +17,17 @@ class PeerMessageHandler:
         self.metadata_wait_list = []
 
     def update(self):
-        if self.peer.connection_manager.connection_state != ConnectionState.Connected and self.peer.connection_manager.connection_state != ConnectionState.Disconnected:
+        if self.peer.connection_state != ConnectionState.Connected\
+        and self.peer.connection_state != ConnectionState.Disconnected:
             return True
 
-        start_time = current_time()
-        while current_time() - start_time < 100:
+        if not self.peer.metadata_manager.handshake_successful:
+            return True
+
+        processed_messages = 0
+        while True:
             if self.peer.torrent.state == TorrentState.Downloading and len(self.metadata_wait_list) > 0:
+                # Process wait list
                 Logger.write(1, str(self.peer.id) + " Processing already received messages now that we have metadata")
                 for message in self.metadata_wait_list:
                     self.handle_message(message)
@@ -31,22 +36,26 @@ class PeerMessageHandler:
 
             msg_bytes = self.peer.connection_manager.get_message()
             if msg_bytes is None:
+                # Nothing in buffer atm
                 return True
 
             message = BasePeerMessage.from_bytes(self.peer, msg_bytes)
             if message is None:
+                # Connection closed
                 Logger.write(2, "Unknown or invalid peer message received (id = " + str(msg_bytes[0]) + "), closing connection")
                 self.peer.stop()
                 return False
 
-            if self.peer.torrent.state == TorrentState.DownloadingMetaData or self.peer.torrent.state == TorrentState.WaitingUserFileSelection:
+            if self.peer.torrent.is_preparing:
+                # Add messages we cannot process yet to wait list
                 if not isinstance(message, MetadataMessage) and not isinstance(message, ExtensionHandshakeMessage):
                     Logger.write(1, str(self.peer.id) + " Adding " + str(message.__class__.__name__) + " to metadata wait list")
                     self.metadata_wait_list.append(message)
                     continue
 
+            # Handle messages
             self.handle_message(message)
-
+            processed_messages += 1
         return True
 
     def handle_message(self, message):

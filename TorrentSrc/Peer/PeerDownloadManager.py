@@ -29,7 +29,7 @@ class PeerDownloadManager:
         self.fast_peer_max_blocks = Settings.get_int("fast_peer_max_download_buffer") // block_size
 
     def update(self):
-        if self.peer.connection_manager.connection_state != ConnectionState.Connected:
+        if self.peer.connection_state != ConnectionState.Connected:
             return True
 
         self.check_current_downloading()
@@ -70,11 +70,13 @@ class PeerDownloadManager:
 
         for peer_download in list(self.downloading):
             if peer_download.block_download.block.done:
+                # Block already done
                 self.downloading.remove(peer_download)
                 peer_download.block_download.remove_peer(self.peer)
                 continue
 
             if peer_download.block_download.block.piece_index < self.peer.torrent.stream_position:
+                # Block no longer needed
                 self.downloading.remove(peer_download)
                 peer_download.block_download.remove_peer(self.peer)
                 continue

@@ -16,6 +16,17 @@ class Peer:
     low_max_download_speed = 100000
     medium_max_download_speed = 250000
 
+    @property
+    def bitfield(self):
+        # Only create a new bitfield when we actually have metadata for it
+        if self.__bitfield is None and not self.torrent.is_preparing:
+            self.__bitfield = Bitfield(self.torrent.data_manager.total_pieces)
+        return self.__bitfield
+
+    @property
+    def connection_state(self):
+        return self.connection_manager.connection_state
+
     def __init__(self, id, torrent, uri, source):
         self.id = id
         self.torrent = torrent
@@ -35,12 +46,6 @@ class Peer:
         self.counter = None
         self.peer_speed = PeerSpeed.Low
 
-    @property
-    def bitfield(self):
-        if self.__bitfield is None and self.torrent.state != TorrentState.DownloadingMetaData and self.torrent.state != TorrentState.WaitingUserFileSelection:
-            self.__bitfield = Bitfield(self.torrent.data_manager.total_pieces)
-        return self.__bitfield
-
     def start(self):
         Logger.write(1, str(self.id) + ' Starting peer')
         self.running = True
@@ -55,7 +60,6 @@ class Peer:
         self.engine.queue_repeating_work_item("connection_manager", 30000, self.connection_manager.update)
         self.engine.queue_repeating_work_item("metadata_manager", 1000, self.metadata_manager.update)
         self.engine.queue_repeating_work_item("download_manager", 200, self.download_manager.update)
-        self.engine.queue_repeating_work_item("message_handler", 200, self.message_handler.update)
         self.engine.queue_repeating_work_item("peer_counter", 1000, self.counter.update)
 
         self.engine.start()

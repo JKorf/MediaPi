@@ -135,7 +135,9 @@ class PeerConnectionManager:
     def update(self):
         if self.connection_state == ConnectionState.Initial:
             self.start()
-        if self.connection_state == ConnectionState.Connected and self.last_communication < current_time() - self.peer_timeout and self.connected_on < current_time() - 30000:
+        if self.connection_state == ConnectionState.Connected \
+                and self.last_communication < current_time() - self.peer_timeout \
+                and self.connected_on < current_time() - 30000:
             Logger.write(1, "Sending keep alive")
             self.send(KeepAliveMessage().to_bytes())
         if self.connection_state == ConnectionState.Disconnected:

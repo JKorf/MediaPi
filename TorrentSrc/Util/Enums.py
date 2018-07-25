@@ -1,10 +1,10 @@
 class TorrentState:
     Initial = 1
     DownloadingMetaData = 2
+    WaitingUserFileSelection = 6
     Downloading = 3
     Paused = 4
     Done = 5
-    WaitingUserFileSelection = 6
 
     @staticmethod
     def get_str(val):
