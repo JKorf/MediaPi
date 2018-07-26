@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 import os
+
+import gc
+
+import objgraph
+
 os.chdir(os.path.dirname(__file__))
 
 import json
@@ -266,6 +271,15 @@ class StartUp:
         EventManager.register_event(EventType.StartTorrent, self.start_torrent)
         EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
         EventManager.register_event(EventType.NewDHTNode, self.new_dht_node)
+
+        EventManager.register_event(EventType.Log, self.log)
+
+    def log(self):
+        gc.collect()
+        obj = objgraph.by_type('Torrent')
+        for i in range(len(obj)):
+            objgraph.show_chain(objgraph.find_backref_chain(obj[i], objgraph.is_proper_module), filename='chain.png')
+            objgraph.show_backrefs(obj, filename="graph" + str(i) + ".png")
 
     def start_torrent(self, url):
         if self.torrent is not None:

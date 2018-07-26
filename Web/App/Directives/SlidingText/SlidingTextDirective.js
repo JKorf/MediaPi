@@ -28,7 +28,7 @@
                     var span = scrolltainer.children('span');
 
                     $(element).css("overflow", "hidden");
-                    scrolltainer.css("height", "20px");
+                    scrolltainer.css("height", "24px");
                     scrolltainer.css("transition", "margin-left " + $scope.transtime + " linear");
                     span.css("white-space", "nowrap");
                     var width = span.width();

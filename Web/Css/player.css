@@ -53,8 +53,8 @@ player.open-settings{
 .player-title{
     position: absolute;
     left: 100px;
-    line-height: 24px;
-    top: 36px;
+    line-height: 26px;
+    top: 34px;
     right: 10px;
 }
 

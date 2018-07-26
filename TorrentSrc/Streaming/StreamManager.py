@@ -52,7 +52,7 @@ class StreamManager:
         self.max_in_buffer_threshold = Settings.get_int("max_bytes_reached_threshold")
         self.stream_tolerance = Settings.get_int("stream_pause_tolerance")
 
-        EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
+        self.player_state_id = EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
         self.listener.start_listening()
 
     def player_state_change(self, old, new):
@@ -155,6 +155,7 @@ class StreamManager:
         self.buffer.write_piece(piece)
 
     def stop(self):
+        EventManager.deregister_event(self.player_state_id)
         self.listener.stop()
 
 

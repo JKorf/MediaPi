@@ -1,12 +1,16 @@
 <div class="media-files">
-    <div class="selection-list-outer">
-        <div class="media-file selection-list-inner" ng-click="selectFile(file)" ng-class="{'selected-item' : selectedFile == file.path}" ng-repeat="file in files | orderBy:['season','episode']" ng-click="selectFile(file)">
-            <div class="media-file-selection-path multiline-truncate">
-                <span class="media-file-selection-path-title" ng-if="file.se">{{file.se}}<br/></span>
-                <span ng-class="{'media-file-selection-path-sub': file.se}">{{file.path}}</span></div>
-            <div class="media-file-selection-size">{{file.size}}</div>
-            <div class="media-file-selection-checkbox">
-                <input type="radio" name="file-selection" ng-model="selectedFile" value="{{file.path}}" />
+    <div class="media-file-season" ng-repeat="(key, value) in seasons">
+        <div class="media-file-season-title" ng-if="key != 0">Season {{key}}</div>
+        <div class="selection-list-outer">
+            <div class="media-file selection-list-inner" ng-click="selectFile(file)" ng-class="{'selected-item' : selectedFile == file.path}" ng-repeat="file in value | orderBy:'episode'" ng-click="selectFile(file)">
+                <div class="media-file-selection-path">
+                    <div class="media-file-selection-path-title" ng-if="file.season && file.episode">S{{addLeadingZero(file.season)}}E{{addLeadingZero(file.episode)}}</div>
+                    <div ng-class="{'media-file-selection-path-sub': file.se, 'truncate': selectedFile != file.path}">{{file.path}}</div>
+                </div>
+                <div class="media-file-selection-size">{{file.size}}</div>
+                <div class="media-file-selection-checkbox">
+                    <input type="radio" name="file-selection" ng-model="selectedFile" value="{{file.path}}" />
+                </div>
             </div>
         </div>
     </div>

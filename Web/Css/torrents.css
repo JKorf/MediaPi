@@ -109,6 +109,7 @@
     display:inline-block;
     vertical-align: top;
     font-size: 13px;
+    width: calc(100% - 130px);
     max-width: calc(100% - 130px);
 }
 
@@ -129,8 +130,18 @@
 
 .media-file-selection-path-title{
     font-weight: bold;
+    font-size:11px;
 }
 
 .media-file-selection-size{
     font-size: 12px;
+}
+
+.media-file-season-title{
+    padding-left: 4px;
+}
+
+.media-files .selection-list-outer{
+    margin-top: 6px;
+    margin-bottom: 6px;
 }

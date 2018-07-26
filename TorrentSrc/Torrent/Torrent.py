@@ -7,6 +7,10 @@ from threading import Lock
 
 import math
 
+import time
+
+import re
+
 from InterfaceSrc.VLCPlayer import PlayerState
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -76,18 +80,11 @@ class Torrent:
         if self.piece_length == 0:
             return missing
 
-        for piece in self.data_manager.pieces:
-            if piece.start_byte > 5000000:
-                break
+        start_piece = self.media_file.start_piece(self.piece_length)
+        pieces_to_check = 5000000 // self.piece_length
+        for piece in self.data_manager.get_pieces_by_index_range(start_piece, start_piece + pieces_to_check):
             for block in piece.blocks:
-                if block.start_byte_total > 5000000:
-                    return missing
                 if block.done:
-                    missing -= block.length
-
-        for piece in self.data_manager.pieces[-(2500000 // self.piece_length)]:
-            for block in piece.blocks:
-                if block.start_byte_total > self.media_file.end_byte or block.done:
                     missing -= block.length
 
         return missing
@@ -132,7 +129,6 @@ class Torrent:
 
         self.media_file = None
 
-        self.subtitles = []
         self.stream_file_hash = None
         self.to_download_bytes = 0
         self.outstanding_requests = 0
@@ -284,13 +280,8 @@ class Torrent:
                 fi = TorrentDownloadFile(file_length, total_length, last_path, path)
                 self.files.append(fi)
                 if self.is_media_file(path):
-
                     media_files.append(fi)
 
-                ext = os.path.splitext(path)[1]
-                if ext == ".srt":
-                    self.subtitles.append(fi)
-                    fi.path = base_folder + "subs/" + last_path + ext
                 total_length += file_length
                 Logger.write(2, "File: " + fi.path)
         else:
@@ -324,8 +315,10 @@ class Torrent:
                 self.__set_state(TorrentState.WaitingUserFileSelection)
                 for file in media_files:
                     season, epi = self.try_parse_season_episode(file.path)
-                    file.season = season
-                    file.episode = epi
+                    if season:
+                        file.season = season
+                    if epi:
+                        file.episode = epi
                 EventManager.throw_event(EventType.TorrentMediaSelectionRequired, [media_files])
 
         EventManager.throw_event(EventType.TorrentMetadataDone, [])
@@ -344,31 +337,35 @@ class Torrent:
         season_number = 0
         epi_number = 0
 
-        if "s0" in path:
-            season_index = path.index("s0") + 1
-            season_number = self.try_parse_number(path[season_index: season_index + 3])
-        if "s1" in path and season_number == 0:
-            season_index = path.index("s1") + 1
-            season_number = self.try_parse_number(path[season_index: season_index + 3])
-        if "s2" in path and season_number == 0:
-            season_index = path.index("s2") + 1
-            season_number = self.try_parse_number(path[season_index : season_index + 3])
-        if "season" in path and season_number == 0:
-            season_index = path.index("season") + 6
-            season_number = self.try_parse_number(path[season_index: season_index + 3])
+        matches = re.findall("\d+[x]\d+", path) # 7x11
+        if len(matches) > 0:
+            match = matches[-1]
+            season_epi = re.split("x", match)
+            if len(season_epi) == 2:
+                season_number = int(season_epi[0])
+                epi_number = int(season_epi[1])
 
-        if "e0" in path:
-            epi_index = path.index("e0") + 1
-            epi_number = self.try_parse_number(path[epi_index: epi_index + 3])
-        if "e1" in path and epi_number == 0:
-            epi_index = path.index("e1") + 1
-            epi_number = self.try_parse_number(path[epi_index: epi_index + 3])
-        if "e2" in path and epi_number == 0:
-            epi_index = path.index("e2") + 1
-            epi_number = self.try_parse_number(path[epi_index: epi_index + 3])
-        if "episode" in path and epi_number == 0:
-            epi_index = path.index("episode") + 7
-            epi_number = self.try_parse_number(path[epi_index: epi_index + 3])
+        if season_number == 0:
+            matches = re.findall("[s]\d+", path)  # s01 / s1
+            if len(matches) > 0:
+                match = matches[-1]
+                season_number = int(match[1:])
+
+        if season_number == 0:
+            if "season" in path:
+                season_index = path.rfind("season") + 6
+                season_number = self.try_parse_number(path[season_index: season_index + 3])
+
+        if epi_number == 0:
+            matches = re.findall("[e]\d+", path)  # e01 / e1
+            if len(matches) > 0:
+                match = matches[-1]
+                epi_number = int(match[1:])
+
+        if epi_number == 0:
+            if "episode" in path:
+                epi_index = path.rfind("episode") + 7
+                epi_number = self.try_parse_number(path[epi_index: epi_index + 3])
 
         return season_number, epi_number
 
@@ -385,14 +382,16 @@ class Torrent:
             return int(number_string[0])
         if number_string[1].isdigit():
             return int(number_string[1])
+        return 0
 
     def set_media_file(self, file):
         self.media_file = StreamFile(file.length, file.start_byte, file.name, file.path)
+        Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
+
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
         self.__set_state(TorrentState.Downloading)
         self.to_download_bytes = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
         Logger.write(2, "To download: " + str(self.to_download_bytes) + ", piece length: " + str(self.piece_length))
-        Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
 
     def user_file_selected(self, file_path):
         Logger.write(2, "User selected media file: " + file_path)
@@ -458,12 +457,24 @@ class Torrent:
 
         self.engine.stop()
         self.peer_message_engine.stop()
+        time.sleep(0.5) # Allow all updates to finish
+
         self.output_manager.stop()
         self.peer_manager.stop()
         self.tracker_manager.stop()
         self.network_manager.stop()
         for file in self.files:
             file.close()
+
+        self.engine = None
+        self.peer_message_engine = None
+        self.tracker_manager = None
+        self.peer_manager = None
+        self.data_manager = None
+        self.download_manager = None
+        self.output_manager = None
+        self.metadata_manager = None
+        self.network_manager = None
 
         EventManager.throw_event(EventType.TorrentStopped, [])
         Logger.write(3, 'Torrent stopped')

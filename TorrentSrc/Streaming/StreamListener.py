@@ -44,7 +44,7 @@ class StreamListener:
         Logger.lock.acquire()
         Logger.write(3, "-- Requests "+self.name+" state --")
         for client in self.requests:
-            Logger.write(3, "     " + str(client[0]) + ": " + client[2])
+            Logger.write(3, "     " + str(client.id) + ": " + client.status)
         Logger.lock.release()
 
     def start_listening(self):
@@ -55,8 +55,8 @@ class StreamListener:
     def handle_request(self, socket):
         if len(self.requests) > 0:
             Logger.write(2, self.name + " new request, closing others")
-            for (id, s, status) in self.requests:
-                s.close()
+            for request in self.requests:
+                request.active = False
 
         self.add_socket(socket, "")
         Logger.write(2, self.name + " new request, now " + str(len(self.requests)))
@@ -78,7 +78,7 @@ class StreamListener:
             Logger.write(2, self.name + " streamListener received unknown request: " + header.path)
 
         # Request completed, close
-        if self.in_requests(socket):
+        if self.is_open(socket):
             self.remove_socket(socket)
             Logger.write(2, self.name + " request finished, now " + str(len(self.requests)))
 
@@ -145,7 +145,7 @@ class StreamListener:
         if header.range:
             range_start = header.range_start
 
-        if self.in_requests(socket):
+        if self.is_open(socket):
             EventManager.throw_event(EventType.NewRequest, [range_start])
             if header.range is None:
                 Logger.write(2, self.name + ' request without range')
@@ -190,7 +190,7 @@ class StreamListener:
 
         while written < length:
             part_length = min(length - written, self.chunk_length)
-            if not self.in_requests(socket):
+            if not self.is_open(socket):
                 Logger.write(2, self.name + " socket no longer open 1: " + str(requested_byte) + ", " + str(length))
                 return
 
@@ -199,7 +199,7 @@ class StreamListener:
                 Logger.write(2, self.name + " canceling retrieved data because we are no longer running")
                 return
 
-            if not self.in_requests(socket):
+            if not self.is_open(socket):
                 Logger.write(2, self.name + " socket no longer open 2: " + str(requested_byte) + ", " + str(length))
                 return
 
@@ -229,23 +229,25 @@ class StreamListener:
                 return
 
     def add_socket(self, socket, status):
-        self.requests.append((self.id, socket, status))
+        self.requests.append(StreamRequest(self.id, socket, status))
         Logger.write(2, self.name + " added request with id " + str(self.id))
         self.id += 1
 
     def update_socket(self, socket, status):
-        tup = [x for x in self.requests if x[1] == socket][0]
-        self.requests.remove(tup)
-        self.requests.append((tup[0], tup[1], status))
+        req = [x for x in self.requests if x.socket == socket][0]
+        req.status = status
 
-    def in_requests(self, socket):
-        return len([x for x in self.requests if x[1] == socket])
+    def is_open(self, socket):
+        req = [x for x in self.requests if x.socket == socket]
+        if len(req) == 0:
+            return False
+        return req[0].active
 
     def remove_socket(self, socket):
         socket.close()
-        tup = [x for x in self.requests if x[1] == socket][0]
-        self.requests.remove(tup)
-        Logger.write(2, self.name + " removed client with id " + str(tup[0]))
+        req = [x for x in self.requests if x.socket == socket][0]
+        self.requests.remove(req)
+        Logger.write(2, self.name + " removed client with id " + str(req.id))
 
     def stop(self):
         EventManager.deregister_event(self.event_id_log)
@@ -253,6 +255,7 @@ class StreamListener:
         self.running = False
         if self.server is not None:
             self.server.close()
+        Logger.write(2, self.name + " stopped")
 
 
 class StreamServer:
@@ -384,3 +387,12 @@ class HttpHeader:
         result += "Content-Length: " + str(self.content_length) + "\r\n"
         result += "Content-Range: " + self.range + "\r\n" + "\r\n"
         return result
+
+
+class StreamRequest:
+
+    def __init__(self, id, socket, status):
+        self.socket = socket
+        self.status = status
+        self.id = id
+        self.active = True

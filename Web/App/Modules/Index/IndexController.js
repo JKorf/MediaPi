@@ -9,18 +9,8 @@
             {
                 $scope.selectedFile = false;
                 $scope.files = data;
-                for(var i = 0; i < $scope.files.length; i++){
-                    var file = $scope.files[i];
-                    if(file.season != 0 && file.episode != 0){
-                        var s = file.season + "";
-                        var e = file.episode + "";
-                        if(s.length == 1)
-                            s = "0" + s;
-                        if(e.length == 1)
-                            e = "0" + e;
-                        file.se = "S" + s + "E" + e;
-                    }
-                }
+                group_by_seasons();
+                console.log($scope.seasons);
                 $rootScope.openPopup();
                 CacheFactory.Get("/App/Modules/Index/mediaselection.html", 900).then(function(data){
                     $rootScope.setPopupContent("Select file to play", false, true, true, data, $scope, function() { return $scope.selectedFile; }).then(function(){
@@ -31,6 +21,21 @@
                 });
             }
         });
+
+        function group_by_seasons(){
+            $scope.seasons = {};
+            for(var i = 0; i < $scope.files.length; i++){
+                if(!$scope.seasons[$scope.files[i].season + ""])
+                    $scope.seasons[$scope.files[i].season + ""] = [];
+                $scope.seasons[$scope.files[i].season + ""].push($scope.files[i]);
+            }
+        }
+
+        $scope.addLeadingZero = function(target){
+            if(target < 10)
+                return "0" + target;
+            return target;
+        }
 
         $scope.selectFile = function(file){
             $scope.selectedFile = file.path;
@@ -131,6 +136,27 @@
             $http.get("/util/startup").then(function (response) {
                 $rootScope.pageTitle = response.data.instance_name;
             });
+
+            $scope.files = [
+                { episode: 0, path: "Path 1 1fda fhduaohfudoa hyfda hfyaods fadyh fophadusfd a daf", season: 0, size: "Some"},
+                { episode: 0, path: "Path 1 2", season: 0, size: "Some"},
+                { episode: 0, path: "Path 2 5", season: 0, size: "Some"},
+                { episode: 0, path: "Path 1 6", season: 0, size: "Some"},
+                { episode: 0, path: "Path 2 7", season: 0, size: "Some"},
+                { episode: 0, path: "Path 3 1", season: 0, size: "Some"},
+                { episode: 0, path: "Path 4 4", season: 0, size: "Some"},
+                { episode: 0, path: "Path 5 8", season: 0, size: "Some"},
+            ];
+            group_by_seasons();
+            console.log($scope.seasons);
+            $rootScope.openPopup();
+                CacheFactory.Get("/App/Modules/Index/mediaselection.html", 900).then(function(data){
+                    $rootScope.setPopupContent("Select file to play", false, true, true, data, $scope, function() { return $scope.selectedFile; }).then(function(){
+                        $http.post("/player/select_file?path=" + encodeURIComponent($scope.selectedFile));
+                    }, function(){
+                        $http.post("/player/stop_player");
+                    });
+                });
         }
 
         Init();

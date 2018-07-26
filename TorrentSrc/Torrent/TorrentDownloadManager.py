@@ -83,21 +83,21 @@ class TorrentDownloadManager:
 
         amount = 100
         if full:
-            amount = len(self.torrent.data_manager.pieces)
+            amount = len(self.torrent.data_manager._pieces)
 
         start = self.torrent.stream_position
         if full:
-            start = 0
-        pieces_to_look_at = self.torrent.data_manager.pieces[start: start + amount]
+            start = self.torrent.media_file.start_piece(self.torrent.piece_length)
+        pieces_to_look_at = self.torrent.data_manager.get_pieces_by_index_range(start, start + amount)
         for piece in pieces_to_look_at:
             piece.priority = self.prioritizer.prioritize_piece_index(piece.index)
         if full:
-            self.queue = sorted(self.queue, key=lambda x: self.torrent.data_manager.pieces[x.block.piece_index].priority, reverse=True)
+            self.queue = sorted(self.queue, key=lambda x: self.torrent.data_manager.get_piece_by_index(x.block.piece_index).priority, reverse=True)
 
         if self.queue:
             block_download = self.queue[0]
-            piece = self.torrent.data_manager.pieces[block_download.block.piece_index]
-            Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + ": "+str(self.torrent.data_manager.pieces[block_download.block.piece_index].priority)+"% "
+            piece = self.torrent.data_manager.get_piece_by_index(block_download.block.piece_index)
+            Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + ": "+str(piece.priority)+"% "
                             "("+str(piece.start_byte)+"-"+str(piece.end_byte)+"), took " + str(current_time()-start_time)+"ms, full: " + str(full))
         else:
             Logger.write(2, "No prio: queue empty")
@@ -112,7 +112,7 @@ class TorrentDownloadManager:
         Logger.write(2, "Starting download queue queuing")
         start_time = current_time()
         left = 0
-        for piece in self.torrent.data_manager.pieces:
+        for piece in self.torrent.data_manager._pieces:
             if piece.start_byte > self.torrent.media_file.end_byte or piece.index < start_position or piece.end_byte < self.torrent.media_file.start_byte:
                 continue
 
@@ -162,7 +162,7 @@ class TorrentDownloadManager:
             if block_download.block.done:
                 to_remove.append(block_download)
                 removed += 1
-            elif self.torrent.data_manager.pieces[block_download.block.piece_index].priority == 0:
+            elif self.torrent.data_manager.get_piece_by_index(block_download.block.piece_index).priority == 0:
                 to_remove.append(block_download)
                 removed += 1
             else:
@@ -205,7 +205,7 @@ class TorrentDownloadManager:
             return False
 
         currently_downloading = len(block_download.peers)
-        prio = self.torrent.data_manager.pieces[block_download.block.piece_index].priority
+        prio = self.torrent.data_manager.get_piece_by_index(block_download.block.piece_index).priority
         if self.torrent.end_game:
             return True
 

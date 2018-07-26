@@ -840,3 +840,7 @@ input[type="range"]::-webkit-slider-thumb {
     background: linear-gradient(#5297ff 10%, #61a0ff 30%, #61a0ff 70%, #5297ff 90%);
     color:white;
 }
+
+.selection-list-inner:first-child{
+    border-top:none;
+}

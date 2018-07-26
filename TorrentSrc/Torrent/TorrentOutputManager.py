@@ -41,40 +41,30 @@ class TorrentOutputManager:
             self.torrent.peer_manager.piece_done(item.index)
             self.stream_manager.write_piece(item)
 
-        self.check_subtitles()
-
         if not self.broadcasted_hash_data:
             # Check if first and last piece(s) are done to calculate the hash
             self.check_stream_file_hash()
 
         return True
 
-    def check_subtitles(self):
-        for sub in [x for x in self.torrent.subtitles if not x.done]:
-            sub_pieces = self.torrent.data_manager.get_pieces_by_range(sub.start_byte, sub.end_byte)
-            if all(piece.done for piece in sub_pieces):
-                Logger.write(2, "Subtitle done, going to write")
-                sub.write_file(sub_pieces)
-                EventManager.throw_event(EventType.SubtitleDownloaded, [sub.path])
-
     def check_stream_file_hash(self):
         if self.torrent.stream_file_hash is not None:
             return
 
-        start_piece = self.torrent.data_manager.pieces[self.torrent.media_file.start_piece(self.torrent.data_manager.piece_length)]
-        end_piece = self.torrent.data_manager.pieces[self.torrent.media_file.end_piece(self.torrent.data_manager.piece_length)]
+        start_piece = self.torrent.data_manager.get_piece_by_index(self.torrent.media_file.start_piece(self.torrent.data_manager.piece_length))
+        end_piece = self.torrent.data_manager.get_piece_by_index(self.torrent.media_file.end_piece(self.torrent.data_manager.piece_length))
         start_done = False
         end_done = False
 
         if start_piece.length < 65536:
-            if start_piece.done and self.torrent.outputdata_manager.pieces[self.torrent.media_file.start_piece(self.torrent.data_manager.piece_length) + 1].done:
+            if start_piece.done and self.torrent.outputdata_manager.get_piece_by_index(self.torrent.media_file.start_piece(self.torrent.data_manager.piece_length) + 1).done:
                 start_done = True
         else:
             if start_piece.done:
                 start_done = True
 
         if self.torrent.media_file.end_byte - end_piece.start_byte < 65536:
-            if end_piece.done and self.torrent.data_manager.pieces[self.torrent.media_file.end_piece(self.torrent.data_manager.piece_length) - 1].done:
+            if end_piece.done and self.torrent.data_manager.get_piece_by_index(self.torrent.media_file.end_piece(self.torrent.data_manager.piece_length) - 1).done:
                 end_done = True
         else:
             if end_piece.done:

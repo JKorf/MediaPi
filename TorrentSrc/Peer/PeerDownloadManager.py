@@ -83,7 +83,7 @@ class PeerDownloadManager:
 
             prio_timeout = 0
             if self.peer.peer_speed == PeerSpeed.Low and self.peer.torrent.peer_manager.are_fast_peers_available():
-                prio = self.peer.torrent.data_manager.pieces[peer_download.block_download.block.piece_index].priority
+                prio = self.peer.torrent.data_manager.get_piece_by_index(peer_download.block_download.block.piece_index).priority
                 prio_timeout = (prio / 2) * 1000
 
             passed_time = current_time() - peer_download.request_time
@@ -121,6 +121,7 @@ class PeerDownloadManager:
 
     def log(self):
         Logger.write(3, "       Currently downloading: " + str(len(self.downloading)))
+        Logger.write(3, "       Speed: " + str(self.peer.counter.value))
 
     def stop(self):
         self.stopped = True
