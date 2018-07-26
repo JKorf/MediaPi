@@ -518,7 +518,7 @@ input[type="range"]::-webkit-slider-thumb {
     background: #fff;
     z-index: 100;
     box-shadow: 6px 6px 7px #888888;
-    overflow: auto;
+    overflow: hidden;
 }
 
 @media only screen and (min-device-width: 768px){
@@ -538,9 +538,9 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .popup-content{
-    overflow: hidden;
+    overflow-y:auto;
     max-height: calc(100% - 40px);
-    min-height: 150px;
+    min-height: 50px;
     position:relative;
     padding: 14px;
 }
@@ -572,7 +572,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .popup-content.buttonsshown{
-    max-height: calc(100% - 80px);
+    max-height: calc(100% - 88px);
+    margin-bottom: 40px;
 }
 
 .popup-buttons{
@@ -580,6 +581,11 @@ input[type="range"]::-webkit-slider-thumb {
     border-top: 1px solid #ddd;
     align-items: center;
     justify-content: space-between;
+    position: absolute;
+    bottom:0;
+    left:0;
+    right:0;
+    background: white;
 }
 
 .popup-close{

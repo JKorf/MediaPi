@@ -139,9 +139,15 @@
 
 .media-file-season-title{
     padding-left: 4px;
+    font-weight: bold;
 }
 
 .media-files .selection-list-outer{
     margin-top: 6px;
     margin-bottom: 6px;
+}
+
+.media-file-selection-path-sub-title{
+    margin-top: 4px;
+    word-wrap:break-word;
 }

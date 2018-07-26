@@ -1,19 +1,17 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('IndexController', function ($scope, $rootScope, $q, $http, $state, $timeout, $compile, CacheFactory, RealtimeFactory) {
+    angular.module('pi-test').controller('IndexController', function ($scope, $rootScope, $q, $http, $state, $timeout, $compile, $window, CacheFactory, RealtimeFactory) {
         $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
 
         RealtimeFactory.register("IndexController", "request", function(event, data){
-            console.log(data);
             if(event == "media_selection")
             {
                 $scope.selectedFile = false;
                 $scope.files = data;
                 group_by_seasons();
-                console.log($scope.seasons);
                 $rootScope.openPopup();
                 CacheFactory.Get("/App/Modules/Index/mediaselection.html", 900).then(function(data){
-                    $rootScope.setPopupContent("Select file to play", false, true, true, data, $scope, function() { return $scope.selectedFile; }).then(function(){
+                    $rootScope.setPopupContent("Select file to play", true, true, true, data, $scope, function() { return $scope.selectedFile; }).then(function(){
                         $http.post("/player/select_file?path=" + encodeURIComponent($scope.selectedFile));
                     }, function(){
                         $http.post("/player/stop_player");
@@ -83,6 +81,11 @@
                 '</div>')($scope));
         }
 
+
+        angular.element($window).bind('resize', function(){
+            $(".popup-content").css("max-height", $window.innerHeight - 240 + "px");
+        });
+
         $rootScope.setPopupContent = function(title, showCancel, showOk, modal, content, scope, canConfirmFunc){
             var defer = $q.defer();
 
@@ -113,6 +116,10 @@
 
                 $(".popup-content").append(content)
                 $compile($(".popup-content")[0])(scope);
+
+                $timeout(function(){
+                    $(".popup-content").css("max-height", $window.innerHeight - 240 + "px");
+                });
             });
 
             return defer.promise;
@@ -136,27 +143,6 @@
             $http.get("/util/startup").then(function (response) {
                 $rootScope.pageTitle = response.data.instance_name;
             });
-
-            $scope.files = [
-                { episode: 0, path: "Path 1 1fda fhduaohfudoa hyfda hfyaods fadyh fophadusfd a daf", season: 0, size: "Some"},
-                { episode: 0, path: "Path 1 2", season: 0, size: "Some"},
-                { episode: 0, path: "Path 2 5", season: 0, size: "Some"},
-                { episode: 0, path: "Path 1 6", season: 0, size: "Some"},
-                { episode: 0, path: "Path 2 7", season: 0, size: "Some"},
-                { episode: 0, path: "Path 3 1", season: 0, size: "Some"},
-                { episode: 0, path: "Path 4 4", season: 0, size: "Some"},
-                { episode: 0, path: "Path 5 8", season: 0, size: "Some"},
-            ];
-            group_by_seasons();
-            console.log($scope.seasons);
-            $rootScope.openPopup();
-                CacheFactory.Get("/App/Modules/Index/mediaselection.html", 900).then(function(data){
-                    $rootScope.setPopupContent("Select file to play", false, true, true, data, $scope, function() { return $scope.selectedFile; }).then(function(){
-                        $http.post("/player/select_file?path=" + encodeURIComponent($scope.selectedFile));
-                    }, function(){
-                        $http.post("/player/stop_player");
-                    });
-                });
         }
 
         Init();
