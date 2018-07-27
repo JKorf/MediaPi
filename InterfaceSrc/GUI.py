@@ -18,9 +18,9 @@ from Shared.Settings import Settings
 class Communicate(QtCore.QObject):
 
     set_none = QtCore.pyqtSignal()
-    set_home = QtCore.pyqtSignal([str])
-    set_buffering = QtCore.pyqtSignal()
+    set_home = QtCore.pyqtSignal([str, bool])
     set_opening = QtCore.pyqtSignal()
+    set_file_select = QtCore.pyqtSignal()
 
 
 class GUI(QtGui.QMainWindow):
@@ -49,6 +49,7 @@ class GUI(QtGui.QMainWindow):
         self.com.set_none.connect(self.set_none)
         self.com.set_home.connect(self.set_home)
         self.com.set_opening.connect(self.set_opening)
+        self.com.set_file_select.connect(self.set_file_select)
 
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 
@@ -56,13 +57,16 @@ class GUI(QtGui.QMainWindow):
         self.width, self.height = screen_resolution.width(), screen_resolution.height()
 
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
+        EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.selection_required)
+        EventManager.register_event(EventType.TorrentMediaFileSelection, self.selection_done)
 
         self.general_info_panel = GeneralInfoPanel(self, 10, 10, 260, 160)
         self.loading_panel = LoadingPanel(self, self.width / 2 - 150, self.height / 2 - 100, 300, 200)
+        self.select_file_panel = SelectFilePanel(self, self.width / 2 - 150, self.height / 2 - 90, 300, 180)
         self.time_panel = TimePanel(self, self.width - 200, self.height - 88, 190, 78)
 
         self.background_timer = QtCore.QTimer(self)
-        self.background_timer.setInterval(1000 * 60 * 15)
+        self.background_timer.setInterval(1000 * 5)# * 60 * 15)
         self.background_timer.timeout.connect(self.cycle_background)
         self.background_timer.start()
 
@@ -72,13 +76,19 @@ class GUI(QtGui.QMainWindow):
         self.update_timer.start()
 
         self.setCursor(Qt.BlankCursor)
-        self.set_home(None)
+        self.set_home(None, True)
 
     @classmethod
     def new_gui(cls, start):
         GUI.app = QtGui.QApplication(sys.argv)
         myapp = GUI(start)
         return GUI.app, myapp
+
+    def selection_required(self, files):
+        self.com.set_file_select.emit()
+
+    def selection_done(self, file):
+        self.com.set_opening.emit()
 
     def player_state_change(self, old_state, new_state):
         if new_state == PlayerState.Opening:
@@ -87,13 +97,9 @@ class GUI(QtGui.QMainWindow):
             if self.start.player.type != 'Radio':
                 self.com.set_none.emit()
             else:
-                self.com.set_home.emit(self.start.player.title)
+                self.com.set_home.emit(self.start.player.title, False)
         elif new_state == PlayerState.Nothing:
-            self.com.set_home.emit(None)
-        elif new_state == PlayerState.Buffering:
-            self.com.set_buffering.emit()
-        elif new_state == PlayerState.Paused:
-            self.com.set_buffering.emit()
+            self.com.set_home.emit(None, False)
 
     def update_time(self):
         self.time_panel.update_time()
@@ -112,7 +118,7 @@ class GUI(QtGui.QMainWindow):
         if self.background_index > self.background_count:
             self.background_index = 1
 
-    def set_home(self, currently_playing):
+    def set_home(self, currently_playing, cycle_background):
         self.hide_background = False
         self.update_buffering = False
 
@@ -120,15 +126,25 @@ class GUI(QtGui.QMainWindow):
         self.general_info_panel.set_address(self.address)
         self.general_info_panel.set_currently_playing(self.currently_playing)
         self.general_info_panel.show()
+        self.select_file_panel.hide()
         self.time_panel.show()
         self.loading_panel.hide()
-        if not currently_playing:
+        if cycle_background:
             self.cycle_background()
 
     def set_opening(self):
         self.update_buffering = True
         self.loading_panel.show()
+        self.select_file_panel.hide()
         self.general_info_panel.show()
+        self.time_panel.show()
+        self.update_buffer_info()
+
+    def set_file_select(self):
+        self.update_buffering = False
+        self.select_file_panel.show()
+        self.general_info_panel.show()
+        self.loading_panel.hide()
         self.time_panel.show()
         self.update_buffer_info()
 
@@ -140,6 +156,7 @@ class GUI(QtGui.QMainWindow):
                                                                      QtCore.Qt.IgnoreAspectRatio)))
         self.setPalette(self.palette)
         self.general_info_panel.hide()
+        self.select_file_panel.hide()
         self.time_panel.hide()
         self.loading_panel.hide()
 
@@ -200,6 +217,13 @@ class InfoWidget(QtGui.QWidget):
         lbl.setStyleSheet("color: #bbb;")
         lbl.setFixedWidth(width)
         lbl.setText(text)
+        return lbl
+
+    def create_img(self, width, height, src):
+        lbl = QtGui.QLabel(self)
+        lbl.setFixedWidth(width)
+        lbl.setFixedHeight(height)
+        lbl.setPixmap(QtGui.QPixmap(src))
         return lbl
 
 
@@ -287,6 +311,21 @@ class LoadingPanel(InfoWidget):
 
     def set_percent(self, percent):
         self.title.setText("Loading "+str(percent)+"%")
+
+
+class SelectFilePanel(InfoWidget):
+    def __init__(self, parent, x, y, width, height):
+        InfoWidget.__init__(self, parent, x, y, width, height)
+
+        self.title = self.create_label(16, width, "Select a file to stream")
+        self.title.setAlignment(Qt.AlignCenter)
+        self.title.move(10, 26)
+        self.title.show()
+
+        self.select_img = self.create_img(64, 64, os.getcwd() + "/Web/Images/select_file.png")
+        self.select_img.setAlignment(Qt.AlignCenter)
+        self.select_img.move(width / 2 - 32, 75)
+        self.select_img.show()
 
 
 class TimePanel(InfoWidget):
