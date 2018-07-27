@@ -261,7 +261,6 @@ class Torrent:
     def parse_info_dictionary(self, info_dict):
         self.name = info_dict[b'name'].decode('utf8')
         base_folder = Settings.get_string("base_folder")
-        media_files = []
 
         if b'files' in info_dict:
             # Multifile
@@ -277,25 +276,22 @@ class Torrent:
                     path += "\\" + path_part.decode('utf8')
                     last_path = path_part.decode('utf8')
 
-                fi = TorrentDownloadFile(file_length, total_length, last_path, path)
+                fi = TorrentDownloadFile(file_length, total_length, last_path, path, self.is_media_file(path))
                 self.files.append(fi)
-                if self.is_media_file(path):
-                    media_files.append(fi)
 
                 total_length += file_length
                 Logger.write(2, "File: " + fi.path)
         else:
             # Singlefile
             total_length = info_dict[b'length']
-            file = TorrentDownloadFile(total_length, 0, self.name, base_folder + self.name)
+            file = TorrentDownloadFile(total_length, 0, self.name, base_folder + self.name, self.is_media_file(path))
             self.files.append(file)
             Logger.write(2, "File: " + file.path)
-            if self.is_media_file(self.name):
-                media_files.append(file)
 
         self.piece_length = info_dict[b'piece length']
         self.piece_hashes = info_dict[b'pieces']
         self.total_size = total_length
+        media_files = [x for x in self.files if x.is_media]
         if len(media_files) == 0:
             # No media file, can't play so just stop
             Logger.write(2, "No media file found in torrent, stopping")
@@ -519,7 +515,7 @@ class InfoHash:
 
 class TorrentDownloadFile:
 
-    def __init__(self, length, start_byte, name, path):
+    def __init__(self, length, start_byte, name, path, is_media):
         self.length = length
         self.start_byte = start_byte
         self.end_byte = start_byte + length
@@ -527,6 +523,7 @@ class TorrentDownloadFile:
         self.name = name
         self.stream = None
         self.done = False
+        self.is_media = is_media
 
         self.season = 0
         self.episode = 0
@@ -575,7 +572,7 @@ class TorrentDownloadFile:
 class StreamFile(TorrentDownloadFile):
 
     def __init__(self, length, start_byte, name, path):
-        super().__init__(length, start_byte, name, path)
+        super().__init__(length, start_byte, name, path, True)
 
         self.state = StreamFileState.MetaData
 

@@ -5,6 +5,7 @@
         https://eltechs.com/run-spotify-on-raspberry-pi/
 
 --- TODO ---
+    Gaat verder gaan met torrent goed?
     Zoeken als download al klaar is niet goed?
 
     kijken of lijntjes korter kunnen, niet vanaf meer dan 2 lagen door eigenlijk
