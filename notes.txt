@@ -8,8 +8,6 @@
     Zoeken als download al klaar is niet goed?
     Op de GUI tonen dat file select moet worden
 
-    popup-knoppen moeten always visible zijn
-
     kijken of lijntjes korter kunnen, niet vanaf meer dan 2 lagen door eigenlijk
     shared opruimen, wat moet bij torrent staan en wat is over hele applicatie?
 

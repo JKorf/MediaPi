@@ -169,7 +169,7 @@ class StreamListener:
         response_header.status_code = status
         response_header.content_length = end - start + 1
         response_header.set_range(start, end, length)
-        filename, file_extension = os.path.splitext(path)
+        filename, file_extension = os.path.splitext(path.lower())
         if file_extension not in StreamListener.mime_mapping:
             Logger.write(2, self.name + " unknown video type: " + str(file_extension) + ", defaulting to mp4")
             response_header.mime_type = StreamListener.mime_mapping[".mp4"]

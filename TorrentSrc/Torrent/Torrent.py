@@ -346,7 +346,13 @@ class Torrent:
                 epi_number = int(season_epi[1])
 
         if season_number == 0:
-            matches = re.findall("[s]\d+", path)  # s01 / s1
+            matches = re.findall("[s][0]\d+", path)  # s01
+            if len(matches) > 0:
+                match = matches[-1]
+                season_number = int(match[1:])
+
+        if season_number == 0:
+            matches = re.findall("[s]\d+", path)  # s1
             if len(matches) > 0:
                 match = matches[-1]
                 season_number = int(match[1:])
@@ -357,7 +363,13 @@ class Torrent:
                 season_number = self.try_parse_number(path[season_index: season_index + 3])
 
         if epi_number == 0:
-            matches = re.findall("[e]\d+", path)  # e01 / e1
+            matches = re.findall("[e][0]\d+", path)  # e01
+            if len(matches) > 0:
+                match = matches[-1]
+                epi_number = int(match[1:])
+
+        if epi_number == 0:
+            matches = re.findall("[e]\d+", path)  # e1
             if len(matches) > 0:
                 match = matches[-1]
                 epi_number = int(match[1:])
@@ -391,7 +403,7 @@ class Torrent:
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
         self.__set_state(TorrentState.Downloading)
         self.to_download_bytes = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
-        Logger.write(2, "To download: " + str(self.to_download_bytes) + ", piece length: " + str(self.piece_length))
+        Logger.write(2, "To download: " + str(self.to_download_bytes) + " ("+ str(self.to_download_bytes - self.media_file.length) +" overhead), piece length: " + str(self.piece_length))
 
     def user_file_selected(self, file_path):
         Logger.write(2, "User selected media file: " + file_path)

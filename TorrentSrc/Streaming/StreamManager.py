@@ -67,7 +67,7 @@ class StreamManager:
 
         if not self.init:
             self.init = True
-            self.end_buffer_start_byte = self.torrent.media_file.end_byte - Settings.get_int("stream_end_buffer_tolerance")
+            self.end_buffer_start_byte = self.torrent.media_file.length - Settings.get_int("stream_end_buffer_tolerance")
             self.start_buffer_end_byte = Settings.get_int("stream_start_buffer")
 
             self.end_piece = int(math.floor(self.torrent.media_file.end_byte / self.torrent.piece_length))
@@ -100,6 +100,8 @@ class StreamManager:
         if not self.init:
             return None
 
+        relative_start_byte = start_byte - self.torrent.media_file.start_byte
+
         # if new request and we are seeking (media_file.state == Seeking) check if it is in the start or end buffer.
         # If it is in either we shouldn't change stream position. once we start playing again we should update the
         # stream position to where we are then
@@ -108,7 +110,7 @@ class StreamManager:
         if self.torrent.media_file.state == StreamFileState.Playing:
             if start_byte + length != self.last_request_end\
                     and self.last_request_end != 0\
-                    and (start_byte > self.start_buffer_end_byte or start_byte + length < self.end_buffer_start_byte)\
+                    and (relative_start_byte > self.start_buffer_end_byte and relative_start_byte + length < self.end_buffer_start_byte)\
                     and start_byte - self.last_request_end != 0:
                     Logger.write(2, "Last: " + str(self.last_request_end) + ", this: " + str(start_byte))
                     # not a follow up request.. Probably seeking
@@ -119,11 +121,17 @@ class StreamManager:
 
         elif self.torrent.media_file.state == StreamFileState.MetaData:
             # Requests to search for metadata. Normally the first x bytes and last x bytes of the file. Don't change
-            pass
+            if self.torrent.piece_length:
+                request_piece = int(math.floor(start_byte / self.torrent.piece_length))
+                if relative_start_byte > self.start_buffer_end_byte and relative_start_byte + length < self.end_buffer_start_byte:
+                    if request_piece not in self.torrent.download_manager.upped_prios:
+                        Logger.write(2, "Received request for metadata not in buffer. Upping prio for " + str(request_piece))
+                        # not a piece currently marked as buffer, should update priority
+                        self.torrent.download_manager.up_priority(request_piece)
 
         elif self.torrent.media_file.state == StreamFileState.Seeking:
             # Seeking to a new position. Some metadata requests are expected. Only change if not in start/end buffer
-            if start_byte < self.start_buffer_end_byte or start_byte + length > self.end_buffer_start_byte:
+            if relative_start_byte < self.start_buffer_end_byte or relative_start_byte + length > self.end_buffer_start_byte:
                 if self.playing:
                     # If request is for start/end buffer but we are playing do a seek
                     self.seek(start_byte)

@@ -17,6 +17,7 @@ class TorrentDownloadManager:
         self.prio = False
         self.reprio_after_metadata = False
         self.last_get_result = 0, 0
+        self.upped_prios = []
 
         self.queue = []
         self.queue_lock = Lock()
@@ -47,6 +48,10 @@ class TorrentDownloadManager:
         Logger.write(3, "     First in queue: " + first)
         Logger.write(3, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]))
         Logger.lock.release()
+
+    def up_priority(self, piece_index):
+        self.upped_prios.append(piece_index)
+        self.update_priority(True)
 
     def update(self):
         if self.torrent.state != TorrentState.Downloading:

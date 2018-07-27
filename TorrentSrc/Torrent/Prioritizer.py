@@ -14,7 +14,6 @@ class StreamPrioritizer:
         self.end_piece = 0
         self.stream_end_buffer_pieces = 0
         self.stream_play_buffer_high_priority = 0
-        self.subtitle_pieces = []
         self.max_chunk_size = Settings.get_int("max_chunk_size")
 
     def prioritize_piece_index(self, piece_index):
@@ -25,7 +24,7 @@ class StreamPrioritizer:
             self.stream_end_buffer_pieces = self.torrent.data_manager.get_piece_by_offset(self.torrent.media_file.end_byte - Settings.get_int("stream_end_buffer_tolerance")).index
             self.stream_play_buffer_high_priority = max(1500000 // self.torrent.piece_length, 2) # TODO setting
 
-        if piece_index in self.subtitle_pieces:
+        if piece_index in self.torrent.download_manager.upped_prios:
             return 100
 
         if piece_index < self.start_piece or piece_index > self.end_piece:
