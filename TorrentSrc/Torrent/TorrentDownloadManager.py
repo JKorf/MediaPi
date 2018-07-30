@@ -97,13 +97,12 @@ class TorrentDownloadManager:
         for piece in pieces_to_look_at:
             piece.priority = self.prioritizer.prioritize_piece_index(piece.index)
         if full:
-            self.queue = sorted(self.queue, key=lambda x: self.torrent.data_manager.get_piece_by_index(x.block.piece_index).priority, reverse=True)
+            self.queue = sorted(self.queue, key=lambda x: x.piece.priority, reverse=True)
 
         if self.queue:
             block_download = self.queue[0]
-            piece = self.torrent.data_manager.get_piece_by_index(block_download.block.piece_index)
-            Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + ": "+str(piece.priority)+"% "
-                            "("+str(piece.start_byte)+"-"+str(piece.end_byte)+"), took " + str(current_time()-start_time)+"ms, full: " + str(full))
+            Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + ": "+str(block_download.piece.priority)+"% "
+                            "("+str(block_download.piece.start_byte)+"-"+str(block_download.piece.end_byte)+"), took " + str(current_time()-start_time)+"ms, full: " + str(full))
         else:
             Logger.write(2, "No prio: queue empty")
 
@@ -126,7 +125,7 @@ class TorrentDownloadManager:
 
             piece.reset()
             for block in piece.blocks:
-                self.queue.append(BlockDownload(block))
+                self.queue.append(BlockDownload(block, piece))
                 left += block.length
 
         self.slow_peer_block_offset = 15000000 // self.torrent.data_manager.block_size # TODO Setting
@@ -167,7 +166,7 @@ class TorrentDownloadManager:
             if block_download.block.done:
                 to_remove.append(block_download)
                 removed += 1
-            elif self.torrent.data_manager.get_piece_by_index(block_download.block.piece_index).priority == 0:
+            elif block_download.piece.priority == 0:
                 to_remove.append(block_download)
                 removed += 1
             else:
@@ -210,7 +209,7 @@ class TorrentDownloadManager:
             return False
 
         currently_downloading = len(block_download.peers)
-        prio = self.torrent.data_manager.get_piece_by_index(block_download.block.piece_index).priority
+        prio = block_download.piece.priority
         if self.torrent.end_game:
             return True
 
@@ -251,7 +250,7 @@ class TorrentDownloadManager:
         self.queue_lock.acquire()
         for block in piece.blocks:
             self.torrent.left += block.length
-            block_download = BlockDownload(block)
+            block_download = BlockDownload(block, piece)
             self.queue.insert(0, block_download)
 
         self.queue_lock.release()
@@ -259,8 +258,9 @@ class TorrentDownloadManager:
 
 class BlockDownload:
 
-    def __init__(self, block):
+    def __init__(self, block, piece):
         self.block = block
+        self.piece = piece
         self.peers = []
         self.lock = Lock()
 
