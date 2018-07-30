@@ -66,7 +66,7 @@ class GUI(QtGui.QMainWindow):
         self.time_panel = TimePanel(self, self.width - 200, self.height - 88, 190, 78)
 
         self.background_timer = QtCore.QTimer(self)
-        self.background_timer.setInterval(1000 * 5)# * 60 * 15)
+        self.background_timer.setInterval(1000 * 60 * 15)
         self.background_timer.timeout.connect(self.cycle_background)
         self.background_timer.start()
 
