@@ -119,6 +119,7 @@ class GUI(QtGui.QMainWindow):
             self.background_index = 1
 
     def set_home(self, currently_playing, cycle_background):
+        should_cycle_background = self.hide_background
         self.hide_background = False
         self.update_buffering = False
 
@@ -129,7 +130,7 @@ class GUI(QtGui.QMainWindow):
         self.select_file_panel.hide()
         self.time_panel.show()
         self.loading_panel.hide()
-        if cycle_background:
+        if cycle_background or should_cycle_background:
             self.cycle_background()
 
     def set_opening(self):
