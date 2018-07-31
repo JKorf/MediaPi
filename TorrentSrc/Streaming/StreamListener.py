@@ -48,7 +48,7 @@ class StreamListener:
         Logger.lock.release()
 
     def start_listening(self):
-        self.thread = CustomThread(self.server.start, "Stream listener: " + self.name)
+        self.thread = CustomThread(self.server.start, "Listener: " + self.name)
         self.running = True
         self.thread.start()
 

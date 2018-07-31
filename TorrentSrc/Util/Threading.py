@@ -30,7 +30,7 @@ class CustomThread:
     def __init__(self, target, thread_name, args=[]):
         self.target = target
         self.args = args
-        self.thread = threading.Thread(target=self.__run)
+        self.thread = threading.Thread(name=thread_name, target=self.__run)
         self.thread.daemon = True
         self.thread_name = thread_name
         ThreadManager.add_thread(self)
