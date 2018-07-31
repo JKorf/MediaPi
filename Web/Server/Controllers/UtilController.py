@@ -75,7 +75,8 @@ class UtilController:
                            ThreadManager.thread_count(),
                            psutil.cpu_percent(),
                            psutil.virtual_memory().percent,
-                           torrent.left)
+                           torrent.left,
+                           torrent.overhead)
 
         if AppSettings.get_bool("dht"):
             de.add_dht(start.dht.routing_table.count_nodes())

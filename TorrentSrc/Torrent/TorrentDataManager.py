@@ -85,16 +85,19 @@ class TorrentDataManager:
             if self.torrent.state == TorrentState.Done:
                 Logger.write(1, 'Received a block but were already done')
                 self.blocks_done.remove((piece_index, offset, data))
+                self.torrent.overhead += len(data)
                 continue
 
             if block.piece_index < self.torrent.stream_position and not block.persistent:
                 Logger.write(1, 'Received a block which is no longer needed')
                 self.blocks_done.remove((piece_index, offset, data))
+                self.torrent.overhead += len(data)
                 continue
 
             if block.done:
                 Logger.write(1, 'Received block but piece was already done')
                 self.blocks_done.remove((piece_index, offset, data))
+                self.torrent.overhead += len(data)
                 continue
 
             self.write_block(block, data)

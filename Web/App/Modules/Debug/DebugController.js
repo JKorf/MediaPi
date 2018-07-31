@@ -118,6 +118,8 @@
                     $scope.debugInfo.torrent_state = "Paused";
                 if ($scope.debugInfo.torrent_state == 5)
                     $scope.debugInfo.torrent_state = "Done";
+                if ($scope.debugInfo.torrent_state == 6)
+                    $scope.debugInfo.torrent_state = "Waiting file selection";
             }, function(er){
                 request = false;
                 $scope.debugInfo = false;

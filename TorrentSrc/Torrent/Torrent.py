@@ -132,6 +132,7 @@ class Torrent:
         self.stream_file_hash = None
         self.to_download_bytes = 0
         self.outstanding_requests = 0
+        self.overhead = 0
 
         self.player_event_id = EventManager.register_event(EventType.PlayerStateChange, self.player_change)
         self.user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
