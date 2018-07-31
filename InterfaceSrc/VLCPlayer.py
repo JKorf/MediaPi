@@ -7,9 +7,8 @@ from InterfaceSrc import vlc
 from InterfaceSrc.vlc import EventType, libvlc_get_version
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Threading import CustomThread
 from Shared.Util import current_time
-
-from TorrentSrc.Util.Threading import CustomThread
 
 
 class VLCPlayer:

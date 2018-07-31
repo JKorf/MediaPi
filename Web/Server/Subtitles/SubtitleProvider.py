@@ -4,10 +4,10 @@ import os
 from threading import Lock
 
 from InterfaceSrc.VLCPlayer import PlayerState
+from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from Shared.Events import EventManager, EventType
-from TorrentSrc.Util.Threading import CustomThread
+from Shared.Threading import CustomThread
 from Web.Server.Subtitles.SubtitlesOpenSubtitles import SubtitlesOpenSubtitles
 from Web.Server.Subtitles.SubtitlesSubDB import SubtitlesSubDB
 

@@ -1,26 +1,20 @@
 import os
-import sys
 import urllib.parse
 import urllib.request
-
-from shutil import copyfile, copytree, rmtree
 
 import psutil
 from tornado import gen
 
-from Shared.Settings import Settings as AppSettings
+from Shared.Events import EventManager
+from Shared.Events import EventType
 from Shared.Logger import Logger
+from Shared.Settings import Settings as AppSettings
 from Shared.Stats import Stats
+from Shared.Threading import ThreadManager
 from Shared.Util import to_JSON, parse_bool, RequestFactory, current_time
-from TorrentSrc.Util.Threading import ThreadManager, CustomThread
+from TorrentSrc.Util.Enums import TorrentState
 from TorrentSrc.Util.Util import write_size
 from Web.Server.Models import DebugInfo, current_media, Version, Settings, Info, Status, StartUp
-
-from TorrentSrc.Util.Enums import TorrentState
-
-from Shared.Events import EventManager
-
-from Shared.Events import EventType
 
 
 class UtilController:

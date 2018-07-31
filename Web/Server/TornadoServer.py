@@ -2,10 +2,10 @@ import base64
 import json
 import os
 import socket
-import urllib.request
-import urllib.parse
-
 import time
+import urllib.parse
+import urllib.request
+
 import tornado
 from tornado import gen
 from tornado import ioloop, web, websocket
@@ -13,9 +13,9 @@ from tornado import ioloop, web, websocket
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, RequestFactory
 from TorrentSrc.Util.Enums import TorrentState
-from TorrentSrc.Util.Threading import CustomThread
 from TorrentSrc.Util.Util import get_file_info
 from Web.Server.Controllers.HDController import HDController
 from Web.Server.Controllers.MovieController import MovieController

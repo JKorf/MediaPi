@@ -1,18 +1,15 @@
 import os
-import random
-import sys
-import urllib.parse
 import socket
+import sys
 import time
+import urllib.parse
 from threading import Lock
 
+from Shared.Events import EventManager
+from Shared.Events import EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from TorrentSrc.Util.Threading import CustomThread
-
-from Shared.Events import EventType
-
-from Shared.Events import EventManager
+from Shared.Threading import CustomThread
 
 
 class StreamListener:

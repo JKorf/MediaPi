@@ -3,7 +3,7 @@ from time import sleep
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
-from TorrentSrc.Util.Threading import CustomThread
+from Shared.Threading import CustomThread
 
 
 class TorrentNetworkManager:

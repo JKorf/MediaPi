@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-import os
-
 import gc
+import os
 
 import objgraph
 
@@ -24,7 +23,7 @@ from Shared.Stats import Stats
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 
-from TorrentSrc.Util.Threading import CustomThread
+from Shared.Threading import CustomThread
 
 from Web.Server.TornadoServer import TornadoServer
 from Web.Server.Subtitles.SubtitleProvider import SubtitleProvider

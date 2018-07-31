@@ -1,14 +1,10 @@
-from Shared.Util import current_time
-
 from time import sleep
 
-from TorrentSrc.Util.Threading import CustomThread
-
-from Shared.Logger import Logger
-
 from Shared.Events import EventManager
-
 from Shared.Events import EventType
+from Shared.Logger import Logger
+from Shared.Threading import CustomThread
+from Shared.Util import current_time
 
 
 class Engine:

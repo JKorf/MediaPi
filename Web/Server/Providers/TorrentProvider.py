@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import datetime
 from functools import wraps
 from lxml import html
 import re
@@ -9,7 +8,7 @@ import time
 from urllib.request import urlopen
 from urllib.request import Request
 
-from TorrentSrc.Util.Util import headers
+from Shared.Util import headers
 
 unicode = str
 

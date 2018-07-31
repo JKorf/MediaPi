@@ -15,6 +15,7 @@ from InterfaceSrc.VLCPlayer import PlayerState
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Util import headers
 from TorrentSrc.Engine import Engine
 from TorrentSrc.Torrent.TorrentPeerManager import TorrentPeerManager
 from TorrentSrc.Torrent.TorrentDataManager import TorrentDataManager
@@ -27,7 +28,6 @@ from TorrentSrc.Util import Bencode
 from TorrentSrc.Util.Bencode import BTFailure
 from TorrentSrc.Util.Counter import Counter
 from TorrentSrc.Util.Enums import TorrentState, StreamFileState
-from TorrentSrc.Util.Util import headers
 
 
 class Torrent:

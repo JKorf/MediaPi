@@ -3,16 +3,15 @@ import time
 from urllib.parse import urlparse
 
 from Shared.Events import EventManager, EventType
-from TorrentSrc.Util import Bencode
-from TorrentSrc.Util.Bencode import BTFailure
-
 from Shared.Logger import *
+from Shared.Threading import CustomThread
 from Shared.Util import current_time
 from TorrentSrc.Connections import *
 from TorrentSrc.Tracker import TrackerMessages
-from TorrentSrc.Util.Threading import CustomThread
-from TorrentSrc.Util.Util import uri_from_bytes
+from TorrentSrc.Util import Bencode
+from TorrentSrc.Util.Bencode import BTFailure
 from TorrentSrc.Util.Enums import PeerSource
+from TorrentSrc.Util.Util import uri_from_bytes
 
 
 class TrackerFactory:

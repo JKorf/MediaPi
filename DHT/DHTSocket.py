@@ -1,12 +1,12 @@
-from socket import socket, AF_INET, SOCK_DGRAM, error
+from socket import socket, AF_INET, SOCK_DGRAM
 from threading import Lock
 
 from DHT.DHTMessages import BaseDHTMessage, QueryDHTMessage, ResponseDHTMessage, ErrorDHTMessage
 from DHT.DHTNode import NodeId, Node
 from DHT.DHTTokenManager import TransactionIdManager
 from Shared.Logger import Logger
+from Shared.Threading import CustomThread
 from Shared.Util import current_time
-from TorrentSrc.Util.Threading import CustomThread
 
 
 class DHTSocket:
