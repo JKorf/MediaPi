@@ -10,8 +10,6 @@
 
     Allowed fast imp
 
-    shared opruimen, wat moet bij torrent staan en wat is over hele applicatie?
-
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database
 
