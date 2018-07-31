@@ -87,7 +87,7 @@ class TorrentDataManager:
                 self.blocks_done.remove((piece_index, offset, data))
                 continue
 
-            if block.piece_index < self.torrent.stream_position:
+            if block.piece_index < self.torrent.stream_position and not block.persistent:
                 Logger.write(1, 'Received a block which is no longer needed')
                 self.blocks_done.remove((piece_index, offset, data))
                 continue

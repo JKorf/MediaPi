@@ -75,16 +75,9 @@ class PeerDownloadManager:
                 peer_download.block_download.remove_peer(self.peer)
                 continue
 
-            if peer_download.block_download.block.piece_index < self.peer.torrent.stream_position:
-                # Block no longer needed
-                self.downloading.remove(peer_download)
-                peer_download.block_download.remove_peer(self.peer)
-                continue
-
             prio_timeout = 0
             if self.peer.peer_speed == PeerSpeed.Low and self.peer.torrent.peer_manager.are_fast_peers_available():
-                prio = self.peer.torrent.data_manager.get_piece_by_index(peer_download.block_download.block.piece_index).priority
-                prio_timeout = (prio / 2) * 1000
+                prio_timeout = (peer_download.block_download.piece.priority / 2) * 1000
 
             passed_time = current_time() - peer_download.request_time
             if passed_time > (55000 - prio_timeout):

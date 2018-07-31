@@ -16,7 +16,7 @@ class PeerMessageHandler:
         self.peer = peer
         self.metadata_wait_list = []
 
-    def update(self):
+    def update(self, allowed_process_time):
         if self.peer.connection_state != ConnectionState.Connected\
         and self.peer.connection_state != ConnectionState.Disconnected:
             return True
@@ -25,7 +25,8 @@ class PeerMessageHandler:
             return True
 
         processed_messages = 0
-        while True:
+        start_time = current_time()
+        while current_time() - start_time < allowed_process_time:
             if self.peer.torrent.state == TorrentState.Downloading and len(self.metadata_wait_list) > 0:
                 # Process wait list
                 Logger.write(1, str(self.peer.id) + " Processing already received messages now that we have metadata")

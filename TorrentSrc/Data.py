@@ -64,7 +64,7 @@ class Bitfield:
 
 class Block:
 
-    def __init__(self, index, piece_index, block_index_in_piece, start_byte_in_piece, start_byte_total, length):
+    def __init__(self, index, piece_index, block_index_in_piece, start_byte_in_piece, start_byte_total, length, persistent):
         self.index = index
         self.piece_index = piece_index
         self.block_index_in_piece = block_index_in_piece
@@ -73,6 +73,7 @@ class Block:
         self.length = length
         self.done = False
         self.data = None
+        self.persistent = persistent
 
     def write_data(self, data):
         self.data = data
@@ -101,9 +102,11 @@ class Piece:
         partial_block = self.length % self.block_size
         whole_blocks = int(math.floor(self.length / self.block_size))
         for index in range(whole_blocks):
-            self.blocks.append(Block(self.block_start_index + index, self.index, index, index * self.block_size, self.start_byte + (index * self.block_size), self.block_size))
+            self.blocks.append(Block(self.block_start_index + index, self.index, index, index * self.block_size,
+                                     self.start_byte + (index * self.block_size), self.block_size, self.persistent))
         if partial_block != 0:
-            self.blocks.append(Block(self.block_start_index + len(self.blocks), self.index, len(self.blocks), len(self.blocks) * self.block_size, self.start_byte + (len(self.blocks) * self.block_size), partial_block))
+            self.blocks.append(Block(self.block_start_index + len(self.blocks), self.index, len(self.blocks),
+                                     len(self.blocks) * self.block_size, self.start_byte + (len(self.blocks) * self.block_size), partial_block, self.persistent))
 
     def get_block_by_offset(self, offset_in_piece):
         return next((x for x in self.blocks if x.start_byte_in_piece == offset_in_piece), None)

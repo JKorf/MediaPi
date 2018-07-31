@@ -48,5 +48,5 @@ class StreamPrioritizer:
             return 100
 
         dif_bytes = dif*self.torrent.piece_length
-        return max(10, 100 - (dif_bytes / 1000 / 1000))
+        return max(10, round(100 - (dif_bytes / 1000 / 1000), 4))
 

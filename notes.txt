@@ -8,14 +8,14 @@
     Continue with torrent
     Seeking still shit
 
+    Allowed fast imp
+
     shared opruimen, wat moet bij torrent staan en wat is over hele applicatie?
 
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database
 
     speed graph
-
-    Volgende aflevering van series automatisch afspelen
 
     Tv control:
         https://ownyourbits.com/2017/02/02/control-your-raspberry-pi-with-your-tv-remote/

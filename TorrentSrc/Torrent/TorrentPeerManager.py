@@ -142,6 +142,7 @@ class TorrentPeerManager:
 
         self.high_speed_peers = len([x for x in self.connected_peers if x.peer_speed == PeerSpeed.High])
         self.medium_speed_peers = len([x for x in self.connected_peers if x.peer_speed == PeerSpeed.Medium])
+        self.connected_peers = sorted(self.connected_peers, key=lambda x: x.counter.value, reverse=True)
 
         return True
 
@@ -178,8 +179,16 @@ class TorrentPeerManager:
         return self.high_speed_peers > 0 or self.medium_speed_peers > 1
 
     def process_peer_messages(self):
-        for peer in self.connected_peers:
-            peer.message_handler.update()
+        end_time = current_time() + 200
+        allowed_process_time = 50
+        index = 1
+
+        for peer in list(self.connected_peers):
+            Logger.write(1, "Peer with speed " + str(peer.counter.value) + " allowed " + str(allowed_process_time) + "ms at index " + str(index))
+            if not peer.message_handler.update(allowed_process_time):
+                self.connected_peers.remove(peer)
+            allowed_process_time = min(50, end_time - current_time())
+            index += 1
 
         return True
 

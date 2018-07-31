@@ -33,7 +33,7 @@ class Logger:
             info = get_info()
             strInfo = datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3].ljust(14) + " | "\
                       + path_leaf(info.filename).ljust(25) + " | "\
-                      + info.function.ljust(20) + " | #"\
+                      + info.function.ljust(30) + " | #"\
                       + str(info.lineno).ljust(5) + " | "\
                       + str(type).ljust(7) + " | "\
                       + message
