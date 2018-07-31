@@ -142,7 +142,7 @@ class UtilController:
         Logger.lock.acquire()
         Logger.write(3, "-- Threads --")
         for thread in ThreadManager.threads:
-            Logger.write(3, "     " + thread.thread_name)
+            Logger.write(3, "     " + thread.thread_name + ", running for " + str((current_time() - thread.start_time)/1000) + " seconds")
         Logger.lock.release()
 
     @staticmethod

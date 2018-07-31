@@ -46,7 +46,6 @@ class TorrentPeerManager:
         Logger.lock.acquire()
         Logger.write(3, "-- TorrentPeerManager state --")
         for peer in self.connected_peers:
-            Logger.write(3, "     " + str(peer.id) + " | " + peer.communication_state.print() + " | " + str(peer.peer_speed) + "("+ write_size(peer.counter.value) + ")" + " | Outstanding: " + str(len(peer.download_manager.downloading)))
             peer.log()
         Logger.lock.release()
 

@@ -9,6 +9,7 @@ from TorrentSrc.Peer.PeerMessageHandler import PeerMessageHandler
 from TorrentSrc.Peer.PeerMetaDataManager import PeerMetaDataManager
 from TorrentSrc.Util.Counter import Counter
 from TorrentSrc.Util.Enums import PeerSpeed, TorrentState, PeerChokeState, PeerInterestedState
+from TorrentSrc.Util.Util import write_size
 
 
 class Peer:
@@ -66,6 +67,10 @@ class Peer:
         Logger.write(1, str(self.id) + ' Peer started')
 
     def log(self):
+        Logger.write(3, "     " + str(self.id) + " | " + self.communication_state.print() + " | " + str(self.peer_speed) +
+                     "(" + write_size(self.counter.value) + ")" + " | Outstanding: " + str(
+                         len(self.download_manager.downloading)))
+
         self.connection_manager.log()
         self.download_manager.log()
 

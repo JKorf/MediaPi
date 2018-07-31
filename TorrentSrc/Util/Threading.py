@@ -5,6 +5,7 @@ import traceback
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Stats import Stats
+from Shared.Util import current_time
 from TorrentSrc.Util.Stats import PyStats
 
 
@@ -33,10 +34,12 @@ class CustomThread:
         self.thread = threading.Thread(name=thread_name, target=self.__run)
         self.thread.daemon = True
         self.thread_name = thread_name
+        self.start_time = 0
         ThreadManager.add_thread(self)
         Stats['threads_started'].add(1)
 
     def start(self):
+        self.start_time = current_time()
         self.thread.start()
 
     def __run(self):

@@ -42,7 +42,7 @@ class StreamListener:
 
     def log_requests(self):
         Logger.lock.acquire()
-        Logger.write(3, "-- Requests "+self.name+" state --")
+        Logger.write(3, "-- "+self.name+" requests state --")
         for client in self.requests:
             Logger.write(3, "     " + str(client.id) + ": " + client.status)
         Logger.lock.release()
