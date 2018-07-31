@@ -180,14 +180,13 @@ class TorrentPeerManager:
 
     def process_peer_messages(self):
         end_time = current_time() + 200
-        allowed_process_time = 50
         index = 1
 
         for peer in list(self.connected_peers):
+            allowed_process_time = min(50, end_time - current_time())
             Logger.write(1, "Peer with speed " + str(peer.counter.value) + " allowed " + str(allowed_process_time) + "ms at index " + str(index))
             if not peer.message_handler.update(allowed_process_time):
                 self.connected_peers.remove(peer)
-            allowed_process_time = min(50, end_time - current_time())
             index += 1
 
         return True
