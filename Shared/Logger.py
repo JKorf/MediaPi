@@ -24,10 +24,16 @@ class Logger:
             log_path = Settings.get_string("log_folder")
             if not os.path.exists(log_path):
                 os.makedirs(log_path)
-            Logger.file = open(log_path + '/log_'+datetime.date.today().strftime('%d-%m-%Y') + ".txt", 'ab', buffering=0)
+            Logger.file = open(log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt", 'ab', buffering=0)
             Logger.file.write("\r\n".encode('utf8'))
-            Logger.file.write("--------------------------------------- Start up ----------------------------------------\r\n".encode('utf8'))
-            Logger.file.write("\r\n".encode('utf8'))
+            Logger.file.write(("Time".ljust(14) + " | "
+                      + "Thread".ljust(30) + " | "
+                      + "File".ljust(25) + " | "
+                      + "Function".ljust(30) + " | #"
+                      + "Line".ljust(5) + " | "
+                      + "Type".ljust(7) + " | "
+                      + "Message\r\n").encode("utf8"))
+            Logger.file.write(("-" * 140 + "\r\n").encode("utf8"))
             print("Log location: " + log_path)
 
         if Logger.log_level <= log_priority:

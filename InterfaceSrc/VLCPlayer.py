@@ -45,7 +45,7 @@ class VLCPlayer:
         ip_timeout = " --ipv4-timeout=500"
         if Settings.get_bool("raspberry"):
             log_path = Settings.get_string("log_folder")
-            file_path = log_path + '/vlclog_'+datetime.date.today().strftime('%d-%m-%Y') + ".txt"
+            file_path = log_path + '/vlclog_'+datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt"
 
             self.__vlc_instance = vlc.Instance("vlc -V omxil_vout --codec omxil --file-logging --logfile="+file_path+" --image-duration=-1 --file-caching=5000" + log_level + network_caching + ip_timeout)
         else:
