@@ -41,11 +41,10 @@ class StreamListener:
         self.event_id_log = EventManager.register_event(EventType.Log, self.log_requests)
 
     def log_requests(self):
-        Logger.lock.acquire()
-        Logger.write(3, "-- "+self.name+" requests state --")
-        for client in self.requests:
-            Logger.write(3, "     " + str(client.id) + ": " + client.status)
-        Logger.lock.release()
+        with Logger.lock:
+            Logger.write(3, "-- "+self.name+" requests state --")
+            for client in self.requests:
+                Logger.write(3, "     " + str(client.id) + ": " + client.status)
 
     def start_listening(self):
         self.thread = CustomThread(self.server.start, "Listener: " + self.name)
@@ -317,13 +316,12 @@ class ReadFile:
         self.location = 0
 
     def get_bytes(self, start, length):
-        self.read_lock.acquire()
-        if self.location != start:
-            Logger.write(2, "Seeking file to " + str(start))
-            self.file.seek(start)
-        data = self.file.read(length)
-        self.location = start + len(data)
-        self.read_lock.release()
+        with self.read_lock:
+            if self.location != start:
+                Logger.write(2, "Seeking file to " + str(start))
+                self.file.seek(start)
+            data = self.file.read(length)
+            self.location = start + len(data)
         return data
 
     def close(self):

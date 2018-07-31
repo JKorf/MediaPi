@@ -32,10 +32,9 @@ class DHTSocket:
         return len(self.to_send_messages) > 0 and current_time() - self.last_send > 5
 
     def get_next_register_id(self):
-        self.register_lock.acquire()
-        this_id = self.register_id
-        self.register_id += 1
-        self.register_lock.release()
+        with self.register_lock:
+            this_id = self.register_id
+            self.register_id += 1
         return this_id
 
     def register_waiting(self, handler):

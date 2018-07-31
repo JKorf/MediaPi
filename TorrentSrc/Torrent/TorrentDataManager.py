@@ -34,13 +34,12 @@ class TorrentDataManager:
     def log_queue(self):
         unfinished = [x for x in self._pieces if not x.done]
 
-        Logger.lock.acquire()
-        Logger.write(3, "-- TorrentDataManager state --")
-        first = ""
-        if unfinished:
-            first = str(unfinished[0].index)
-        Logger.write(3, "     Data status: first unfinished=" + first + ", total unfinished=" + str(len(unfinished)) +" pieces")
-        Logger.lock.release()
+        with Logger.lock:
+            Logger.write(3, "-- TorrentDataManager state --")
+            first = ""
+            if unfinished:
+                first = str(unfinished[0].index)
+            Logger.write(3, "     Data status: first unfinished=" + first + ", total unfinished=" + str(len(unfinished)) +" pieces")
 
     def unregister(self):
         EventManager.deregister_event(self.event_id_log)

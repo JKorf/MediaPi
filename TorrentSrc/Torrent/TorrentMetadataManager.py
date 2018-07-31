@@ -58,35 +58,31 @@ class TorrentMetadataManager:
         return int(max[0])
 
     def add_metadata_piece(self, index, data):
-        self.__lock.acquire()
-        if self.metadata_done:
-            self.__lock.release()
-            return
+        with self.__lock:
+            if self.metadata_done:
+                return
 
-        if index >= len(self.metadata_blocks) or index < 0:
-            Logger.write(2, 'Invalid metadata block index: ' + index)
-            self.__lock.release()
-            return
+            if index >= len(self.metadata_blocks) or index < 0:
+                Logger.write(2, 'Invalid metadata block index: ' + index)
+                return
 
-        if data is None or len(data) == 0:
-            Logger.write(2, 'Invalid metadata block data')
-            self.__lock.release()
-            return
+            if data is None or len(data) == 0:
+                Logger.write(2, 'Invalid metadata block data')
+                return
 
-        self.metadata_blocks[index].write(data)
+            self.metadata_blocks[index].write(data)
 
-        if len([x for x in self.metadata_blocks if not x.done]) == 0:
-            Logger.write(2, "Metadata done")
-            self.metadata_done = True
+            if len([x for x in self.metadata_blocks if not x.done]) == 0:
+                Logger.write(2, "Metadata done")
+                self.metadata_done = True
 
-            data = bytearray(self.current_total_size)
-            for block in self.metadata_blocks:
-                data[self.metadata_block_size * block.index:] = block.data
+                data = bytearray(self.current_total_size)
+                for block in self.metadata_blocks:
+                    data[self.metadata_block_size * block.index:] = block.data
 
-            data = bdecode(bytes(data))
-            self.torrent.parse_info_dictionary(data)
-            self.metadata_blocks.clear()
-        self.__lock.release()
+                data = bdecode(bytes(data))
+                self.torrent.parse_info_dictionary(data)
+                self.metadata_blocks.clear()
 
     def get_pieces_to_do(self):
         return [x for x in self.metadata_blocks if not x.done]

@@ -47,12 +47,11 @@ class SubtitleProvider:
 
     def search_subtitles_thread(self, source, size, filename, first_64k, last_64k):
         sub_paths = source.get_subtitles(size, filename, first_64k, last_64k)
-        self.sub_files_lock.acquire()
-        for path in sub_paths:
-            hash = self.get_sub_hash(path)
-            if len([x for x in self.sub_files if x.hash == hash]) == 0:
-                self.sub_files.append(Subtitle(hash, path))
-        self.sub_files_lock.release()
+        with self.sub_files_lock:
+            for path in sub_paths:
+                hash = self.get_sub_hash(path)
+                if len([x for x in self.sub_files if x.hash == hash]) == 0:
+                    self.sub_files.append(Subtitle(hash, path))
         self.add_subtitles(None, PlayerState.Playing)
 
     def add_subtitles(self, old_state, new_state):

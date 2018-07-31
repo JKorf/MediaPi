@@ -43,11 +43,10 @@ class TorrentPeerManager:
         EventManager.deregister_event(self.event_id_stopped)
 
     def log_peers(self):
-        Logger.lock.acquire()
-        Logger.write(3, "-- TorrentPeerManager state --")
-        for peer in self.connected_peers:
-            peer.log()
-        Logger.lock.release()
+        with Logger.lock:
+            Logger.write(3, "-- TorrentPeerManager state --")
+            for peer in self.connected_peers:
+                peer.log()
 
     def add_potential_peers_from_ip_port(self, data):
         for ip, port in data:

@@ -95,9 +95,8 @@ class PeerConnectionManager:
                 self.buffer_position = 0
                 self.receive_state = ReceiveState.ReceiveLength
 
-                self.receiveLock.acquire()
-                self.received_bytes.append(message)
-                self.receiveLock.release()
+                with self.receiveLock:
+                    self.received_bytes.append(message)
 
                 return
 
@@ -106,29 +105,26 @@ class PeerConnectionManager:
             return
 
         success = True
-        self.sendLock.acquire()
-        if len(self.to_send_bytes) != 0:
-            Logger.write(1, str(self.peer.id) + ' Sending ' + str(len(self.to_send_bytes)) + " bytes of data")
-            success = self.connection.send(self.to_send_bytes)
-            self.to_send_bytes.clear()
-            self.last_communication = current_time()
-        self.sendLock.release()
+        with self.sendLock:
+            if len(self.to_send_bytes) != 0:
+                Logger.write(1, str(self.peer.id) + ' Sending ' + str(len(self.to_send_bytes)) + " bytes of data")
+                success = self.connection.send(self.to_send_bytes)
+                self.to_send_bytes.clear()
+                self.last_communication = current_time()
 
         if not success:
             self.disconnect()
 
     def send(self, data):
-        self.sendLock.acquire()
-        self.to_send_bytes.extend(data)
-        self.sendLock.release()
+        with self.sendLock:
+            self.to_send_bytes.extend(data)
 
     def get_message(self):
         if len(self.received_bytes) == 0:
             return None
 
-        self.receiveLock.acquire()
-        data = self.received_bytes.pop(0)
-        self.receiveLock.release()
+        with self.receiveLock:
+            data = self.received_bytes.pop(0)
 
         return data
 
@@ -156,13 +152,11 @@ class PeerConnectionManager:
         Logger.write(1, str(self.peer.id) + ' disconnected')
         self.connection_state = ConnectionState.Disconnected
 
-        self.sendLock.acquire()
-        self.to_send_bytes.clear()
-        self.sendLock.release()
+        with self.sendLock:
+            self.to_send_bytes.clear()
 
-        self.receiveLock.acquire()
-        self.received_bytes.clear()
-        self.receiveLock.release()
+        with self.receiveLock:
+            self.received_bytes.clear()
 
         self.connection.disconnect()
 

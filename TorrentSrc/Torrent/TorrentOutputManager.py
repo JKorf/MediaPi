@@ -17,23 +17,19 @@ class TorrentOutputManager:
         self.broadcasted_hash_data = False
 
     def add_piece_to_output(self, piece):
-        self.__lock.acquire()
-        self.pieces_to_output.append(piece)
-        self.__lock.release()
+        with self.__lock:
+            self.pieces_to_output.append(piece)
 
     def flush(self):
         self.update()
 
     def update(self):
-        self.__lock.acquire()
+        with self.__lock:
+            to_write = list(self.pieces_to_output)
+            if len(to_write) == 0:
+                return True
 
-        to_write = list(self.pieces_to_output)
-        if len(to_write) == 0:
-            self.__lock.release()
-            return True
-
-        self.pieces_to_output.clear()
-        self.__lock.release()
+            self.pieces_to_output.clear()
 
         Logger.write(2, str(len(to_write)) + ' pieces done')
 

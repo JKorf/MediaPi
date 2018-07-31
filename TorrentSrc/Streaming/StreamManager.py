@@ -105,43 +105,42 @@ class StreamManager:
         # if new request and we are seeking (media_file.state == Seeking) check if it is in the start or end buffer.
         # If it is in either we shouldn't change stream position. once we start playing again we should update the
         # stream position to where we are then
-        self.seek_lock.acquire()
+        with self.seek_lock:
 
-        if self.torrent.media_file.state == StreamFileState.Playing:
-            if start_byte + length != self.last_request_end\
-                    and self.last_request_end != 0\
-                    and (relative_start_byte > self.start_buffer_end_byte and relative_start_byte + length < self.end_buffer_start_byte)\
-                    and start_byte - self.last_request_end != 0:
-                    Logger.write(2, "Last: " + str(self.last_request_end) + ", this: " + str(start_byte))
-                    # not a follow up request.. Probably seeking
+            if self.torrent.media_file.state == StreamFileState.Playing:
+                if start_byte + length != self.last_request_end\
+                        and self.last_request_end != 0\
+                        and (relative_start_byte > self.start_buffer_end_byte and relative_start_byte + length < self.end_buffer_start_byte)\
+                        and start_byte - self.last_request_end != 0:
+                        Logger.write(2, "Last: " + str(self.last_request_end) + ", this: " + str(start_byte))
+                        # not a follow up request.. Probably seeking
+                        self.seek(start_byte)
+                else:
+                    # normal flow, we are playing and should update the stream position
+                    self.change_stream_position(start_byte)
+
+            elif self.torrent.media_file.state == StreamFileState.MetaData:
+                # Requests to search for metadata. Normally the first x bytes and last x bytes of the file. Don't change
+                if self.torrent.piece_length:
+                    request_piece = int(math.floor(start_byte / self.torrent.piece_length))
+                    if relative_start_byte > self.start_buffer_end_byte and relative_start_byte + length < self.end_buffer_start_byte:
+                        if request_piece not in self.torrent.download_manager.upped_prios:
+                            Logger.write(2, "Received request for metadata not in buffer. Upping prio for " + str(request_piece))
+                            # not a piece currently marked as buffer, should update priority
+                            self.torrent.download_manager.up_priority(request_piece)
+
+            elif self.torrent.media_file.state == StreamFileState.Seeking:
+                # Seeking to a new position. Some metadata requests are expected. Only change if not in start/end buffer
+                if relative_start_byte < self.start_buffer_end_byte or relative_start_byte + length > self.end_buffer_start_byte:
+                    if self.playing:
+                        # If request is for start/end buffer but we are playing do a seek
+                        self.seek(start_byte)
+                else:
                     self.seek(start_byte)
-            else:
-                # normal flow, we are playing and should update the stream position
-                self.change_stream_position(start_byte)
 
-        elif self.torrent.media_file.state == StreamFileState.MetaData:
-            # Requests to search for metadata. Normally the first x bytes and last x bytes of the file. Don't change
-            if self.torrent.piece_length:
-                request_piece = int(math.floor(start_byte / self.torrent.piece_length))
-                if relative_start_byte > self.start_buffer_end_byte and relative_start_byte + length < self.end_buffer_start_byte:
-                    if request_piece not in self.torrent.download_manager.upped_prios:
-                        Logger.write(2, "Received request for metadata not in buffer. Upping prio for " + str(request_piece))
-                        # not a piece currently marked as buffer, should update priority
-                        self.torrent.download_manager.up_priority(request_piece)
+            self.last_request_end = start_byte + length
 
-        elif self.torrent.media_file.state == StreamFileState.Seeking:
-            # Seeking to a new position. Some metadata requests are expected. Only change if not in start/end buffer
-            if relative_start_byte < self.start_buffer_end_byte or relative_start_byte + length > self.end_buffer_start_byte:
-                if self.playing:
-                    # If request is for start/end buffer but we are playing do a seek
-                    self.seek(start_byte)
-            else:
-                self.seek(start_byte)
-
-        self.last_request_end = start_byte + length
-
-        data = self.buffer.get_data_for_stream(start_byte, length)
-        self.seek_lock.release()
+            data = self.buffer.get_data_for_stream(start_byte, length)
         return data
 
     def seek(self, start_byte):
@@ -171,9 +170,8 @@ class StreamBuffer:
 
     @property
     def bytes_in_buffer(self):
-        self.__lock.acquire()
-        total = sum(x.length for x in self.data_ready)
-        self.__lock.release()
+        with self.__lock:
+            total = sum(x.length for x in self.data_ready)
         return total
 
     def __init__(self, manager, piece_length):
@@ -211,13 +209,11 @@ class StreamBuffer:
             current_byte_to_search = start_byte + current_read
             piece_index = int(math.floor(current_byte_to_search / self.piece_length))
 
-            self.__lock.acquire()
-            pieces = [x for x in self.data_ready if x.index == piece_index]
-            if len(pieces) > 0:
-                current_piece = pieces[0]
-            else:
-                current_piece = None
-            self.__lock.release()
+            current_piece = None
+            with self.__lock:
+                pieces = [x for x in self.data_ready if x.index == piece_index]
+                if len(pieces) > 0:
+                    current_piece = pieces[0]
 
             if current_piece is None:
                 return None
@@ -234,27 +230,22 @@ class StreamBuffer:
         return result
 
     def write_piece(self, piece):
-        self.__lock.acquire()
+        with self.__lock:
+            if piece in self.data_ready:
+                return
 
-        if piece in self.data_ready:
-            self.__lock.release()
-            return
-
-        Logger.write(1, "Piece " + str(piece.index) + " ready for streaming")
-        self.data_ready.append(piece)
-        self.__lock.release()
+            Logger.write(1, "Piece " + str(piece.index) + " ready for streaming")
+            self.data_ready.append(piece)
 
         self.last_consecutive_piece_dirty = True
         self.clear(self.stream_manager.stream_position_piece_index)
 
     def clear(self, stream_position):
-        self.__lock.acquire()
-        for piece in self.data_ready:
-            if piece.index < (stream_position - 1) and not piece.persistent:
-                piece.clear()
-                self.data_ready.remove(piece)
-
-        self.__lock.release()
+        with self.__lock:
+            for piece in self.data_ready:
+                if piece.index < (stream_position - 1) and not piece.persistent:
+                    piece.clear()
+                    self.data_ready.remove(piece)
 
         self.update_consecutive()
 
@@ -262,20 +253,19 @@ class StreamBuffer:
         if not self.last_consecutive_piece_dirty:
             return
 
-        self.__lock.acquire()
-        self.data_ready.sort(key=lambda x: x.index)
+        with self.__lock:
+            self.data_ready.sort(key=lambda x: x.index)
 
-        start = self.stream_manager.stream_position_piece_index
+            start = self.stream_manager.stream_position_piece_index
 
-        for item in self.data_ready:
-            if item.index <= start:
-                continue
+            for item in self.data_ready:
+                if item.index <= start:
+                    continue
 
-            if item.index == start + 1:
-                start = item.index
-            else:
-                break
+                if item.index == start + 1:
+                    start = item.index
+                else:
+                    break
 
-        self.__lock.release()
         self.last_consecutive_piece_dirty = False
         self.last_consecutive_piece = start

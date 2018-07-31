@@ -38,18 +38,16 @@ class Counter:
         return self.last_result
 
     def add_value(self, val):
-        self.__lock.acquire()
-        self.current_counter_value += val
-        self.total += val
-        self.__lock.release()
+        with self.__lock:
+            self.current_counter_value += val
+            self.total += val
 
     def update(self):
-        self.__lock.acquire()
-        self.last_seconds[self.loop_number] = (current_time() - self.last_update, self.current_counter_value)
-        self.last_update = current_time()
+        with self.__lock:
+            self.last_seconds[self.loop_number] = (current_time() - self.last_update, self.current_counter_value)
+            self.last_update = current_time()
 
-        self.current_counter_value = 0
-        self.__lock.release()
+            self.current_counter_value = 0
 
         self.loop_number += 1
         if self.loop_number == 5:

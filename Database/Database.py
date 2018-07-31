@@ -18,17 +18,16 @@ class Database:
         self.lock = Lock()
 
     def init_database(self):
-        self.lock.acquire()
-        database_exists = os.path.isfile(self.path)
+        with self.lock:
+            database_exists = os.path.isfile(self.path)
 
-        if not database_exists:
-            self.connect()
-            self.create_structure()
-            self.database.commit()
-            self.disconnect()
+            if not database_exists:
+                self.connect()
+                self.create_structure()
+                self.database.commit()
+                self.disconnect()
 
-        self.check_migration()
-        self.lock.release()
+            self.check_migration()
 
     def connect(self):
         self.database = sqlite3.connect(self.path)
@@ -78,129 +77,113 @@ class Database:
         self.connection.executescript(data)
 
     def add_watched_file(self, url, watchedAt):
-        self.lock.acquire()
-        self.connect()
+        with self.lock:
+            self.connect()
 
-        self.connection.execute("INSERT INTO WatchedFiles (URL, WatchedAt) VALUES (?, ?)", [url, watchedAt])
+            self.connection.execute("INSERT INTO WatchedFiles (URL, WatchedAt) VALUES (?, ?)", [url, watchedAt])
 
-        self.database.commit()
-        self.disconnect()
-        self.lock.release()
+            self.database.commit()
+            self.disconnect()
 
     def get_watched_files(self):
-        self.lock.acquire()
-        self.connect()
-        self.connection.execute('SELECT * FROM WatchedFiles')
-        data = self.connection.fetchall()
-        self.disconnect()
-        self.lock.release()
+        with self.lock:
+            self.connect()
+            self.connection.execute('SELECT * FROM WatchedFiles')
+            data = self.connection.fetchall()
+            self.disconnect()
         return data
 
     def add_watched_episode(self, showId, episodeSeason, episodeNumber, watchedAt):
-        self.lock.acquire()
-        self.connect()
+        with self.lock:
+            self.connect()
+            self.connection.execute("INSERT INTO WatchedEpisodes " +
+                                    "(ShowId, EpisodeSeason, EpisodeNumber, WatchedAt)" +
+                                    " VALUES ('" + str(showId) + "', " + str(episodeSeason) + ", " + str(episodeNumber) + ", '" + str(watchedAt) + "')")
 
-        self.connection.execute("INSERT INTO WatchedEpisodes " +
-                                "(ShowId, EpisodeSeason, EpisodeNumber, WatchedAt)" +
-                                " VALUES ('" + str(showId) + "', " + str(episodeSeason) + ", " + str(episodeNumber) + ", '" + str(watchedAt) + "')")
-
-        self.database.commit()
-        self.disconnect()
-        self.lock.release()
+            self.database.commit()
+            self.disconnect()
 
     def get_watched_episodes(self):
-        self.lock.acquire()
-        self.connect()
-        self.connection.execute('SELECT * FROM WatchedEpisodes')
-        data = self.connection.fetchall()
-        self.disconnect()
-        self.lock.release()
+        with self.lock:
+            self.connect()
+            self.connection.execute('SELECT * FROM WatchedEpisodes')
+            data = self.connection.fetchall()
+            self.disconnect()
         return data
 
     def add_favorite(self, id):
-        self.lock.acquire()
-        self.connect()
+        with self.lock:
+            self.connect()
+            self.connection.execute("INSERT INTO Favorites (Id) VALUES ('" + str(id) + "')")
 
-        self.connection.execute("INSERT INTO Favorites (Id) VALUES ('" + str(id) + "')")
-
-        self.database.commit()
-        self.disconnect()
-        self.lock.release()
+            self.database.commit()
+            self.disconnect()
 
     def remove_favorite(self, id):
-        self.lock.acquire()
-        self.connect()
+        with self.lock:
+            self.connect()
+            self.connection.execute("DELETE FROM Favorites WHERE Id = '"+str(id)+"'")
 
-        self.connection.execute("DELETE FROM Favorites WHERE Id = '"+str(id)+"'")
-
-        self.database.commit()
-        self.disconnect()
-        self.lock.release()
+            self.database.commit()
+            self.disconnect()
 
     def get_favorites(self):
-        self.lock.acquire()
-        self.connect()
-        self.connection.execute('SELECT * FROM Favorites')
-        data = self.connection.fetchall()
-        self.disconnect()
-        self.lock.release()
-        return [x[0] for x in data]
+        with self.lock:
+            self.connect()
+            self.connection.execute('SELECT * FROM Favorites')
+            data = self.connection.fetchall()
+            self.disconnect()
+            return [x[0] for x in data]
 
     def add_watching_item(self, type, name, url, image, length, time):
         if self.get_watching_item(url) is not None:
             return
 
-        self.lock.acquire()
-        self.connect()
-        self.connection.execute("INSERT INTO UnfinishedItems (Type, Url, Name, Image, Time, Length, WatchedAt) " +
-                                "VALUES (?, ?, ?, ?, ?, ?, ?)", [type, url, name, image, 0, str(length), str(time)])
+        with self.lock:
+            self.connect()
+            self.connection.execute("INSERT INTO UnfinishedItems (Type, Url, Name, Image, Time, Length, WatchedAt) " +
+                                    "VALUES (?, ?, ?, ?, ?, ?, ?)", [type, url, name, image, 0, str(length), str(time)])
 
-        self.database.commit()
-        self.disconnect()
-        self.lock.release()
+            self.database.commit()
+            self.disconnect()
 
     def get_watching_item(self, url):
-        self.lock.acquire()
-        self.connect()
+        with self.lock:
+            self.connect()
 
-        self.connection.execute("SELECT * FROM UnfinishedItems WHERE Url=?", [url])
-        data = self.connection.fetchall()
-        self.database.commit()
-        self.disconnect()
-        self.lock.release()
-        if len(data) == 0:
-            return None
-        return data[0]
+            self.connection.execute("SELECT * FROM UnfinishedItems WHERE Url=?", [url])
+            data = self.connection.fetchall()
+            self.database.commit()
+            self.disconnect()
+            if len(data) == 0:
+                return None
+            return data[0]
 
     def get_watching_items(self):
-        self.lock.acquire()
-        self.connect()
+        with self.lock:
+            self.connect()
 
-        self.connection.execute("SELECT * FROM UnfinishedItems")
-        data = self.connection.fetchall()
-        self.database.commit()
-        self.disconnect()
-        self.lock.release()
+            self.connection.execute("SELECT * FROM UnfinishedItems")
+            data = self.connection.fetchall()
+            self.database.commit()
+            self.disconnect()
         return data
 
     def update_watching_item(self, url, time, update_time):
-        self.lock.acquire()
-        self.connect()
+        with self.lock:
+            self.connect()
+            self.connection.execute(
+                "UPDATE UnfinishedItems SET Time=?, WatchedAt=? WHERE Url=?", [time, update_time, url])
 
-        self.connection.execute(
-            "UPDATE UnfinishedItems SET Time=?, WatchedAt=? WHERE Url=?", [time, update_time, url])
-
-        self.database.commit()
-        self.disconnect()
-        self.lock.release()
+            self.database.commit()
+            self.disconnect()
 
     def remove_watching_item(self, url):
-        self.lock.acquire()
-        self.connect()
+        with self.lock:
+            self.connect()
 
-        self.connection.execute(
-            "DELETE FROM UnfinishedItems WHERE Url=?", [url])
+            self.connection.execute(
+                "DELETE FROM UnfinishedItems WHERE Url=?", [url])
 
-        self.database.commit()
-        self.disconnect()
-        self.lock.release()
+            self.database.commit()
+            self.disconnect()

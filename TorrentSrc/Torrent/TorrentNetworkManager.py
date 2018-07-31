@@ -20,10 +20,9 @@ class TorrentNetworkManager:
         self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
 
     def log(self):
-        Logger.lock.acquire()
-        Logger.write(3, "-- TorrentNetworkManager state --")
-        Logger.write(3, "     Network manager: last run input sockets: " + str(self.last_inputs) + ", output: " + str(self.last_outputs))
-        Logger.lock.release()
+        with Logger.lock:
+            Logger.write(3, "-- TorrentNetworkManager state --")
+            Logger.write(3, "     Network manager: last run input sockets: " + str(self.last_inputs) + ", output: " + str(self.last_outputs))
 
     def unregister(self):
         EventManager.deregister_event(self.event_id_stopped)

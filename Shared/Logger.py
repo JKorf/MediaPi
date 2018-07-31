@@ -51,12 +51,12 @@ class Logger:
 
             if log_priority == 3:
                 strInfo = '\033[1m' + strInfo + '\033[0m'
-            Logger.lock.acquire()
-            if not Settings.get_bool("raspberry"):
-                print(strInfo)
 
-            Logger.file.write((file_log + "\r\n").encode('utf8'))
-            Logger.lock.release()
+            with Logger.lock:
+                if not Settings.get_bool("raspberry"):
+                    print(strInfo)
+
+                Logger.file.write((file_log + "\r\n").encode('utf8'))
 
 
 def get_info():

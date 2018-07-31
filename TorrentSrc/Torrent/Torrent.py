@@ -555,18 +555,17 @@ class TorrentDownloadFile:
         Logger.write(2, "File " + self.name + " done")
 
     def write(self, offset_in_file, data):
-        self.__lock.acquire()
-        self.open()
+        with self.__lock:
+            self.open()
 
-        self.stream.seek(offset_in_file)
-        can_write = len(data)
-        if self.length - offset_in_file < can_write:
-            can_write = self.length - offset_in_file
+            self.stream.seek(offset_in_file)
+            can_write = len(data)
+            if self.length - offset_in_file < can_write:
+                can_write = self.length - offset_in_file
 
-        self.stream.write(data[0:can_write])
-        self.stream.flush()
+            self.stream.write(data[0:can_write])
+            self.stream.flush()
 
-        self.__lock.release()
         return can_write
 
 
