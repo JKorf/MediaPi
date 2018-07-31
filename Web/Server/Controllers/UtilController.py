@@ -59,7 +59,7 @@ class UtilController:
     def debug(start):
         torrent = start.torrent
         if torrent is None:
-            de = DebugInfo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ThreadManager.thread_count(), psutil.cpu_percent(), psutil.virtual_memory().percent, 0)
+            de = DebugInfo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ThreadManager.thread_count(), psutil.cpu_percent(), psutil.virtual_memory().percent, 0, 0)
         else:
             de = DebugInfo(len(torrent.peer_manager.potential_peers),
                            len(torrent.peer_manager.connected_peers),

@@ -234,7 +234,7 @@ class Torrent:
 
         self.engine.queue_repeating_work_item("tracker_manager", 10000, self.tracker_manager.update)
         self.engine.queue_repeating_work_item("peer_manager_new", 1000, self.peer_manager.update_new_peers)
-        self.engine.queue_repeating_work_item("peer_manager_status", 1000, self.peer_manager.update_peer_status)
+        self.engine.queue_repeating_work_item("peer_manager_status", 500, self.peer_manager.update_peer_status)
         self.engine.queue_repeating_work_item("peer_manager_bad_peers", 30000, self.peer_manager.update_bad_peers)
         self.engine.queue_repeating_work_item("torrent_download_manager", 5000, self.download_manager.update)
         self.engine.queue_repeating_work_item("torrent_download_manager_prio", 5000, self.download_manager.update_priority)
