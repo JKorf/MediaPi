@@ -95,8 +95,9 @@ class Piece:
         self.blocks = []
         self.block_size = Settings.get_int("block_size")
         self.priority = 0
-        self.init_blocks()
         self.persistent = persistent
+
+        self.init_blocks()
 
     def init_blocks(self):
         partial_block = self.length % self.block_size

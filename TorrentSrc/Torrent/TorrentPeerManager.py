@@ -181,11 +181,13 @@ class TorrentPeerManager:
         index = 1
 
         for peer in [x for x in list(self.connected_peers) if x.connection_state == ConnectionState.Connected]:
-            allowed_process_time = min(50, end_time - current_time())
-            Logger.write(1, "Peer " + str(peer.id) + " with speed " + str(peer.counter.value) + " allowed " + str(allowed_process_time) + "ms at index " + str(index))
+            allowed_process_time = max(min(50, end_time - current_time()), 10)
+            Logger.write(1, str(peer.id) + " peer with speed " + str(peer.counter.value) + " allowed " + str(allowed_process_time) + "ms at index " + str(index))
             if not peer.message_handler.update(allowed_process_time):
+                Logger.write(1, str(peer.id) + " removing peer, update = false")
                 self.connected_peers.remove(peer)
             index += 1
+        Logger.write(1, "Total took " + str(current_time() - (end_time - 200)) + "ms")
 
         return True
 

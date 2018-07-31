@@ -57,6 +57,7 @@ class PeerMessageHandler:
             # Handle messages
             self.handle_message(message)
             processed_messages += 1
+        return True
 
     def handle_message(self, message):
         if isinstance(message, PieceMessage):
