@@ -56,7 +56,7 @@ class EventManager:
 
     @staticmethod
     def throw_event(event_type, args):
-        thread = threading.Thread(name="EventHandler " + str(event_type), target=EventManager.execute_handlers, args=[event_type, args])
+        thread = threading.Thread(name="Evnt " + str(event_type), target=EventManager.execute_handlers, args=[event_type, args])
         thread.daemon = True
         thread.start()
 
