@@ -401,10 +401,10 @@ class RealtimeHandler(websocket.WebSocketHandler):
         if self not in TornadoServer.clients:
             Logger.write(2, "New connection")
             TornadoServer.clients.append(self)
-            if TornadoServer.start_obj.torrent and TornadoServer.start_obj.torrent.state == TorrentState.WaitingUserFileSelection:
+            if TornadoServer.start_obj.torrent_manager.torrent and TornadoServer.start_obj.torrent_manager.torrent.state == TorrentState.WaitingUserFileSelection:
                 self.write_message(to_JSON(WebSocketMessage('request', 'media_selection',
                                                             [MediaFile(x.path, x.length, x.season, x.episode) for x in
-                                                             [y for y in TornadoServer.start_obj.torrent.files if y.is_media]])))
+                                                             [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]])))
 
     def on_close(self):
         if self in TornadoServer.clients:

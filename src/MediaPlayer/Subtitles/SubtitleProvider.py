@@ -60,7 +60,7 @@ class SubtitleProvider:
 
         for subtitle in [sub for sub in self.sub_files if not sub.added]:
             subtitle.added = True
-            self.start.player.set_subtitle_file(subtitle.path)
+            self.start.gui_manager.player.set_subtitle_file(subtitle.path)
 
     def get_sub_hash(self, path):
         size = os.path.getsize(path)

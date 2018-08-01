@@ -5,7 +5,7 @@ from os.path import isfile, join
 from Shared.Util import write_size
 
 
-class current_media:
+class CurrentMedia:
 
     def __init__(self, state, type, title, path, img, playing_for, play_time, volume, length, selected_sub, subtitles, sub_delay, subs_done, audio_tracks, current_audio_track, buffered_percentage):
         self.state = state

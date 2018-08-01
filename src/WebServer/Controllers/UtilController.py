@@ -13,7 +13,7 @@ from Shared.Stats import Stats
 from Shared.Threading import ThreadManager
 from Shared.Util import to_JSON, parse_bool, RequestFactory, current_time, write_size
 from MediaPlayer.Util.Enums import TorrentState
-from WebServer.Models import DebugInfo, current_media, Version, Settings, Info, Status, StartUp
+from WebServer.Models import DebugInfo, CurrentMedia, Version, Settings, Info, Status, StartUp
 
 
 class UtilController:
@@ -21,36 +21,36 @@ class UtilController:
     @staticmethod
     def player_state(start):
         ret = [0, 5, 6]
-        if start.player is None or start.player.get_state().value in ret:
-            return to_JSON(current_media(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)).encode('utf8')
+        if start.gui_manager.player is None or start.gui_manager.player.get_state().value in ret:
+            return to_JSON(CurrentMedia(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)).encode('utf8')
 
-        title = start.player.title
+        title = start.gui_manager.player.title
         percentage = 0
-        if start.torrent is not None and start.torrent.media_file is not None:
-            buffered = start.torrent.bytes_ready_in_buffer
-            percentage = buffered / start.torrent.media_file.length * 100
-            if start.torrent.state == TorrentState.Done:
+        if start.torrent_manager.torrent is not None and start.torrent_manager.torrent.media_file is not None:
+            buffered = start.torrent_manager.torrent.bytes_ready_in_buffer
+            percentage = buffered / start.torrent_manager.torrent.media_file.length * 100
+            if start.torrent_manager.torrent.state == TorrentState.Done:
                 percentage = 100
 
-        media = current_media(start.player.state.value,
-                              start.player.type,
-                              title,
-                              start.player.path,
-                              start.player.img,
-                              start.player.get_position(),
-                              start.player.get_length(), start.player.get_volume(),
-                              start.player.get_length(), start.player.get_selected_sub(),
-                              start.player.get_subtitle_tracks(),
-                              start.player.get_subtitle_delay() / 1000 / 1000,
-                              True,
-                              start.player.get_audio_tracks(),
-                              start.player.get_audio_track(),
-                              percentage)
+        media = CurrentMedia(start.gui_manager.player.state.value,
+                             start.gui_manager.player.type,
+                             title,
+                             start.gui_manager.player.path,
+                             start.gui_manager.player.img,
+                             start.gui_manager.player.get_position(),
+                             start.gui_manager.player.get_length(), start.gui_manager.player.get_volume(),
+                             start.gui_manager.player.get_length(), start.gui_manager.player.get_selected_sub(),
+                             start.gui_manager.player.get_subtitle_tracks(),
+                             start.gui_manager.player.get_subtitle_delay() / 1000 / 1000,
+                             True,
+                             start.gui_manager.player.get_audio_tracks(),
+                             start.gui_manager.player.get_audio_track(),
+                             percentage)
         return to_JSON(media)
 
     @staticmethod
     def debug(start):
-        torrent = start.torrent
+        torrent = start.torrent_manager.torrent
         if torrent is None:
             de = DebugInfo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ThreadManager.thread_count(), psutil.cpu_percent(), psutil.virtual_memory().percent, 0, 0)
         else:
@@ -72,7 +72,7 @@ class UtilController:
                            torrent.overhead)
 
         if AppSettings.get_bool("dht"):
-            de.add_dht(start.dht.routing_table.count_nodes())
+            de.add_dht(start.torrent_manager.dht.routing_table.count_nodes())
 
         return to_JSON(de)
 
@@ -80,9 +80,9 @@ class UtilController:
     def status(start):
         speed = 0
         ready = -1
-        if start.torrent:
-            speed = write_size(start.torrent.download_counter.value)
-            ready = start.torrent.bytes_ready_in_buffer
+        if start.torrent_manager.torrent:
+            speed = write_size(start.torrent_manager.torrent.download_counter.value)
+            ready = start.torrent_manager.torrent.bytes_ready_in_buffer
 
         return to_JSON(Status(speed, ready, psutil.cpu_percent(), psutil.virtual_memory().percent))
 

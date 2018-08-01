@@ -554,7 +554,7 @@ class TorrentDownloadFile:
         self.done = True
         Logger.write(2, "File " + self.name + " done")
 
-    def write(self, offset_in_file, data):
+    def write(self, offset_in_file: object, data: object) -> object:
         with self.__lock:
             self.open()
 

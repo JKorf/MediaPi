@@ -24,18 +24,20 @@ class Communicate(QtCore.QObject):
 
 
 class GUI(QtGui.QMainWindow):
-    def __init__(self, start):
+    base_image_path = os.getcwd() + "/Interface/TV/Images/"
+
+    def __init__(self, program):
         super(GUI, self).__init__()
 
         self.hide_background = False
-        self.base_background_address = os.getcwd() + "/Web/Images/backgrounds/"
-        self.black_address = os.getcwd() + "/Web/Images/black.png"
+        self.base_background_address = self.base_image_path + "backgrounds/"
+        self.black_address = GUI.base_image_path + "/black.png"
         self.background_count = len([f for f in os.listdir(self.base_background_address) if isfile(join(self.base_background_address, f))])
         self.background_index = Random().randint(1, self.background_count)
 
         self.update_buffering = False
         self.palette = QtGui.QPalette()
-        self.start = start
+        self.program = program
 
         self.quality = 0
         self.address = "-"
@@ -79,9 +81,9 @@ class GUI(QtGui.QMainWindow):
         self.set_home(None, True)
 
     @classmethod
-    def new_gui(cls, start):
+    def new_gui(cls, program):
         GUI.app = QtGui.QApplication(sys.argv)
-        myapp = GUI(start)
+        myapp = GUI(program)
         return GUI.app, myapp
 
     def selection_required(self, files):
@@ -94,10 +96,10 @@ class GUI(QtGui.QMainWindow):
         if new_state == PlayerState.Opening:
             self.com.set_opening.emit()
         elif new_state == PlayerState.Playing:
-            if self.start.player.type != 'Radio':
+            if self.program.gui_manager.player.type != 'Radio':
                 self.com.set_none.emit()
             else:
-                self.com.set_home.emit(self.start.player.title, False)
+                self.com.set_home.emit(self.program.gui_manager.player.title, False)
         elif new_state == PlayerState.Nothing:
             self.com.set_home.emit(None, False)
 
@@ -170,18 +172,18 @@ class GUI(QtGui.QMainWindow):
         if not self.update_buffering:
             return
 
-        if self.start.torrent and self.start.torrent.media_file:
-            percentage_done = math.floor(min(((7500000 - self.start.torrent.bytes_missing_for_buffering) / 7500000) * 100, 99))
+        if self.program.torrent_manager.torrent and self.program.torrent_manager.torrent.media_file:
+            percentage_done = math.floor(min(((7500000 - self.program.torrent_manager.torrent.bytes_missing_for_buffering) / 7500000) * 100, 99))
             self.loading_panel.set_percent(percentage_done)
 
         QtCore.QTimer.singleShot(1000, lambda: self.update_buffer_info())
 
     def get_media_length(self):
-        actual = self.start.player.get_length()
+        actual = self.program.gui_manager.player.get_length()
         if actual:
             return actual
 
-        if self.start.player.type == "Movie":
+        if self.program.gui_manager.player.type == "Movie":
             return 120 * 60
         else:
             return 20 * 60
@@ -305,7 +307,7 @@ class LoadingPanel(InfoWidget):
         self.title.move(10, 26)
         self.title.show()
 
-        self.loader = QtSvg.QSvgWidget(os.getcwd() + "/Web/Images/loader.svg")
+        self.loader = QtSvg.QSvgWidget(GUI.base_image_path + "loader.svg")
         self.loader.setParent(self)
         self.loader.setGeometry(width / 2 - 40, 90, 80, 80)
         self.loader.show()
@@ -323,7 +325,7 @@ class SelectFilePanel(InfoWidget):
         self.title.move(10, 26)
         self.title.show()
 
-        self.select_img = self.create_img(64, 64, os.getcwd() + "/Web/Images/select_file.png")
+        self.select_img = self.create_img(64, 64, GUI.base_image_path + "select_file.png")
         self.select_img.setAlignment(Qt.AlignCenter)
         self.select_img.move(width / 2 - 32, 75)
         self.select_img.show()
