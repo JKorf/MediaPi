@@ -28,7 +28,6 @@ tracker_peer_request_amount=200
 peer_request_interval=300000
 peer_request_interval_no_potential=30000
 tracker_retry=3
-use_external_trackers=False
 
 # Streaming
 max_chunk_size=500000

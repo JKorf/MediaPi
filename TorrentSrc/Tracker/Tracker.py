@@ -143,11 +143,6 @@ class TrackerManager:
                 if tracker is not None:
                     self.trackers.append(tracker)
 
-            for uri in ExtraTrackerList.load():
-                tracker = TrackerFactory.create_tracker(uri)
-                if tracker is not None:
-                    self.trackers.append(tracker)
-
         if len(self.torrent.peer_manager.potential_peers) > 1000:
             return True
 
@@ -191,28 +186,3 @@ class TrackerManager:
 
     def stop(self):
         self.running = False
-
-
-class ExtraTrackerList:
-
-    @staticmethod
-    def load():
-        result = []
-
-        if not Settings.get_bool("use_external_trackers"):
-            return result
-
-        filepath = os.getcwd() + "\\trackers.txt"
-        if not os.path.isfile(filepath):
-            Logger.write(2, 'External trackers enabled, but no trackers file found')
-            return result
-
-        with open(filepath) as f:
-            for line in f:
-                line = line.replace("\r", "").replace("\n", "")
-                if line.startswith('udp://') or line.startswith('http://'):
-                    result.append(line)
-
-        Logger.write(2, "Added " + str(len(result)) + " external trackers")
-        return result
-
