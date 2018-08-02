@@ -31,9 +31,7 @@ class VLCPlayer:
         self.img = None
         self.state = PlayerState.Nothing
         self.state_change_action = None
-        self.last_time = 0
         self.trying_subitems = False
-        self.buffer_start_time = 0
 
         thread = CustomThread(self.watch_time_change, "VLC State watcher")
         thread.start()
@@ -166,11 +164,6 @@ class VLCPlayer:
         self.__event_manager.event_attach(EventType.MediaPlayerStopped, self.state_change_stopped)
         self.__event_manager.event_attach(EventType.MediaPlayerEndReached, self.state_change_end_reached)
         self.__event_manager.event_attach(EventType.MediaPlayerEncounteredError, self.on_error)
-
-        self.__event_manager.event_attach(EventType.MediaPlayerTimeChanged, self.on_time_change)
-
-    def on_time_change(self, event):
-        self.last_time = current_time()
 
     def state_change_opening(self, event):
         if self.state != PlayerState.Opening:
