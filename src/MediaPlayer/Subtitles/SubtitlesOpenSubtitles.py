@@ -28,7 +28,7 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
                 self.OS_token = self.xml_client.LogIn("", "", "en", "mediaplayerjk")['token']
                 break
             except Exception as e:
-                Logger.write(2, 'Error creating xml_client try '+current_try+': ' + str(e))
+                Logger.write(2, 'Error creating xml_client try '+ str(current_try) +': ' + str(e))
                 current_try += 1
                 if current_try > 3:
                     EventManager.throw_event(EventType.Error,

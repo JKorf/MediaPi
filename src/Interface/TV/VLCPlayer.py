@@ -63,9 +63,9 @@ class VLCPlayer:
             self.__player.set_mrl(url)
         else:
             if time != 0:
-                self.__player.set_mrl(url, "demux=avformat", "start-time=" + str(time // 1000))
+                self.__player.set_mrl(url, "start-time=" + str(time // 1000))
             else:
-                self.__player.set_mrl(url, "demux=avformat")
+                self.__player.set_mrl(url)
 
         return self.__player.play() != -1
 
@@ -105,9 +105,6 @@ class VLCPlayer:
 
     def set_time(self, pos):
         self.__player.set_time(pos)
-
-        self.buffer_start_time = self.last_time
-        self.change_state(PlayerState.Buffering)
 
     def set_position(self, pos):
         self.__player.set_position(pos)
@@ -180,8 +177,10 @@ class VLCPlayer:
             self.change_state(PlayerState.Opening)
 
     def state_change_playing(self, event):
-        if self.state != PlayerState.Playing:
+        if self.state == PlayerState.Paused:
             self.change_state(PlayerState.Playing)
+        else:
+            pass # gets handled by watching time change
 
     def state_change_paused(self, event):
         if self.state != PlayerState.Paused:
@@ -223,12 +222,20 @@ class VLCPlayer:
             self.trying_subitems = False
 
     def watch_time_change(self):
+        last_time = 0
         while True:
+            this_time = self.__player.get_time()
+            if this_time == 0:
+                time.sleep(0.5)
+                continue
 
-            if self.state == PlayerState.Buffering:
-                if self.last_time - self.buffer_start_time > 5000:
+            if this_time - last_time == 0:
+                if self.state == PlayerState.Playing:
+                    self.change_state(PlayerState.Buffering)
+            else:
+                if self.state == PlayerState.Buffering or self.state == PlayerState.Opening:
                     self.change_state(PlayerState.Playing)
-
+            last_time = this_time
             time.sleep(1)
 
     def change_state(self, new):

@@ -4,6 +4,9 @@
     spotify
         https://eltechs.com/run-spotify-on-raspberry-pi/
 
+    Ikea lighting
+        https://learn.pimoroni.com/tutorial/sandyj/controlling-ikea-tradfri-lights-from-your-pi
+
 --- TODO ---
     Continue with torrent
     Seeking still shit
