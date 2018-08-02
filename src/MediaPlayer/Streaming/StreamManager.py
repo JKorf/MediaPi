@@ -6,9 +6,9 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from MediaPlayer.Streaming.StreamListener import StreamListener
-from MediaPlayer.Util.Enums import TorrentState, DownloadMode, StreamFileState
+from MediaPlayer.Util.Enums import TorrentState, DownloadMode
 
-from Shared.Util import current_time, write_size
+from Shared.Util import write_size
 
 
 class StreamManager:
@@ -46,13 +46,18 @@ class StreamManager:
         self.start_buffer_end_byte = 0
         self.playing = False
         self.last_request_end = 0
+        self.currently_seeking = False
 
         self.max_in_buffer = Settings.get_int("max_bytes_ready_in_buffer")
         self.max_in_buffer_threshold = Settings.get_int("max_bytes_reached_threshold")
         self.stream_tolerance = Settings.get_int("stream_pause_tolerance")
 
         self.player_state_id = EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
+        self.seek_id = EventManager.register_event(EventType.Seek, self.seeking)
         self.listener.start_listening()
+
+    def seeking(self, pos):
+        self.currently_seeking = True
 
     def player_state_change(self, old, new):
         if new == PlayerState.Playing:
@@ -101,52 +106,42 @@ class StreamManager:
 
         relative_start_byte = start_byte - self.torrent.media_file.start_byte
 
-        # if new request and we are seeking (media_file.state == Seeking) check if it is in the start or end buffer.
-        # If it is in either we shouldn't change stream position. once we start playing again we should update the
-        # stream position to where we are then
         with self.seek_lock:
+            if self.last_request_end == start_byte + length:
+                # If same request as last time, just try to retrieve data
+                return self.buffer.get_data_for_stream(start_byte, length)
 
-            if self.torrent.media_file.state == StreamFileState.Playing:
-                if start_byte + length != self.last_request_end\
-                        and self.last_request_end != 0\
-                        and (relative_start_byte > self.start_buffer_end_byte and relative_start_byte + length < self.end_buffer_start_byte)\
-                        and start_byte - self.last_request_end != 0:
-                        Logger.write(2, "Last: " + str(self.last_request_end) + ", this: " + str(start_byte))
-                        # not a follow up request.. Probably seeking
-                        self.seek(start_byte)
-                else:
-                    # normal flow, we are playing and should update the stream position
-                    self.change_stream_position(start_byte)
+            if start_byte == self.last_request_end:
+                # If follow up request of last, change pos and retrieve data
+                self.last_request_end = start_byte + length
+                self.change_stream_position(start_byte)
+                return self.buffer.get_data_for_stream(start_byte, length)
 
-            elif self.torrent.media_file.state == StreamFileState.MetaData:
-                # Requests to search for metadata. Normally the first x bytes and last x bytes of the file. Don't change
-                if self.torrent.piece_length:
-                    request_piece = int(math.floor(start_byte / self.torrent.piece_length))
-                    if relative_start_byte > self.start_buffer_end_byte and relative_start_byte + length < self.end_buffer_start_byte:
-                        if request_piece not in self.torrent.download_manager.upped_prios:
-                            Logger.write(2, "Received request for metadata not in buffer. Upping prio for " + str(request_piece))
-                            # not a piece currently marked as buffer, should update priority
-                            self.torrent.download_manager.up_priority(request_piece)
+            if relative_start_byte < self.start_buffer_end_byte or relative_start_byte > self.end_buffer_start_byte:
+                # If not follow up and in metadata range, just return data
+                self.last_request_end = start_byte + length
+                return self.buffer.get_data_for_stream(start_byte, length)
 
-            elif self.torrent.media_file.state == StreamFileState.Seeking:
-                # Seeking to a new position. Some metadata requests are expected. Only change if not in start/end buffer
-                if relative_start_byte < self.start_buffer_end_byte or relative_start_byte + length > self.end_buffer_start_byte:
-                    if self.playing:
-                        # If request is for start/end buffer but we are playing do a seek
-                        self.seek(start_byte)
-                else:
-                    self.seek(start_byte)
+            if self.currently_seeking:
+                # If currently seeking and not in metadata range, seek and return data
+                self.currently_seeking = False
+                self.seek(start_byte)
+                self.last_request_end = start_byte + length
+                return self.buffer.get_data_for_stream(start_byte, length)
 
+            # This request is not the same as last, not following up, we aren't seeking and not in metadata range.
+            # Try to download and return it, might be some stray metadata search of VLC
+            request_piece = int(math.floor(start_byte / self.torrent.piece_length))
             self.last_request_end = start_byte + length
-
-            data = self.buffer.get_data_for_stream(start_byte, length)
-        return data
+            if request_piece not in self.torrent.download_manager.upped_prios:
+                Logger.write(2, "Received request for metadata not in buffer. Upping prio for " + str(request_piece))
+                self.torrent.download_manager.up_priority(request_piece)
+                return self.buffer.get_data_for_stream(start_byte, length)
 
     def seek(self, start_byte):
         old_stream_position = self.stream_position_piece_index
         self.change_stream_position(start_byte)
         self.torrent.download_manager.seek(old_stream_position, self.stream_position_piece_index)
-        self.torrent.media_file.set_state(StreamFileState.Playing)
         self.buffer.seek(self.stream_position_piece_index)
 
     def change_stream_position(self, start_byte):
@@ -162,6 +157,7 @@ class StreamManager:
 
     def stop(self):
         EventManager.deregister_event(self.player_state_id)
+        EventManager.deregister_event(self.seek_id)
         self.listener.stop()
 
 

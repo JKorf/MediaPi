@@ -27,7 +27,7 @@ from MediaPlayer.Tracker.Tracker import TrackerManager
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 from MediaPlayer.Util.Counter import Counter
-from MediaPlayer.Util.Enums import TorrentState, StreamFileState
+from MediaPlayer.Util.Enums import TorrentState
 
 
 class Torrent:
@@ -134,7 +134,6 @@ class Torrent:
         self.outstanding_requests = 0
         self.overhead = 0
 
-        self.player_event_id = EventManager.register_event(EventType.PlayerStateChange, self.player_change)
         self.user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
 
         self.engine = Engine.Engine('Main Engine', Settings.get_int("main_engine_tick_rate"))
@@ -148,10 +147,6 @@ class Torrent:
         self.output_manager = TorrentOutputManager(self)
         self.metadata_manager = TorrentMetadataManager(self)
         self.network_manager = TorrentNetworkManager(self)
-
-    def player_change(self, old, new):
-        if old == PlayerState.Opening and new == PlayerState.Playing:
-            self.media_file.set_state(StreamFileState.Playing)
 
     @classmethod
     def create_torrent(cls, id, url):
@@ -394,7 +389,7 @@ class Torrent:
         return 0
 
     def set_media_file(self, file):
-        self.media_file = StreamFile(file.length, file.start_byte, file.name, file.path)
+        self.media_file = file
         Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
 
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
@@ -461,7 +456,6 @@ class Torrent:
 
     def stop(self):
         Logger.write(2, 'Torrent stopping')
-        EventManager.deregister_event(self.player_event_id)
         EventManager.deregister_event(self.user_file_selected_id)
 
         self.engine.stop()
@@ -567,25 +561,3 @@ class TorrentDownloadFile:
             self.stream.flush()
 
         return can_write
-
-
-class StreamFile(TorrentDownloadFile):
-
-    def __init__(self, length, start_byte, name, path):
-        super().__init__(length, start_byte, name, path, True)
-
-        self.state = StreamFileState.MetaData
-
-    def set_state(self, new_state):
-        if new_state != self.state:
-            Logger.write(2, "Stream file state changed from " + self.state_name(self.state) + " to " + self.state_name(new_state))
-            self.state = new_state
-
-    def state_name(self, value):
-        if value == StreamFileState.MetaData:
-            return "MetaData"
-        if value == StreamFileState.Playing:
-            return "Playing"
-        if value == StreamFileState.Seeking:
-            return "Seeking"
-

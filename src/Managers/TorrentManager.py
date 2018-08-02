@@ -4,7 +4,6 @@ from Interface.TV.VLCPlayer import PlayerState
 from MediaPlayer.DHT.DHTEngine import DHTEngine
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
 from MediaPlayer.Torrent.Torrent import Torrent
-from MediaPlayer.Util.Enums import StreamFileState
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -25,7 +24,6 @@ class TorrentManager:
 
         EventManager.register_event(EventType.StartTorrent, self.start_torrent)
         EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
-        EventManager.register_event(EventType.Seek, self.seek)
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
         EventManager.register_event(EventType.NewDHTNode, self.new_dht_node)
 
@@ -53,10 +51,6 @@ class TorrentManager:
                 self.torrent.stop()
                 Logger.write(2, "Ended " + self.torrent.media_file.name)
                 self.torrent = None
-
-    def seek(self, pos):
-        if self.torrent and self.torrent.media_file:
-            self.torrent.media_file.set_state(StreamFileState.Seeking)
 
     def stop_torrent(self):
         if self.torrent:

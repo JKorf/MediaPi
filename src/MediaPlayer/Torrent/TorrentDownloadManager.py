@@ -4,7 +4,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Util import current_time
 from MediaPlayer.Torrent.Prioritizer import StreamPrioritizer
-from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode, StreamFileState
+from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 
 
 class TorrentDownloadManager:
@@ -78,13 +78,6 @@ class TorrentDownloadManager:
             return True
 
         start_time = current_time()
-
-        if not self.reprio_after_metadata and self.torrent.media_file.state == StreamFileState.Playing:
-            # Do a full reprioritize after metadata is done
-            self.reprio_after_metadata = True
-            full = True
-            Logger.write(2, "Doing full reprioritize after media metadata done")
-
         amount = 100
         if full:
             amount = len(self.torrent.data_manager._pieces)
@@ -232,13 +225,11 @@ class TorrentDownloadManager:
         Logger.write(2, "Seeking " + str(old_index) + " to " + str(new_piece_index) + ", now " + str(len(self.queue)) + " items")
         with self.queue_lock:
             self.queue = []
-            self.requeue(new_piece_index)
 
             if self.torrent.state == TorrentState.Done:
                 self.torrent.restart_downloading()
 
-            self.prio = False
-            self.update_priority(True, False)
+            self.requeue(new_piece_index)
 
         Logger.write(2, "Seeking done in " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
 
