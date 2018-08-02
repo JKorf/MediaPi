@@ -188,7 +188,7 @@ class UtilHandler(web.RequestHandler):
         elif url == "get_settings":
             self.write(UtilController.get_settings())
         elif url == "version":
-            self.write(UtilController.version())
+            self.write(UtilController.version(TornadoServer.start_obj))
         elif url == "status":
             self.write(UtilController.status(TornadoServer.start_obj))
 

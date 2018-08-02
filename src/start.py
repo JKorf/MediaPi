@@ -44,6 +44,7 @@ class Program:
         self.init_folders()
 
         self.webserver_manager.start_server()
+        self.version = datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S")
 
         if not self.is_slave:
             self.database = Database()
@@ -51,7 +52,7 @@ class Program:
             self.file_listener = StreamListener("MasterFileServer", 50010)
             self.file_listener.start_listening()
 
-        Logger.write(3, "MediaPlayer build [" + datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S") + "]")
+        Logger.write(3, "MediaPlayer build [" + self.version + "]")
         Logger.write(3, "Slave: " + str(self.is_slave))
         if self.is_slave:
             Logger.write(3, "Master ip: " + str(Settings.get_string("master_ip")))

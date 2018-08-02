@@ -115,9 +115,8 @@ class WebSocketMessage:
 
 class Version:
 
-    def __init__(self, build_date, version_number):
+    def __init__(self, build_date):
         self.build_date = build_date
-        self.version_number = version_number
 
 
 class StartUp:
