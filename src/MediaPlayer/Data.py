@@ -123,6 +123,8 @@ class Piece:
 
         data = bytearray()
         for block in self.blocks:
+            if not block.done:
+                return None
             data.extend(block.data)
         return data
 

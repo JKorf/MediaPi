@@ -48,7 +48,7 @@ class TornadoServer:
             (r"/torrent/(.*)", TorrentHandler),
             (r"/realtime", RealtimeHandler),
             (r"/database/(.*)", DatabaseHandler),
-            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "\\Interface\\Mobile\\", "default_filename": "index.html"})
+            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Interface/Mobile", "default_filename": "index.html"})
         ]
 
         self.application = web.Application(handlers)
@@ -349,6 +349,7 @@ def play_master_file(path, file, position):
         size = int(json_obj["size"])
         first = base64.b64decode(json_obj["first"])
         last = base64.b64decode(json_obj["last"])
+        file = file.split("/")[-1]
 
         EventManager.throw_event(EventType.HashDataKnown, [size, file, first, last])
     else:
