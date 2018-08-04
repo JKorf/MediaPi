@@ -24,6 +24,12 @@ class GUIManager:
         EventManager.register_event(EventType.SetVolume, self.set_volume)
         EventManager.register_event(EventType.Seek, self.seek)
 
+        EventManager.register_event(EventType.SetSubtitleFile, self.set_subtitle_file)
+        EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_id)
+        EventManager.register_event(EventType.SetSubtitleOffset, self.set_subtitle_offset)
+        EventManager.register_event(EventType.SubtitleDownloaded, self.set_subtitle_file)
+        EventManager.register_event(EventType.SetAudioId, self.set_audio_id)
+
     def start_gui(self):
         self.app, self.gui = GUI.new_gui(self.program)
 
