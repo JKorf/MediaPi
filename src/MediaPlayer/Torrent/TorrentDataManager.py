@@ -56,14 +56,18 @@ class TorrentDataManager:
         blocks_per_piece = int(math.ceil(self.piece_length / self.block_size))
 
         stream_start_buffer = Settings.get_int("stream_start_buffer")
-        stream_end_buffer = Settings.get_int("stream_initial_end_buffer")
+        stream_end_buffer = Settings.get_int("stream_end_buffer_tolerance")
         start_piece = math.floor(self.torrent.media_file.start_byte / self.piece_length)
         end_piece = math.ceil(self.torrent.media_file.end_byte / self.piece_length)
         current_byte = start_piece * self.piece_length
 
+        pers_pieces = ""
         for index in range(end_piece - start_piece):
+            relative_current_byte = current_byte - start_piece * self.piece_length
             piece_index = start_piece + index
-            persistent = current_byte < stream_start_buffer or current_byte > self.torrent.media_file.end_byte - stream_end_buffer
+            persistent = relative_current_byte < stream_start_buffer or current_byte + self.piece_length > self.torrent.media_file.end_byte - stream_end_buffer
+            if persistent:
+                pers_pieces += str(piece_index) + ", "
 
             if current_byte + self.piece_length > self.torrent.total_size:
                 # last piece, is not full length
@@ -75,6 +79,7 @@ class TorrentDataManager:
 
         self.init_done = True
         Logger.write(2, "Pieces initialized, " + str(len(self._pieces)) + " pieces created")
+        Logger.write(2, "Persistent pieces: " + pers_pieces)
 
     def update_write_blocks(self):
         for piece_index, offset, data in list(self.blocks_done):
@@ -108,7 +113,7 @@ class TorrentDataManager:
 
         if self.init_done:
             if self.torrent.state != TorrentState.Done:
-                if len([x for x in self._pieces if x.index >= self.torrent.stream_buffer_position and not x.done]) == 0:
+                if len([x for x in self._pieces if x.index >= self.torrent.stream_position and not x.done]) == 0:
                     self.torrent.torrent_done()
 
         return True

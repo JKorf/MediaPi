@@ -27,7 +27,7 @@ class TorrentManager:
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
         EventManager.register_event(EventType.NewDHTNode, self.new_dht_node)
 
-    def start_torrent(self, url):
+    def start_torrent(self, url, media_file):
         if self.torrent is not None:
             Logger.write(2, "Can't start new torrent, still torrent active")
             return
@@ -35,6 +35,8 @@ class TorrentManager:
         success, torrent = Torrent.create_torrent(1, url)
         if success:
             self.torrent = torrent
+            if media_file is not None:
+                self.torrent.set_selected_media_file(media_file)
             torrent.start()
         else:
             Logger.write(2, "Invalid torrent")

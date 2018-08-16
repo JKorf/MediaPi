@@ -38,7 +38,7 @@ class Observer:
             thread = CustomThread(self.watch_wifi, "Watch wifi")
             thread.start()
 
-    def start_player(self, type, title, url, img=None, position=0):
+    def start_player(self, type, title, url, img=None, position=0, media_file=None):
         self.added_unfinished = False
         self.removed_unfinished = False
 
@@ -62,7 +62,10 @@ class Observer:
             if self.player.type == "File":
                 watching_type = "file"
 
+            media_file = None
             if self.torrent is not None:
+                if self.torrent.media_file is not None:
+                    media_file = self.torrent.media_file.name
                 path = self.torrent.uri
             else:
                 path = self.player.path
@@ -88,15 +91,13 @@ class Observer:
                 # Add unfinished
                 self.added_unfinished = True
                 if self.is_slave:
-                    self.start.webserver_manager.server.notify_master("/database/add_unfinished?url="
-                                                                   + urllib.parse.quote(path)
-                                                                   + "&name=" + urllib.parse.quote(self.player.title)
-                                                                   + "&length=" + str(self.player.get_length())
-                                                                   + "&time=" + str(current_time())
-                                                                   + "&image=" + urllib.parse.quote(img)
-                                                                   + "&type=" + watching_type)
+                    notify_url = "/database/add_unfinished?url=" + urllib.parse.quote(path) + "&name=" + urllib.parse.quote(self.player.title) + "&length=" + str(self.player.get_length()) \
+                                                                + "&time=" + str(current_time()) + "&image=" + urllib.parse.quote(img) + "&type=" + watching_type
+                    if media_file is not None:
+                        notify_url += "&mediaFile=" + urllib.parse.quote(media_file)
+                    self.start.webserver_manager.server.notify_master(notify_url)
                 else:
-                    self.start.database.add_watching_item(watching_type, self.player.title, path, self.player.img, self.player.get_length(), current_time())
+                    self.start.database.add_watching_item(watching_type, self.player.title, path, self.player.img, self.player.get_length(), current_time(), media_file)
 
             if not self.removed_unfinished and self.player.get_position() > 10:
                 # Update unfinished
@@ -104,9 +105,12 @@ class Observer:
                 if self.last_play_update_time != pos:
                     self.last_play_update_time = pos
                     if self.is_slave:
-                        self.start.webserver_manager.server.notify_master("/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(pos) + "&watchedAt=" + str(current_time()))
+                        notify_url = "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(pos) + "&watchedAt=" + str(current_time())
+                        if media_file is not None:
+                            notify_url += "&mediaFile=" + urllib.parse.quote(media_file)
+                        self.start.webserver_manager.server.notify_master(notify_url)
                     else:
-                        self.start.database.update_watching_item(path, pos, current_time())
+                        self.start.database.update_watching_item(path, pos, current_time(), media_file)
 
             time.sleep(5)
 

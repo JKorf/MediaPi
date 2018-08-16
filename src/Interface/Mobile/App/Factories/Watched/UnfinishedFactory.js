@@ -15,7 +15,8 @@
                         position: response[i][4],
                         length: response[i][5],
                         watchedAt: new Date(0),
-                        type: response[i][7]
+                        type: response[i][7],
+                        mediaFile: response[i][8]
                     };
                     obj.watchedAt.setUTCSeconds(response[i][6] / 1000)
                     unfinished.push(obj);
@@ -29,7 +30,7 @@
             unfinished = unfinished.filter(function( item ) {
                 return item.url !== obj.url;
             });
-            $http.post("/database/remove_unfinished?url=" + encodeURIComponent(obj.url));
+            $http.post("/database/remove_unfinished?url=" + encodeURIComponent(obj.url) + "&mediaFile=" + encodeURIComponent(obj.mediaFile));
         }
 
         return factory;

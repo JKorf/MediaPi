@@ -128,6 +128,7 @@ class Torrent:
         self.__lock = Lock()
 
         self.media_file = None
+        self.selected_media_file = None
 
         self.stream_file_hash = None
         self.to_download_bytes = 0
@@ -292,9 +293,11 @@ class Torrent:
             # No media file, can't play so just stop
             Logger.write(2, "No media file found in torrent, stopping")
             EventManager.throw_event(EventType.StopPlayer, [])
-        if len(media_files) == 1:
+        elif len(media_files) == 1:
             # Single media file, just play that
             self.set_media_file(media_files[0])
+        elif self.selected_media_file is not None:
+            self.set_media_file([x for x in media_files if x.name == self.selected_media_file][0])
         else:
             ordered = sorted(media_files, key=lambda x: x.length, reverse=True)
             biggest = ordered[0]
@@ -387,6 +390,10 @@ class Torrent:
         if number_string[1].isdigit():
             return int(number_string[1])
         return 0
+
+    def set_selected_media_file(self, file):
+        Logger.write(2, "Setting selected media file to " + file)
+        self.selected_media_file = file
 
     def set_media_file(self, file):
         self.media_file = file

@@ -14,7 +14,7 @@ class Database:
         self.path = Settings.get_string("base_folder") + "database.data"
         self.database = None
         self.connection = None
-        self.current_version = 2
+        self.current_version = 3
         self.lock = Lock()
 
     def init_database(self):
@@ -55,8 +55,9 @@ class Database:
         while db_version != self.current_version:
             Logger.write(2, "Database version " + str(db_version) + ", latest is " + str(self.current_version) + ". Upgrading")
             self.upgrade(db_version)
-            db_version+= 1
+            db_version += 1
 
+        Logger.write(2, "Database upgrade completed")
         self.disconnect()
 
     def upgrade(self, number):
@@ -135,14 +136,14 @@ class Database:
             self.disconnect()
             return [x[0] for x in data]
 
-    def add_watching_item(self, type, name, url, image, length, time):
+    def add_watching_item(self, type, name, url, image, length, time, media_file):
         if self.get_watching_item(url) is not None:
             return
 
         with self.lock:
             self.connect()
-            self.connection.execute("INSERT INTO UnfinishedItems (Type, Url, Name, Image, Time, Length, WatchedAt) " +
-                                    "VALUES (?, ?, ?, ?, ?, ?, ?)", [type, url, name, image, 0, str(length), str(time)])
+            self.connection.execute("INSERT INTO UnfinishedItems (Type, Url, Name, Image, Time, Length, WatchedAt, MediaFile) " +
+                                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [type, url, name, image, 0, str(length), str(time), media_file])
 
             self.database.commit()
             self.disconnect()
@@ -169,12 +170,15 @@ class Database:
             self.disconnect()
         return data
 
-    def update_watching_item(self, url, time, update_time):
+    def update_watching_item(self, url, time, update_time, media_file=None):
         with self.lock:
             self.connect()
-            self.connection.execute(
-                "UPDATE UnfinishedItems SET Time=?, WatchedAt=? WHERE Url=?", [time, update_time, url])
-
+            if media_file is None:
+                self.connection.execute(
+                    "UPDATE UnfinishedItems SET Time=?, WatchedAt=? WHERE Url=?", [time, update_time, url])
+            else:
+                self.connection.execute(
+                    "UPDATE UnfinishedItems SET Time=?, WatchedAt=? WHERE Url=? AND MediaFile=?", [time, update_time, url, media_file])
             self.database.commit()
             self.disconnect()
 

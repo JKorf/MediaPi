@@ -45,9 +45,9 @@ class GUIManager:
                 thread = CustomThread(self.stop_player, "Stopping player")
                 thread.start()
 
-    def start_player(self, type, title, url, img=None, position=0):
+    def start_player(self, type, title, url, img=None, position=0, media_file=None):
         self.stop_player()
-        self.player.play(type, title, url, img, position)
+        self.player.play(type, title, url, img, position, media_file)
 
     def start_torrent(self, url):
         self.player.stop()

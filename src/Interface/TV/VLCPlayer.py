@@ -49,7 +49,7 @@ class VLCPlayer:
             self.__vlc_instance = vlc.Instance("--image-duration=-1" + log_level + network_caching + ip_timeout)
         Logger.write(3, "VLC version " + libvlc_get_version().decode('utf8'))
 
-    def play(self, type, title, url, img=None, time=0):
+    def play(self, type, title, url, img=None, time=0, video_type="mkv"):
         Logger.write(2, "VLC Play | Type: " + type + ", title: " + title + ", url: " + url +", img: " + str(img) + ", time: " + str(time))
         self.type = type
         self.title = title
@@ -61,7 +61,10 @@ class VLCPlayer:
             self.__player.set_mrl(url)
         else:
             if time != 0:
-                self.__player.set_mrl(url, "start-time=" + str(time // 1000))
+                if video_type.endswith("mp4"): # searching in mp4 files is no good with the default demuxer, use avformat. Less accurate with events/subs but it at least plays
+                    self.__player.set_mrl(url, "demux=mkv", "start-time=" + str(time // 1000))
+                else:
+                    self.__player.set_mrl(url, "start-time=" + str(time // 1000))
             else:
                 self.__player.set_mrl(url)
 

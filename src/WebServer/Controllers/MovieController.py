@@ -50,24 +50,28 @@ class MovieController:
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
-        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url)])
+        EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), None])
         EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, urllib.parse.unquote(img)])
 
     @staticmethod
     @gen.coroutine
-    def play_continue(delegate, type, url, title, image, position):
-        Logger.write(2, "Continue " + title + "("+type+") at " + str(position))
+    def play_continue(delegate, type, url, title, image, position, media_file):
+        Logger.write(2, "Continue " + title + " ("+type+") at " + str(position))
         url = urllib.parse.unquote_plus(url)
+        img = urllib.parse.unquote(image)
+        if img == "null":
+            img = None
         if type == "torrent":
             EventManager.throw_event(EventType.StopTorrent, [])
             time.sleep(0.2)
-            EventManager.throw_event(EventType.StartTorrent, [url])
+            EventManager.throw_event(EventType.StartTorrent, [url, urllib.parse.unquote_plus(media_file)])
             EventManager.throw_event(EventType.StartPlayer,
                                      ["Movie",
                                       urllib.parse.unquote(title),
                                       MovieController.server_uri,
-                                      urllib.parse.unquote(image),
-                                      int(float(position)) * 1000])
+                                      img,
+                                      int(float(position)) * 1000,
+                                      media_file])
         else:
             if Settings.get_bool("slave"):
                 yield delegate(url, title, int(float(position)) * 1000)
@@ -79,5 +83,5 @@ class MovieController:
                                          ["File",
                                           urllib.parse.unquote(title),
                                           url,
-                                          urllib.parse.unquote(image),
+                                          img,
                                           int(float(position)) * 1000])

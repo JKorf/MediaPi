@@ -134,13 +134,17 @@ class StreamManager:
             request_piece = int(math.floor(start_byte / self.torrent.piece_length))
             self.last_request_end = start_byte + length
             if request_piece not in self.torrent.download_manager.upped_prios:
-                Logger.write(2, "Received request for metadata not in buffer. Upping prio for " + str(request_piece))
-                self.torrent.download_manager.up_priority(request_piece)
+                Logger.write(2, "Received stray request, going to search to " + str(request_piece))
+                self.seek(start_byte)
+                self.last_request_end = start_byte + length
                 return self.buffer.get_data_for_stream(start_byte, length)
 
     def seek(self, start_byte):
         old_stream_position = self.stream_position_piece_index
         self.change_stream_position(start_byte)
+        index_change = int(math.floor(start_byte / self.torrent.piece_length)) - old_stream_position
+        if index_change >= 0 and index_change < 2: # If it's the same piece or only one piece forwards dont seek
+            return
         self.torrent.download_manager.seek(old_stream_position, self.stream_position_piece_index)
         self.buffer.seek(self.stream_position_piece_index)
 
@@ -184,6 +188,8 @@ class StreamBuffer:
                            if x.persistent or
                            (x.index >= new_index
                            and (x.index - new_index) * self.piece_length < 100000000)]
+        self.last_consecutive_piece_dirty = True
+        self.update_consecutive()
 
     def get_consecutive_bytes_in_buffer(self, start_from):
         self.update_consecutive()

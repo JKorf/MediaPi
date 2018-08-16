@@ -210,7 +210,7 @@ class MovieHandler(web.RequestHandler):
         if url == "play_movie":
             MovieController.play_movie(self.get_argument("url"), self.get_argument("id"), self.get_argument("title"), self.get_argument("img", ""))
         elif url == "play_continue":
-            yield MovieController.play_continue(play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"))
+            yield MovieController.play_continue(play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"), self.get_argument("mediaFile"))
 
     @gen.coroutine
     def get(self, url):
@@ -475,13 +475,15 @@ class DatabaseHandler(web.RequestHandler):
                 urllib.parse.unquote(self.get_argument("url")),
                 self.get_argument("image"),
                 int(self.get_argument("length")),
-                self.get_argument("time"))
+                self.get_argument("time"),
+                self.get_argument("mediaFile"))
 
         if url == "update_unfinished":
             TornadoServer.start_obj.database.update_watching_item(
                 urllib.parse.unquote(self.get_argument("url")),
                 int(self.get_argument("position")),
-                self.get_argument("watchedAt"))
+                self.get_argument("watchedAt"),
+                self.get_argument("mediaFile"))
 
     @gen.coroutine
     def reroute_to_master(self):

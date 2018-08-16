@@ -35,7 +35,8 @@
                         <img ng-if="!uf.image" ng-src="/Images/unknown.png" class="home-list-item-img" />
                     </div>
                     <div class="home-list-item-details">
-                        <div class="home-list-item-title multiline-truncate2">{{uf.name}}</div>
+                        <div class="home-list-item-title multiline-truncate2" ng-if="!uf.mediaFile">{{uf.name}}</div>
+                        <div class="home-list-item-title multiline-truncate2" ng-if="uf.mediaFile">{{uf.mediaFile}}</div>
                         <div class="unfinished-list-ago">{{timeToTimespan(uf.watchedAt)}}</div>
                         <unfinished-line percentage="uf.position / uf.length"></unfinished-line>
                         <div class="unfinished-list-times">
