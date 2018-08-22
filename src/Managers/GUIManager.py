@@ -24,7 +24,7 @@ class GUIManager:
         EventManager.register_event(EventType.SetVolume, self.set_volume)
         EventManager.register_event(EventType.Seek, self.seek)
 
-        EventManager.register_event(EventType.TorrentMediaFileSet, self.torrent_media_file_set)
+        #EventManager.register_event(EventType.TorrentMediaFileSet, self.torrent_media_file_set)
 
         EventManager.register_event(EventType.SetSubtitleFile, self.set_subtitle_file)
         EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_id)
