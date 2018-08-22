@@ -6,6 +6,8 @@ from Shared.Util import current_time, write_size
 from MediaPlayer.Peer.PeerMessages import RequestMessage
 from MediaPlayer.Util.Enums import ConnectionState, PeerSpeed, PeerInterestedState, PeerChokeState
 
+from src.MediaPlayer.Util.Enums import TorrentState
+
 
 class PeerDownloadManager:
 
