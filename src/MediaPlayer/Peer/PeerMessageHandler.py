@@ -126,6 +126,7 @@ class PeerMessageHandler:
 
         elif isinstance(message, AllowedFastMessage):
             Logger.write(1, str(self.peer.id) + " Received AllowedFast message")
+            self.peer.allowed_fast_pieces.append(message.piece_index)
             return
 
         elif isinstance(message, SuggestPieceMessage):

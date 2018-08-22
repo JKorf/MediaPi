@@ -47,6 +47,8 @@ class Peer:
         self.counter = None
         self.peer_speed = PeerSpeed.Low
 
+        self.allowed_fast_pieces = []
+
     def start(self):
         Logger.write(1, str(self.id) + ' Starting peer')
         self.running = True

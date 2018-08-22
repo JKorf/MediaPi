@@ -126,6 +126,37 @@ class TorrentDownloadManager:
 
         self.update_priority(True, False)
 
+    def get_allowed_fast_blocks_to_download(self, peer, amount):
+        can_download_pieces = []
+        result = []
+        piece_max_offset = 50000000 // self.torrent.data_manager.piece_length
+
+        for piece_index in peer.allowed_fast_pieces:
+            if piece_index > self.torrent.stream_position and piece_index - self.torrent.stream_position < piece_max_offset:
+                if self.torrent.media_file is not None and piece_index > self.torrent.media_file.end_piece(self.torrent.data_manager.piece_length):
+                    continue
+
+                can_download_pieces.append(piece_index)
+
+        if len(can_download_pieces) == 0:
+            return result
+
+        max_piece_index = max(can_download_pieces)
+        with self.queue_lock:
+            for block_download in self.queue:
+                if block_download.block.piece_index in can_download_pieces:
+                    if peer.bitfield.has_piece(block_download.block.piece_index):
+                        result.append(block_download)
+                        block_download.add_peer(peer)
+
+                if block_download.block.piece_index > max_piece_index and not block_download.block.persistent:
+                    break
+
+                if len(result) == amount:
+                    break
+
+        return result
+
     def get_blocks_to_download(self, peer, amount):
         if self.torrent.state != TorrentState.Downloading:
             return []

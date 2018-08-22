@@ -37,11 +37,25 @@ class PeerDownloadManager:
         if not self.has_interesting_pieces():
             return True
 
-        if self.peer.communication_state.in_choke == PeerChokeState.Choked:
-            return True
-
         if self.peer.communication_state.out_interest == PeerInterestedState.Uninterested:
             return True
+
+        if self.peer.communication_state.in_choke == PeerChokeState.Choked:
+            if len(self.peer.allowed_fast_pieces) == 0:
+                return True
+
+            with self.lock:
+                new_blocks = self.max_blocks - len(self.downloading)
+                to_download = self.peer.torrent.download_manager.get_allowed_fast_blocks_to_download(self.peer, new_blocks)
+                for block in to_download:
+                    self.downloading.append(PeerDownload(block))
+
+                if len(to_download) == 0:
+                    return True
+
+                Logger.write(2, str(self.peer.id) + " requesting " + str(len(to_download)) + " allowed fast blocks")
+                self.request(to_download)
+                return True
 
         if len(self.downloading) >= self.max_blocks:
             return True
@@ -51,15 +65,21 @@ class PeerDownloadManager:
                 return False
 
             new_blocks = self.max_blocks - len(self.downloading)
-            to_download = self.get_next_blocks_to_download(new_blocks)
-            for block_download in to_download:
-                request = RequestMessage(block_download.block.piece_index, block_download.block.start_byte_in_piece, block_download.block.length)
-                Logger.write(1, str(self.peer.id) + ' Sending request for piece ' + str(request.index) + ", block " + str(
-                    request.offset // 16384))
-                self.peer.torrent.outstanding_requests += 1
-                self.peer.connection_manager.send(request.to_bytes())
+            to_download = self.peer.torrent.download_manager.get_blocks_to_download(self.peer, new_blocks)
+            for block in to_download:
+                self.downloading.append(PeerDownload(block))
+
+            self.request(to_download)
 
         return True
+
+    def request(self, to_download):
+        for block_download in to_download:
+            request = RequestMessage(block_download.block.piece_index, block_download.block.start_byte_in_piece, block_download.block.length)
+            Logger.write(1, str(self.peer.id) + ' Sending request for piece ' + str(request.index) + ", block " + str(
+                request.offset // 16384))
+            self.peer.torrent.outstanding_requests += 1
+            self.peer.connection_manager.send(request.to_bytes())
 
     def check_current_downloading(self):
         canceled = 0
@@ -83,13 +103,6 @@ class PeerDownloadManager:
                     canceled += 1
         if canceled:
             Logger.write(1, "Canceled " + str(canceled))
-
-    def get_next_blocks_to_download(self, amount):
-        blocks_to_download = self.peer.torrent.download_manager.get_blocks_to_download(self.peer, amount)
-        for block in blocks_to_download:
-            self.downloading.append(PeerDownload(block))
-
-        return blocks_to_download
 
     def has_interesting_pieces(self):
         if self.peer.bitfield is None or self.peer.bitfield.has_none:
