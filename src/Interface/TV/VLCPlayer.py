@@ -64,6 +64,7 @@ class VLCPlayer:
         params = []
         if type == "YouTube":
             params.append("lua-intf=youtube")
+            params.append("demux=avformat")
 
         if start_time != 0:
             params.append("start-time=" + str(start_time // 1000))
