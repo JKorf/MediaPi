@@ -7,7 +7,7 @@
             <div class="player-settings-volume-full"><img src="/Images/speaker.png"/></div>
         </div>
         <div class="player-setting-volume">
-            <slider tooltip-bottom="true" model="playerState.volume" text="volumeToolTip" min="0" max="100" on-end-change="volChanged"></slider>
+            <slider tooltip-bottom="false" model="playerState.volume" text="volumeToolTip" min="0" max="100" on-end-change="volChanged"></slider>
         </div>
     </div>
 
@@ -34,7 +34,7 @@
                 <div class="player-subtitle-delay-min">-10s</div>
                 <div class="player-subtitle-delay-max">+10s</div>
                 <div class="player-subtitle-delay-slider">
-                    <slider model="playerState.subtitle_delay" text="subTooltip" min="-10" max="10" step="0.1" on-end-change="changeSubtitleOffset"></slider>
+                    <slider tooltip-bottom="false" model="playerState.subtitle_delay" text="subTooltip" min="-10" max="10" step="0.1" on-end-change="changeSubtitleOffset"></slider>
                 </div>
             </div>
             <div class="player-subtitle-tracks">
