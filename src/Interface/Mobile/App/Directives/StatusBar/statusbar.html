@@ -1,18 +1,18 @@
 <div class="status-bar">
-    <div class="status-bar-disconnected" ng-if="!data.cpu">
+    <div class="status-bar-disconnected" ng-if="!data">
         <div class="status-bar-item">
             Disconnected
         </div>
     </div>
 
-    <div class="status-bar-left" ng-if="data.cpu">
+    <div class="status-bar-left" ng-if="data">
         <div class="status-bar-item stream-item" ng-if="data.buffer_ready >= 0">
             <div class="status-ellipse"></div>
         </div>
 
         <div class="status-bar-divider divider-1" ng-if="data.buffer_ready >= 0"></div>
 
-        <div class="status-bar-item speed-item">
+        <div class="status-bar-item speed-item" ng-if="data.speed != -1">
             <div class="status-bar-item-icon">
                 <img src="/Images/torrents.png" />
             </div>
@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <div class="status-bar-right"  ng-if="data.cpu">
+    <div class="status-bar-right"  ng-if="data">
         <div class="status-bar-item memory-item">
             <div class="status-bar-item-icon">
                 <img src="/Images/memory.png" />

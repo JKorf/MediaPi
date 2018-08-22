@@ -89,11 +89,14 @@ class Info:
 
 class Status:
 
-    def __init__(self, total_speed, buffer_ready, cpu, memory):
+    def __init__(self, total_speed, buffer_ready, cpu, memory, torrent_state, peers_connected, potential_peers):
         self.speed = total_speed
         self.buffer_ready = buffer_ready
         self.cpu = cpu
         self.memory = memory
+        self.torrent_state = torrent_state
+        self.peers_connected = peers_connected
+        self.potential_peers = potential_peers
 
 
 class Settings:

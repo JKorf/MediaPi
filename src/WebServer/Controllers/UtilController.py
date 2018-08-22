@@ -78,13 +78,19 @@ class UtilController:
 
     @staticmethod
     def status(start):
-        speed = 0
+        speed = -1
         ready = -1
+        torrent_state = -1
+        connected_peers = -1
+        potential_peers = -1
         if start.torrent_manager.torrent:
             speed = write_size(start.torrent_manager.torrent.download_counter.value)
             ready = start.torrent_manager.torrent.bytes_ready_in_buffer
+            torrent_state = start.torrent_manager.torrent.state
+            connected_peers = len(start.torrent_manager.torrent.peer_manager.connected_peers)
+            potential_peers = len(start.torrent_manager.torrent.peer_manager.potential_peers)
 
-        return to_JSON(Status(speed, ready, psutil.cpu_percent(), psutil.virtual_memory().percent))
+        return to_JSON(Status(speed, ready, psutil.cpu_percent(), psutil.virtual_memory().percent, torrent_state, connected_peers, potential_peers))
 
     @staticmethod
     def info():
