@@ -29,6 +29,7 @@ class VLCPlayer:
         self.title = None
         self.path = None
         self.img = None
+        self.time = 0
         self.state = PlayerState.Nothing
         self.state_change_action = None
         self.trying_subitems = False
@@ -55,20 +56,23 @@ class VLCPlayer:
         self.title = title
         self.path = url
         self.img = img
-        if type == "YouTube":
-            self.__player.set_mrl(url, "lua-intf=youtube")
-        elif type == "Image":
-            self.__player.set_mrl(url)
-        else:
-            if time != 0:
-                if video_type.endswith("mp4"): # searching in mp4 files is no good with the default demuxer, use avformat. Less accurate with events/subs but it at least plays
-                    self.__player.set_mrl(url, "demux=mkv", "start-time=" + str(time // 1000))
-                else:
-                    self.__player.set_mrl(url, "start-time=" + str(time // 1000))
-            else:
-                self.__player.set_mrl(url)
-
+        self.time = time
+        self.__player.set_mrl(url, *self.get_parameters(type, time, video_type))
         return self.__player.play() != -1
+
+    def get_parameters(self, type, start_time, video_type):
+        params = []
+        if type == "YouTube":
+            params.append("lua-intf=youtube")
+
+        if start_time != 0:
+            params.append("start-time=" + str(start_time // 1000))
+
+        if start_time != 0 and video_type.endswith("mp4"):
+            params.append("demux=avformat")
+        elif video_type is not None and video_type.endswith("avi"):
+            params.append("demux=avformat")
+        return params
 
     def pause_resume(self):
         self.__player.pause()

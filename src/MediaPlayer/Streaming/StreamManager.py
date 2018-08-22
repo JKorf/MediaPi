@@ -45,6 +45,7 @@ class StreamManager:
         self.end_buffer_start_byte = 0
         self.start_buffer_end_byte = 0
         self.playing = False
+        self.has_played = False
         self.last_request_end = 0
         self.currently_seeking = False
 
@@ -62,6 +63,7 @@ class StreamManager:
     def player_state_change(self, old, new):
         if new == PlayerState.Playing:
             self.playing = True
+            self.has_played = True
         else:
             self.playing = False
 
@@ -114,7 +116,8 @@ class StreamManager:
             if start_byte == self.last_request_end:
                 # If follow up request of last, change pos and retrieve data
                 self.last_request_end = start_byte + length
-                self.change_stream_position(start_byte)
+                if self.has_played:
+                    self.change_stream_position(start_byte)
                 return self.buffer.get_data_for_stream(start_byte, length)
 
             if relative_start_byte < self.start_buffer_end_byte or relative_start_byte > self.end_buffer_start_byte:
@@ -130,7 +133,7 @@ class StreamManager:
                 return self.buffer.get_data_for_stream(start_byte, length)
 
             # This request is not the same as last, not following up, we aren't seeking and not in metadata range.
-            # Try to download and return it, might be some stray metadata search of VLC
+            # Best we can do is just seek it
             request_piece = int(math.floor(start_byte / self.torrent.piece_length))
             self.last_request_end = start_byte + length
             if request_piece not in self.torrent.download_manager.upped_prios:

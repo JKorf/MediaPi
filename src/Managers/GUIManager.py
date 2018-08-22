@@ -24,6 +24,8 @@ class GUIManager:
         EventManager.register_event(EventType.SetVolume, self.set_volume)
         EventManager.register_event(EventType.Seek, self.seek)
 
+        EventManager.register_event(EventType.TorrentMediaFileSet, self.torrent_media_file_set)
+
         EventManager.register_event(EventType.SetSubtitleFile, self.set_subtitle_file)
         EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_id)
         EventManager.register_event(EventType.SetSubtitleOffset, self.set_subtitle_offset)
@@ -44,6 +46,18 @@ class GUIManager:
             if self.player.type != "YouTube":
                 thread = CustomThread(self.stop_player, "Stopping player")
                 thread.start()
+
+    def torrent_media_file_set(self):
+        if self.player.time != 0:
+            return
+
+        Logger.write(2, "Torrent media file set, going to restart player to select correct demux")
+        type = self.player.type
+        title = self.player.title
+        url = self.player.path
+        img = self.player.img
+        self.stop_player()
+        self.player.play(type, title, url, img, 0, self.program.torrent_manager.torrent.media_file.name)
 
     def start_player(self, type, title, url, img=None, position=0, media_file=None):
         self.stop_player()

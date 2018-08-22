@@ -36,6 +36,7 @@ class EventType(Enum):
     StopTorrent = 24,
     TorrentMetadataDone = 25
     TorrentStopped = 26
+    TorrentMediaFileSet = 34
 
     Error = 27,
 
