@@ -2,7 +2,7 @@ from threading import Lock
 
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from Shared.Util import current_time
+from Shared.Util import current_time, write_size
 from MediaPlayer.Peer.PeerMessages import RequestMessage
 from MediaPlayer.Util.Enums import ConnectionState, PeerSpeed, PeerInterestedState, PeerChokeState
 
@@ -108,7 +108,7 @@ class PeerDownloadManager:
 
     def log(self):
         Logger.write(3, "       Currently downloading: " + str(len(self.downloading)))
-        Logger.write(3, "       Speed: " + str(self.peer.counter.value))
+        Logger.write(3, "       Speed: " + write_size(self.peer.counter.value))
 
     def stop(self):
         self.stopped = True

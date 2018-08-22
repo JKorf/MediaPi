@@ -25,6 +25,8 @@ class TorrentPeerManager:
         self.connecting_peers = []
         self.connected_peers = []
         self.disconnected_peers = []
+        self.cant_connect_peers = []
+        self.complete_peer_list = []
         self.max_peers_connected = Settings.get_int("max_peers_connected")
         self.max_peers_connecting = Settings.get_int("max_peers_connecting")
         self.random = Random()
@@ -44,6 +46,12 @@ class TorrentPeerManager:
     def log_peers(self):
         with Logger.lock:
             Logger.write(3, "-- TorrentPeerManager state --")
+            Logger.write(3, "   Potential peers: " + str(len(self.potential_peers)))
+            Logger.write(3, "   Connected peers: " + str(len(self.connected_peers)))
+            Logger.write(3, "   Connecting peers: " + str(len(self.connecting_peers)))
+            Logger.write(3, "   CantConnect peers: " + str(len(self.cant_connect_peers)))
+            Logger.write(3, "   Disconnected peers: " + str(len(self.disconnected_peers)))
+            Logger.write(3, "   Complete list: " + str(len(self.complete_peer_list)))
             for peer in self.connected_peers:
                 peer.log()
 
@@ -57,13 +65,15 @@ class TorrentPeerManager:
 
         if isinstance(uri, list):
             for u in uri:
-                if uri not in [x[0] for x in self.potential_peers]:
-                    self.potential_peers.append((u, source))
-                    self.add_potential_peer_stat(source)
+                self.add_potential_peer_item(u, source)
         else:
-            if uri not in [x[0] for x in self.potential_peers]:
-                self.potential_peers.append((uri, source))
-                self.add_potential_peer_stat(source)
+            self.add_potential_peer_item(uri, source)
+
+    def add_potential_peer_item(self, uri, source):
+        if uri not in self.complete_peer_list:
+            self.complete_peer_list.append(uri)
+            self.potential_peers.append((uri, source))
+            self.add_potential_peer_stat(source)
 
     def add_potential_peer_stat(self, source):
         if source == PeerSource.DHT:
@@ -90,9 +100,11 @@ class TorrentPeerManager:
         if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData and self.torrent.state != TorrentState.WaitingUserFileSelection:
             return True
 
-        if len(self.potential_peers) == 0:
-            # no new peers
-            return True
+        peer_list = list(self.potential_peers)  # Try connecting to new peers from potential list
+        if len(peer_list) == 0:
+            peer_list = list(self.disconnected_peers)  # If we dont have any new peers to try, try connecting to disconnected peers
+            if len(peer_list) == 0:
+                return True  # No peers available
 
         if len(self.connected_peers) >= self.max_peers_connected:
             # already have max connections
@@ -131,7 +143,7 @@ class TorrentPeerManager:
 
         for peer in peers_disconnected:
             self.connecting_peers.remove(peer)
-            self.disconnected_peers.append(peer.uri)
+            self.cant_connect_peers.append(peer.uri)
 
         for peer in peers_disconnected_connected:
             self.connected_peers.remove(peer)
@@ -196,6 +208,8 @@ class TorrentPeerManager:
         for peer in self.connected_peers:
             peer.stop()
 
+        self.complete_peer_list.clear()
         self.potential_peers.clear()
+        self.cant_connect_peers.clear()
         self.update_peer_status()
         self.disconnected_peers.clear()

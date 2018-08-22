@@ -67,9 +67,7 @@ class Peer:
         Logger.write(1, str(self.id) + ' Peer started')
 
     def log(self):
-        Logger.write(3, "     " + str(self.id) + " | " + self.communication_state.print() + " | " + str(self.peer_speed) +
-                     "(" + write_size(self.counter.value) + ")" + " | Outstanding: " + str(
-                         len(self.download_manager.downloading)))
+        Logger.write(3, "     " + str(self.id) + " | " + self.communication_state.print())
 
         self.connection_manager.log()
         self.download_manager.log()

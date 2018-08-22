@@ -10,6 +10,7 @@
 --- TODO ---
     Seeking still shit
     Niet proberen te connecten met peer waarmee je al geconnect bent
+    Peers disconnecten veel
 
     Allowed fast imp
 
