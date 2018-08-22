@@ -19,7 +19,10 @@
                         mediaFile: response[i][8]
                     };
                     obj.watchedAt.setUTCSeconds(response[i][6] / 1000)
-                    unfinished.push(obj);
+                    if(new Date() - obj.watchedAt > 1000 * 60 * 60 * 24 * 30)
+                        factory.Remove(obj);
+                    else
+                        unfinished.push(obj);
                 }
                 console.log(unfinished);
                 return unfinished;
