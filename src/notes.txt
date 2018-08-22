@@ -9,10 +9,7 @@
 
 --- TODO ---
     Seeking still shit
-    Niet proberen te connecten met peer waarmee je al geconnect bent
     Peers disconnecten veel
-
-    Allowed fast imp
 
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database
