@@ -50,8 +50,8 @@ class MovieController:
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
+        EventManager.throw_event(EventType.PreparePlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, urllib.parse.unquote(img), 0, None])
         EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), None])
-        EventManager.throw_event(EventType.StartPlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, urllib.parse.unquote(img)])
 
     @staticmethod
     @gen.coroutine
@@ -64,14 +64,9 @@ class MovieController:
         if type == "torrent":
             EventManager.throw_event(EventType.StopTorrent, [])
             time.sleep(0.2)
+
+            EventManager.throw_event(EventType.PreparePlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, img, int(float(position)) * 1000, media_file])
             EventManager.throw_event(EventType.StartTorrent, [url, urllib.parse.unquote_plus(media_file)])
-            EventManager.throw_event(EventType.StartPlayer,
-                                     ["Movie",
-                                      urllib.parse.unquote(title),
-                                      MovieController.server_uri,
-                                      img,
-                                      int(float(position)) * 1000,
-                                      media_file])
         else:
             if Settings.get_bool("slave"):
                 yield delegate(url, title, int(float(position)) * 1000)
@@ -79,9 +74,5 @@ class MovieController:
                 if sys.platform == "linux" or sys.platform == "linux2":
                     if not url.startswith("/"):
                         url = "/" + url
-                EventManager.throw_event(EventType.StartPlayer,
-                                         ["File",
-                                          urllib.parse.unquote(title),
-                                          url,
-                                          img,
-                                          int(float(position)) * 1000])
+                EventManager.throw_event(EventType.PreparePlayer, ["File", urllib.parse.unquote(title), url, img, int(float(position)) * 1000, url])
+                EventManager.throw_event(EventType.StartPlayer, [])

@@ -38,8 +38,4 @@ class TorrentController:
         time.sleep(1)
         if url.endswith('.torrent') or url.startswith('magnet:'):
             EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), None])
-            EventManager.throw_event(EventType.StartPlayer,
-                                     ["Movie", urllib.parse.unquote(title), MovieController.server_uri])
-        else:
-            EventManager.throw_event(EventType.StartPlayer,
-                                     ["Movie", urllib.parse.unquote(title), urllib.parse.unquote_plus(url)])
+            EventManager.throw_event(EventType.PreparePlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, None, 0, None])

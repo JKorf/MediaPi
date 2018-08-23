@@ -18,13 +18,15 @@ class GUIManager:
 
         self.player.on_state_change(self.player_state_change)
 
+        EventManager.register_event(EventType.PreparePlayer, self.prepare_player)
         EventManager.register_event(EventType.StartPlayer, self.start_player)
+
         EventManager.register_event(EventType.StopPlayer, self.stop_player)
         EventManager.register_event(EventType.PauseResumePlayer, self.pause_resume_player)
         EventManager.register_event(EventType.SetVolume, self.set_volume)
         EventManager.register_event(EventType.Seek, self.seek)
 
-        #EventManager.register_event(EventType.TorrentMediaFileSet, self.torrent_media_file_set)
+        EventManager.register_event(EventType.TorrentMediaFileSet, self.torrent_media_file_set)
 
         EventManager.register_event(EventType.SetSubtitleFile, self.set_subtitle_file)
         EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_id)
@@ -47,21 +49,14 @@ class GUIManager:
                 thread = CustomThread(self.stop_player, "Stopping player")
                 thread.start()
 
+    def prepare_player(self, type, title, url, img, position, media_file):
+        self.player.prepare_play(type, title, url, img, position, media_file)
+
+    def start_player(self):
+        self.player.play()
+
     def torrent_media_file_set(self):
-        if self.player.time != 0:
-            return
-
-        Logger.write(2, "Torrent media file set, going to restart player to select correct demux")
-        type = self.player.type
-        title = self.player.title
-        url = self.player.path
-        img = self.player.img
-        self.stop_player()
-        self.player.play(type, title, url, img, 0, self.program.torrent_manager.torrent.media_file.name)
-
-    def start_player(self, type, title, url, img=None, position=0, media_file=None):
-        self.stop_player()
-        self.player.play(type, title, url, img, position, media_file)
+        self.player.play(0, self.program.torrent_manager.torrent.media_file.name)
 
     def start_torrent(self, url):
         self.player.stop()

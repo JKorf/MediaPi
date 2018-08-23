@@ -21,8 +21,13 @@ class UtilController:
     @staticmethod
     def player_state(start):
         ret = [0, 5, 6]
-        if start.gui_manager.player is None or start.gui_manager.player.get_state().value in ret:
+        state = start.gui_manager.player.get_state().value
+
+        if state in ret and not start.gui_manager.player.prepared:
             return to_JSON(CurrentMedia(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)).encode('utf8')
+
+        if state == 0:
+            state = 1
 
         title = start.gui_manager.player.title
         percentage = 0
@@ -32,7 +37,7 @@ class UtilController:
             if start.torrent_manager.torrent.state == TorrentState.Done:
                 percentage = 100
 
-        media = CurrentMedia(start.gui_manager.player.state.value,
+        media = CurrentMedia(state,
                              start.gui_manager.player.type,
                              title,
                              start.gui_manager.player.path,

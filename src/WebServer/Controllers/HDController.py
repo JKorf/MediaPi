@@ -44,12 +44,14 @@ class HDController:
         Logger.write(2, "Play file: " + file)
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
+        filename = urllib.parse.unquote(filename)
 
         if filename.endswith(".jpg"):
-            EventManager.throw_event(EventType.StartPlayer, ["Image", urllib.parse.unquote(filename), file])
+            EventManager.throw_event(EventType.PreparePlayer, ["Image", filename, file, None, 0, filename])
+            EventManager.throw_event(EventType.StartPlayer, [])
         else:
-            EventManager.throw_event(EventType.StartPlayer, ["File", urllib.parse.unquote(filename), file, None, position])
-
+            EventManager.throw_event(EventType.PreparePlayer, ["File", filename, file, None, position, filename])
+            EventManager.throw_event(EventType.StartPlayer, [])
 
     @staticmethod
     def next_image(currentPath):

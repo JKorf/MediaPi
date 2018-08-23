@@ -8,7 +8,7 @@
         <div ng-if="playerState.type != 'Image'">
             <div class="player-controls">
                 <div class="player-pause-resume" ng-click="playPause()">
-                    <img ng-if="playerState.state == 'Playing' || playerState.state == 'Buffering'|| playerState.state == 'Opening'" src="/Images/pause-open.png" />
+                    <img ng-if="playerState.state == 'Playing' || playerState.state == 'Buffering'|| playerState.state == 'Opening' || playerState.state == 'SelectMediaFile'" src="/Images/pause-open.png" />
                     <img ng-if="playerState.state == 'Paused'" src="/Images/play-open.png" />
                 </div>
                 <div class="player-stop" ng-click="stop()">
@@ -20,7 +20,7 @@
             </div>
         </div>
 
-        <div ng-if="playerState.state == 'Buffering' || playerState.state == 'Opening'" class="player-loading">
+        <div ng-if="playerState.state == 'Buffering' || playerState.state == 'Opening' || playerState.state == 'SelectMediaFile'" class="player-loading">
             <img src="/Images/loader.gif" />
         </div>
         <div class="player-title" ng-class="{'player-image-title': playerState.type == 'Image'}" sliding-text text="{{playerState.title}}" transtime="4s" intervaltime="6000">

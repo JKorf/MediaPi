@@ -48,4 +48,4 @@ class ShowController:
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(1)
         EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), None])
-        EventManager.throw_event(EventType.StartPlayer, ["Show", urllib.parse.unquote(title), ShowController.server_uri, urllib.parse.unquote(img)])
+        EventManager.throw_event(EventType.PreparePlayer, ["Show", urllib.parse.unquote(title), ShowController.server_uri, urllib.parse.unquote(img), 0, None])

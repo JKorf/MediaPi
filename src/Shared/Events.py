@@ -10,11 +10,7 @@ class EventType(Enum):
 
     Seek = 2,
     StartPlayer = 3,
-    PlayerStarted = 4
-    PlayerOpening = 5,
-    PlayerBuffering = 6,
-    PlayerNothingSpecial = 7,
-    PlayerBufferingDone = 8,
+    PreparePlayer = 35,
     StopPlayer = 9,
     PlayerStopped = 10
     SetVolume = 11,

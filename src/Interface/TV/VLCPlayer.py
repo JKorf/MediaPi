@@ -30,6 +30,9 @@ class VLCPlayer:
         self.path = None
         self.img = None
         self.time = 0
+        self.filename = None
+        self.prepared = False
+
         self.state = PlayerState.Nothing
         self.state_change_action = None
         self.trying_subitems = False
@@ -50,29 +53,49 @@ class VLCPlayer:
             self.__vlc_instance = vlc.Instance("--image-duration=-1" + log_level + network_caching + ip_timeout)
         Logger.write(3, "VLC version " + libvlc_get_version().decode('utf8'))
 
-    def play(self, type, title, url, img=None, time=0, video_type="mkv"):
-        Logger.write(2, "VLC Play | Type: " + type + ", title: " + title + ", url: " + url +", img: " + str(img) + ", time: " + str(time))
+    def prepare_play(self, type, title, url, img=None, time=0, filename=None):
         self.type = type
         self.title = title
         self.path = url
         self.img = img
         self.time = time
-        self.__player.set_mrl(url, *self.get_parameters(type, time, video_type))
+        self.filename = filename
+        self.prepared = True
+
+    def play(self, time=0, filename=None):
+        if not self.prepared:
+            raise ValueError("Player not prepared")
+
+        if time != 0:
+            self.time = time
+        if filename is not None:
+            self.filename = filename
+
+        parameters = self.get_parameters()
+
+        Logger.write(2, "VLC Play | Type: " + self.type)
+        Logger.write(2, "VLC Play | Title: " + self.title)
+        Logger.write(2, "VLC Play | Url: " + self.path)
+        Logger.write(2, "VLC Play | Time: " + str(self.time))
+        Logger.write(2, "VLC Play | Filename: " + str(self.filename))
+        Logger.write(2, "VLC Play | Parameters: " + str(parameters))
+
+        self.__player.set_mrl(self.path, *parameters)
         return self.__player.play() != -1
 
-    def get_parameters(self, type, start_time, video_type):
+    def get_parameters(self):
         params = []
-        if type == "YouTube":
+        if self.type == "YouTube":
             params.append("lua-intf=youtube")
-            params.append("demux=avformat")
 
-        if start_time != 0:
-            params.append("start-time=" + str(start_time // 1000))
+        if self.time != 0:
+            params.append("start-time=" + str(self.time // 1000))
 
-        if start_time != 0 and video_type.endswith("mp4"):
-            params.append("demux=avformat")
-        elif video_type is not None and video_type.endswith("avi"):
-            params.append("demux=avformat")
+        if self.type != "File":
+            if self.time != 0 and self.filename.endswith("mp4"):
+                params.append("demux=avformat")
+            elif self.filename is not None and self.filename.endswith("avi"):
+                params.append("demux=avformat")
         return params
 
     def pause_resume(self):
@@ -84,6 +107,7 @@ class VLCPlayer:
         self.title = None
         self.img = None
         self.path = None
+        self.prepared = False
 
     def fullscreen_on(self):
         self.__player.set_fullscreen(True)
@@ -189,6 +213,7 @@ class VLCPlayer:
 
     def state_change_stopped(self, event):
         if self.state != PlayerState.Nothing:
+            self.prepared = False
             self.change_state(PlayerState.Nothing)
 
     def state_change_end_reached(self, event):

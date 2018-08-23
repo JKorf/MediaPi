@@ -28,6 +28,7 @@ class Observer:
         self.master_path = Settings.get_string("master_ip") + ":50010/file/"
 
         EventManager.register_event(EventType.StartPlayer, self.start_player)
+        EventManager.register_event(EventType.PreparePlayer, self.start_player)
 
         thread = CustomThread(self.watch_download_speed, "Watch download speed")
         thread.start()
@@ -38,7 +39,7 @@ class Observer:
             thread = CustomThread(self.watch_wifi, "Watch wifi")
             thread.start()
 
-    def start_player(self, type, title, url, img=None, position=0, media_file=None):
+    def start_player(self, type=None, title=None, url=None, img=None, position=0, media_file=None):
         self.added_unfinished = False
         self.removed_unfinished = False
 

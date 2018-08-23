@@ -18,5 +18,6 @@ class RadioController:
         Logger.write(2, "Play radio: " + id)
         radio = RadioProvider.get_by_id(int(id))
         EventManager.throw_event(EventType.StopTorrent, [])
-        time.sleep(1)
-        EventManager.throw_event(EventType.StartPlayer, ["Radio", radio.name, radio.url, radio.image])
+        time.sleep(0.2)
+        EventManager.throw_event(EventType.PreparePlayer, ["Radio", radio.name, radio.url, radio.image, 0, None])
+        EventManager.throw_event(EventType.StartPlayer, [])

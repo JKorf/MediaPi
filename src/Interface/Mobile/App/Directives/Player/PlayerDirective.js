@@ -12,6 +12,7 @@
                 playerStates[2] = "Buffering";
                 playerStates[3] = "Playing";
                 playerStates[4] = "Paused";
+                playerStates[5] = "SelectMediaFile";
 
                 var playStartTime;
                 var playStartOffset;

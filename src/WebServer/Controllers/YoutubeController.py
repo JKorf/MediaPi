@@ -126,16 +126,18 @@ class YoutubeController:
         Logger.write(2, "Play youtube: " + title)
 
         EventManager.throw_event(EventType.StopTorrent, [])
-        time.sleep(1)
-        EventManager.throw_event(EventType.StartPlayer, ["YouTube", unquote(title), 'https://www.youtube.com/watch?v='+id])
+        time.sleep(0.2)
+        EventManager.throw_event(EventType.PreparePlayer, ["YouTube", unquote(title), 'https://www.youtube.com/watch?v=' + id, None, 0, None])
+        EventManager.throw_event(EventType.StartPlayer, [])
 
     @staticmethod
     def play_youtube_url(url, title):
         Logger.write(2, "Play youtube url: " + unquote(title))
 
         EventManager.throw_event(EventType.StopTorrent, [])
-        time.sleep(1)
-        EventManager.throw_event(EventType.StartPlayer, ["Youtube", unquote(title), unquote(url)])
+        time.sleep(0.2)
+        EventManager.throw_event(EventType.PreparePlayer, ["YouTube", unquote(title), unquote(url), None, 0, None])
+        EventManager.throw_event(EventType.StartPlayer, [])
 
     @staticmethod
     @gen.coroutine
