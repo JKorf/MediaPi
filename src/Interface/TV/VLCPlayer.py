@@ -41,16 +41,9 @@ class VLCPlayer:
         thread.start()
 
     def instantiate_vlc(self):
-        log_level = " --verbose=" + str(Settings.get_int("vlc_log_level"))
-        network_caching = " --network-caching=" + str(Settings.get_int("network_caching"))
-        ip_timeout = " --ipv4-timeout=500"
-        if Settings.get_bool("raspberry"):
-            log_path = Settings.get_string("log_folder")
-            file_path = log_path + '/vlclog_'+datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt"
-
-            self.__vlc_instance = vlc.Instance("vlc -V omxil_vout --codec omxil --file-logging --logfile="+file_path+" --image-duration=-1 --file-caching=5000" + log_level + network_caching + ip_timeout)
-        else:
-            self.__vlc_instance = vlc.Instance("--image-duration=-1" + log_level + network_caching + ip_timeout)
+        parameters = self.get_instance_parameters()
+        Logger.write(2, "VLC parameters: " + str(parameters))
+        self.__vlc_instance = vlc.Instance("vlc", *parameters)
         Logger.write(3, "VLC version " + libvlc_get_version().decode('utf8'))
 
     def prepare_play(self, type, title, url, img=None, time=0, filename=None):
@@ -71,7 +64,7 @@ class VLCPlayer:
         if filename is not None:
             self.filename = filename
 
-        parameters = self.get_parameters()
+        parameters = self.get_play_parameters()
 
         Logger.write(2, "VLC Play | Type: " + self.type)
         Logger.write(2, "VLC Play | Title: " + self.title)
@@ -83,7 +76,24 @@ class VLCPlayer:
         self.__player.set_mrl(self.path, *parameters)
         return self.__player.play() != -1
 
-    def get_parameters(self):
+    def get_instance_parameters(self):
+        params = []
+        params.append("--verbose=" + str(Settings.get_int("vlc_log_level")))
+        params.append("--network-caching=" + str(Settings.get_int("network_caching")))
+        params.append("--ipv4-timeout=500")
+        params.append("--image-duration=-1")
+
+        if Settings.get_bool("raspberry"):
+            log_path = Settings.get_string("log_folder")
+            params.append("--logfile=" + log_path + '/vlclog_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt")
+            params.append("--file-logging")
+            params.append("--codec=omxil")
+            params.append("--vout=omxil_vout")
+            params.append("--file-caching=5000")
+
+        return params
+
+    def get_play_parameters(self):
         params = []
         if self.type == "YouTube":
             params.append("lua-intf=youtube")
