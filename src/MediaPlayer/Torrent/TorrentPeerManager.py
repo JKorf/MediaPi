@@ -38,6 +38,7 @@ class TorrentPeerManager:
 
         self.high_speed_peers = 0
         self.medium_speed_peers = 0
+        self.last_busy_peers_reconnect = current_time()
 
     def unregister(self):
         EventManager.deregister_event(self.event_id_log)
@@ -72,7 +73,7 @@ class TorrentPeerManager:
     def add_potential_peer_item(self, uri, source):
         if uri not in self.complete_peer_list:
             self.complete_peer_list.append(uri)
-            self.potential_peers.append((uri, source))
+            self.potential_peers.append((urlparse(uri), source))
             self.add_potential_peer_stat(source)
 
     def add_potential_peer_stat(self, source):
@@ -102,9 +103,13 @@ class TorrentPeerManager:
 
         peer_list = list(self.potential_peers)  # Try connecting to new peers from potential list
         if len(peer_list) == 0:
+            if current_time() - self.last_busy_peers_reconnect < 1000 * 15:
+                return True  # only try busy peers every 15 seconds
+
             peer_list = list(self.disconnected_peers)  # If we dont have any new peers to try, try connecting to disconnected peers
             if len(peer_list) == 0:
                 return True  # No peers available
+            self.last_busy_peers_reconnect = current_time()
 
         if len(self.connected_peers) >= self.max_peers_connected:
             # already have max connections
@@ -116,17 +121,18 @@ class TorrentPeerManager:
 
         connected_peers_under_max = self.max_peers_connected - len(self.connected_peers)
         connecting_peers_under_max = self.max_peers_connecting - len(self.connecting_peers)
-        peers_to_connect = min(min(connecting_peers_under_max, connected_peers_under_max), len(self.potential_peers))
+        peers_to_connect = min(min(connecting_peers_under_max, connected_peers_under_max), len(peer_list))
         for index in range(peers_to_connect):
-            if len(self.potential_peers) == 0:
+            if len(peer_list) == 0:
                 # We probably stopped the torrent if this happens
                 return True
 
             Logger.write(1, 'starting new peer')
-            peer_to_connect = self.random.choice(self.potential_peers)
-            self.potential_peers.remove(peer_to_connect)
+            peer_to_connect = self.random.choice(peer_list)
+            if peer_to_connect in self.potential_peers:
+                self.potential_peers.remove(peer_to_connect)
             self.__peer_id += 1
-            new_peer = Peer(self.__peer_id, self.torrent, urlparse(peer_to_connect[0]), peer_to_connect[1])
+            new_peer = Peer(self.__peer_id, self.torrent, peer_to_connect[0], peer_to_connect[1])
             new_peer.start()
             self.connecting_peers.append(new_peer)
 
@@ -147,7 +153,7 @@ class TorrentPeerManager:
 
         for peer in peers_disconnected_connected:
             self.connected_peers.remove(peer)
-            self.disconnected_peers.append(peer.uri)
+            self.disconnected_peers.append((peer.uri, peer.source))
 
         self.high_speed_peers = len([x for x in self.connected_peers if x.peer_speed == PeerSpeed.High])
         self.medium_speed_peers = len([x for x in self.connected_peers if x.peer_speed == PeerSpeed.Medium])

@@ -97,6 +97,13 @@ class Torrent:
         return False
 
     @property
+    def starting(self):
+        # TODO setting
+        if self.download_counter.total < 4000000:
+            return True
+        return False
+
+    @property
     def state(self):
         return self.__state
 

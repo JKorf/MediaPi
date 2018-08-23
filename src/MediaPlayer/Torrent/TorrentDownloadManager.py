@@ -147,7 +147,7 @@ class TorrentDownloadManager:
         with self.queue_lock:
             for block_download in self.queue:
                 if block_download.block.piece_index in can_download_pieces:
-                    if peer.bitfield.has_piece(block_download.block.piece_index):
+                    if peer.bitfield.has_piece(block_download.block.piece_index) and peer not in block_download.peers:
                         result.append(block_download)
                         block_download.add_peer(peer)
 
@@ -203,9 +203,10 @@ class TorrentDownloadManager:
                         result.append(block_download)
                         block_download.add_peer(peer)
 
-                    elif self.can_download_priority_pieces(block_download, peer):
-                        result.append(block_download)
-                        block_download.add_peer(peer)
+                    elif not self.torrent.starting:
+                        if self.can_download_priority_pieces(block_download, peer):
+                            result.append(block_download)
+                            block_download.add_peer(peer)
 
                     elif self.download_mode == DownloadMode.ImportantOnly:
                         if block_download.block.start_byte_total - self.torrent.stream_position * self.torrent.data_manager.piece_length > 100000000:
@@ -230,12 +231,19 @@ class TorrentDownloadManager:
 
     def can_download_priority_pieces(self, block_download, peer):
         if peer in block_download.peers:
-            return False
+            return False  # already downloading this
+
+        if len([x for x in block_download.peers if x.peer_speed == PeerSpeed.High]) > 0:
+            return False  # a high speed peer is already downloading this
+
+        if peer.peer_speed != PeerSpeed.High and len([x for x in block_download.peers if x.peer_speed == PeerSpeed.Medium]) > 0:
+            return False  # a medium speed peer is already downloading this and we're not fast ourselfs
+
+        if self.torrent.end_game:
+            return True
 
         currently_downloading = len(block_download.peers)
         prio = block_download.piece.priority
-        if self.torrent.end_game:
-            return True
 
         if self.download_mode == DownloadMode.ImportantOnly:
             if prio == 100:
