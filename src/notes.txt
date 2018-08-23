@@ -14,6 +14,8 @@
     Seeking still shit
     Peers disconnecten veel
 
+    too much overhead
+
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database
 

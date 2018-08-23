@@ -130,6 +130,8 @@ class TorrentDownloadManager:
         can_download_pieces = []
         result = []
         piece_max_offset = 50000000 // self.torrent.data_manager.piece_length
+        if self.download_mode == DownloadMode.ImportantOnly:
+            return result
 
         for piece_index in peer.allowed_fast_pieces:
             if piece_index > self.torrent.stream_position and piece_index - self.torrent.stream_position < piece_max_offset:
