@@ -8,6 +8,9 @@
         https://learn.pimoroni.com/tutorial/sandyj/controlling-ikea-tradfri-lights-from-your-pi
 
 --- TODO ---
+    Weather
+    TV
+
     Seeking still shit
     Peers disconnecten veel
 
