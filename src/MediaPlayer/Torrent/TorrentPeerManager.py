@@ -38,7 +38,6 @@ class TorrentPeerManager:
 
         self.high_speed_peers = 0
         self.medium_speed_peers = 0
-        self.last_busy_peers_reconnect = current_time()
 
     def unregister(self):
         EventManager.deregister_event(self.event_id_log)
@@ -103,13 +102,9 @@ class TorrentPeerManager:
 
         peer_list = list(self.potential_peers)  # Try connecting to new peers from potential list
         if len(peer_list) == 0:
-            if current_time() - self.last_busy_peers_reconnect < 1000 * 15:
-                return True  # only try busy peers every 15 seconds
-
-            peer_list = list(self.disconnected_peers)  # If we dont have any new peers to try, try connecting to disconnected peers
+            peer_list = [(x[0], x[1]) for x in self.disconnected_peers if current_time() - x[2] > 30000]  # If we dont have any new peers to try, try connecting to disconnected peers
             if len(peer_list) == 0:
                 return True  # No peers available
-            self.last_busy_peers_reconnect = current_time()
 
         if len(self.connected_peers) >= self.max_peers_connected:
             # already have max connections
@@ -155,7 +150,7 @@ class TorrentPeerManager:
 
         for peer in peers_busy:
             self.connecting_peers.remove(peer)
-            self.disconnected_peers.append((peer.uri, peer.source))
+            self.disconnected_peers.append((peer.uri, peer.source, current_time()))
 
         for peer in peers_failed_connect:
             self.connecting_peers.remove(peer)
@@ -163,7 +158,7 @@ class TorrentPeerManager:
 
         for peer in peers_disconnected_connected:
             self.connected_peers.remove(peer)
-            self.disconnected_peers.append((peer.uri, peer.source))
+            self.disconnected_peers.append((peer.uri, peer.source, current_time()))
 
         self.high_speed_peers = len([x for x in self.connected_peers if x.peer_speed == PeerSpeed.High])
         self.medium_speed_peers = len([x for x in self.connected_peers if x.peer_speed == PeerSpeed.Medium])
