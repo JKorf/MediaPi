@@ -15,6 +15,7 @@
 
         $scope.watchTrailer = function(){
             ConfirmationFactory.confirm_play().then(function(){
+                $rootScope.$broadcast("startPlay", {title: $scope.movie.title, type: "YouTube"});
                 $http.post("/youtube/play_youtube_url?url=" + encodeURIComponent($scope.movie.youtube_trailer) + "&title=" + encodeURIComponent($scope.movie.title + " trailer"));
             });
         }
@@ -45,7 +46,7 @@
 
         $scope.watchMovie = function(){
             ConfirmationFactory.confirm_play().then(function(){
-                $rootScope.$broadcast("startPlay", {title: $scope.movie.title});
+                $rootScope.$broadcast("startPlay", {title: $scope.movie.title, type: "Movie"});
 
                 $http.post('/movies/play_movie?url=' + encodeURIComponent($scope.selectedTorrent.url) + '&id=' + $scope.movie.id + '&title=' + encodeURIComponent($scope.movie.title) + '&img=' + encodeURIComponent($scope.movie.poster));
             });

@@ -64,7 +64,7 @@
 
         $scope.watchEpisode = function(episode){
             ConfirmationFactory.confirm_play().then(function(){
-                $rootScope.$broadcast("startPlay", {title: "[S"+addLeadingZero(episode.season)+"E"+addLeadingZero(episode.episode)+"] " + $scope.show.title});
+                $rootScope.$broadcast("startPlay", {title: "[S"+addLeadingZero(episode.season)+"E"+addLeadingZero(episode.episode)+"] " + $scope.show.title, type: "Show"});
 
                 var title = "[S"+addLeadingZero(episode.season)+"E"+addLeadingZero(episode.episode)+"]" + encodeURIComponent(" " + $scope.show.title);
                 $http.post('/shows/play_episode?url=' + encodeURIComponent(episode.torrents[$scope.selectedResolution.resolution].url) + '&title=' + title + '&img=' + encodeURIComponent($scope.show.images.poster));

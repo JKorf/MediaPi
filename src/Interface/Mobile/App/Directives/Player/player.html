@@ -8,7 +8,7 @@
         <div ng-if="playerState.type != 'Image'">
             <div class="player-controls">
                 <div class="player-pause-resume" ng-click="playPause()">
-                    <img ng-if="playerState.state == 'Playing' || playerState.state == 'Buffering'|| playerState.state == 'Opening' || playerState.state == 'SelectMediaFile'" src="/Images/pause-open.png" />
+                    <img ng-if="playerState.state == 'Playing' || playerState.state == 'Buffering'|| playerState.state == 'Opening'" src="/Images/pause-open.png" />
                     <img ng-if="playerState.state == 'Paused'" src="/Images/play-open.png" />
                 </div>
                 <div class="player-stop" ng-click="stop()">
@@ -27,9 +27,9 @@
         </div>
 
         <div class="player-image">
-            <protected-img ng-if="playerState.img && !isLocalImage(playerState.img)" src="playerState.img" imgclass="player-image-img"></protected-img>
-            <img ng-if="!playerState.img" ng-src="/Images/unknown.png" class="player-image-img" />
-            <img ng-if="playerState.img && isLocalImage(playerState.img)" ng-src="{{playerState.img}}" class="player-image-img" />
+            <protected-img ng-if="playerState.img" src="playerState.img" imgclass="player-image-img"></protected-img>
+            <img ng-if="!playerState.img && playerState.type != 'YouTube'" ng-src="/Images/unknown.png" class="player-image-img" />
+            <img ng-if="!playerState.img && playerState.type == 'YouTube'" ng-src="/Images/youtube-full.png" class="player-image-img" />
         </div>
 
         <div class="player-image-controls" ng-if="playerState.type == 'Image'">

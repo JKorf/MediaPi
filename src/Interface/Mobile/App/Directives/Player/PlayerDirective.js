@@ -12,7 +12,7 @@
                 playerStates[2] = "Buffering";
                 playerStates[3] = "Playing";
                 playerStates[4] = "Paused";
-                playerStates[5] = "SelectMediaFile";
+                playerStates[5] = "Ended";
 
                 var playStartTime;
                 var playStartOffset;
@@ -30,10 +30,6 @@
                 $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options){
                     SetHeights();
                 });
-
-                $scope.isLocalImage = function(img){
-                    return img.startsWith("/Images/");
-                }
 
                 $scope.settings = function(){
                     $rootScope.openPopup();
@@ -112,7 +108,6 @@
                         if(event == "state_change"){
                             state = playerStates[parseInt(data)];
                             ChangeState(state);
-                            console.log("State change: " + state);
                             if(!playerInvokeInterval)
                             {
                                 playerInvokeInterval = $timeout(function(){
@@ -156,7 +151,6 @@
                         }
 
                         $scope.$apply();
-                        SetHeights();
                     });
 
                     initMediaSession();
@@ -171,7 +165,7 @@
                         handlePlayerInfo({data: {
                             state: 1,
                             title: args.title,
-                            type: "Show",
+                            type: args.type,
                             playing_for: 0,
                             play_time: 0,
                             length: 0
@@ -252,13 +246,14 @@
                 }
 
                 function handlePlayerInfo(response){
+                    response.data.state = playerStates[parseInt(response.data.state)];
+                    ChangeState(response.data.state);
                     $scope.playerState = response.data;
+
                     updateMediaSessionMetaData();
-                    ChangeState(playerStates[parseInt(response.data.state)]);
 
                     playStartTime = new Date();
                     playStartOffset = $scope.playerState.playing_for;
-                    SetHeights();
 
                     if($scope.playerState.state != 'Nothing' && $scope.playerState.state != 'Buffering')
                     {
@@ -290,8 +285,11 @@
                 }
 
                 function ChangeState(state){
-                    if($scope.playerState.state == state)
+                    if($scope.playerState.state == state){
                         return;
+                    }
+
+                    console.log("Changing state from " + $scope.playerState.state + " to " + state);
 
                     if(state == 'Nothing' || state == 'error' || state == 'disconnected'){
                         playing = false;
@@ -312,6 +310,7 @@
 
                     $scope.playerState.state = state;
                     $rootScope.playerState = state;
+                    SetHeights();
                 }
 
                 function SetHeights(){
