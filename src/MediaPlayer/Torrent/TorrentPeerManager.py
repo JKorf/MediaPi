@@ -129,8 +129,13 @@ class TorrentPeerManager:
 
             Logger.write(1, 'starting new peer')
             peer_to_connect = self.random.choice(peer_list)
+
             if peer_to_connect in self.potential_peers:
                 self.potential_peers.remove(peer_to_connect)
+            elif peer_to_connect in self.disconnected_peers:
+                self.disconnected_peers.remove(peer_to_connect)
+
+            peer_list.remove(peer_to_connect)
             self.__peer_id += 1
             new_peer = Peer(self.__peer_id, self.torrent, peer_to_connect[0], peer_to_connect[1])
             new_peer.start()
@@ -140,14 +145,19 @@ class TorrentPeerManager:
 
     def update_peer_status(self):
         peers_connected = [peer for peer in self.connecting_peers if peer.connection_state == ConnectionState.Connected]
-        peers_disconnected = [peer for peer in self.connecting_peers if peer.connection_state == ConnectionState.Disconnected]
+        peers_failed_connect = [peer for peer in self.connecting_peers if peer.connection_state == ConnectionState.Disconnected and peer.connection_manager.connected_on == 0]
+        peers_busy = [peer for peer in self.connecting_peers if peer.connection_state == ConnectionState.Disconnected and peer.connection_manager.connected_on != 0]
         peers_disconnected_connected = [peer for peer in self.connected_peers if peer.connection_state == ConnectionState.Disconnected]
 
         for peer in peers_connected:
             self.connecting_peers.remove(peer)
             self.connected_peers.append(peer)
 
-        for peer in peers_disconnected:
+        for peer in peers_busy:
+            self.connecting_peers.remove(peer)
+            self.disconnected_peers.append((peer.uri, peer.source))
+
+        for peer in peers_failed_connect:
             self.connecting_peers.remove(peer)
             self.cant_connect_peers.append(peer.uri)
 

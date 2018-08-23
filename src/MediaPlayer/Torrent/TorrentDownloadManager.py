@@ -17,6 +17,7 @@ class TorrentDownloadManager:
         self.prio = False
         self.reprio_after_metadata = False
         self.last_get_result = 0, 0
+        self.last_get_time = 0
         self.upped_prios = []
 
         self.queue = []
@@ -46,7 +47,7 @@ class TorrentDownloadManager:
                 first = str(self.queue[0].block.piece_index) + "-" + str(self.queue[0].block.block_index_in_piece)
             Logger.write(3, "     Queue status: length: " + str(len(self.queue))+ ", init: " + str(self.init) + ", prio: " + str(self.prio))
             Logger.write(3, "     First in queue: " + first)
-            Logger.write(3, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]))
+            Logger.write(3, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]) + " " + str(current_time() - self.last_get_time) + "ms ago")
 
     def up_priority(self, piece_index):
         self.upped_prios.append(piece_index)
@@ -227,6 +228,7 @@ class TorrentDownloadManager:
 
             self.ticks += 1
             self.last_get_result = amount, len(result)
+            self.last_get_time = current_time()
         return result
 
     def can_download_priority_pieces(self, block_download, peer):

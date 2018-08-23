@@ -33,6 +33,7 @@ class PeerConnectionManager:
 
     def start(self):
         self.connection_state = ConnectionState.Connecting
+        self.connected_on = 0
         Logger.write(1, str(self.peer.id) + ' connecting to ' + str(self.uri.netloc))
         Stats['peers_connect_try'].add(1)
 
