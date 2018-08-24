@@ -12,6 +12,7 @@ import time
 import re
 
 from Interface.TV.VLCPlayer import PlayerState
+from MediaPlayer.Util.Util import try_parse_season_episode
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -277,7 +278,7 @@ class Torrent:
                 path_list = file[b'path']
                 last_path = ""
                 for path_part in path_list:
-                    path += "\\" + path_part.decode('utf8')
+                    path += "/" + path_part.decode('utf8')
                     last_path = path_part.decode('utf8')
 
                 fi = TorrentDownloadFile(file_length, total_length, last_path, path, self.is_media_file(path))
@@ -316,7 +317,7 @@ class Torrent:
                 # Multiple files, let user decide
                 self.__set_state(TorrentState.WaitingUserFileSelection)
                 for file in media_files:
-                    season, epi = self.try_parse_season_episode(file.path)
+                    season, epi = try_parse_season_episode(file.path)
                     if season:
                         file.season = season
                     if epi:
@@ -327,76 +328,12 @@ class Torrent:
         Logger.write(3, "Torrent metadata read")
 
     def is_media_file(self, path):
-        if not "." in path:
+        if "." not in path:
             return False
 
         ext = os.path.splitext(path)[1].lower()
         if ext == ".mp4" or ext == ".mkv" or ext == ".avi":
             return True
-
-    def try_parse_season_episode(self, path):
-        path = path.lower()
-        season_number = 0
-        epi_number = 0
-
-        matches = re.findall("\d+[x]\d+", path) # 7x11
-        if len(matches) > 0:
-            match = matches[-1]
-            season_epi = re.split("x", match)
-            if len(season_epi) == 2:
-                season_number = int(season_epi[0])
-                epi_number = int(season_epi[1])
-
-        if season_number == 0:
-            matches = re.findall("[s][0]\d+", path)  # s01
-            if len(matches) > 0:
-                match = matches[-1]
-                season_number = int(match[1:])
-
-        if season_number == 0:
-            matches = re.findall("[s]\d+", path)  # s1
-            if len(matches) > 0:
-                match = matches[-1]
-                season_number = int(match[1:])
-
-        if season_number == 0:
-            if "season" in path:
-                season_index = path.rfind("season") + 6
-                season_number = self.try_parse_number(path[season_index: season_index + 3])
-
-        if epi_number == 0:
-            matches = re.findall("[e][0]\d+", path)  # e01
-            if len(matches) > 0:
-                match = matches[-1]
-                epi_number = int(match[1:])
-
-        if epi_number == 0:
-            matches = re.findall("[e]\d+", path)  # e1
-            if len(matches) > 0:
-                match = matches[-1]
-                epi_number = int(match[1:])
-
-        if epi_number == 0:
-            if "episode" in path:
-                epi_index = path.rfind("episode") + 7
-                epi_number = self.try_parse_number(path[epi_index: epi_index + 3])
-
-        return season_number, epi_number
-
-    def try_parse_number(self, number_string):
-        if number_string.isdigit():
-            return int(number_string)
-
-        if len(number_string) > 1:
-            if number_string[0: 2].isdigit():
-                return int(number_string[0: 2])
-            if number_string[1: 3].isdigit():
-                return int(number_string[1: 3])
-        if number_string[0].isdigit():
-            return int(number_string[0])
-        if number_string[1].isdigit():
-            return int(number_string[1])
-        return 0
 
     def set_selected_media_file(self, file):
         Logger.write(2, "Setting selected media file to " + file)

@@ -117,9 +117,9 @@ class UtilController:
             result = yield RequestFactory.make_request_async(url)
             if not result:
                 Logger.write(2, "Couldnt get image: " + urllib.parse.unquote(url))
-                result = open(os.getcwd() + "/Web/Images/noimage.png", "rb").read()
+                result = open(os.getcwd() + "/Interface/Mobile/Images/unknown.png", "rb").read()
         except Exception:
-            result = open(os.getcwd() + "/Web/Images/noimage.png", "rb").read()
+            result = open(os.getcwd() + "/Interface/Mobile/Images/noimage.png", "rb").read()
         return result
 
     @staticmethod

@@ -2,6 +2,8 @@ import os
 import socket
 import time
 
+import re
+
 from MediaPlayer.Util import Network
 from MediaPlayer.Util.Network import read_ushort
 
@@ -77,3 +79,70 @@ def check_minimal_bytes_length(bytes, minimal):
     if bytes is None or len(bytes) < minimal:
         return False
     return True
+
+
+def try_parse_season_episode(path):
+    path = path.lower()
+    season_number = 0
+    epi_number = 0
+
+    matches = re.findall("\d+[x]\d+", path)  # 7x11
+    if len(matches) > 0:
+        match = matches[-1]
+        season_epi = re.split("x", match)
+        if len(season_epi) == 2:
+            season_number = int(season_epi[0])
+            epi_number = int(season_epi[1])
+
+    if season_number == 0:
+        matches = re.findall("[s][0]\d+", path)  # s01
+        if len(matches) > 0:
+            match = matches[-1]
+            season_number = int(match[1:])
+
+    if season_number == 0:
+        matches = re.findall("[s]\d+", path)  # s1
+        if len(matches) > 0:
+            match = matches[-1]
+            season_number = int(match[1:])
+
+    if season_number == 0:
+        if "season" in path:
+            season_index = path.rfind("season") + 6
+            season_number = try_parse_number(path[season_index: season_index + 3])
+
+    if epi_number == 0:
+        matches = re.findall("[e][0]\d+", path)  # e01
+        if len(matches) > 0:
+            match = matches[-1]
+            epi_number = int(match[1:])
+
+    if epi_number == 0:
+        matches = re.findall("[e]\d+", path)  # e1
+        if len(matches) > 0:
+            match = matches[-1]
+            epi_number = int(match[1:])
+
+    if epi_number == 0:
+        if "episode" in path:
+            epi_index = path.rfind("episode") + 7
+            epi_number = try_parse_number(path[epi_index: epi_index + 3])
+
+    return season_number, epi_number
+
+
+def try_parse_number(number_string):
+    if number_string.isdigit():
+        return int(number_string)
+
+    if len(number_string) > 1:
+        if number_string[0: 2].isdigit():
+            return int(number_string[0: 2])
+        if number_string[1: 3].isdigit():
+            return int(number_string[1: 3])
+    if number_string[0].isdigit():
+        return int(number_string[0])
+    if number_string[1].isdigit():
+        return int(number_string[1])
+    return 0
+

@@ -72,7 +72,7 @@ class Database:
         self.database.commit()
 
     def create_structure(self):
-        with open(str(pathlib.Path(__file__).parent) + '\\Create.sql', 'r') as script:
+        with open(str(pathlib.Path(__file__).parent) + '/Create.sql', 'r') as script:
             data = script.read().replace('\n', '')
 
         self.connection.executescript(data)
