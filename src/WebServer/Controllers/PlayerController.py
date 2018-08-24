@@ -36,11 +36,6 @@ class PlayerController:
         EventManager.throw_event(EventType.SetSubtitleOffset, [int(float(offset) * 1000 * 1000)])
 
     @staticmethod
-    def search_subs():
-        Logger.write(2, "Search subs")
-        EventManager.throw_event(EventType.SearchAdditionalSubs, [])
-
-    @staticmethod
     def seek(pos):
         Logger.write(2, "Seek " + pos)
         EventManager.throw_event(EventType.Seek, [int(float(pos)) * 1000])

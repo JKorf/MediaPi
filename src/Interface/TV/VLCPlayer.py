@@ -296,3 +296,4 @@ class PlayerState(Enum):
     Playing = 3,
     Paused = 4,
     Ended = 5
+

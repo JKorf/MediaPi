@@ -23,8 +23,6 @@ class EventType(Enum):
     SetSubtitleId = 17,
     SetSubtitleOffset = 18,
     SubtitleDownloaded = 19,
-    SubsDoneChange = 20,
-    SearchAdditionalSubs = 21,
 
     SetAudioId = 22,
 

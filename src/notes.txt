@@ -15,6 +15,8 @@
 
     Season bepalen kan ook bij bestanden, zelfde methode
     Als season, kijken of je de volgende beschikbaar is. Zo ja -> vragen
+    Een aparte service voor requests vanuit pi.
+    De request popup ook weer sluiten als een andere client hem heeft beantwoord
 
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database

@@ -54,13 +54,13 @@ class TornadoServer:
         self.application = web.Application(handlers)
 
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.media_selection_required)
+        EventManager.register_event(EventType.TorrentMediaFileSelection, self.media_selected)
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_changed)
         EventManager.register_event(EventType.PlayerError, self.player_error)
         EventManager.register_event(EventType.Seek, self.player_seeking)
         EventManager.register_event(EventType.SetVolume, self.player_volume)
         EventManager.register_event(EventType.SetSubtitleId, self.player_subtitle_id)
         EventManager.register_event(EventType.SetSubtitleOffset, self.player_subtitle_offset)
-        EventManager.register_event(EventType.SubsDoneChange, self.player_subs_done_change)
         EventManager.register_event(EventType.Error, self.application_error)
 
     def start(self):
@@ -100,69 +100,43 @@ class TornadoServer:
                 time.sleep(10)
         return "No internet connection"
 
+    def media_selected(self, file):
+        self.broadcast("request", "media_selection_close")
+
     def media_selection_required(self, files):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('request', 'media_selection', [MediaFile(x.path, x.length, x.season, x.episode) for x in files])))
+        self.broadcast("request", "media_selection", [MediaFile(x.path, x.length, x.season, x.episode) for x in files])
 
     def player_state_changed(self, old_state, state):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'state_change', state.value)))
-
-    def player_started(self):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'started', "")))
-
-    def player_opening(self):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'opening', "")))
-
-    def player_buffering(self):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'buffering', "")))
-
-    def player_buffering_done(self):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'buffering_done', "")))
-
-    def player_nothing_special(self):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'nothing_special', "")))
-
-    def player_stopped(self):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'stopped', "")))
-
-    def player_paused(self):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'paused', "")))
+        self.broadcast("player_event", "state_change", state.value)
 
     def player_error(self):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'error', "")))
+        self.broadcast("player_event", "error")
 
     def player_seeking(self, pos):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'seek', pos / 1000)))
+        self.broadcast("player_event", "seek", pos / 1000)
 
     def player_volume(self, vol):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'volume', vol)))
+        self.broadcast("player_event", "volume", vol)
 
     def player_subtitle_id(self, id):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'subtitle_id', id)))
+        self.broadcast("player_event", "subtitle_id", id)
 
     def player_subs_done_change(self, done):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'subs_done_change', done)))
+        self.broadcast("player_event", "subs_done_change", done)
 
     def player_subtitle_offset(self, offset):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('player_event', 'subtitle_offset', float(offset) / 1000 / 1000)))
+        self.broadcast("player_event", "subtitle_offset", float(offset) / 1000 / 1000)
 
     def application_error(self, error_type, error_message):
-        for client in self.clients:
-            client.write_message(to_JSON(WebSocketMessage('error_event', error_type, error_message)))
+        self.broadcast("error_event", error_type, error_message)
+
+    @staticmethod
+    def broadcast(event, method, parameters=None):
+        if parameters is None:
+            parameters = ""
+
+        for client in TornadoServer.clients:
+            client.write_message(to_JSON(WebSocketMessage(event, method, parameters)))
 
 
 class StaticFileHandler(tornado.web.StaticFileHandler):
@@ -264,15 +238,18 @@ class PlayerHandler(web.RequestHandler):
         elif url == "set_subtitle_id":
             PlayerController.set_subtitle_id(self.get_argument("sub"))
         elif url == "stop_player":
+            was_waiting_for_file_selection = TornadoServer.start_obj.torrent_manager.torrent and TornadoServer.start_obj.torrent_manager.torrent.state == TorrentState.WaitingUserFileSelection
             PlayerController.stop_player()
+
+            if was_waiting_for_file_selection:
+                TornadoServer.broadcast('request', 'media_selection_close', [])
+
         elif url == "pause_resume_player":
             PlayerController.pause_resume_player()
         elif url == "change_volume":
             PlayerController.change_volume(self.get_argument("vol"))
         elif url == "change_subtitle_offset":
             PlayerController.change_subtitle_offset(self.get_argument("offset"))
-        elif url == "search_subs":
-            PlayerController.search_subs()
         elif url == "seek":
             PlayerController.seek(self.get_argument("pos"))
         elif url == "set_audio_id":
@@ -403,9 +380,8 @@ class RealtimeHandler(websocket.WebSocketHandler):
             Logger.write(2, "New connection")
             TornadoServer.clients.append(self)
             if TornadoServer.start_obj.torrent_manager.torrent and TornadoServer.start_obj.torrent_manager.torrent.state == TorrentState.WaitingUserFileSelection:
-                self.write_message(to_JSON(WebSocketMessage('request', 'media_selection',
-                                                            [MediaFile(x.path, x.length, x.season, x.episode) for x in
-                                                             [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]])))
+                TornadoServer.broadcast('request', 'media_selection', [MediaFile(x.path, x.length, x.season, x.episode) for x in
+                                                             [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]])
 
     def on_close(self):
         if self in TornadoServer.clients:

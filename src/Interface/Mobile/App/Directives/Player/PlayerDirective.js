@@ -171,6 +171,17 @@
                             length: 0
                         }});
                     });
+
+                    $rootScope.$on("stopPlay", function(event, args){
+                        handlePlayerInfo({data: {
+                            state: 0,
+                            title: "",
+                            type: "",
+                            playing_for: 0,
+                            play_time: 0,
+                            length: 0
+                        }});
+                    });
                 }
 
                 function initMediaSession(){

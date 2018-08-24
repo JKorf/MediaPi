@@ -271,7 +271,6 @@ class Torrent:
             # Multifile
             files = info_dict[b'files']
             total_length = 0
-            temp_media = None
             for file in files:
                 file_length = file[b'length']
                 path = self.name

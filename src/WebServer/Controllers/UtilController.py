@@ -5,6 +5,7 @@ import urllib.request
 import psutil
 from tornado import gen
 
+from Interface.TV.VLCPlayer import PlayerState
 from Shared.Events import EventManager
 from Shared.Events import EventType
 from Shared.Logger import Logger
@@ -20,14 +21,14 @@ class UtilController:
 
     @staticmethod
     def player_state(start):
-        ret = [0, 5, 6]
-        state = start.gui_manager.player.get_state().value
+        state = start.gui_manager.player.state
 
-        if state in ret and not start.gui_manager.player.prepared:
-            return to_JSON(CurrentMedia(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)).encode('utf8')
+        if not start.gui_manager.player.prepared:
+            if state == PlayerState.Nothing or state == PlayerState.Ended:
+                return to_JSON(CurrentMedia(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)).encode('utf8')
 
-        if state == 0:
-            state = 1
+        if state == PlayerState.Nothing or state == PlayerState.Ended:
+            state = PlayerState.Opening
 
         title = start.gui_manager.player.title
         percentage = 0
@@ -37,7 +38,7 @@ class UtilController:
             if start.torrent_manager.torrent.state == TorrentState.Done:
                 percentage = 100
 
-        media = CurrentMedia(state,
+        media = CurrentMedia(state.value,
                              start.gui_manager.player.type,
                              title,
                              start.gui_manager.player.path,
