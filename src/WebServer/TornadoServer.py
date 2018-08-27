@@ -5,6 +5,7 @@ import socket
 import time
 import urllib.parse
 import urllib.request
+from threading import Lock
 
 import tornado
 from tornado import gen
@@ -32,6 +33,7 @@ class TornadoServer:
     start_obj = None
     master_ip = None
     clients = []
+    _ws_lock = Lock()
 
     def __init__(self, start):
         self.port = 80
@@ -53,6 +55,7 @@ class TornadoServer:
 
         self.application = web.Application(handlers)
 
+        EventManager.register_event(EventType.NextEpisodeSelection, self.next_episode_selection)
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.media_selection_required)
         EventManager.register_event(EventType.TorrentMediaFileSelection, self.media_selected)
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_changed)
@@ -100,11 +103,14 @@ class TornadoServer:
                 time.sleep(10)
         return "No internet connection"
 
+    def next_episode_selection(self, path, name, season, episode, type):
+        self.broadcast("request", "next_episode", MediaFile(path, name, 0, season, episode, type))
+
     def media_selected(self, file):
         self.broadcast("request", "media_selection_close")
 
     def media_selection_required(self, files):
-        self.broadcast("request", "media_selection", [MediaFile(x.path, x.length, x.season, x.episode) for x in files])
+        self.broadcast("request", "media_selection", [MediaFile(x.path, x.name, x.length, x.season, x.episode, None) for x in files])
 
     def player_state_changed(self, old_state, state):
         self.broadcast("player_event", "state_change", state.value)
@@ -135,8 +141,9 @@ class TornadoServer:
         if parameters is None:
             parameters = ""
 
-        for client in TornadoServer.clients:
-            client.write_message(to_JSON(WebSocketMessage(event, method, parameters)))
+        with TornadoServer._ws_lock:
+            for client in TornadoServer.clients:
+                client.write_message(to_JSON(WebSocketMessage(event, method, parameters)))
 
 
 class StaticFileHandler(tornado.web.StaticFileHandler):

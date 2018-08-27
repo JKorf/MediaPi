@@ -1,10 +1,13 @@
+import os
 import sys
 
 from Interface.TV.GUI import GUI
 from Interface.TV.VLCPlayer import VLCPlayer, PlayerState
+from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Threading import CustomThread
+from WebServer.Models import FileStructure
 
 
 class GUIManager:
@@ -20,6 +23,7 @@ class GUIManager:
 
         EventManager.register_event(EventType.PreparePlayer, self.prepare_player)
         EventManager.register_event(EventType.StartPlayer, self.start_player)
+        EventManager.register_event(EventType.PlayerStateChange, self.check_next_episode)
 
         EventManager.register_event(EventType.StopPlayer, self.stop_player)
         EventManager.register_event(EventType.PauseResumePlayer, self.pause_resume_player)
@@ -44,10 +48,37 @@ class GUIManager:
     def player_state_change(self, prev_state, new_state):
         Logger.write(2, "State change from " + str(prev_state) + " to " + str(new_state))
         EventManager.throw_event(EventType.PlayerStateChange, [prev_state, new_state])
+
         if new_state == PlayerState.Ended:
             if self.player.type != "YouTube":
                 thread = CustomThread(self.stop_player, "Stopping player")
                 thread.start()
+
+    def check_next_episode(self, old, new):
+        if new != PlayerState.Nothing:
+            return
+
+        playing_type = self.player.type
+        path = self.player.path
+
+        if playing_type == "File":
+            season, epi = try_parse_season_episode(path)
+            if season == 0 or epi == 0:
+                return
+
+            dir_name = os.path.dirname(path)
+            for potential in FileStructure(dir_name).files:
+                if not is_media_file(potential):
+                    continue
+
+                s, e = try_parse_season_episode(potential)
+                if s == season and e == epi + 1:
+                    Logger.write(2, "Found next episode: " + potential)
+                    EventManager.throw_event(EventType.NextEpisodeSelection, [dir_name + "/" + potential, potential, s, e, "File"])
+                    break
+
+        else:
+            pass
 
     def prepare_player(self, type, title, url, img, position, media_file):
         self.player.prepare_play(type, title, url, img, position, media_file)

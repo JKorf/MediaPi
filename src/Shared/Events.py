@@ -41,6 +41,7 @@ class EventType(Enum):
     NewRequest = 31,
     TorrentMediaSelectionRequired = 32
     TorrentMediaFileSelection = 33
+    NextEpisodeSelection = 36
 
 
 class EventManager:

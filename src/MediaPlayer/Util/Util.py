@@ -146,3 +146,12 @@ def try_parse_number(number_string):
         return int(number_string[1])
     return 0
 
+
+def is_media_file(path):
+    if "." not in path:
+        return False
+
+    ext = os.path.splitext(path)[1].lower()
+    if ext == ".mp4" or ext == ".mkv" or ext == ".avi":
+        return True
+

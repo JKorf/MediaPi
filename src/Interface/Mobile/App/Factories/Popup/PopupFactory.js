@@ -1,14 +1,36 @@
 (function () {
 
-    angular.module('pi-test').factory('PopupFactory', function ($rootScope, $http, $window, $compile, $q, $timeout, RealtimeFactory, CacheFactory) {
+    angular.module('pi-test').factory('PopupFactory', function ($rootScope, $http, $window, $compile, $q, $timeout, RealtimeFactory, CacheFactory, FilesWatchedFactory) {
 
          RealtimeFactory.register("IndexController", "request", function(event, data){
             if(event == "media_selection")
                 OpenMediaSelection(data);
 
+            if(event == "next_episode"){
+                OpenSelectNextEpisode(data);
+            }
+
             if(event == "media_selection_close")
                 $rootScope.closePopup();
         });
+
+        function OpenSelectNextEpisode(data){
+            $rootScope.openPopup();
+            $rootScope.setPopupContent("Continue playing", true, true, true, "Found next episode, do you want to continue with season " + data.season + ", episode " + data.episode + "?", $rootScope).then(function(action){
+                console.log(action);
+                if(data.type == "File"){
+                    $rootScope.$broadcast("startPlay", {title: data.filename, type: "File"});
+                    $http.post("/hd/play_file?path=" + encodeURIComponent(data.path) + "&filename=" + encodeURIComponent(data.filename));
+                    FilesWatchedFactory.AddWatchedFile(data.path, new Date());
+                }
+                else{
+                    $http.post("/movies/play_continue?type=torrent&url=" + encodeURIComponent(data.path) + "&title=" + encodeURIComponent(data.filename) +"&image=null&position=0&mediaFile=" + encodeURIComponent(data.filename));
+
+                }
+            }, function(action){
+                console.log(action);
+            });
+        }
 
         function OpenMediaSelection(data)
         {

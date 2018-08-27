@@ -12,7 +12,7 @@ import time
 import re
 
 from Interface.TV.VLCPlayer import PlayerState
-from MediaPlayer.Util.Util import try_parse_season_episode
+from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -280,7 +280,7 @@ class Torrent:
                     path += "/" + path_part.decode('utf8')
                     last_path = path_part.decode('utf8')
 
-                fi = TorrentDownloadFile(file_length, total_length, last_path, path, self.is_media_file(path))
+                fi = TorrentDownloadFile(file_length, total_length, last_path, path, is_media_file(path))
                 self.files.append(fi)
 
                 total_length += file_length
@@ -288,7 +288,7 @@ class Torrent:
         else:
             # Singlefile
             total_length = info_dict[b'length']
-            file = TorrentDownloadFile(total_length, 0, self.name, base_folder + self.name, self.is_media_file(self.name))
+            file = TorrentDownloadFile(total_length, 0, self.name, base_folder + self.name, is_media_file(self.name))
             self.files.append(file)
             Logger.write(2, "File: " + file.path)
 
@@ -325,14 +325,6 @@ class Torrent:
 
         EventManager.throw_event(EventType.TorrentMetadataDone, [])
         Logger.write(3, "Torrent metadata read")
-
-    def is_media_file(self, path):
-        if "." not in path:
-            return False
-
-        ext = os.path.splitext(path)[1].lower()
-        if ext == ".mp4" or ext == ".mkv" or ext == ".avi":
-            return True
 
     def set_selected_media_file(self, file):
         Logger.write(2, "Setting selected media file to " + file)

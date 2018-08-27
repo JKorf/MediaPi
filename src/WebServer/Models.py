@@ -190,8 +190,10 @@ class TorrentDetailModel:
 
 class MediaFile:
 
-    def __init__(self, path, size, season, episode):
+    def __init__(self, path, filename, size, season, episode, type):
         self.path = path
+        self.filename = filename
         self.size = write_size(size)
         self.season = season
         self.episode = episode
+        self.type = type
