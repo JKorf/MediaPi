@@ -17,11 +17,21 @@
 
                 if (watchedShow.length == 0){
                     // newly show started
-                    watched.push({showId: showId, episodes: [{season: epiSeason, episode: epiNr, watchedAt: watchedAt}] });
+                    watched.push({showId: showId, watchedAt:watchedAt, episodes: [{season: epiSeason, episode: epiNr, watchedAt: watchedAt}] });
                     sort();
                 }else{
+                    var watchedEpisode = $.grep(watchedShow[0].episodes, function(item){
+                        return item.season == epiSeason && item.episode == epiNr;
+                    });
+
                     // add episode
-                    watchedShow[0].episodes.push({season: epiSeason, episode: epiNr, watchedAt: watchedAt});
+                    if (watchedEpisode.length == 0){
+                        watchedShow[0].episodes.push({season: epiSeason, episode: epiNr, watchedAt: watchedAt});
+                        watchedShow[0].watchedAt = watchedAt;
+                    }
+                    else
+                        watchedShow[0].watchedAt = watchedAt;
+
                     sort();
                 }
             });
@@ -42,14 +52,18 @@
                            showId: data.data[i][0],
                            episodes: [
                                 {season: data.data[i][1],
-                                episode: data.data[i][2]}],
-                                watchedAt: new Date(data.data[i][3])});
+                                episode: data.data[i][2],
+                                wachtedAt: new Date(data.data[i][3])}],
+                            watchedAt: new Date(data.data[i][3])});
                         }
                         else{
                             watchedShow[0].episodes.push({
                                 season: data.data[i][1],
                                 episode: data.data[i][2],
                                 watchedAt: new Date(data.data[i][3])});
+                            var time = new Date(data.data[i][3]);
+                            if (time > watchedShow[0].watchedAt)
+                                watchedShow[0].watchedAt = time;
                         }
                     }
                     sort();
@@ -74,6 +88,17 @@
                         promise.resolve(watched[i].episodes);
                 }
                 promise.resolve(false);
+            });
+
+            return promise.promise;
+        }
+
+        factory.LastWatchedShow = function(){
+            var promise = $q.defer();
+
+            factory.GetWatched().then(function(){
+                sort();
+                promise.resolve(watched[0]);
             });
 
             return promise.promise;

@@ -103,14 +103,14 @@ class TornadoServer:
                 time.sleep(10)
         return "No internet connection"
 
-    def next_episode_selection(self, path, name, season, episode, type):
-        self.broadcast("request", "next_episode", MediaFile(path, name, 0, season, episode, type))
+    def next_episode_selection(self, path, name, season, episode, type, media_file):
+        self.broadcast("request", "next_episode", MediaFile(path, name, 0, season, episode, type, media_file))
 
     def media_selected(self, file):
         self.broadcast("request", "media_selection_close")
 
     def media_selection_required(self, files):
-        self.broadcast("request", "media_selection", [MediaFile(x.path, x.name, x.length, x.season, x.episode, None) for x in files])
+        self.broadcast("request", "media_selection", [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None) for x in files])
 
     def player_state_changed(self, old_state, state):
         self.broadcast("player_event", "state_change", state.value)
@@ -212,6 +212,9 @@ class ShowHandler(web.RequestHandler):
     def post(self, url):
         if url == "play_episode":
             ShowController.play_episode(self.get_argument("url"), self.get_argument("title"), self.get_argument("img", ""))
+
+        elif url == "set_next_episode":
+            EventManager.throw_event(EventType.SetNextEpisode, [self.get_argument("season"), self.get_argument("episode"), self.get_argument("url")])
 
     @gen.coroutine
     def get(self, url):
@@ -387,7 +390,7 @@ class RealtimeHandler(websocket.WebSocketHandler):
             Logger.write(2, "New connection")
             TornadoServer.clients.append(self)
             if TornadoServer.start_obj.torrent_manager.torrent and TornadoServer.start_obj.torrent_manager.torrent.state == TorrentState.WaitingUserFileSelection:
-                TornadoServer.broadcast('request', 'media_selection', [MediaFile(x.path, x.length, x.season, x.episode) for x in
+                TornadoServer.broadcast('request', 'media_selection', [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None) for x in
                                                              [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]])
 
     def on_close(self):

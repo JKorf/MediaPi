@@ -64,9 +64,12 @@ class MovieController:
         if type == "torrent":
             EventManager.throw_event(EventType.StopTorrent, [])
             time.sleep(0.2)
+            file = urllib.parse.unquote_plus(media_file)
+            if file == "null":
+                file = None
 
             EventManager.throw_event(EventType.PreparePlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, img, int(float(position)) * 1000, media_file])
-            EventManager.throw_event(EventType.StartTorrent, [url, urllib.parse.unquote_plus(media_file)])
+            EventManager.throw_event(EventType.StartTorrent, [url, file])
         else:
             if Settings.get_bool("slave"):
                 yield delegate(url, title, int(float(position)) * 1000)

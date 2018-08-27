@@ -107,11 +107,15 @@
                 if($scope.watchedEpisodes[i].showId == show._id){
                     var lastEpi;
                     for(var i2 = 0; i2 < $scope.watchedEpisodes[i].episodes.length; i2++){
+                        var testEpi = $scope.watchedEpisodes[i].episodes[i2];
                         if(!lastEpi)
-                            lastEpi = $scope.watchedEpisodes[i].episodes[i2];
-                        else{
-                            if($scope.watchedEpisodes[i].episodes[i2].watchedAt > lastEpi.watchedAt)
-                                lastEpi = $scope.watchedEpisodes[i].episodes[i2];
+                            lastEpi = testEpi;
+                        else
+                        {
+                            if(testEpi.season > lastEpi.season || (testEpi.season == lastEpi.season && testEpi.episode > lastEpi.episode))
+                            {
+                                lastEpi = testEpi;
+                            }
                         }
                     }
                     lastWatchedShowEpisode = lastEpi;
