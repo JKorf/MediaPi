@@ -78,10 +78,17 @@ class Database:
         self.connection.executescript(data)
 
     def add_watched_file(self, url, watchedAt):
+        watched = self.get_watched_files()
+        sql = "INSERT INTO WatchedFiles (URL, WatchedAt) VALUES (?, ?)"
+        parameters = [url, watchedAt]
+        if url in [x[0] for x in watched]:
+            sql = "UPDATE WatchedFiles SET WatchedAt = ? WHERE URL = ?"
+            parameters = [watchedAt, url]
+
         with self.lock:
             self.connect()
 
-            self.connection.execute("INSERT INTO WatchedFiles (URL, WatchedAt) VALUES (?, ?)", [url, watchedAt])
+            self.connection.execute(sql, parameters)
 
             self.database.commit()
             self.disconnect()
