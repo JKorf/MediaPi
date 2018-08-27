@@ -455,6 +455,10 @@ class DatabaseHandler(web.RequestHandler):
 
         if url == "add_unfinished":
             Logger.write(2, "Adding unfinished")
+
+            media_file = self.get_argument("mediaFile")
+            if media_file == "None" or media_file == "null":
+                media_file = None
             TornadoServer.start_obj.database.add_watching_item(
                 self.get_argument("type"),
                 self.get_argument("name"),
@@ -462,14 +466,18 @@ class DatabaseHandler(web.RequestHandler):
                 self.get_argument("image"),
                 int(self.get_argument("length")),
                 self.get_argument("time"),
-                self.get_argument("mediaFile"))
+                media_file)
 
         if url == "update_unfinished":
+            media_file = self.get_argument("mediaFile")
+            if media_file == "None" or media_file == "null":
+                media_file = None
+
             TornadoServer.start_obj.database.update_watching_item(
                 urllib.parse.unquote(self.get_argument("url")),
                 int(self.get_argument("position")),
                 self.get_argument("watchedAt"),
-                self.get_argument("mediaFile"))
+                media_file)
 
     @gen.coroutine
     def reroute_to_master(self):

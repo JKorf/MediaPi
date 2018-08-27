@@ -1,7 +1,7 @@
 # Instance config
 name=PC
 slave=False
-master_ip=http://192.168.1.100
+master_ip=http://127.0.0.1
 
 # Paths
 log_folder=/home/pi/Scripts/Logs

@@ -94,8 +94,7 @@ class Observer:
                 if self.is_slave:
                     notify_url = "/database/add_unfinished?url=" + urllib.parse.quote(path) + "&name=" + urllib.parse.quote(self.player.title) + "&length=" + str(self.player.get_length()) \
                                                                 + "&time=" + str(current_time()) + "&image=" + urllib.parse.quote(img) + "&type=" + watching_type
-                    if media_file is not None:
-                        notify_url += "&mediaFile=" + urllib.parse.quote(media_file)
+                    notify_url += "&mediaFile=" + urllib.parse.quote(str(media_file))
                     self.start.webserver_manager.server.notify_master(notify_url)
                 else:
                     self.start.database.add_watching_item(watching_type, self.player.title, path, self.player.img, self.player.get_length(), current_time(), media_file)
@@ -107,8 +106,7 @@ class Observer:
                     self.last_play_update_time = pos
                     if self.is_slave:
                         notify_url = "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(pos) + "&watchedAt=" + str(current_time())
-                        if media_file is not None:
-                            notify_url += "&mediaFile=" + urllib.parse.quote(media_file)
+                        notify_url += "&mediaFile=" + urllib.parse.quote(str(media_file))
                         self.start.webserver_manager.server.notify_master(notify_url)
                     else:
                         self.start.database.update_watching_item(path, pos, current_time(), media_file)

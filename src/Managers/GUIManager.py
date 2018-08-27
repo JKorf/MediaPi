@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -6,7 +7,9 @@ from Interface.TV.VLCPlayer import VLCPlayer, PlayerState
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Settings import Settings
 from Shared.Threading import CustomThread
+from Shared.Util import RequestFactory
 from WebServer.Models import FileStructure
 
 
@@ -148,8 +151,16 @@ class NextEpisodeManager:
             if season == 0 or epi == 0:
                 return
 
-            dir_name = os.path.dirname(self.gui_manager.player.path)
-            for potential in FileStructure(dir_name).files:
+            if Settings.get_bool("slave"):
+                index = self.gui_manager.player.path.index("/file/")
+                dir_name = os.path.dirname(self.gui_manager.player.path[index + 6:])
+                result = json.loads(RequestFactory.make_request(str(Settings.get_string("master_ip") + "/hd/directory?path=" + dir_name)).decode())
+                file_list = result["files"]
+            else:
+                dir_name = os.path.dirname(self.gui_manager.player.path)
+                file_list = FileStructure(dir_name).files
+
+            for potential in file_list:
                 if not is_media_file(potential):
                     continue
 
