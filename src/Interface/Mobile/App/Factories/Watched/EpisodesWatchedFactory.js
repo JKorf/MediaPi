@@ -68,7 +68,6 @@
                     }
                     sort();
 
-                    console.log(watched);
                     promise.resolve(watched);
                 });
             }else

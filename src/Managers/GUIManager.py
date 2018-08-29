@@ -29,6 +29,7 @@ class GUIManager:
         EventManager.register_event(EventType.StartPlayer, self.start_player)
         EventManager.register_event(EventType.PlayerStateChange, self.check_next_episode)
         EventManager.register_event(EventType.StartTorrent, self.reset_next_episode)
+        EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
 
         EventManager.register_event(EventType.StopPlayer, self.stop_player)
         EventManager.register_event(EventType.PauseResumePlayer, self.pause_resume_player)
@@ -59,11 +60,14 @@ class GUIManager:
                 thread = CustomThread(self.stop_player, "Stopping player")
                 thread.start()
 
+    def user_file_selected(self, path):
+        self.player.title = os.path.basename(path)
+
     def reset_next_episode(self, url, file):
         self.next_episode_manager.reset()
 
     def check_next_episode(self, old, new):
-        if new != PlayerState.Nothing:
+        if new != PlayerState.Ended:
             return
 
         if self.next_episode_manager.next_type is not None:

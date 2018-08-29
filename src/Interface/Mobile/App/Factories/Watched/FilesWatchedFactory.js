@@ -22,7 +22,6 @@
                             watchedAt: new Date(data.data[i][1])
                         });
                     }
-                    console.log(watchedFiles);
                     promise.resolve(watchedFiles);
                 });
             }else

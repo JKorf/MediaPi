@@ -24,7 +24,6 @@
                     else
                         unfinished.push(obj);
                 }
-                console.log(unfinished);
                 return unfinished;
             });
         }
