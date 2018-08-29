@@ -77,7 +77,8 @@ class GUIManager:
                                                                       self.next_episode_manager.next_season,
                                                                       self.next_episode_manager.next_episode,
                                                                       self.next_episode_manager.next_type,
-                                                                      self.next_episode_manager.next_media_file])
+                                                                      self.next_episode_manager.next_media_file,
+                                                                      self.next_episode_manager.next_img])
 
     def prepare_player(self, type, title, url, img, position, media_file):
         self.player.prepare_play(type, title, url, img, position, media_file)
@@ -129,10 +130,12 @@ class NextEpisodeManager:
         self.next_path = None
         self.next_title = None
         self.next_media_file = None
+        self.next_img = None
         self.next_season = 0
         self.next_episode = 0
 
     def reset(self):
+        self.next_img = None
         self.next_type = None
         self.next_path = None
         self.next_title = None
@@ -144,6 +147,7 @@ class NextEpisodeManager:
         self.next_season = season
         self.next_episode = episode
         self.next_type = "Torrent"
+        self.next_img = self.gui_manager.player.img
         self.next_title = self.gui_manager.player.title.replace("E" + self.add_leading_zero(int(episode) - 1), "E" + self.add_leading_zero(episode))
         self.next_path = url
         Logger.write(2, "Set next episode: " + self.next_title)

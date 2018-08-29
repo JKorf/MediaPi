@@ -27,7 +27,7 @@
             $(".view").removeClass("player-closed");
             $(".view").removeClass("player-visible");
 
-            if (playerState && playerState != 'Nothing' && playerState != 'disconnected'){
+            if (playerState && playerState != 'Nothing' && playerState != 'disconnected' && playerState != 'Ended'){
                 $(".view").addClass("player-visible");
                 $("menu").addClass("player-open");
             }else{

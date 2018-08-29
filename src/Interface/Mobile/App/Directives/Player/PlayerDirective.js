@@ -302,7 +302,7 @@
 
                     console.log("Changing state from " + $scope.playerState.state + " to " + state);
 
-                    if(state == 'Nothing' || state == 'error' || state == 'disconnected'){
+                    if(state == 'Nothing' || state == 'Ended' || state == 'error' || state == 'disconnected'){
                         playing = false;
                         media = false;
                         setMediaSessionState("none");

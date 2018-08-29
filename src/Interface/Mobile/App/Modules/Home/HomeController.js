@@ -47,6 +47,11 @@
 
         $scope.continue_torrent = function(uf){
             ConfirmationFactory.confirm_continue(uf.name).then(function(){
+                var name = uf.name;
+                if (!name)
+                    name = uf.mediaFile;
+
+                $rootScope.$broadcast("startPlay", {title: name, type: "Show"});
                 $http.post("/movies/play_continue?type="+uf.type+"&url=" + encodeURIComponent(uf.url) + "&title=" + encodeURIComponent(uf.name) + "&image=" + encodeURIComponent(uf.image) + "&position=" + uf.position + "&mediaFile=" +encodeURIComponent(uf.mediaFile));
             })
         }

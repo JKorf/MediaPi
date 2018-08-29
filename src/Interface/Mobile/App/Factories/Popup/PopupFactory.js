@@ -24,7 +24,7 @@
                     $rootScope.$broadcast("startPlay", {title: data.title, type: "File"});
                 }
                 else{
-                    $http.post("/movies/play_continue?type=torrent&url=" + encodeURIComponent(data.path) + "&title=" + encodeURIComponent(data.title) +"&image=null&position=0&mediaFile=" + encodeURIComponent(data.media_file));
+                    $http.post("/movies/play_continue?type=torrent&url=" + encodeURIComponent(data.path) + "&title=" + encodeURIComponent(data.title) +"&image="+encodeURIComponent(data.img)+"&position=0&mediaFile=" + encodeURIComponent(data.media_file));
                     $rootScope.$broadcast("startPlay", {title: data.title, type: "Show"});
                     EpisodesWatchedFactory.LastWatchedShow().then(function(show){
                          EpisodesWatchedFactory.AddWatched(show.showId, parseInt(data.season), parseInt(data.episode), new Date());
