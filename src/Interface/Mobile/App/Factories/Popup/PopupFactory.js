@@ -63,7 +63,7 @@
             CacheFactory.Get("/App/Modules/Index/mediaselection.html", 900).then(function(data){
                 $rootScope.setPopupContent("Select file to play", true, true, true, data, scope, function() { return scope.selectedFile; }).then(function(action){
                     console.log(action);
-                    $http.post("/player/select_file?path=" + encodeURIComponent(scope.selectedFile));
+                    $http.post("/player/select_file?path=" + encodeURIComponent(scope.selectedFile) + "&watchedAt=" + new Date());
                 }, function(action){
                     console.log(action);
                     if (action != "invalid"){

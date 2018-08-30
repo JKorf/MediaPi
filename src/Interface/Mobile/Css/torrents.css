@@ -111,6 +111,7 @@
     font-size: 13px;
     width: calc(100% - 130px);
     max-width: calc(100% - 130px);
+    position: relative;
 }
 
 .media-file-selection-size{
@@ -150,4 +151,15 @@
 .media-file-selection-path-sub-title{
     margin-top: 4px;
     word-wrap:break-word;
+}
+
+.media-file-seen{
+    position: absolute;
+    right: 0;
+    top: -3px;
+}
+
+.media-file-seen img{
+    width: 16px;
+    height: 16px;
 }

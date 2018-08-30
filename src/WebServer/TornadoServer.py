@@ -104,13 +104,15 @@ class TornadoServer:
         return "No internet connection"
 
     def next_episode_selection(self, path, name, season, episode, type, media_file, img):
-        self.broadcast("request", "next_episode", MediaFile(path, name, 0, season, episode, type, media_file, img))
+        self.broadcast("request", "next_episode", MediaFile(path, name, 0, season, episode, type, media_file, img, False))
 
     def media_selected(self, file):
         self.broadcast("request", "media_selection_close")
 
     def media_selection_required(self, files):
-        self.broadcast("request", "media_selection", [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None) for x in files])
+        watched_files = [f[1] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
+        files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in files]
+        self.broadcast("request", "media_selection", files)
 
     def player_state_changed(self, old_state, state):
         self.broadcast("player_event", "state_change", state.value)
@@ -263,6 +265,7 @@ class PlayerHandler(web.RequestHandler):
             PlayerController.set_audio_track(self.get_argument("track"))
         elif url == "select_file":
             EventManager.throw_event(EventType.TorrentMediaFileSelection, [urllib.parse.unquote(self.get_argument("path"))])
+            TornadoServer.start_obj.database.add_watched_torrent_file(TornadoServer.start_obj.torrent_manager.torrent.uri, self.get_argument("path"), self.get_argument("watchedAt"))
 
 
 class HDHandler(web.RequestHandler):
@@ -387,8 +390,9 @@ class RealtimeHandler(websocket.WebSocketHandler):
             Logger.write(2, "New connection")
             TornadoServer.clients.append(self)
             if TornadoServer.start_obj.torrent_manager.torrent and TornadoServer.start_obj.torrent_manager.torrent.state == TorrentState.WaitingUserFileSelection:
-                TornadoServer.broadcast('request', 'media_selection', [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None) for x in
-                                                             [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]])
+                watched_files = [f[1] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
+                files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]]
+                TornadoServer.broadcast('request', 'media_selection', files)
 
     def on_close(self):
         if self in TornadoServer.clients:
@@ -419,11 +423,19 @@ class DatabaseHandler(web.RequestHandler):
             Logger.write(2, "Getting unfinished items")
             self.write(to_JSON(TornadoServer.start_obj.database.get_watching_items()))
 
+        if url == "get_watched_torrent_files":
+            Logger.write(2, "Getting watched torrent files")
+            self.write(to_JSON(TornadoServer.start_obj.database.get_watched_torrent_files(self.get_argument("url"))))
+
     @gen.coroutine
     def post(self, url):
         if Settings.get_bool("slave"):
             yield self.reroute_to_master()
             return
+
+        if url == "add_watched_torrent_file":
+            Logger.write(2, "Adding to watched torrent files")
+            TornadoServer.start_obj.database.add_watched_torrent_file(urllib.parse.unquote(self.get_argument("url")), self.get_argument("mediaFile"), self.get_argument("watchedAt"))
 
         if url == "add_watched_file":
             Logger.write(2, "Adding to watched files")

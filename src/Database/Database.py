@@ -14,7 +14,7 @@ class Database:
         self.path = Settings.get_string("base_folder") + "database.data"
         self.database = None
         self.connection = None
-        self.current_version = 3
+        self.current_version = 4
         self.lock = Lock()
 
     def init_database(self):
@@ -198,3 +198,28 @@ class Database:
 
             self.database.commit()
             self.disconnect()
+
+    def add_watched_torrent_file(self, url, media_file, watched_at):
+        watched = self.get_watched_torrent_files(url)
+        if media_file in [x[1] for x in watched]:
+            return
+
+        with self.lock:
+            self.connect()
+            self.connection.execute("INSERT INTO WatchedTorrentFiles " +
+                                    "(Url, MediaFile, WatchedAt)" +
+                                    " VALUES (?, ?, ?)", [url, media_file, watched_at])
+
+            self.database.commit()
+            self.disconnect()
+
+    def get_watched_torrent_files(self, url):
+        with self.lock:
+            self.connect()
+            self.connection.execute("SELECT * FROM WatchedTorrentFiles WHERE Url=?", [url])
+            data = self.connection.fetchall()
+
+            self.database.commit()
+            self.disconnect()
+        return data
+
