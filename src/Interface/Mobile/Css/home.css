@@ -8,11 +8,38 @@
     position: relative;
     width: 100%;
     margin-top: 10px;
+    height: 30px;
+    vertical-align: top;
 }
+
+.home-item.expanded{
+    height: auto;
+}
+
 
 .home-item:first-child{
     margin-top: 0;
 }
+
+@media only screen and (min-device-width: 768px){
+    .home-item{
+        width: calc(50% - 5px);
+    }
+
+    .home-favorites{
+        margin-top: 0;
+    }
+
+    .home-watched{
+        margin-top: 0;
+        margin-left: 10px;
+    }
+
+    .home-unfinished{
+        margin-top: 10px;
+    }
+}
+
 
 .home-item-bar{
     height: 30px;
