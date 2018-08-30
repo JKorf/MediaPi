@@ -156,10 +156,18 @@
 .media-file-seen{
     position: absolute;
     right: 0;
-    top: -3px;
+    top: -5px;
 }
 
 .media-file-seen img{
     width: 16px;
     height: 16px;
+}
+
+.media-file-selection-path-inner{
+    padding-right: 4px;
+}
+
+.media-file-selection-seen{
+    color: #888;
 }
