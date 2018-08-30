@@ -213,9 +213,6 @@ class ShowHandler(web.RequestHandler):
         if url == "play_episode":
             ShowController.play_episode(self.get_argument("url"), self.get_argument("title"), self.get_argument("img", ""))
 
-        elif url == "set_next_episode":
-            EventManager.throw_event(EventType.SetNextEpisode, [self.get_argument("season"), self.get_argument("episode"), self.get_argument("url")])
-
     @gen.coroutine
     def get(self, url):
         if url == "get_shows":

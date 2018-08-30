@@ -48,32 +48,10 @@
 
         $scope.watchEpisode = function(episode){
             ConfirmationFactory.confirm_play().then(function(){
-                var season = episode.season;
-                var epi = episode.episode;
-                var next;
-                for (var j = 0; j < $scope.show.Seasons.length; j++){
-                    for(var i = 0; i < $scope.show.Seasons[j].length; i++){
-                        if($scope.show.Seasons[j][i].season == season && $scope.show.Seasons[j][i].episode == epi + 1){
-                            next = $scope.show.Seasons[j][i];
-                            break;
-                        }
-                    }
-                }
-
                 $rootScope.$broadcast("startPlay", {title: "[S"+addLeadingZero(episode.season)+"E"+addLeadingZero(episode.episode)+"] " + $scope.show.title, type: "Show"});
 
                 var title = "[S"+addLeadingZero(episode.season)+"E"+addLeadingZero(episode.episode)+"]" + encodeURIComponent(" " + $scope.show.title);
                 $http.post('/shows/play_episode?url=' + encodeURIComponent(episode.torrents[$scope.selectedResolution.resolution].url) + '&title=' + title + '&img=' + encodeURIComponent($scope.show.images.poster));
-                if (next){
-                    console.log(next);
-                    url = "";
-                    if (next.torrents[$scope.selectedResolution.resolution])
-                        url = next.torrents[$scope.selectedResolution.resolution].url;
-                    else
-                        url = next.torrents[Object.keys(next.torrents)[0]].url;
-
-                    $http.post('/shows/set_next_episode?url=' + encodeURIComponent(url) + "&season=" + season + "&episode=" + next.episode);
-                }
 
                 EpisodesWatchedFactory.AddWatched($scope.show._id, episode.season, episode.episode, new Date());
                 EpisodesWatchedFactory.GetWatchedForShow($stateParams.id).then(function(data){

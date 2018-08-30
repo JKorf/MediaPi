@@ -18,11 +18,9 @@
     Seeking to begin/end works?
 
     Movies/series kunnen toevoegen aan `want to watch`
-    Movies already watched
+    Movies already watched -> history
 
     watched by torrent seasons
-
-    Bij continue with next episode de img meenemen -> werkt niet bij continue with van hoofdscherm?
 
     Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
 		Kan in database

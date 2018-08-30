@@ -46,6 +46,9 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
         Logger.write(2, "OpenSubtitles: Subs searching, bytesize: " + str(size) + ", hash: " + str(hash))
 
         search_result = self.search_subs(dic)
+        if search_result is None:
+            return
+
         found_subs = []
         if search_result:
             found_subs = self.process_sub_response(search_result)
