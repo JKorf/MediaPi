@@ -35,7 +35,7 @@
             }, function(action){
                 console.log(action);
             });
-            
+
             $timeout(function(){
                 if(open)
                     $rootScope.closePopup();

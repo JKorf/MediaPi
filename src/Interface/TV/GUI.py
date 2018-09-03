@@ -59,6 +59,7 @@ class GUI(QtGui.QMainWindow):
         self.width, self.height = screen_resolution.width(), screen_resolution.height()
 
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
+        EventManager.register_event(EventType.StartTorrent, self.torrent_start)
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.selection_required)
         EventManager.register_event(EventType.TorrentMediaFileSelection, self.selection_done)
 
@@ -90,6 +91,9 @@ class GUI(QtGui.QMainWindow):
         self.com.set_file_select.emit()
 
     def selection_done(self, file):
+        self.com.set_opening.emit()
+
+    def torrent_start(self, url, title):
         self.com.set_opening.emit()
 
     def player_state_change(self, old_state, new_state):
