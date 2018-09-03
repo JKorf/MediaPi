@@ -15,8 +15,10 @@
         });
 
         function OpenSelectNextEpisode(data){
+            var open = true;
             $rootScope.openPopup();
             $rootScope.setPopupContent("Continue playing", true, true, true, "Found next episode, do you want to continue with season " + data.season + ", episode " + data.episode + "?", $rootScope).then(function(action){
+                open = false;
                 if(data.type == "File"){
                     $rootScope.$broadcast("startPlay", {title: data.filename, type: "File"});
                     $http.post("/hd/play_file?path=" + encodeURIComponent(data.path) + "&filename=" + encodeURIComponent(data.title));
@@ -33,6 +35,12 @@
             }, function(action){
                 console.log(action);
             });
+            
+            $timeout(function(){
+                if(open)
+                    $rootScope.closePopup();
+            }, 1000 * 60 * 30);
+
         }
 
         function OpenMediaSelection(data)
