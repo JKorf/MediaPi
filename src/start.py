@@ -31,9 +31,14 @@ class Program:
         Logger.write(2, "Starting")
         sys.excepthook = self.handle_exception
 
-        Stats['start_time'].add(current_time())
-        self.running = True
         self.is_slave = Settings.get_bool("slave")
+
+        self.database = Database()
+        self.database.init_database()
+
+        Stats.database = self.database
+        Stats.set('start_time', current_time())
+        self.running = True
 
         self.gui_manager = GUIManager(self)
         self.webserver_manager = WebServerManager(self)
@@ -47,8 +52,6 @@ class Program:
         self.version = datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S")
 
         if not self.is_slave:
-            self.database = Database()
-            self.database.init_database()
             self.file_listener = StreamListener("MasterFileServer", 50010)
             self.file_listener.start_listening()
 

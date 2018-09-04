@@ -35,16 +35,16 @@ class PeerConnectionManager:
         self.connection_state = ConnectionState.Connecting
         self.connected_on = 0
         Logger.write(1, str(self.peer.id) + ' connecting to ' + str(self.uri.netloc))
-        Stats['peers_connect_try'].add(1)
+        Stats.add('peers_connect_try', 1)
 
         if not self.connection.connect(self.connection_timeout):
-            Stats['peers_connect_failed'].add(1)
+            Stats.add('peers_connect_failed', 1)
             Logger.write(1, str(self.peer.id) + ' could not connect to ' + str(self.uri.netloc))
             self.disconnect()
             return
 
         self.connected_on = current_time()
-        Stats['peers_connect_success'].add(1)
+        Stats.add('peers_connect_success', 1)
         Logger.write(1, str(self.peer.id) + ' connected to ' + str(self.uri.netloc))
         self.connection_state = ConnectionState.Connected
         self.connection.socket.setblocking(0)

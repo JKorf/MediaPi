@@ -47,9 +47,9 @@ class Observer:
         while True:
             if self.torrent is not None:
                 # Check max download speed
-                current = Stats['max_download_speed'].total
+                current = Stats.total('max_download_speed')
                 if self.torrent.download_counter.max > current:
-                    Stats['max_download_speed'].set(self.torrent.download_counter.max)
+                    Stats.set('max_download_speed', self.torrent.download_counter.max)
 
             time.sleep(5)
 

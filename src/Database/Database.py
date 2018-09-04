@@ -6,15 +6,17 @@ from threading import Lock
 
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Util import current_time
 
 
 class Database:
 
     def __init__(self):
         self.path = Settings.get_string("base_folder") + "database.data"
+        self.slave = Settings.get_bool("slave")
         self.database = None
         self.connection = None
-        self.current_version = 4
+        self.current_version = 5
         self.lock = Lock()
 
     def init_database(self):
@@ -78,6 +80,9 @@ class Database:
         self.connection.executescript(data)
 
     def add_watched_file(self, url, watchedAt):
+        if self.slave:
+            raise PermissionError("Cant call add_watched_file on slave")
+
         watched = self.get_watched_files()
         sql = "INSERT INTO WatchedFiles (URL, WatchedAt) VALUES (?, ?)"
         parameters = [url, watchedAt]
@@ -94,6 +99,9 @@ class Database:
             self.disconnect()
 
     def get_watched_files(self):
+        if self.slave:
+            raise PermissionError("Cant call add_watched_file on slave")
+
         with self.lock:
             self.connect()
             self.connection.execute('SELECT * FROM WatchedFiles')
@@ -102,6 +110,9 @@ class Database:
         return data
 
     def add_watched_episode(self, showId, episodeSeason, episodeNumber, watchedAt):
+        if self.slave:
+            raise PermissionError("Cant call add_watched_file on slave")
+
         with self.lock:
             self.connect()
             self.connection.execute("INSERT INTO WatchedEpisodes " +
@@ -112,6 +123,9 @@ class Database:
             self.disconnect()
 
     def get_watched_episodes(self):
+        if self.slave:
+            raise PermissionError("Cant call get_watched_episodes on slave")
+
         with self.lock:
             self.connect()
             self.connection.execute('SELECT * FROM WatchedEpisodes')
@@ -120,6 +134,9 @@ class Database:
         return data
 
     def add_favorite(self, id):
+        if self.slave:
+            raise PermissionError("Cant call add_favorite on slave")
+
         with self.lock:
             self.connect()
             self.connection.execute("INSERT INTO Favorites (Id) VALUES ('" + str(id) + "')")
@@ -128,6 +145,9 @@ class Database:
             self.disconnect()
 
     def remove_favorite(self, id):
+        if self.slave:
+            raise PermissionError("Cant call remove_favorite on slave")
+
         with self.lock:
             self.connect()
             self.connection.execute("DELETE FROM Favorites WHERE Id = '"+str(id)+"'")
@@ -136,6 +156,9 @@ class Database:
             self.disconnect()
 
     def get_favorites(self):
+        if self.slave:
+            raise PermissionError("Cant call get_favorites on slave")
+
         with self.lock:
             self.connect()
             self.connection.execute('SELECT * FROM Favorites')
@@ -144,6 +167,9 @@ class Database:
             return [x[0] for x in data]
 
     def add_watching_item(self, type, name, url, image, length, time, media_file):
+        if self.slave:
+            raise PermissionError("Cant call add_watching_item on slave")
+
         if self.get_watching_item(url) is not None:
             return
 
@@ -156,6 +182,9 @@ class Database:
             self.disconnect()
 
     def get_watching_item(self, url):
+        if self.slave:
+            raise PermissionError("Cant call get_watching_item on slave")
+
         with self.lock:
             self.connect()
 
@@ -168,6 +197,9 @@ class Database:
             return data[0]
 
     def get_watching_items(self):
+        if self.slave:
+            raise PermissionError("Cant call get_watching_items on slave")
+
         with self.lock:
             self.connect()
 
@@ -178,6 +210,9 @@ class Database:
         return data
 
     def update_watching_item(self, url, time, update_time, media_file=None):
+        if self.slave:
+            raise PermissionError("Cant call update_watching_item on slave")
+
         with self.lock:
             self.connect()
             if media_file is None:
@@ -190,6 +225,9 @@ class Database:
             self.disconnect()
 
     def remove_watching_item(self, url):
+        if self.slave:
+            raise PermissionError("Cant call remove_watching_item on slave")
+
         with self.lock:
             self.connect()
 
@@ -200,6 +238,9 @@ class Database:
             self.disconnect()
 
     def add_watched_torrent_file(self, url, media_file, watched_at):
+        if self.slave:
+            raise PermissionError("Cant call add_watched_torrent_file on slave")
+
         watched = self.get_watched_torrent_files(url)
         if media_file in [x[1] for x in watched]:
             return
@@ -214,6 +255,9 @@ class Database:
             self.disconnect()
 
     def get_watched_torrent_files(self, url):
+        if self.slave:
+            raise PermissionError("Cant call get_watched_torrent_files on slave")
+
         with self.lock:
             self.connect()
             self.connection.execute("SELECT * FROM WatchedTorrentFiles WHERE Url=?", [url])
@@ -222,4 +266,33 @@ class Database:
             self.database.commit()
             self.disconnect()
         return data
+
+    def update_stat(self, key, value):
+        with self.lock:
+            self.connect()
+
+            self.connection.execute("SELECT * FROM Stats WHERE Name=?", [key])
+            data = self.connection.fetchall()
+            if not data:
+                self.connection.execute("INSERT INTO Stats " +
+                                    "(Name, Val, LastUpdate)" +
+                                    " VALUES (?, ?, ?)", [key, value, current_time()])
+            else:
+                self.connection.execute("UPDATE Stats SET Val=?, LastUpdate=? WHERE Name=?", [value, current_time(), key])
+
+            self.database.commit()
+            self.disconnect()
+
+    def get_stat(self, key):
+        with self.lock:
+            self.connect()
+            self.connection.execute("SELECT * FROM Stats WHERE Name=?", [key])
+            data = self.connection.fetchall()
+
+            self.database.commit()
+            self.disconnect()
+        if not data:
+            return 0
+
+        return float(data[0][1])
 

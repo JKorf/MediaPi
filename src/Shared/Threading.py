@@ -34,7 +34,7 @@ class CustomThread:
         self.thread_name = thread_name
         self.start_time = 0
         ThreadManager.add_thread(self)
-        Stats['threads_started'].add(1)
+        Stats.add('threads_started', 1)
 
     def start(self):
         self.start_time = current_time()

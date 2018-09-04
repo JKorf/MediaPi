@@ -101,7 +101,7 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
                 continue
 
             Logger.write(2, "OpenSubtitles: Downloaded " + str(sub_id) + ", rating: " + sub['SubRating'])
-            Stats['subs_downloaded'].add(1)
+            Stats.add('subs_downloaded', 1)
 
             sub_data = base64.b64decode(sub_result['data'][0]['data'])
             sub_act_data = gzip.decompress(sub_data)

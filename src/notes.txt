@@ -15,8 +15,6 @@
 
     Info bij images (datum) met een knop? Also mobile UI
 
-    Seeking to begin/end works?
-
     Movies/series kunnen toevoegen aan `want to watch`
     Movies already watched -> history
 

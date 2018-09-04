@@ -77,13 +77,13 @@ class TorrentPeerManager:
 
     def add_potential_peer_stat(self, source):
         if source == PeerSource.DHT:
-            Stats['peers_source_dht'].add(1)
+            Stats.add('peers_source_dht', 1)
         elif source == PeerSource.HttpTracker:
-            Stats['peers_source_http_tracker'].add(1)
+            Stats.add('peers_source_http_tracker', 1)
         elif source == PeerSource.UdpTracker:
-            Stats['peers_source_udp_tracker'].add(1)
+            Stats.add('peers_source_udp_tracker', 1)
         elif source == PeerSource.PeerExchange:
-            Stats['peers_source_exchange'].add(1)
+            Stats.add('peers_source_exchange', 1)
 
     def piece_done(self, piece_index):
         for peer in list(self.connected_peers):

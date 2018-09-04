@@ -100,10 +100,10 @@ class UtilController:
 
     @staticmethod
     def info():
-        info = Info(current_time() - Stats['start_time'].total, Stats['peers_connect_try'].total, Stats['peers_connect_failed'].total, Stats['peers_connect_success'].total,
-                    Stats['peers_source_dht'].total, Stats['peers_source_udp_tracker'].total, Stats['peers_source_http_tracker'].total, Stats['peers_source_exchange'].total,
-                    write_size(Stats['total_downloaded'].total), Stats['threads_started'].total, Stats['subs_downloaded'].total, Stats['vlc_played'].total,
-                    write_size(Stats['max_download_speed'].total))
+        info = Info(current_time() - Stats.total('start_time'), Stats.total('peers_connect_try'), Stats.total('peers_connect_failed'), Stats.total('peers_connect_success'),
+                    Stats.total('peers_source_dht'), Stats.total('peers_source_udp_tracker'), Stats.total('peers_source_http_tracker'), Stats.total('peers_source_exchange'),
+                    write_size(Stats.total('total_downloaded')), Stats.total('threads_started'), Stats.total('subs_downloaded'), Stats.total('vlc_played'),
+                    write_size(Stats.total('max_download_speed')))
 
         return to_JSON(info)
 

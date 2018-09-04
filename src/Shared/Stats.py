@@ -1,44 +1,20 @@
-from Shared.Util import write_size
 
+class Stats:
 
-class MetaStats(type):
-    stats = dict()
+    database = None
 
-    def __getitem__(self, item):
-        if item not in MetaStats.stats:
-            MetaStats.stats[item] = Stat(item)
+    @staticmethod
+    def add(name, value):
+        stat = Stats.database.get_stat(name)
+        if stat == 0:
+            Stats.database.update_stat(name, value)
+        else:
+            Stats.database.update_stat(name, stat + value)
 
-        return MetaStats.stats[item]
+    @staticmethod
+    def total(name):
+        return Stats.database.get_stat(name)
 
-
-class Stats(object, metaclass=MetaStats):
-    pass
-
-
-class Stat:
-
-    @property
-    def average(self):
-        if self.counts == 0:
-            return 0
-        return self.value // self.counts
-
-    @property
-    def total(self):
-        return self.value
-
-    def __init__(self, name):
-        self.name = name
-        self.value = 0
-        self.counts = 0
-
-    def add(self, val):
-        self.value += val
-        self.counts += 1
-
-    def set(self, val):
-        self.value = val
-        self.counts = 1
-
-    def as_size(self):
-        return write_size(self.value)
+    @staticmethod
+    def set(name, value):
+        Stats.database.update_stat(name, value)
