@@ -18,9 +18,6 @@
     Movies/series kunnen toevoegen aan `want to watch`
     Movies already watched -> history
 
-    Stats opslaan per versie zodat bij opnieuw opstarten weer ingeladen kan worden
-		Kan in database
-
     speed graph
 
     Tv control:
