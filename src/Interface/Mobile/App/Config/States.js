@@ -80,6 +80,13 @@
             controller: "SettingsController"
         });
 
+        $stateProvider.state('history', {
+            url: '/history',
+            templateUrl: '/App/Modules/History/history.html',
+            cache: false,
+            controller: "HistoryController"
+        });
+
         $urlRouterProvider.otherwise('/');
     });
 })();

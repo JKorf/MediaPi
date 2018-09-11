@@ -85,8 +85,8 @@
 
         function sort(){
             watched.sort(function(a, b) {
-                    a = new Date(a.WatchedAt);
-                    b = new Date(b.watchedAt);
+                    a = a.WatchedAt;
+                    b = b.WatchedAt;
                     return a>b ? -1 : a<b ? 1 : 0;
                 });
         }

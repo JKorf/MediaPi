@@ -1,3 +1,4 @@
+import datetime
 import time
 
 from Interface.TV.VLCPlayer import PlayerState
@@ -7,6 +8,7 @@ from MediaPlayer.Torrent.Torrent import Torrent
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Util import current_time
 
 
 class TorrentManager:
@@ -23,6 +25,7 @@ class TorrentManager:
             EventManager.register_event(EventType.RequestDHTPeers, self.request_dht_peers)
 
         EventManager.register_event(EventType.StartTorrent, self.start_torrent)
+        EventManager.register_event(EventType.TorrentMediaFileSet, self.media_file_set)
         EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
         EventManager.register_event(EventType.NewDHTNode, self.new_dht_node)
@@ -46,6 +49,9 @@ class TorrentManager:
                 self.torrent = None
 
             time.sleep(1)
+
+    def media_file_set(self):
+        self.start.database.add_watched_torrent_file(self.torrent.name, self.torrent.uri, self.torrent.media_file.path, datetime.datetime.now().isoformat())
 
     def player_state_change(self, old_state, new_state):
         if new_state == PlayerState.Ended:

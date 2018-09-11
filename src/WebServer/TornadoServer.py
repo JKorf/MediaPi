@@ -265,7 +265,6 @@ class PlayerHandler(web.RequestHandler):
             PlayerController.set_audio_track(self.get_argument("track"))
         elif url == "select_file":
             EventManager.throw_event(EventType.TorrentMediaFileSelection, [urllib.parse.unquote(self.get_argument("path"))])
-            TornadoServer.start_obj.database.add_watched_torrent_file(TornadoServer.start_obj.torrent_manager.torrent.uri, self.get_argument("path"), self.get_argument("watchedAt"))
 
 
 class HDHandler(web.RequestHandler):

@@ -1,0 +1,13 @@
+<div class="view-history sub-view">
+
+    <div class="history" ng-repeat="item in history" ng-if="item.Title" ng-click="goToItem(item)">
+        <div class="history-img">
+            <img ng-if="item.Image" ng-src="{{item.Image}}" />
+            <img ng-if="!item.Image" ng-src="/Images/unknown.png" />
+        </div>
+        <div class="history-title truncate">{{item.Title}}</div>
+        <div class="history-type">{{item.Type}}</div>
+        <div class="history-time">{{item.WatchedAt | dateToTimespan}}</div>
+    </div>
+
+</div>
