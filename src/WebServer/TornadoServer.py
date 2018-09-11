@@ -432,13 +432,13 @@ class DatabaseHandler(web.RequestHandler):
             Logger.write(2, "Adding to watched files")
             TornadoServer.start_obj.database.add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"))
 
-        if url == "add_favorite":
-            Logger.write(2, "Adding to favorites")
-            TornadoServer.start_obj.database.add_favorite(self.get_argument("id"))
-
-        if url == "remove_favorite":
-            Logger.write(2, "Removing from favorites")
-            TornadoServer.start_obj.database.remove_favorite(self.get_argument("id"))
+        if url == "add_watched_movie":
+            Logger.write(2, "Adding to watched movie")
+            TornadoServer.start_obj.database.add_watched_movie(
+                self.get_argument("title"),
+                self.get_argument("movieId"),
+                self.get_argument("image"),
+                self.get_argument("watchedAt"))
 
         if url == "add_watched_episode":
             Logger.write(2, "Adding to watched episodes")
@@ -449,6 +449,14 @@ class DatabaseHandler(web.RequestHandler):
                 self.get_argument("episodeSeason"),
                 self.get_argument("episodeNumber"),
                 self.get_argument("watchedAt"))
+
+        if url == "add_favorite":
+            Logger.write(2, "Adding to favorites")
+            TornadoServer.start_obj.database.add_favorite(self.get_argument("id"))
+
+        if url == "remove_favorite":
+            Logger.write(2, "Removing from favorites")
+            TornadoServer.start_obj.database.remove_favorite(self.get_argument("id"))
 
         if url == "remove_unfinished":
             Logger.write(2, "Removing unfinished")

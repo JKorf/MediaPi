@@ -1,6 +1,6 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('MovieController', function ($scope, $rootScope, $http, $timeout, $stateParams, ConfirmationFactory, CacheFactory) {
+    angular.module('pi-test').controller('MovieController', function ($scope, $rootScope, $http, $timeout, $stateParams, HistoryFactory, ConfirmationFactory, CacheFactory) {
         $scope.selectedTorrent = { url: "" };
 
         Init();
@@ -28,27 +28,13 @@
             $scope.selectedTorrent.url = torrent.url;
         }
 
-         $scope.downloadMovie = function(episode){
-             $http.post('/torrents/download?url=' + encodeURIComponent($scope.selectedTorrent.url) + '&id=' + $scope.movie.id + '&title=' + encodeURIComponent($scope.movie.title));
-
-            $(".movie-wrapper").append("<div class='download-started'><img src='/Images/download-blue.png' /></div>")
-            $timeout(function(){
-                $(".download-started").css("opacity", "0");
-                $(".download-started").css("width", "10px");
-                $(".download-started").css("height", "10px");
-                $(".download-started").css("left", "calc(50% - 10px)");
-                $(".download-started").css("top", "calc(50% - 10px)");
-                $timeout(function(){
-                    $(".download-started").remove();
-                }, 1000)
-            });
-        }
-
         $scope.watchMovie = function(){
             ConfirmationFactory.confirm_play().then(function(){
                 $rootScope.$broadcast("startPlay", {title: $scope.movie.title, type: "Movie"});
 
                 $http.post('/movies/play_movie?url=' + encodeURIComponent($scope.selectedTorrent.url) + '&id=' + $scope.movie.id + '&title=' + encodeURIComponent($scope.movie.title) + '&img=' + encodeURIComponent($scope.movie.poster));
+
+                HistoryFactory.AddWatchedMovie($scope.movie.id, $scope.movie.title, encodeURIComponent($scope.movie.poster), new Date());
             });
         }
 

@@ -129,6 +129,19 @@ class Database:
             self.database.commit()
             self.disconnect()
 
+    def add_watched_movie(self, title, movie_id, image, watched_at):
+        if self.slave:
+            raise PermissionError("Cant call add_watched_movie on slave")
+
+        with self.lock:
+            self.connect()
+            self.connection.execute("INSERT INTO History " +
+                                    "(Type, ImdbId, Title, Image, WatchedAt)" +
+                                    " VALUES (?, ?, ?, ?, ?)", ["Movie", str(movie_id), title, str(image), str(watched_at)])
+
+            self.database.commit()
+            self.disconnect()
+
     def add_watched_torrent_file(self, title, url, media_file, watched_at):
         if self.slave:
             raise PermissionError("Cant call add_watched_torrent_file on slave")

@@ -34,13 +34,12 @@
         $scope.goToItem = function(item){
 
             if(item.Type == "Show")
-            {
                 $state.go("show", { id: item.ImdbId });
-            }
+            else if(item.Type == "Movie")
+                $state.go("movie", { id: item.ImdbId });
             else if (item.Type == "File")
-            {
                 $state.go("hd", { path: item.URL });
-            }
+
         }
 
         Init();

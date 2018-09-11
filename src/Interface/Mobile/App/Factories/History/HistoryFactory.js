@@ -17,6 +17,17 @@
             });
         }
 
+        factory.AddWatchedMovie = function(movieId, title, img, watchedAt){
+            factory.GetWatched().then(function(){
+                $http.post("/database/add_watched_movie?movieId=" + movieId
+                        + "&title=" + encodeURIComponent(title)
+                        + "&image=" + encodeURIComponent(img)
+                         + "&watchedAt=" + encodeURIComponent(watchedAt)).then(function(){
+                              retrieve();
+                         });
+            });
+        }
+
         factory.AddWatchedFile = function(title, url, watchedAt){
             factory.GetWatched().then(function(){
                 $http.post("/database/add_watched_file?"
@@ -89,21 +100,6 @@
                     b = b.WatchedAt;
                     return a>b ? -1 : a<b ? 1 : 0;
                 });
-        }
-
-        function create_history_show(imdbId, title, season, episode, watched_at){
-            return {
-                "Id": obj[0],
-                "ImdbId": obj[1],
-                "Type": obj[2],
-                "Title": obj[3],
-                "Image": obj[4],
-                "WatchedAt": new Date(obj[5]),
-                "Season": obj[6],
-                "Episode": obj[7],
-                "URL": obj[8],
-                "MediaFile": obj[9]
-            }
         }
 
         function parse_history(obj)
