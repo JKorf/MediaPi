@@ -110,7 +110,7 @@ class TornadoServer:
         self.broadcast("request", "media_selection_close")
 
     def media_selection_required(self, files):
-        watched_files = [f[1] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
+        watched_files = [f[9] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
         files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in files]
         self.broadcast("request", "media_selection", files)
 
@@ -390,7 +390,7 @@ class RealtimeHandler(websocket.WebSocketHandler):
             Logger.write(2, "New connection")
             TornadoServer.clients.append(self)
             if TornadoServer.start_obj.torrent_manager.torrent and TornadoServer.start_obj.torrent_manager.torrent.state == TorrentState.WaitingUserFileSelection:
-                watched_files = [f[1] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
+                watched_files = [f[9] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
                 files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]]
                 TornadoServer.broadcast('request', 'media_selection', files)
 
@@ -411,21 +411,13 @@ class DatabaseHandler(web.RequestHandler):
             Logger.write(2, "Getting favorites")
             self.write(to_JSON(TornadoServer.start_obj.database.get_favorites()))
 
-        if url == "get_watched_files":
-            Logger.write(2, "Getting watched files")
-            self.write(to_JSON(TornadoServer.start_obj.database.get_watched_files()))
-
-        if url == "get_watched_episodes":
-            Logger.write(2, "Getting watched episodes")
-            self.write(to_JSON(TornadoServer.start_obj.database.get_watched_episodes()))
+        if url == "get_history":
+            Logger.write(2, "Getting history")
+            self.write(to_JSON(TornadoServer.start_obj.database.get_history()))
 
         if url == "get_unfinished_items":
             Logger.write(2, "Getting unfinished items")
             self.write(to_JSON(TornadoServer.start_obj.database.get_watching_items()))
-
-        if url == "get_watched_torrent_files":
-            Logger.write(2, "Getting watched torrent files")
-            self.write(to_JSON(TornadoServer.start_obj.database.get_watched_torrent_files(self.get_argument("url"))))
 
     @gen.coroutine
     def post(self, url):
@@ -435,11 +427,11 @@ class DatabaseHandler(web.RequestHandler):
 
         if url == "add_watched_torrent_file":
             Logger.write(2, "Adding to watched torrent files")
-            TornadoServer.start_obj.database.add_watched_torrent_file(urllib.parse.unquote(self.get_argument("url")), self.get_argument("mediaFile"), self.get_argument("watchedAt"))
+            TornadoServer.start_obj.database.add_watched_torrent_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("mediaFile"), self.get_argument("watchedAt"))
 
         if url == "add_watched_file":
             Logger.write(2, "Adding to watched files")
-            TornadoServer.start_obj.database.add_watched_file(urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"))
+            TornadoServer.start_obj.database.add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"))
 
         if url == "add_favorite":
             Logger.write(2, "Adding to favorites")
@@ -452,7 +444,9 @@ class DatabaseHandler(web.RequestHandler):
         if url == "add_watched_episode":
             Logger.write(2, "Adding to watched episodes")
             TornadoServer.start_obj.database.add_watched_episode(
+                self.get_argument("title"),
                 self.get_argument("showId"),
+                self.get_argument("image"),
                 self.get_argument("episodeSeason"),
                 self.get_argument("episodeNumber"),
                 self.get_argument("watchedAt"))

@@ -1,6 +1,6 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('HomeController', function ($scope, $rootScope, $http, $state, $timeout, ConfirmationFactory, UnfinishedFactory, EpisodesWatchedFactory, FilesWatchedFactory, FavoritesFactory, CacheFactory) {
+    angular.module('pi-test').controller('HomeController', function ($scope, $rootScope, $http, $state, $timeout, ConfirmationFactory, UnfinishedFactory, HistoryFactory, FavoritesFactory, CacheFactory) {
         $scope.lastWatched = [];
         $scope.favorites = [];
 
@@ -76,8 +76,9 @@
                 $scope.unfinished = data;
             });
 
-            EpisodesWatchedFactory.GetWatched().then(function(data){
-                $scope.watchedEpisodes = data;
+            HistoryFactory.GetWatched().then(function(data){
+                $scope.history = data;
+                console.log(data);
             });
 
             var favs = FavoritesFactory.GetAll().then(function(favs){
@@ -96,21 +97,10 @@
                     });
                 }
             });
-
-            FilesWatchedFactory.GetWatchedFiles().then(function(data) {
-                $(".recent-files-list .home-list-loader").remove();
-                if(data.length > 0){
-                    data.sort(function(a, b) {
-                        a = new Date(a.watchedAt);
-                        b = new Date(b.watchedAt);
-                        return a>b ? -1 : a<b ? 1 : 0;
-                    });
-                }
-                $scope.lastWatchedFiles = data;
-            });
         }
 
         function DetermineLastEpisodeRelease(show){
+        return;
             var lastWatchedShowEpisode;
             show.toWatch = 0;
             for(var i = 0; i < $scope.watchedEpisodes.length; i++){

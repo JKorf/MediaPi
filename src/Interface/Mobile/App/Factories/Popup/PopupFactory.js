@@ -1,6 +1,6 @@
 (function () {
 
-    angular.module('pi-test').factory('PopupFactory', function ($rootScope, $http, $window, $compile, $q, $timeout, RealtimeFactory, CacheFactory, FilesWatchedFactory, EpisodesWatchedFactory) {
+    angular.module('pi-test').factory('PopupFactory', function ($rootScope, $http, $window, $compile, $q, $timeout, RealtimeFactory, CacheFactory, HistoryFactory) {
 
          RealtimeFactory.register("IndexController", "request", function(event, data){
             if(event == "media_selection")
@@ -22,14 +22,14 @@
                 if(data.type == "File"){
                     $rootScope.$broadcast("startPlay", {title: data.filename, type: "File"});
                     $http.post("/hd/play_file?path=" + encodeURIComponent(data.path) + "&filename=" + encodeURIComponent(data.title));
-                    FilesWatchedFactory.AddWatchedFile(data.path, new Date());
+                    HistoryFactory.AddWatchedFile(data.title, data.path, new Date());
                     $rootScope.$broadcast("startPlay", {title: data.title, type: "File"});
                 }
                 else{
                     $http.post("/movies/play_continue?type=torrent&url=" + encodeURIComponent(data.path) + "&title=" + encodeURIComponent(data.title) +"&image="+encodeURIComponent(data.img)+"&position=0&mediaFile=" + encodeURIComponent(data.media_file));
                     $rootScope.$broadcast("startPlay", {title: data.title, type: "Show"});
-                    EpisodesWatchedFactory.LastWatchedShow().then(function(show){
-                         EpisodesWatchedFactory.AddWatched(show.showId, parseInt(data.season), parseInt(data.episode), new Date());
+                    HistoryFactory.LastWatchedShow().then(function(show){
+                         HistoryFactory.AddWatchedShow(show.ImdbId, show.Title, data.img, parseInt(data.season), parseInt(data.episode), new Date());
                     });
                 }
             }, function(action){
@@ -45,6 +45,7 @@
 
         function OpenMediaSelection(data)
         {
+        console.log(data);
             var scope =  $rootScope.$new(true);
             scope.selectedFile = false;
             scope.files = data;

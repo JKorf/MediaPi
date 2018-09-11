@@ -23,10 +23,10 @@
             <div class="home-item-down-icon"><img ng-src="/Images/down.png" /></div>
         </div>
         <div class="home-item-content">
-            <div class="home-watched-item" ng-repeat="file in lastWatchedFiles" ng-click="goToFile(file.url)">
+            <div class="home-watched-item" ng-repeat="file in history | filter: {Type: 'File'} | orderBy: '-WatchedAt'" ng-click="goToFile(file.url)">
                 <div class="home-watched-img"><img ng-src="/Images/unknown.png" /></div>
-                <div class="home-watched-title truncate">{{getFileName(file.url)}}</div>
-                <div class="home-watched-time">{{timeToTimespan(file.watchedAt)}}</div>
+                <div class="home-watched-title truncate">{{getFileName(file.URL)}}</div>
+                <div class="home-watched-time">{{timeToTimespan(file.WatchedAt)}}</div>
             </div>
             <div ng-if="lastWatchedFiles.length == 0" class="home-item-no-content">
                 No recently watched files..

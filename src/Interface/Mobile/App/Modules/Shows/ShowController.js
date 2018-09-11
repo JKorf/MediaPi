@@ -1,6 +1,6 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('ShowController', function ($scope, $rootScope, $http, $stateParams, $timeout, $state, EpisodesWatchedFactory, ConfirmationFactory, FavoritesFactory, CacheFactory) {
+    angular.module('pi-test').controller('ShowController', function ($scope, $rootScope, $http, $stateParams, $timeout, $state, HistoryFactory, ConfirmationFactory, FavoritesFactory, CacheFactory) {
 
         $scope.selectedResolution = { resolution: '720p' };
         $scope.selectedSeason;
@@ -53,10 +53,13 @@
                 var title = "[S"+addLeadingZero(episode.season)+"E"+addLeadingZero(episode.episode)+"]" + encodeURIComponent(" " + $scope.show.title);
                 $http.post('/shows/play_episode?url=' + encodeURIComponent(episode.torrents[$scope.selectedResolution.resolution].url) + '&title=' + title + '&img=' + encodeURIComponent($scope.show.images.poster));
 
-                EpisodesWatchedFactory.AddWatched($scope.show._id, episode.season, episode.episode, new Date());
-                EpisodesWatchedFactory.GetWatchedForShow($stateParams.id).then(function(data){
-                    $scope.watched = data;
-                });
+                HistoryFactory.AddWatchedShow($scope.show._id, $scope.show.title, encodeURIComponent($scope.show.images.poster), episode.season, episode.episode, new Date());
+                $timeout(function(){
+                    HistoryFactory.GetWatchedForShow($stateParams.id).then(function(data){
+                        console.log(data);
+                        $scope.watched = data;
+                    });
+                }, 2000);
             });
         }
 
@@ -82,8 +85,8 @@
 
         $scope.isWatched = function(epi){
             for(var i = 0; i < $scope.watched.length; i++){
-                if($scope.watched[i].season == epi.season &&
-                   $scope.watched[i].episode == epi.episode)
+                if($scope.watched[i].Season == epi.season &&
+                   $scope.watched[i].Episode == epi.episode)
                    return true;
             }
             return false;
@@ -109,7 +112,7 @@
             }, function(er){
                 console.log("rejected: " + er);
             });
-            EpisodesWatchedFactory.GetWatchedForShow($stateParams.id).then(function(data){
+            HistoryFactory.GetWatchedForShow($stateParams.id).then(function(data){
                 $scope.watched = data;
             });
         }

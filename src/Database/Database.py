@@ -16,7 +16,7 @@ class Database:
         self.slave = Settings.get_bool("slave")
         self.database = None
         self.connection = None
-        self.current_version = 5
+        self.current_version = 6
         self.lock = Lock()
 
     def init_database(self):
@@ -79,16 +79,34 @@ class Database:
 
         self.connection.executescript(data)
 
-    def add_watched_file(self, url, watchedAt):
+    def get_history(self):
+        if self.slave:
+            raise PermissionError("Cant call get_watched_file on slave")
+
+        with self.lock:
+            self.connect()
+            self.connection.execute('SELECT * FROM History')
+            data = self.connection.fetchall()
+            self.disconnect()
+        return data
+
+    def get_watched_torrent_files(self, uri):
+        if self.slave:
+            raise PermissionError("Cant call get_watched_file on slave")
+
+        with self.lock:
+            self.connect()
+            self.connection.execute('SELECT * FROM History WHERE URL = ?', [uri])
+            data = self.connection.fetchall()
+            self.disconnect()
+        return data
+
+    def add_watched_file(self, title, url, watched_at):
         if self.slave:
             raise PermissionError("Cant call add_watched_file on slave")
 
-        watched = self.get_watched_files()
-        sql = "INSERT INTO WatchedFiles (URL, WatchedAt) VALUES (?, ?)"
-        parameters = [url, watchedAt]
-        if url in [x[0] for x in watched]:
-            sql = "UPDATE WatchedFiles SET WatchedAt = ? WHERE URL = ?"
-            parameters = [watchedAt, url]
+        sql = "INSERT INTO History (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
+        parameters = ["File", title, url, watched_at]
 
         with self.lock:
             self.connect()
@@ -98,40 +116,31 @@ class Database:
             self.database.commit()
             self.disconnect()
 
-    def get_watched_files(self):
+    def add_watched_episode(self, title, show_id, image, season, episode, watched_at):
         if self.slave:
-            raise PermissionError("Cant call add_watched_file on slave")
+            raise PermissionError("Cant call add_watched_episode on slave")
 
         with self.lock:
             self.connect()
-            self.connection.execute('SELECT * FROM WatchedFiles')
-            data = self.connection.fetchall()
-            self.disconnect()
-        return data
-
-    def add_watched_episode(self, showId, episodeSeason, episodeNumber, watchedAt):
-        if self.slave:
-            raise PermissionError("Cant call add_watched_file on slave")
-
-        with self.lock:
-            self.connect()
-            self.connection.execute("INSERT INTO WatchedEpisodes " +
-                                    "(ShowId, EpisodeSeason, EpisodeNumber, WatchedAt)" +
-                                    " VALUES ('" + str(showId) + "', " + str(episodeSeason) + ", " + str(episodeNumber) + ", '" + str(watchedAt) + "')")
+            self.connection.execute("INSERT INTO History " +
+                                    "(Type, ImdbId, Title, Image, Season, Episode, WatchedAt)" +
+                                    " VALUES (?, ?, ?, ?, ?, ?, ?)", ["Show", str(show_id), title, str(image), str(season), str(episode), str(watched_at)])
 
             self.database.commit()
             self.disconnect()
 
-    def get_watched_episodes(self):
+    def add_watched_torrent_file(self, title, url, media_file, watched_at):
         if self.slave:
-            raise PermissionError("Cant call get_watched_episodes on slave")
+            raise PermissionError("Cant call add_watched_torrent_file on slave")
 
         with self.lock:
             self.connect()
-            self.connection.execute('SELECT * FROM WatchedEpisodes')
-            data = self.connection.fetchall()
+            self.connection.execute("INSERT INTO History " +
+                                    "(Type, Title, URL, MediaFile, WatchedAt)" +
+                                    " VALUES (?, ?, ?, ?, ?)", ["Torrent", title, url, media_file, watched_at])
+
+            self.database.commit()
             self.disconnect()
-        return data
 
     def add_favorite(self, id):
         if self.slave:
@@ -236,36 +245,6 @@ class Database:
 
             self.database.commit()
             self.disconnect()
-
-    def add_watched_torrent_file(self, url, media_file, watched_at):
-        if self.slave:
-            raise PermissionError("Cant call add_watched_torrent_file on slave")
-
-        watched = self.get_watched_torrent_files(url)
-        if media_file in [x[1] for x in watched]:
-            return
-
-        with self.lock:
-            self.connect()
-            self.connection.execute("INSERT INTO WatchedTorrentFiles " +
-                                    "(Url, MediaFile, WatchedAt)" +
-                                    " VALUES (?, ?, ?)", [url, media_file, watched_at])
-
-            self.database.commit()
-            self.disconnect()
-
-    def get_watched_torrent_files(self, url):
-        if self.slave:
-            raise PermissionError("Cant call get_watched_torrent_files on slave")
-
-        with self.lock:
-            self.connect()
-            self.connection.execute("SELECT * FROM WatchedTorrentFiles WHERE Url=?", [url])
-            data = self.connection.fetchall()
-
-            self.database.commit()
-            self.disconnect()
-        return data
 
     def update_stat(self, key, value):
         with self.lock:

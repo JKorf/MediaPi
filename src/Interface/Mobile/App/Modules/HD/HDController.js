@@ -1,6 +1,6 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('HDController', function ($scope, $rootScope, $http, $state, $stateParams, $location, $timeout, Settings, FilesWatchedFactory, ConfirmationFactory) {
+    angular.module('pi-test').controller('HDController', function ($scope, $rootScope, $http, $state, $stateParams, $location, $timeout, Settings, HistoryFactory, ConfirmationFactory) {
         var initial = true;
 
         $scope.current = { drive: "/", path: "" };;
@@ -53,7 +53,7 @@
         $scope.fileHasBeenWatched = function(file){
             var path = concatPath($scope.current.path, file)
             return $.grep($scope.watchedFiles, function(item){
-                return item.url == path;
+                return item.URL == path;
             }).length != 0;
         }
 
@@ -150,7 +150,12 @@
                 var path = concatPath($scope.current.path, file);
                 $http.post("/hd/play_file?filename=" + encodeURIComponent(file)+"&path=" + encodeURIComponent(path));
 
-                FilesWatchedFactory.AddWatchedFile(path, new Date());
+                HistoryFactory.AddWatchedFile(file, path, new Date());
+                $timeout(function(){
+                    HistoryFactory.GetWatched().then(function(data){
+                        $scope.watchedFiles = data;
+                    });
+                }, 2000);
             });
         }
 
@@ -207,7 +212,7 @@
             console.log("Getting dir for " + path);
             $scope.promise = $http.get("/hd/directory?path=" + encodeURIComponent(path)).then(function (response) {
                 $scope.filestructure = response.data;
-                FilesWatchedFactory.GetWatchedFiles().then(function(data){
+                HistoryFactory.GetWatched().then(function(data){
                     $scope.watchedFiles = data;
                 });
                 if($scope.referencedFile.length > 0){
