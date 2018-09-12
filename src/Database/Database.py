@@ -155,6 +155,17 @@ class Database:
             self.database.commit()
             self.disconnect()
 
+    def remove_watched(self, id):
+        if self.slave:
+            raise PermissionError("Cant call add_watched_torrent_file on slave")
+
+        with self.lock:
+            self.connect()
+            self.connection.execute("DELETE FROM History WHERE Id=?", [id])
+
+            self.database.commit()
+            self.disconnect()
+
     def add_favorite(self, id):
         if self.slave:
             raise PermissionError("Cant call add_favorite on slave")

@@ -3,6 +3,16 @@
     angular.module('pi-test').controller('HistoryController', function ($scope, $rootScope, $state, HistoryFactory) {
 
         $scope.history = [];
+        $scope.resultLimit = 10;
+
+        var view = $(".view");
+        view.scroll(function(){
+            if(view[0].scrollHeight - view[0].scrollTop == view[0].offsetHeight)
+            {
+                $scope.resultLimit += 10;
+                $scope.$apply();
+            }
+        });
 
         function Init(){
 
@@ -31,15 +41,20 @@
             return target;
         }
 
-        $scope.goToItem = function(item){
-
+        $scope.goToItem = function(item)
+        {
             if(item.Type == "Show")
                 $state.go("show", { id: item.ImdbId });
             else if(item.Type == "Movie")
                 $state.go("movie", { id: item.ImdbId });
             else if (item.Type == "File")
                 $state.go("hd", { path: item.URL });
+        }
 
+        $scope.removeItem = function(item)
+        {
+            HistoryFactory.RemoveWatched(item.Id);
+            $scope.history.splice($scope.history.indexOf(item), 1);
         }
 
         Init();

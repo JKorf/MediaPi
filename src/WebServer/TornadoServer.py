@@ -450,6 +450,10 @@ class DatabaseHandler(web.RequestHandler):
                 self.get_argument("episodeNumber"),
                 self.get_argument("watchedAt"))
 
+        if url == "remove_watched":
+            Logger.write(2, "Remove watched")
+            TornadoServer.start_obj.database.remove_watched(self.get_argument("id"));
+
         if url == "add_favorite":
             Logger.write(2, "Adding to favorites")
             TornadoServer.start_obj.database.add_favorite(self.get_argument("id"))

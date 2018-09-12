@@ -40,6 +40,13 @@
             });
         }
 
+        factory.RemoveWatched = function(id){
+            $http.post("/database/remove_watched?"
+                        + "id=" + id).then(function(){
+                              retrieve();
+                         });
+        };
+
         factory.GetWatched = function(){
             var promise = $q.defer();
 
