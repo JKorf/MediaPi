@@ -17,6 +17,7 @@ class TorrentManager:
         self.start = start
         self.torrent = None
         self.subtitle_provider = SubtitleProvider(self.start)
+        self.last_torrent_start = 0
 
         self.dht_enabled = Settings.get_bool("dht")
         if self.dht_enabled:
@@ -41,6 +42,7 @@ class TorrentManager:
             if media_file is not None:
                 self.torrent.set_selected_media_file(media_file)
             torrent.start()
+            self.last_torrent_start = current_time()
         else:
             Logger.write(2, "Invalid torrent")
             EventManager.throw_event(EventType.Error, ["torrent_error", "Invalid torrent"])
@@ -51,7 +53,8 @@ class TorrentManager:
             time.sleep(1)
 
     def media_file_set(self):
-        self.start.database.add_watched_torrent_file(self.torrent.name, self.torrent.uri, self.torrent.media_file.path, datetime.datetime.now().isoformat())
+        if self.start.database.last_history_add < self.last_torrent_start - 100:
+            self.start.database.add_watched_torrent_file(self.torrent.name, self.torrent.uri, self.torrent.media_file.path, datetime.datetime.now().isoformat())
 
     def player_state_change(self, old_state, new_state):
         if new_state == PlayerState.Ended:

@@ -18,6 +18,7 @@ class Database:
         self.connection = None
         self.current_version = 6
         self.lock = Lock()
+        self.last_history_add = 0
 
     def init_database(self):
         with self.lock:
@@ -112,7 +113,7 @@ class Database:
             self.connect()
 
             self.connection.execute(sql, parameters)
-
+            self.last_history_add = current_time()
             self.database.commit()
             self.disconnect()
 
@@ -125,7 +126,7 @@ class Database:
             self.connection.execute("INSERT INTO History " +
                                     "(Type, ImdbId, Title, Image, Season, Episode, WatchedAt)" +
                                     " VALUES (?, ?, ?, ?, ?, ?, ?)", ["Show", str(show_id), title, str(image), str(season), str(episode), str(watched_at)])
-
+            self.last_history_add = current_time()
             self.database.commit()
             self.disconnect()
 
@@ -138,7 +139,7 @@ class Database:
             self.connection.execute("INSERT INTO History " +
                                     "(Type, ImdbId, Title, Image, WatchedAt)" +
                                     " VALUES (?, ?, ?, ?, ?)", ["Movie", str(movie_id), title, str(image), str(watched_at)])
-
+            self.last_history_add = current_time()
             self.database.commit()
             self.disconnect()
 
@@ -151,7 +152,7 @@ class Database:
             self.connection.execute("INSERT INTO History " +
                                     "(Type, Title, URL, MediaFile, WatchedAt)" +
                                     " VALUES (?, ?, ?, ?, ?)", ["Torrent", title, url, media_file, watched_at])
-
+            self.last_history_add = current_time()
             self.database.commit()
             self.disconnect()
 

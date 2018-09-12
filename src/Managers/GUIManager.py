@@ -201,6 +201,9 @@ class NextEpisodeManager:
 
                 show = self.gui_manager.player.title[8:]
                 results = json.loads(RequestFactory.make_request("http://127.0.0.1/shows/get_shows?page=1&orderby=trending&keywords=" + urllib.parse.quote(show)).decode('utf8'))
+                if len(results) == 0:
+                    return
+
                 show = json.loads(RequestFactory.make_request("http://127.0.0.1/shows/get_show?id=" + urllib.parse.quote(results[0]["_id"])).decode('utf8'))
                 next_epi = [x for x in show["episodes"] if x["season"] == season and x["episode"] == epi + 1]
                 if len(next_epi) == 0:

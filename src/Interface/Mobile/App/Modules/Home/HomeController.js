@@ -53,7 +53,7 @@
 
                 $rootScope.$broadcast("startPlay", {title: name, type: "Show"});
                 $http.post("/movies/play_continue?type="+uf.type+"&url=" + encodeURIComponent(uf.url) + "&title=" + encodeURIComponent(uf.name) + "&image=" + encodeURIComponent(uf.image) + "&position=" + uf.position + "&mediaFile=" +encodeURIComponent(uf.mediaFile));
-            })
+            });
         }
 
         $scope.remove_unfinished = function( uf){
