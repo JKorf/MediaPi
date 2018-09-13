@@ -6,12 +6,9 @@
             <div class="home-item-down-icon"><img ng-src="/Images/down.png" /></div>
         </div>
         <div class="home-item-content home-favorites-content">
-            <div class="home-favorite-item" ng-repeat="favorite in favorites" ng-click="goToShow(favorite._id)">
-                <div class="home-favorite-img"><img ng-src="{{favorite.images.poster}}" /></div>
+            <div class="home-favorite-item" ng-repeat="favorite in favorites | filter: {type: 'Show'}" ng-click="goToShow(favorite.id)">
+                <div class="home-favorite-img"><img ng-src="{{favorite.image}}" /></div>
                 <div class="home-favorite-title truncate">{{favorite.title}}</div>
-            </div>
-            <div ng-if="favorites.length == 0" class="home-item-no-content">
-                No favorites yet..
             </div>
         </div>
     </div>
@@ -27,9 +24,6 @@
                 <div class="home-watched-img"><img ng-src="/Images/unknown.png" /></div>
                 <div class="home-watched-title truncate">{{getFileName(file.URL)}}</div>
                 <div class="home-watched-time">{{timeToTimespan(file.WatchedAt)}}</div>
-            </div>
-            <div ng-if="lastWatchedFiles.length == 0" class="home-item-no-content">
-                No recently watched files..
             </div>
         </div>
     </div>
@@ -48,8 +42,21 @@
                 <div class="home-unfinished-line"><unfinished-line percentage="uf.position / uf.length"></unfinished-line></div>
                 <div class="home-watched-time">{{timeToTimespan(uf.watchedAt)}}</div>
             </div>
-            <div ng-if="unfinished.length == 0" class="home-item-no-content">
-                No unfinished media..
+        </div>
+    </div>
+
+    <div class="home-item home-youtube">
+        <div class="home-item-bar" ng-click="expandItem($event)">
+            <div class="home-item-icon"><img ng-src="/Images/youtube.png" /></div>
+            <div class="home-item-title">Youtube favorites</div>
+            <div class="home-item-down-icon"><img ng-src="/Images/down.png" /></div>
+        </div>
+        <div class="home-item-content">
+            <div class="home-item-content home-favorites-content">
+                <div class="home-favorite-item" ng-repeat="favorite in favorites | filter: {type: 'YouTube'}" ng-click="goToYouTube(favorite.id)">
+                    <div class="home-favorite-img"><img ng-src="{{favorite.image}}" /></div>
+                    <div class="home-favorite-title truncate">{{favorite.title}}</div>
+                </div>
             </div>
         </div>
     </div>

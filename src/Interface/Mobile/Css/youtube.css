@@ -120,3 +120,16 @@
 .youtube-details-videos .youtube-video-upload{
     top: 14px;
 }
+
+.youtube-favorite{
+    position: absolute;
+    right: 23px;
+    top: 23px;
+    background: rgba(255,255,255, 0.8);
+    padding:4px;
+}
+
+.youtube-favorite img{
+    width: 22px;
+    height: 242x;
+}

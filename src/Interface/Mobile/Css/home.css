@@ -8,14 +8,9 @@
     position: relative;
     width: 100%;
     margin-top: 10px;
-    height: 30px;
     vertical-align: top;
-}
-
-.home-item.expanded{
     height: auto;
 }
-
 
 .home-item:first-child{
     margin-top: 0;
@@ -83,12 +78,13 @@
 
 .home-item-content{
     max-height: 0;
-    overflow-y: auto;
+    overflow-y: hidden;
     transition: max-height 0.2s;
 }
 
 .home-item.expanded .home-item-content{
     max-height: 200px;
+    overflow-y: auto;
 }
 
 .home-favorite-item{

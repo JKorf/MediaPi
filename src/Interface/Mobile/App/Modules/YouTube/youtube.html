@@ -2,6 +2,10 @@
     <view-loader promise="promise"></view-loader>
 
     <div class="youtube-details-img"><img ng-src="{{channelInfo.thumbnail}}" /></div>
+    <div class="youtube-favorite" ng-click="toggleFavorite()">
+        <img src="/Images/fav-open.png" ng-if="!isFavorite()">
+        <img src="/Images/fav-closed.png" ng-if="isFavorite()">
+    </div>
     <div class="youtube-details-info">
         <div class="youtube-details-title">{{channelInfo.title}}</div>
         <div class="youtube-details-published row">

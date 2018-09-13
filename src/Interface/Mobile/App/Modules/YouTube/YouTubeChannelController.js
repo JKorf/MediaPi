@@ -1,6 +1,7 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('YouTubeChannelController', function ($scope, $rootScope, $http, $state, $stateParams, CacheFactory, ConfirmationFactory, HistoryFactory) {
+    angular.module('pi-test').controller('YouTubeChannelController', function ($scope, $rootScope, $http, $state, $stateParams, CacheFactory, FavoritesFactory, ConfirmationFactory, HistoryFactory) {
+        $scope.favs = [];
 
         $scope.parseNumber = function(number)
         {
@@ -39,7 +40,25 @@
             });
         }
 
+        $scope.isFavorite = function(){
+            for(var i = 0 ; i < $scope.favs.length; i++)
+                if($scope.favs[i].id == $stateParams.id)
+                    return true;
+            return false;
+        }
+
+        $scope.toggleFavorite = function(){
+            if(!$scope.isFavorite())
+                FavoritesFactory.Add($stateParams.id, "YouTube", $scope.channelInfo.title, $scope.channelInfo.thumbnail);
+            else
+                FavoritesFactory.Remove($stateParams.id);
+        }
+
         function Init(){
+            FavoritesFactory.GetAll().then(function(data) {
+                $scope.favs = data;
+            });
+
             var url = '/youtube/channel_info?id=' + $stateParams.id;
             $scope.promise = CacheFactory.Get(url, 900).then(function(response){
                 $scope.channelInfo = response;

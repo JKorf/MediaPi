@@ -16,7 +16,7 @@ class Database:
         self.slave = Settings.get_bool("slave")
         self.database = None
         self.connection = None
-        self.current_version = 6
+        self.current_version = 7
         self.lock = Lock()
         self.last_history_add = 0
 
@@ -180,13 +180,13 @@ class Database:
             self.database.commit()
             self.disconnect()
 
-    def add_favorite(self, id):
+    def add_favorite(self, id, type, title, image):
         if self.slave:
             raise PermissionError("Cant call add_favorite on slave")
 
         with self.lock:
             self.connect()
-            self.connection.execute("INSERT INTO Favorites (Id) VALUES ('" + str(id) + "')")
+            self.connection.execute("INSERT INTO Favorites (Id, Type, Title, Image) VALUES (?, ?, ?, ?)", [str(id), type, title, image])
 
             self.database.commit()
             self.disconnect()
@@ -211,7 +211,7 @@ class Database:
             self.connection.execute('SELECT * FROM Favorites')
             data = self.connection.fetchall()
             self.disconnect()
-            return [x[0] for x in data]
+            return data
 
     def add_watching_item(self, type, name, url, image, length, time, media_file):
         if self.slave:

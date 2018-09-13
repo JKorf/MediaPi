@@ -65,7 +65,7 @@
 
         $scope.isFavorite = function(){
             for(var i = 0 ; i < $scope.favs.length; i++)
-                if($scope.favs[i] == $stateParams.id)
+                if($scope.favs[i].id == $stateParams.id)
                     return true;
             return false;
         }
@@ -74,7 +74,7 @@
             console.log($stateParams.id);
             if(!$scope.isFavorite())
             {
-                FavoritesFactory.Add($stateParams.id);
+                FavoritesFactory.Add($stateParams.id, "Show", $scope.show.title, $scope.show.images.poster);
                 console.log($scope.favs);
             }
             else

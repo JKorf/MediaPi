@@ -462,7 +462,7 @@ class DatabaseHandler(web.RequestHandler):
 
         if url == "add_favorite":
             Logger.write(2, "Adding to favorites")
-            TornadoServer.start_obj.database.add_favorite(self.get_argument("id"))
+            TornadoServer.start_obj.database.add_favorite(self.get_argument("id"), self.get_argument("type"), self.get_argument("title"), self.get_argument("image"))
 
         if url == "remove_favorite":
             Logger.write(2, "Removing from favorites")

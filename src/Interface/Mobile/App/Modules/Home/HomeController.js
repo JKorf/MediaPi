@@ -45,6 +45,10 @@
             $state.go("show", { id: id });
         }
 
+        $scope.goToYouTube = function(id){
+            $state.go("youtube-channel", { id: id });
+        }
+
         $scope.continue_torrent = function(uf){
             ConfirmationFactory.confirm_continue(uf.name).then(function(){
                 var name = uf.name;
@@ -80,21 +84,8 @@
                 $scope.history = data;
             });
 
-            var favs = FavoritesFactory.GetAll().then(function(favs){
-                if (favs.length == 0){
-                     $(".favorites-list .home-list-loader").remove();
-                     $(".favorites-list .list-no-items").css("display", "block");
-                 }
-
-                for(var i = 0 ; i < favs.length ; i++){
-                    CacheFactory.Get('/shows/get_show?id=' + favs[i], 900).then(function (response) {
-                        $(".favorites-list .home-list-loader").remove();
-                        DetermineLastEpisodeRelease(response);
-                        $scope.favorites.push(response);
-                    }, function (er) {
-                        console.log(er);
-                    });
-                }
+            FavoritesFactory.GetAll().then(function(favs){
+                $scope.favorites = favs;
             });
         }
 
