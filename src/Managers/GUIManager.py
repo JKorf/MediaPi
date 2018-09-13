@@ -174,7 +174,7 @@ class NextEpisodeManager:
                     self.next_path = dir_name + "/" + potential
                     break
 
-        elif self.gui_manager.player.type != "YouTube" and self.gui_manager.player.type != "Image":
+        elif self.gui_manager.player.type != "Radio" and self.gui_manager.player.type != "YouTube" and self.gui_manager.player.type != "Image":
             season, epi = try_parse_season_episode(self.gui_manager.program.torrent_manager.torrent.media_file.path)
             if season != 0 and epi != 0:
                 # Try to get next episode from same torrent
