@@ -16,7 +16,8 @@
     Info bij images (datum) met een knop? Also mobile UI
 
     Movies/series kunnen toevoegen aan `want to watch`
-    Movies already watched -> history
+
+    Css aanpassen zodat themes kunnen worden gebruikt
 
     speed graph
 

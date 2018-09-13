@@ -26,11 +26,15 @@
 }
 
 .history-title{
-    display: inline-block;
+    position: absolute;
+    top: 4px;
+    left: 76px;
     margin-left: 2px;
     vertical-align: top;
     font-weight: bold;
-    max-width: calc(100% - 92px);
+    max-width: calc(100% - 98px);
+    height: 36px;
+    overflow: hidden;
 }
 
 .history-time{
@@ -42,7 +46,7 @@
 
 .history-type{
     position: absolute;
-    top: 24px;
+    bottom: 16px;
     left: 76px;
     font-size: 11px;
 }

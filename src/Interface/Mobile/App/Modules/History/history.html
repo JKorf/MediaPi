@@ -5,7 +5,7 @@
             <img ng-if="item.Image" ng-src="{{item.Image}}" />
             <img ng-if="!item.Image" ng-src="/Images/unknown.png" />
         </div>
-        <div class="history-title truncate">{{item.Title}}</div>
+        <div class="history-title multiline-truncate2">{{item.Title}}</div>
         <div class="history-type">{{item.Type}}</div>
         <div class="history-time">{{item.WatchedAt | dateToTimespan}}</div>
         <div class="history-remove" ng-click="removeItem(item)"><img src="/Images/close.png" /></div>
