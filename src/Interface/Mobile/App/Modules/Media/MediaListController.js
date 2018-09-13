@@ -83,7 +83,7 @@
                     moreServerResults = false;
                 }
 
-                if(view[0].scrollHeight - view[0].scrollTop == view[0].offsetHeight)
+                if(view[0].scrollHeight - Math.round(view[0].scrollTop) == view[0].offsetHeight)
                 {
                     var localResults = $scope.localPage * $scope.resultsPerLocalPage;
                     var serverResults =  $scope.serverPage * $scope.resultsPerServerPage;

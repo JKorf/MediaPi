@@ -87,6 +87,14 @@
 
 .youtube-details-info{
     padding: 10px;
+    width: 100%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.youtube-details-img{
+    display: inline-block;
+    vertical-align: top;
 }
 
 .youtube-details-img, .youtube-details-img img{
@@ -109,7 +117,7 @@
 }
 
 .youtube-details-videos{
-    padding-top: 10px;
+    padding: 10px;
 }
 
 .youtube-details-videos .youtube-video{
@@ -132,4 +140,29 @@
 .youtube-favorite img{
     width: 22px;
     height: 242x;
+}
+
+
+@media only screen and (min-device-width: 768px){
+    .youtube-details-videos{
+        border-top: 1px solid #eee;
+        padding-top: 5px;
+        margin-top: 5px;
+    }
+
+    .youtube-details-videos .youtube-video{
+        padding: 4px;
+        border-top: none;
+        display: inline-block;
+        width: calc(25% - 2px);
+        vertical-align: top;
+    }
+
+    .youtube-details-img{
+        width: calc(25% - 8px);
+    }
+
+     .youtube-details-info{
+        width: calc(75% - 8px);
+    }
 }
