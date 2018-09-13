@@ -85,6 +85,9 @@ class GUIManager:
         self.player.prepare_play(type, title, url, img, position, media_file)
 
     def start_player(self):
+        if self.player.type == "YouTube":
+            self.next_episode_manager.reset()
+
         self.player.play()
 
     def torrent_media_file_set(self):
