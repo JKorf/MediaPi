@@ -346,13 +346,13 @@ class YoutubeHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
         if url == "search":
-            data = yield YoutubeController.search(self.get_argument("query"))
+            data = yield YoutubeController.search(self.get_argument("query"), self.get_argument("type"))
             self.write(data)
         elif url == "home":
             data = yield YoutubeController.home()
             self.write(data)
-        elif url == "channels":
-            data = yield YoutubeController.channels()
+        elif url == "channel_info":
+            data = yield YoutubeController.channel_info(self.get_argument("id"))
             self.write(data)
         elif url == "channel_feed":
             data = yield YoutubeController.channel_feed(self.get_argument("id"))
@@ -431,6 +431,12 @@ class DatabaseHandler(web.RequestHandler):
         if url == "add_watched_file":
             Logger.write(2, "Adding to watched files")
             TornadoServer.start_obj.database.add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"))
+
+        if url == "add_watched_youtube":
+            Logger.write(2, "Adding to watched youtube")
+            TornadoServer.start_obj.database.add_watched_youtube(
+                self.get_argument("title"),
+                self.get_argument("watchedAt"))
 
         if url == "add_watched_movie":
             Logger.write(2, "Adding to watched movie")

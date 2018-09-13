@@ -60,10 +60,17 @@
         });
 
         $stateProvider.state('youtube', {
-            url: '/youtube',
+            url: '/media/youtube',
+            templateUrl: '/App/Modules/Media/medialist.html',
+            cache: false,
+            controller: "MediaListController"
+        });
+
+        $stateProvider.state('youtube-channel', {
+            url: '/youtube/:id',
             templateUrl: '/App/Modules/YouTube/youtube.html',
             cache: false,
-            controller: "YouTubeController"
+            controller: "YouTubeChannelController"
         });
 
         $stateProvider.state('debug', {

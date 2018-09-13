@@ -1,40 +1,5 @@
 .view-youtube{
-    height: calc(100% - 25px);
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.youtube-menu{
-    position:absolute;
-    bottom:0;
-    left:0;
-    right:0;
-    height: 40px;
-    background: #fff;
-    display: flex;
-    align-items: stretch;
-}
-
-.youtube-menu-item{
-    flex-grow: 1;
-    text-align: center;
-    border-right: 1px solid #eee;
-    border-top: 2px solid #ccc;
-}
-
-.youtube-menu-item:last-child{
-    border-right: none;
-}
-
-.youtube-menu-item img{
-    height: 26px;
-    width: 26px;
-    margin-top: 7px;
-    text-align: center;
-}
-
-.youtube-menu-item-active{
-    background: #f1f1f1;
+    background: white;
 }
 
 .youtube-videos{
@@ -43,11 +8,9 @@
 }
 
 .youtube-video{
-    min-width: 270px;
     position: relative;
     background: #fff;
     min-height: 100px;
-    margin: 8px;
 }
 
 .youtube-video-thumbnail{
@@ -59,22 +22,13 @@
     height: 100%;
 }
 
-.youtube-video-details{
+.youtube-video-details,.youtube-channel-details{
     padding: 6px;
     position: relative;
 }
 
-.youtube-channels{
-    display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(270px, 1fr));
-}
-
 .youtube-channel{
-    background: #fff;
-    min-width: 270px;
     position:relative;
-    height: 90px;
-    margin: 8px;
 }
 
 .youtube-channel:last-child{
@@ -82,11 +36,7 @@
 }
 
 .youtube-channel-thumbnail{
-    position: absolute;
-    left: 10px;
-    top: 10px;
-    bottom: 10px;
-    width: 70px;
+    width: 100%;
 }
 
 .youtube-channel-title{
@@ -94,8 +44,8 @@
 }
 
 .youtube-channel-description{
-    margin-top: 12px;
-    font-size: 12px;
+    margin-top: 4px;
+    font-size: 11px;
 }
 
 .youtube-channel-thumbnail-img{
@@ -104,72 +54,69 @@
 }
 
 .youtube-channel-details{
-    position:absolute;
-    top:10px;
-    right:10px;
-    bottom: 10px;
-    left: 90px;
+    margin-top:4px;
 }
 
 .youtube-video-upload{
-    font-size: 12px;
-    color: #666;
+    font-size: 11px;
+    position:absolute;
+    right: 4px;
+    top: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #eee;
+    padding: 2px 8px;
 }
 
 .youtube-video-channel{
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
     position:absolute;
-    right: 4px;
+    left: 6px;
+    right: 6px;
     top: 5px;
 }
 
 .youtube-video-title{
+    margin-top: 14px;
+}
+
+.youtube-details-title{
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.youtube-details-info{
+    padding: 10px;
+}
+
+.youtube-details-img, .youtube-details-img img{
+    width: 100%;
+}
+
+.youtube-details-info .row{
     margin-top: 4px;
 }
 
-.youtube-search{
-    border-top: 2px solid #ccc;
-    position:absolute;
-    top: -39px;
-    height: 40px;
-    left:0;
-    right:0;
-    background:white;
+.youtube-details-info .row-value{
+    text-align: right;
 }
 
-.youtube-search-box{
-    margin: 10px;
-    width: calc(100% - 30px);
+.youtube-details-description{
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    overflow:hidden;
 }
 
-.youtube-channel-new{
-    width: 20px;
-    height: 20px;
-    border-radius:15px;
-    background: #0071bc;
-    color: white;
-    padding-top: 1px;
-    text-align: center;
-    position:absolute;
-    left:65px;
-    top: 65px;
+.youtube-details-videos{
+    padding-top: 10px;
 }
 
-.youtube-sub-title{
-    font-size: 16px;
-    margin: 8px 8px 2px 8px;
-    padding: 6px;
-    font-weight: bold;
-    background: white;
+.youtube-details-videos .youtube-video{
+    padding-top: 10px;
+    border-top: 1px solid #eee;
 }
 
-.youtube-no-videos{
-    padding: 10px;
-    margin: 8px;
-    background: white;
-}
-
-.youtube-items{
-    margin: -8px;
+.youtube-details-videos .youtube-video-upload{
+    top: 14px;
 }

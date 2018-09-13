@@ -6,7 +6,7 @@
     position: relative;
     background: #fff;
     width: calc(50% - 8px);
-    min-height: 180px;
+    min-height: 100px;
     display: inline-block;
     vertical-align: top;
     margin: 4px;

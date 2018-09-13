@@ -1,52 +1,36 @@
 ﻿<div class="view-youtube sub-view">
     <view-loader promise="promise"></view-loader>
 
-    <div class="youtube-no-videos" ng-if="videos.length == 0 && channels.length == 0 && done">
-        No videos found :(
-    </div>
-
-    <div class="youtube-items">
-        <div class="youtube-sub-title" ng-if="channels.length != 0">Channels</div>
-        <div class="youtube-channels">
-            <div class="youtube-channel" ng-repeat="channel in channels | orderBy: 'new':true" ng-click="openChannel(channel)">
-                <div class="youtube-channel-thumbnail"><img class="youtube-channel-thumbnail-img" ng-src="{{channel.thumbnail}}" imageonload/></div>
-                <div class="youtube-channel-details">
-                    <div class="youtube-channel-title truncate">{{channel.title}}</div>
-                    <div class="youtube-channel-description multiline-truncate">{{channel.description}}</div>
-                </div>
-                <div ng-if="channel.new" class="youtube-channel-new">
-                    {{channel.new}}
-                </div>
-            </div>
+    <div class="youtube-details-img"><img ng-src="{{channelInfo.thumbnail}}" /></div>
+    <div class="youtube-details-info">
+        <div class="youtube-details-title">{{channelInfo.title}}</div>
+        <div class="youtube-details-published row">
+            <div class="col-xs-6">Published:</div>
+            <div class="col-xs-6 row-value">{{channelInfo.published | date:'dd-MM-yyyy'}}</div>
         </div>
+        <div class="youtube-details-subs row">
+            <div class="col-xs-6">Subscriptions:</div>
+            <div class="col-xs-6 row-value">{{parseNumber(channelInfo.subs)}}</div>
+        </div>
+        <div class="youtube-details-video-count row">
+            <div class="col-xs-6">Video count:</div>
+            <div class="col-xs-6 row-value">{{parseNumber(channelInfo.video_count)}}</div>
+        </div>
+        <div class="youtube-details-views row">
+            <div class="col-xs-6">Total views:</div>
+            <div class="col-xs-6 row-value">{{parseNumber(channelInfo.views)}}</div>
+        </div>
+        <div class="youtube-details-description multiline-truncate" ng-click="showDescription($event)">{{channelInfo.description}}</div>
 
-        <div class="youtube-sub-title" ng-if="videos.length != 0">Videos</div>
-        <div class="youtube-videos">
-            <div class="youtube-video" ng-repeat="video in videos |orderBy: orderByDate:true" ng-click="watchVideo(video)">
-                <div class="youtube-video-thumbnail"><img class="youtube-video-thumbnail-img" ng-src="{{video.thumbnail}}" imageonload/></div>
+        <div class="youtube-details-videos">
+            <div class="youtube-video" ng-click="watchVideo(item)" ng-if="item.type == 'video'" ng-repeat="item in channelInfo.videos">
+                <div class="youtube-video-thumbnail"><img class="youtube-video-thumbnail-img" ng-src="{{item.thumbnail}}" imageonload/></div>
+                <div class="youtube-video-upload" ng-if="item.uploaded">{{timeToTimespan(item.uploaded)}}</div>
+
                 <div class="youtube-video-details">
-                    <div class="youtube-video-upload">{{timeToTimespan(video.uploaded)}}</div>
-                    <div class="youtube-video-channel">{{video.channel_title}}</div>
-                    <div class="youtube-video-title">{{video.title}}</div>
+                    <div class="youtube-video-channel truncate">{{item.channel_title}}</div>
+                    <div class="youtube-video-title multiline-truncate2">{{item.title}}</div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="youtube-menu">
-        <div class="youtube-menu-item" ng-class="{'youtube-menu-item-active': active=='home'}" ng-click="goHome()">
-            <img src="/Images/home.png" />
-        </div>
-        <div class="youtube-menu-item" ng-class="{'youtube-menu-item-active': active=='channels'}" ng-click="goChannels()">
-            <img src="/Images/subs.png" />
-        </div>
-        <div class="youtube-menu-item" ng-class="{'youtube-menu-item-active': active=='search'}" ng-click="goSearch()">
-            <img src="/Images/search2.png" />
-        </div>
-
-        <div class="youtube-search" ng-show="active=='search'">
-            <div class="youtube-search-box">
-                <textbox model="search.keywords" enter="search" placeholder="search.."></textbox>
             </div>
         </div>
     </div>

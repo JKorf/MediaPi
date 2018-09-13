@@ -40,6 +40,17 @@
             });
         }
 
+        factory.AddWatchedYouTube = function(title, watchedAt){
+            factory.GetWatched().then(function(){
+                $http.post("/database/add_watched_youtube?"
+                        + "title=" + encodeURIComponent(title)
+                         + "&watchedAt=" + encodeURIComponent(watchedAt)).then(function(){
+                              retrieve();
+                         });
+
+            });
+        }
+
         factory.RemoveWatched = function(id){
             $http.post("/database/remove_watched?"
                         + "id=" + id).then(function(){

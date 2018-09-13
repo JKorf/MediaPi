@@ -24,30 +24,32 @@ class YoutubeController:
 
     @staticmethod
     @gen.coroutine
-    def search(query):
+    def search(query, type):
         Logger.write(2, "Searching youtube for " + query)
         path = "search?part=snippet&q=" +query + "&type=video,channel&maxResults=20"
 
         data = yield YoutubeController.internal_make_request(path)
         if data is None:
             return
-        result = {"videos": [], "channels": []}
-
-        for video in [x for x in data['items'] if x['id']['kind'] == "youtube#video"]:
-            result["videos"].append({'title': video['snippet']['title'],
-                            'id': video['id']['videoId'],
-                            'uploaded': video['snippet']['publishedAt'],
-                            'channel_id': video['snippet']['channelId'],
-                            'channel_title': video['snippet']['channelTitle'],
-                            'thumbnail': video['snippet']['thumbnails']['medium']['url']})
-
-        for channel in [x for x in data['items'] if x['id']['kind'] == "youtube#channel"]:
-            result["channels"].append({
-                'id': channel['snippet']['channelId'],
-                'title': channel['snippet']['title'],
-                'description': channel['snippet']['description'],
-                'thumbnail': channel['snippet']['thumbnails']['medium']['url']
-            })
+        result = []
+        if type == "videos":
+            for video in [x for x in data['items'] if x['id']['kind'] == "youtube#video"]:
+                result.append({'title': video['snippet']['title'],
+                                'id': video['id']['videoId'],
+                                'uploaded': video['snippet']['publishedAt'],
+                                'channel_id': video['snippet']['channelId'],
+                                'channel_title': video['snippet']['channelTitle'],
+                                'thumbnail': video['snippet']['thumbnails']['medium']['url'],
+                                'type': 'video'})
+        else:
+            for channel in [x for x in data['items'] if x['id']['kind'] == "youtube#channel"]:
+                result.append({
+                    'id': channel['snippet']['channelId'],
+                    'title': channel['snippet']['title'],
+                    'description': channel['snippet']['description'],
+                    'thumbnail': channel['snippet']['thumbnails']['medium']['url'],
+                    'type': 'channel'
+                })
 
         return to_JSON(result).encode('utf8')
 
@@ -71,30 +73,30 @@ class YoutubeController:
         for future in futures:
             yield future
 
-        data = {"videos": uploads, "channels": []}
+        uploads.sort(key=lambda x: x['uploaded'], reverse=True)
 
-        return to_JSON(data).encode('utf8')
+        return to_JSON(uploads).encode('utf8')
 
     @staticmethod
     @gen.coroutine
-    def channels():
-        path = "subscriptions?part=snippet,contentDetails&mine=true&maxResults=50"
-        subscriptions = yield YoutubeController.internal_make_request(path)
-        if subscriptions is None:
-            return
+    def channel_info(channel_id):
+        path = "channels?part=snippet%2CcontentDetails%2Cstatistics&id=" + channel_id
+        channel_info = yield YoutubeController.internal_make_request(path)
 
-        channels = []
-        for sub in subscriptions['items']:
-            channels.append(
-                {'id': sub['snippet']['resourceId']['channelId'],
-                 'published': sub['snippet']['publishedAt'],
-                 'title': sub['snippet']['title'],
-                 'description': sub['snippet']['description'],
-                 'thumbnail': sub['snippet']['thumbnails']['medium']['url'],
-                 'new': sub['contentDetails']['newItemCount'],
-                 })
+        videos = []
+        yield YoutubeController.uploads_for_channel(channel_id, videos, 28)
+        result = {
+            'title': channel_info["items"][0]["snippet"]["title"],
+            'description': channel_info["items"][0]["snippet"]["description"],
+            'published': channel_info["items"][0]["snippet"]["publishedAt"],
+            'thumbnail': channel_info["items"][0]["snippet"]["thumbnails"]["medium"]["url"],
+            'views': channel_info["items"][0]["statistics"]["viewCount"],
+            'subs': channel_info["items"][0]["statistics"]["subscriberCount"],
+            'video_count': channel_info["items"][0]["statistics"]["videoCount"],
+            'videos': videos
+        }
 
-        return to_JSON(channels).encode('utf8')
+        return to_JSON(result).encode('utf8')
 
     @staticmethod
     @gen.coroutine
@@ -119,7 +121,8 @@ class YoutubeController:
                                 'uploaded': activity['snippet']['publishedAt'],
                                 'channel_id': activity['snippet']['channelId'],
                                 'channel_title': activity['snippet']['channelTitle'],
-                                'thumbnail': activity['snippet']['thumbnails']['medium']['url']})
+                                'thumbnail': activity['snippet']['thumbnails']['medium']['url'],
+                                'type': 'video'})
 
     @staticmethod
     def play_youtube(id, title):
@@ -127,7 +130,7 @@ class YoutubeController:
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
-        EventManager.throw_event(EventType.PreparePlayer, ["YouTube", unquote(title), 'https://www.youtube.com/watch?v=' + id, None, 0, None])
+        EventManager.throw_event(EventType.PreparePlayer, ["YouTube", unquote(title), 'http://www.youtube.com/watch?v=' + id, None, 0, None])
         EventManager.throw_event(EventType.StartPlayer, [])
 
     @staticmethod

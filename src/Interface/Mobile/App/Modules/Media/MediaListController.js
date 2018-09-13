@@ -1,6 +1,6 @@
 (function () {
 
-    angular.module('pi-test').controller('MediaListController', function ($scope, $rootScope, $http, $state, $timeout, $stateParams, SearchHistoryFactory, CacheFactory) {
+    angular.module('pi-test').controller('MediaListController', function ($scope, $rootScope, $http, $state, $timeout, $stateParams, ConfirmationFactory, SearchHistoryFactory, CacheFactory) {
         var initial = true;
 
         $scope.localPage = 0;
@@ -16,6 +16,8 @@
             $scope.searchoptions = ["trending", "rating", "last added", "title"];
         else if ($scope.mediaType == 'shows')
             $scope.searchoptions = ["trending", "rating", "updated", "name"];
+        else if ($scope.mediaType == 'youtube')
+            $scope.searchoptions = ['videos', 'channels'];
 
         $scope.search = {
             keywords: "",
@@ -30,11 +32,24 @@
             }
         });
 
-        $scope.goToMedia = function (id) {
+        $scope.goToMedia = function (media) {
             if ($scope.mediaType == 'movies')
-                $state.go("movie", { id: id });
+                $state.go("movie", { id: media.imdb_id });
             else if($scope.mediaType == 'shows')
-                $state.go("show", { id: id });
+                $state.go("show", { id: media.imdb_id });
+            else if($scope.mediaType == 'youtube')
+            {
+                if (media.type == "video"){
+                    ConfirmationFactory.confirm_play().then(function(){
+                        $rootScope.$broadcast("startPlay", {title: media.title, type: "YouTube"});
+                        $http.post('/youtube/play_youtube?id=' + media.id+'&title=' + encodeURIComponent(media.title));
+                    });
+                }
+                else
+                {
+                    $state.go("youtube-channel", { id: media.id });
+                }
+            }
         }
 
         $scope.searchMedia = function(){
@@ -138,6 +153,7 @@
                 // Load more from server
                 console.log(GetUri(serverPage));
                 $scope.promise = CacheFactory.Get(GetUri(serverPage), 900).then(function (response) {
+                    console.log(response);
                     $scope.mediaList.push.apply($scope.mediaList, response);
                     $scope.serverPage = serverPage;
                     $scope.localPage = localPage;
@@ -161,14 +177,26 @@
 
         function GetUri(page)
         {
-            var base = '/movies/get_movies';
-            if ($scope.mediaType == 'shows')
-                base = '/shows/get_shows';
+            if($scope.mediaType == "youtube")
+            {
+                var base = '/youtube/home?page=' + page;
+                if($scope.search.keywords != ""){
+                    base = '/youtube/search?page='+ page + '&query=' + encodeURIComponent($scope.search.keywords) + "&type=" + encodeURIComponent($scope.search.orderby);
+                }
 
-            if(initial)
-                base += "_all"
+                return base;
+            }
+            else
+            {
+                var base = '/movies/get_movies';
+                if ($scope.mediaType == 'shows')
+                    base = '/shows/get_shows';
 
-            return base + '?page='+ page +'&orderby=' + encodeURIComponent($scope.search.orderby) + '&keywords=' + encodeURIComponent($scope.search.keywords);
+                if(initial)
+                    base += "_all"
+
+                return base + '?page='+ page +'&orderby=' + encodeURIComponent($scope.search.orderby) + '&keywords=' + encodeURIComponent($scope.search.keywords);
+            }
         }
     });
 

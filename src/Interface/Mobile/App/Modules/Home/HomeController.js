@@ -78,7 +78,6 @@
 
             HistoryFactory.GetWatched().then(function(data){
                 $scope.history = data;
-                console.log(data);
             });
 
             var favs = FavoritesFactory.GetAll().then(function(favs){

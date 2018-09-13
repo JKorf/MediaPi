@@ -130,6 +130,19 @@ class Database:
             self.database.commit()
             self.disconnect()
 
+    def add_watched_youtube(self, title, watched_at):
+        if self.slave:
+            raise PermissionError("Cant call add_watched_youtube on slave")
+
+        with self.lock:
+            self.connect()
+            self.connection.execute("INSERT INTO History " +
+                                    "(Type, title, WatchedAt)" +
+                                    " VALUES (?, ?, ?)", ["YouTube", title, str(watched_at)])
+            self.last_history_add = current_time()
+            self.database.commit()
+            self.disconnect()
+
     def add_watched_movie(self, title, movie_id, image, watched_at):
         if self.slave:
             raise PermissionError("Cant call add_watched_movie on slave")

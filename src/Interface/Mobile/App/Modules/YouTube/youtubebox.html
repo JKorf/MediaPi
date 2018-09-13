@@ -1,0 +1,17 @@
+<div class="youtube-video" ng-if="item.type == 'video'">
+    <div class="youtube-video-thumbnail"><img class="youtube-video-thumbnail-img" ng-src="{{item.thumbnail}}" imageonload/></div>
+    <div class="youtube-video-upload" ng-if="item.uploaded">{{timeToTimespan(item.uploaded)}}</div>
+
+    <div class="youtube-video-details">
+        <div class="youtube-video-channel truncate">{{item.channel_title}}</div>
+        <div class="youtube-video-title multiline-truncate2">{{item.title}}</div>
+    </div>
+</div>
+
+<div class="youtube-channel" ng-if="item.type == 'channel'">
+    <div class="youtube-channel-thumbnail"><img class="youtube-video-thumbnail-img" ng-src="{{item.thumbnail}}" imageonload/></div>
+    <div class="youtube-channel-details">
+        <div class="youtube-channel-title">{{item.title}}</div>
+        <div class="youtube-channel-description multiline-truncate" ng-click="showDescription($event)">{{item.description}}</div>
+    </div>
+</div>

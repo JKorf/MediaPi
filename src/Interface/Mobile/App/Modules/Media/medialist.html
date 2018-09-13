@@ -16,9 +16,10 @@
         Nothing found :(
     </div>
 
-    <div class="media-box hide" ng-class="{'first-media-box': $index==0}" ng-repeat="media in mediaList | limitTo:localPage*resultsPerLocalPage " ng-click="goToMedia(media.imdb_id)">
+    <div class="media-box hide" ng-class="{'first-media-box': $index==0}" ng-repeat="media in mediaList | limitTo:localPage*resultsPerLocalPage " ng-click="goToMedia(media)">
         <movie-box ng-if="mediaType == 'movies'" movie="media"></movie-box>
         <show-box ng-if="mediaType == 'shows'" show="media"></show-box>
+        <youtube-box ng-if="mediaType == 'youtube'" item="media"></youtube-box>
     </div>
 
     <div class='media-more' ng-if="(mediaList.length % resultsPerServerPage == 0 || localPage * resultsPerLocalPage < mediaList.length) && mediaList.length > 0">Scroll to load more <img src='/Images/down big.png' /></div>

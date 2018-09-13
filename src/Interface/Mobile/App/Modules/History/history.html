@@ -3,7 +3,8 @@
     <div class="history" ng-repeat="item in history | limitTo: resultLimit" ng-if="item.Title" ng-click="goToItem(item)">
         <div class="history-img">
             <img ng-if="item.Image" ng-src="{{item.Image}}" />
-            <img ng-if="!item.Image" ng-src="/Images/unknown.png" />
+            <img ng-if="!item.Image && item.Type != 'YouTube'" ng-src="/Images/unknown.png" />
+            <img ng-if="!item.Image && item.Type == 'YouTube'" ng-src="/Images/youtube-full.png" />
         </div>
         <div class="history-title multiline-truncate2">{{item.Title}}</div>
         <div class="history-type">{{item.Type}}</div>
