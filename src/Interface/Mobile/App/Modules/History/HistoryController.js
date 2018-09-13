@@ -7,7 +7,7 @@
 
         var view = $(".view");
         view.scroll(function(){
-            if(view[0].scrollHeight - view[0].scrollTop == view[0].offsetHeight)
+            if(view[0].scrollHeight - Math.round(view[0].scrollTop) == view[0].offsetHeight)
             {
                 $scope.resultLimit += 10;
                 $scope.$apply();
