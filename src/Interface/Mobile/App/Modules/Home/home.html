@@ -54,7 +54,7 @@
             <div class="home-unfinished-item" ng-repeat="uf in unfinished" ng-click="continue_torrent(uf)">
                 <div class="home-unfinished-img" ng-if="uf.image"><img ng-src="{{uf.image}}" /></div>
                 <div class="home-unfinished-no-img" ng-if="!uf.image"><img ng-src="/Images/unknown.png" /></div>
-                <div class="home-unfinished-title truncate" ng-if="uf.mediaFile">{{uf.name}}</div>
+                <div class="home-unfinished-title truncate">{{uf.name}}</div>
                 <div class="home-unfinished-line"><unfinished-line percentage="uf.position / uf.length"></unfinished-line></div>
                 <div class="home-watched-time">{{timeToTimespan(uf.watchedAt)}}</div>
             </div>

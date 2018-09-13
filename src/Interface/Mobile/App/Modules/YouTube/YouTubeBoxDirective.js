@@ -5,7 +5,7 @@
             scope: {
                 item: '='
             },
-            templateUrl: '/App/Modules/Youtube/youtubebox.html',
+            templateUrl: '/App/Modules/YouTube/youtubebox.html',
             link: function ($scope, element, attrs) {
                 $scope.timeToTimespan = function(date){
                     var time = new Date();

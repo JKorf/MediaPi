@@ -69,6 +69,8 @@
 
         function Init(){
             UnfinishedFactory.GetUnfinished().then(function(data){
+                            console.log(data);
+
                 $(".unfinished-list .home-list-loader").remove();
                 if(data.length > 0){
                     data.sort(function(a, b) {
