@@ -6,7 +6,7 @@
     </div>
 
     <div class="hd-filter" ng-click="filterSettingsOpen = !filterSettingsOpen" ng-class="{'filter-open': filterSettingsOpen}">
-        <img src="/Images/filter.png" />
+        <img src="/Images/filter.svg" svg-image />
         <div class="hd-filter-settings">
             <div class="filter-title">Show</div>
             <div class="filter-row">
@@ -27,7 +27,7 @@
     <div class="hd-file-structure">
         <div class="hd-directory" ng-click="directoryUp()" ng-if="current.path != current.drive">
             <div class="hd-directory-icon">
-                <img src="/Images/directory.png" />
+                <img src="/Images/directory.svg" svg-image />
             </div>
             <div class="hd-directory-title">
                 ..
@@ -36,7 +36,7 @@
 
         <div class="hd-directory" ng-repeat="directory in filestructure.dirs" ng-click="changeDirectory(directory)">
             <div class="hd-directory-icon">
-                <img src="/Images/directory.png" />
+                <img src="/Images/directory.svg" svg-image />
             </div>
             <div class="hd-directory-title truncate">
                 {{directory}}
@@ -45,15 +45,15 @@
 
         <div class="hd-directory" ng-class="{'file-watched': fileHasBeenWatched(file)}" ng-repeat="file in filestructure.files | filter:startsWith | filter: filterFiles | orderBy: file" ng-click="playFile(file)" ripple>
             <div class="hd-directory-icon">
-                <img ng-if="isImage(file)" src="/Images/image.png" />
-                <img ng-if="isMovie(file)" src="/Images/stream.png" />
-                <img ng-if="isSubtitle(file)" src="/Images/subtitle.png" />
+                <img ng-if="isImage(file)" src="/Images/image.svg" svg-image/>
+                <img ng-if="isMovie(file)" src="/Images/stream.svg" svg-image />
+                <img ng-if="isSubtitle(file)" src="/Images/subtitle.svg" svg-image />
             </div>
             <div class="hd-file-title truncate">
                 {{file}}
             </div>
             <div ng-if="fileHasBeenWatched(file)" class="hd-file-watched">
-                <img src="/Images/watched.png" />
+                <img src="/Images/watched.svg" svg-image />
             </div>
         </div>
     </div>

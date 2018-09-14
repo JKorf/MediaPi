@@ -4,7 +4,7 @@
         <div class="selection-list-outer">
             <div class="media-file selection-list-inner" ng-click="selectFile(file)" ng-class="{'selected-item' : selectedFile == file.path}" ng-repeat="file in value | orderBy:'episode'" ng-click="selectFile(file)">
                 <div class="media-file-selection-path" ng-class="{'media-file-selection-seen': file.seen}">
-                    <div class="media-file-seen" ng-if="file.seen"><img src="/Images/watched.png" /></div>
+                    <div class="media-file-seen" ng-if="file.seen"><img src="/Images/watched.svg" svg-image /></div>
                     <div class="media-file-selection-path-title" ng-if="file.season && file.episode">S{{addLeadingZero(file.season)}}E{{addLeadingZero(file.episode)}}</div>
                     <div ng-class="{'media-file-selection-path-sub-title': file.season && file.episode, 'truncate': selectedFile != file.path}" class="media-file-selection-path-inner">{{file.path}}</div>
                 </div>

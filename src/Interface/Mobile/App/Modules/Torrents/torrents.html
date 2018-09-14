@@ -6,16 +6,16 @@
             <textbox model="search" enter="searchTorrents" placeholder="search.."></textbox>
         </div>
         <div class="media-search-button" ng-click="searchTorrents()">
-            <img src="/Images/search.png" />
+            <img src="/Images/search.svg" svg-image />
         </div>
     </div>
 
     <div class="torrents">
         <div class="torrent" ripple ng-repeat="torrent in torrents" ng-click="watch(torrent)">
             <div class="torrent-image">
-                <img ng-if="torrent.category == 'movie'" src="/Images/movie.png" />
-                <img ng-if="torrent.category == 'show'" src="/Images/show.png" />
-                <img ng-if="torrent.category == 'other'" src="/Images/other.png" />
+                <img ng-if="torrent.category == 'movie'" src="/Images/movie.svg" svg-image />
+                <img ng-if="torrent.category == 'show'" src="/Images/show.svg" svg-image />
+                <img ng-if="torrent.category == 'other'" src="/Images/other.svg" svg-image />
             </div>
             <div class="torrent-title truncate">{{torrent.title}}</div>
             <div class="torrent-size truncate">{{torrent.size}}</div>

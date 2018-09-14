@@ -1,6 +1,6 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('IndexController', function ($scope, $rootScope, $q, $http, $state, $timeout, $compile, $window, CacheFactory, RealtimeFactory, PopupFactory) {
+    angular.module('pi-test').controller('IndexController', function ($scope, $rootScope, $q, $http, $state, $timeout, $compile, $window, CacheFactory, RealtimeFactory, PopupFactory, SVGFactory) {
         $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
 
         $rootScope.$watch('playerState', function (newv, oldv){

@@ -17,7 +17,7 @@
                 {
                     if (!$(".options-menu").is(e.target) &&
                         !$(".options-button").is(e.target) &&
-                        !$(".options-button img").is(e.target))
+                        !$(".options-button svg").is(e.target))
                         $scope.closeOptions();
                 });
 

@@ -1,0 +1,70 @@
+@import "definitions";
+
+.view-history{
+    background: white;
+    padding: 4px;
+}
+
+.history{
+    margin-top: 5px;
+    padding-top: 5px;
+    position: relative;
+    border-top: 1px solid #eee;
+}
+
+.history:first-child{
+    border-top: none;
+    margin-top: 0;
+}
+
+.history-img{
+    width: 64px;
+    margin-left: 6px;
+    display: inline-block;
+}
+
+.history-img img{
+    width: 100%;
+}
+
+.history-title{
+    position: absolute;
+    top: 4px;
+    left: 76px;
+    margin-left: 2px;
+    vertical-align: top;
+    font-weight: bold;
+    max-width: calc(100% - 98px);
+    height: 36px;
+    overflow: hidden;
+}
+
+.history-time{
+    position: absolute;
+    bottom: 0;
+    left: 76px;
+    font-size: 11px;
+}
+
+.history-type{
+    position: absolute;
+    bottom: 16px;
+    left: 76px;
+    font-size: 11px;
+}
+
+.history-remove{
+    position: absolute;
+    right: 4px;
+    top:3px;
+    width: 20px;
+    height: 20px;
+    text-align:right;
+}
+
+.history-remove img{
+    vertical-align: top;
+    width: 10px;
+    height: 10px;
+    margin-top: 4px;
+}

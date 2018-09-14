@@ -14,7 +14,7 @@
 
         <div class="status-bar-item speed-item" ng-if="data.speed != -1">
             <div class="status-bar-item-icon">
-                <img src="/Images/torrents.png" />
+                <img src="/Images/speed.svg" svg-image />
             </div>
             <div class="status-bar-item-value">
                 {{data.speed}}/ps
@@ -25,7 +25,7 @@
     <div class="status-bar-right"  ng-if="data">
         <div class="status-bar-item memory-item">
             <div class="status-bar-item-icon">
-                <img src="/Images/memory.png" />
+                <img src="/Images/memory.svg" svg-image />
             </div>
             <div class="status-bar-item-value">
                 {{data.memory}}%
@@ -34,7 +34,7 @@
         <div class="status-bar-divider divider-2"></div>
         <div class="status-bar-item cpu-item">
             <div class="status-bar-item-icon">
-                <img src="/Images/cpu.png" />
+                <img class="svg" src="/Images/cpu.svg" svg-image />
             </div>
             <div class="status-bar-item-value">
                 {{data.cpu}}%

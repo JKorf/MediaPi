@@ -1,0 +1,52 @@
+@import "definitions";
+
+.view-radio{
+    height: 100%;
+    width: 100%;
+}
+
+.radio-wrapper{
+    margin-bottom: 15px;
+}
+
+.radio-box{
+    background: #fff;
+    cursor: pointer;
+    margin: 10px;
+    width: calc(33.3333% - 10px);
+    margin: 5px;
+    display: inline-block;
+    border-bottom: 1px solid #eee;
+    position:relative;
+    vertical-align: top;
+}
+
+@media only screen and (min-device-width: 768px){
+    .radio-box{
+        width: calc(20% - 10px);
+    }
+}
+
+@media only screen and (min-device-width: 1024px){
+    .radio-box{
+        width: calc(10% - 10px);
+    }
+}
+
+.radio-name{
+    display: inline-block;
+    vertical-align: top;
+    padding: 10px;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+}
+
+.radio-img{
+}
+
+.radio-img img{
+    width: calc(100% - 20px);
+    height: calc(100% - 20px);
+    margin: 10px;
+}

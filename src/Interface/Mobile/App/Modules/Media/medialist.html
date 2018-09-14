@@ -8,7 +8,7 @@
             <div class="drop-arrow-down"><img src="/Images/down-gray.png" /></div>
         </div>
         <div class="media-search-button" ng-click="searchMedia()">
-            <img src="/Images/search.png" />
+            <img src="/Images/search.svg" svg-image />
         </div>
     </div>
 
@@ -22,6 +22,6 @@
         <youtube-box ng-if="mediaType == 'youtube'" item="media"></youtube-box>
     </div>
 
-    <div class='media-more' ng-if="(mediaList.length % resultsPerServerPage == 0 || localPage * resultsPerLocalPage < mediaList.length) && mediaList.length > 0">Scroll to load more <img src='/Images/down big.png' /></div>
+    <div class='media-more' ng-if="(mediaList.length % resultsPerServerPage == 0 || localPage * resultsPerLocalPage < mediaList.length) && mediaList.length > 0">Scroll to load more <img src='/Images/down.svg' svg-image /></div>
     <div class="media-more-loader">Loading.. <img src='/Images/loader.gif' /></div>
 </div>

@@ -15,7 +15,7 @@
         $(document).mouseup(function (e)
         {
             var target = $(e.target);
-            if($(".hd-filter").has(target) && !target.is($(".hd-filter")) && !target.is($(".hd-filter img"))){
+            if($(".hd-filter").has(target) && !target.is($(".hd-filter")) && !target.is($(".hd-filter svg"))){
                 $scope.filterSettingsOpen = false;
                 $scope.$apply();
             }

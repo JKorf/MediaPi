@@ -11,10 +11,6 @@
     Weather
     TV
 
-    Meer imdb info bij series/films
-
-    Info bij images (datum) met een knop? Also mobile UI
-
     Movies/series kunnen toevoegen aan `want to watch`
 
     Css aanpassen zodat themes kunnen worden gebruikt

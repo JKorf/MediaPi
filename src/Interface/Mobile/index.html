@@ -13,23 +13,25 @@
     <link rel="shortcut icon" sizes="196x196" href="/Images/icon.png">
     <link rel="manifest" href="/manifest.json">
 
-    <link rel="stylesheet" type="text/css" href="Css/base.css">
+    <link rel="stylesheet/less" type="text/css" href="Css/definitions.less" />
+    <link rel="stylesheet/less" type="text/css" href="Css/base.less" />
     <link rel="stylesheet" type="text/css" href="Css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="Css/bootstrap_ms.css">
-    <link rel="stylesheet" type="text/css" href="Css/menu.css">
-    <link rel="stylesheet" type="text/css" href="Css/player.css">
-    <link rel="stylesheet" type="text/css" href="Css/hd.css">
-    <link rel="stylesheet" type="text/css" href="Css/radio.css">
-    <link rel="stylesheet" type="text/css" href="Css/shows.css">
-    <link rel="stylesheet" type="text/css" href="Css/movies.css">
-    <link rel="stylesheet" type="text/css" href="Css/youtube.css">
-    <link rel="stylesheet" type="text/css" href="Css/home.css">
-    <link rel="stylesheet" type="text/css" href="Css/torrents.css">
-    <link rel="stylesheet" type="text/css" href="Css/media_list.css">
-    <link rel="stylesheet" type="text/css" href="Css/history.css">
+    <link rel="stylesheet/less" type="text/css" href="Css/menu.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/player.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/hd.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/radio.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/shows.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/movies.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/youtube.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/home.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/torrents.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/media_list.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/history.less">
 
     <script src="/App/External/angular.js"></script>
     <script src="/App/External/ngSanitize.js"></script>
+    <script src="/App/External/less.js"></script>
     <script src="/App/External/angular-ui-router.js"></script>
     <script src="/App/External/jquery.js"></script>
     <script src="/App/External/hammer.js"></script>
@@ -77,6 +79,7 @@
     <script src="/App/Directives/UnfinishedLine/UnfinishedLineDirective.js"></script>
     <script src="/App/Directives/Swipe/SwipeDirective.js"></script>
     <script src="/App/Directives/Fade/FadeDirective.js"></script>
+    <script src="/App/Directives/SVGImage/SVGDirective.js"></script>
 
     <script src="/App/Factories/Memory/MemoryFactory.js"></script>
     <script src="/App/Factories/History/HistoryFactory.js"></script>
@@ -89,6 +92,7 @@
     <script src="/App/Factories/Cache/CacheFactory.js"></script>
     <script src="/App/Factories/Request/RequestFactory.js"></script>
     <script src="/App/Factories/Popup/PopupFactory.js"></script>
+    <script src="/App/Factories/SVG/SVGFactory.js"></script>
 
     <script type="text/javascript">
         window.addEventListener("load", function() { window.scrollTo(0, 0); });

@@ -1,0 +1,226 @@
+﻿@import "definitions";
+
+.view-home{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.home-item{
+    background: white;
+    position: relative;
+    width: 100%;
+    margin-top: 10px;
+    vertical-align: top;
+    height: auto;
+}
+
+.home-item:first-child{
+    margin-top: 0;
+}
+
+@media only screen and (min-device-width: 768px){
+    .home-item{
+        width: calc(50% - 5px);
+    }
+
+    .home-favorites{
+        margin-top: 0;
+    }
+
+    .home-watched{
+        margin-top: 0;
+        margin-left: 10px;
+    }
+
+    .home-unfinished{
+        margin-top: 10px;
+    }
+
+    .home-youtube{
+        margin-left: 10px;
+    }
+}
+
+
+.home-item-bar{
+    height: 30px;
+    position:relative;
+    padding: 5px;
+}
+
+.home-item.expanded .home-item-bar{
+    border-bottom: 1px solid #eee;
+}
+
+.home-item-icon{
+    top: 5px;
+    position: absolute;
+    left: 5px;
+}
+
+.home-item-title{
+    position: absolute;
+    left: 30px;
+    top: 6px;
+    font-weight: bold;
+    right: 30px;
+    text-align: center;
+}
+
+.home-item-down-icon{
+    position: absolute;
+    right: 5px;
+    top: 5px;
+}
+
+.home-item-down-icon.flipped{
+    transform: rotate(180deg);
+}
+
+.home-item-bar svg{
+    width: 16px;
+    height: 16px;
+}
+
+.home-item-content{
+    max-height: 0;
+    overflow-y: hidden;
+    transition: max-height 0.2s;
+}
+
+.home-item.expanded .home-item-content{
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.home-favorite-item{
+    width: calc(33.333333% - 4px);
+    position: relative;
+    display: inline-block;
+    margin: 2px;
+}
+
+.home-favorite-img{
+    width: 100%;
+    height: 100%;
+}
+
+.home-favorite-img img{
+    width: 100%;
+    height: 100%;
+}
+
+.home-favorite-title{
+    position: absolute;
+    bottom:0;
+    right:0;
+    left:0;
+    height: 30px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.8) 30%);
+}
+
+.home-favorites-content.expanded{
+    margin-bottom: 5px;
+}
+
+.home-favorite-title{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left:0;
+    padding-top: 10px;
+    padding-left: 4px;
+    padding-right: 4px;
+    height: 30px;
+    color: white;
+}
+
+.home-watched-item{
+    border-bottom: 1px solid #eee;
+    position: relative;
+    height: 50px;
+}
+
+.home-watched-item:last-child{
+    border-bottom: none;
+}
+
+.home-watched-img{
+    width: 42px;
+    height: 42px;
+    position:absolute;
+    left:4px;
+    top:4px;
+}
+
+.home-watched-img img{
+    width: 42px;
+    height: 42px;
+}
+
+.home-watched-title{
+    position:absolute;
+    left:54px;
+    bottom:9px;
+    right: 4px;
+}
+
+.home-watched-time{
+    position:absolute;
+    left:54px;
+    top:4px;
+    font-size: 11px;
+}
+
+.home-unfinished-img{
+    width: 42px;
+    height: 60px;
+    position:relative;
+    margin-left: 4px;
+    margin-top: 4px;
+    margin-bottom: 16px;
+}
+
+.home-unfinished-img img{
+    width: 42px;
+    height: 60px;
+}
+
+.home-unfinished-no-img{
+    width: 42px;
+    height: 42px;
+    position:relative;
+    margin: 4px;
+}
+
+.home-unfinished-no-img img{
+    width: 42px;
+    height: 42px;
+}
+
+.home-unfinished-item{
+    border-bottom: 1px solid #eee;
+    position: relative;
+    min-height: 54px;
+}
+
+.home-unfinished-line
+{
+    position:absolute;
+    bottom:4px;
+    left:4px;
+    right:4px;
+}
+
+.home-unfinished-title{
+    position:absolute;
+    left:54px;
+    bottom:18px;
+    right: 4px;
+}
+
+.home-item-no-content{
+    height: 30px;
+    padding: 6px;
+    text-align: center;
+}

@@ -40,7 +40,7 @@
                 <div class="show-episode-view-episodes"  ng-if="selectedSeason">
                     <div class="show-episode-view-episode" ripple ng-repeat="episode in selectedSeason"
                          ng-class="{'selectedepisode': episode==selectedEpisode, 'lastepisode': $last, 'firstepisode': $first}" ng-click="selectEpisode(episode)">
-                        <div class="show-episode-view-episode-number" ng-class="{'show-episode-view-episode-watched': isWatched(episode)}">{{episode.episode}}. <img class="watched-episode-img" ng-if="isWatched(episode)" src="/Images/watched.png"/></div>
+                        <div class="show-episode-view-episode-number" ng-class="{'show-episode-view-episode-watched': isWatched(episode)}">{{episode.episode}}. <img class="watched-episode-img" ng-if="isWatched(episode)" src="/Images/watched.svg" svg-image/></div>
                         <div class="show-episode-view-episode-title2 truncate" ng-class="{'show-episode-view-episode-watched': isWatched(episode)}">{{episode.title}}</div>
                         <div class="show-episode-view-episode-info">
                             <div class="show-episode-view-episode-aired-on"  ng-if="episode==selectedEpisode">{{episode.first_aired | secondsToDateTime | date:'dd MMM yyyy'}}</div>
