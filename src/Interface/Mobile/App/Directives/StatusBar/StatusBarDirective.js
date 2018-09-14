@@ -17,8 +17,18 @@
                 function handleStatus(response){
                     $scope.data = response.data;
                     $(".status-ellipse").css('background', colorForTorrentState($scope.data.torrent_state, $scope.data.buffer_ready, $scope.data.peers_connected, $scope.data.potential_peers));
-                    $(".memory-item").css('color', colorForMemory($scope.data.memory));
-                    $(".cpu-item").css('color', colorForCpu($scope.data.cpu));
+
+                    var memcolor = colorForMemory($scope.data.memory);
+                    if (memcolor == normal)
+                        $(".memory-item").css('color', "");
+                    else
+                        $(".memory-item").css('color', memcolor);
+
+                    var cpucolor = colorForCpu($scope.data.cpu);
+                    if (cpucolor == normal)
+                        $(".cpu-item").css('color', "");
+                    else
+                        $(".cpu-item").css('color', cpucolor);
                 }
 
                 function handleError(err){
