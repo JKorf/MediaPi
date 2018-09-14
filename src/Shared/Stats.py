@@ -1,20 +1,48 @@
+from threading import Lock
+
+from Shared.Util import current_time
+
 
 class Stats:
 
     database = None
+    lock = Lock()
+    cache = dict()
+
+    @staticmethod
+    def _get_stat(name):
+        if name not in Stats.cache:
+            stat = Stats.database.get_stat(name)
+            Stats.cache[name] = stat
+        else:
+            return Stats.cache[name]
+        return stat
+
+    @staticmethod
+    def _update_stat(name, value):
+        with Stats.lock:
+            Stats.cache[name] = value
+
+    @staticmethod
+    def save_stats():
+        with Stats.lock:
+            copy = Stats.cache.copy()
+
+        for key, val in copy.items():
+            Stats.database.update_stat(key, val)
 
     @staticmethod
     def add(name, value):
-        stat = Stats.database.get_stat(name)
+        stat = Stats._get_stat(name)
         if stat == 0:
-            Stats.database.update_stat(name, value)
+            Stats._update_stat(name, value)
         else:
-            Stats.database.update_stat(name, stat + value)
+            Stats._update_stat(name, stat + value)
 
     @staticmethod
     def total(name):
-        return Stats.database.get_stat(name)
+        return Stats._get_stat(name)
 
     @staticmethod
     def set(name, value):
-        Stats.database.update_stat(name, value)
+        Stats._update_stat(name, value)

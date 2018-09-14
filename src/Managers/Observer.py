@@ -3,6 +3,7 @@ import time
 import urllib.parse
 
 from Shared.Events import EventType, EventManager
+from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Stats import Stats
 from Shared.Threading import CustomThread
@@ -34,6 +35,8 @@ class Observer:
         thread.start()
         thread = CustomThread(self.update_unfinished, "Watch unfinished")
         thread.start()
+        thread = CustomThread(self.save_stats, "Stat saver")
+        thread.start()
 
         if Settings.get_bool("show_gui"):
             thread = CustomThread(self.watch_wifi, "Watch wifi")
@@ -42,6 +45,11 @@ class Observer:
     def start_player(self, type=None, title=None, url=None, img=None, position=0, media_file=None):
         self.added_unfinished = False
         self.removed_unfinished = False
+
+    def save_stats(self):
+        while True:
+            Stats.save_stats()
+            time.sleep(10)
 
     def watch_download_speed(self):
         while True:
