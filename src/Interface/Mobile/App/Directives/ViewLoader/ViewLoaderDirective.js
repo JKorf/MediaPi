@@ -37,7 +37,7 @@
 
                 function hideLoader(){
                     $(".view-loader").css("display", "none");
-                    $(".view").css("overflow", "auto");
+                    $(".view").css("overflow-y", "auto");
                 }
             }
         };
