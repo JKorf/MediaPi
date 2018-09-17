@@ -4,12 +4,12 @@
         <div class="menu-item-icon"><img src="/Images/home.svg" svg-image /></div>
     </div>
 
-    <div class="menu-item" ng-click="navigate('shows')" ng-class="{current: currentState == 'shows'}">
+    <div class="menu-item" ng-click="navigate('shows')" ng-class="{current: currentState == 'shows' || currentState == 'show'}">
         <div class="menu-item-title">Shows</div>
         <div class="menu-item-icon"><img src="/Images/show.svg" svg-image/></div>
     </div>
 
-    <div class="menu-item" ng-click="navigate('movies')" ng-class="{current: currentState == 'movies'}">
+    <div class="menu-item" ng-click="navigate('movies')" ng-class="{current: currentState == 'movies' || currentState == 'movie'}">
         <div class="menu-item-title">Movies</div>
         <div class="menu-item-icon"><img src="/Images/movie.svg" svg-image/></div>
     </div>

@@ -9,7 +9,7 @@ player{
     transition: height 0.5s ease;
     border-bottom: none;
 
-    background: #fff;
+    background: #colors[background2];
     height: 0px;
     overflow: hidden;
     z-index: 11;
@@ -25,7 +25,7 @@ player{
 }
 
 player.open{
-    border-bottom: 2px solid #ddd;
+    border-bottom: 2px solid #colors[borders];
 
     height: 100px;
 }
@@ -92,8 +92,8 @@ player.open-settings{
     font-weight:bold;
     top: -50px;
     left: calc(50% - 50px);
-    background: #fff;
-    border: 1px solid #ddd;
+    background: #colors[background2];
+    border: 1px solid #colors[borders];
     border-radius: 2px;
     display: none;
 }
@@ -123,7 +123,7 @@ player.open-settings{
     right: 10px;
     width: 24px;
     height: 24px;
-    background: white;
+    background: #colors[background2];
     z-index: 1;
 }
 
@@ -146,6 +146,11 @@ player.open-settings{
     cursor: pointer;
 }
 
+.player-stop svg{
+    width: 20px;
+    heigth: 20px;
+}
+
 .player-image-img{
     max-width: 80px;
     height: 80px;
@@ -158,7 +163,7 @@ player.open-settings{
 }
 
 .player-settings{
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #colors[borders];
     position:absolute;
     top: 100px;
     left:0;
@@ -211,12 +216,14 @@ player.open-settings{
 .player-settings-volume-muted{
     left:0;
     top:0;
+    width: 20px;
     position:absolute;
 }
 
 .player-settings-volume-full{
     right:0;
     position:absolute;
+    width: 20px;
 
     top:0;
 }
@@ -231,13 +238,12 @@ player.open-settings{
 .player-subtitle{
     padding: 4px;
     position:relative;
-    background: linear-gradient(#fCfCfC 0%, #fff 50%, #fCfCfC 100%);
-    border-top: 1px solid #ddd;
+    background: #colors[list2];
+    border-top: 1px solid #colors[borders];
 }
 
 .player-subtitle.selected-sub{
-    background: linear-gradient(#colors[secondary] 10%, #colors[secondary-highlight] 30%, #colors[secondary-highlight] 70%, #colors[secondary] 90%);
-    color:#colors[text-light];
+    background: #colors[list1];
 }
 
 .player-subtitle:first-child{
@@ -293,7 +299,7 @@ player.open-settings{
 .player-subtitle-tracks{
     max-height: 150px;
     overflow: auto;
-    border: 1px solid #ddd;
+    border: 1px solid #colors[borders];
     border-radius: 8px;
 }
 
@@ -311,13 +317,10 @@ player.open-settings{
 .player-audio-track{
     padding: 4px;
     position:relative;
-    background: linear-gradient(#fCfCfC 0%, #fff 50%, #fCfCfC 100%);
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #colors[borders];
 }
 
 .player-audio-track.selected-audio{
-    background: linear-gradient(#colors[secondary] 10%, #colors[secondary-highlight] 30%, #colors[secondary-highlight] 70%, #colors[secondary] 90%);
-    color:#colors[text-light];
 }
 
 .player-audio-track:first-child{
@@ -343,7 +346,7 @@ player.open-settings{
 .player-audio-tracks{
     max-height: 150px;
     overflow: auto;
-    border: 1px solid #ddd;
+    border: 1px solid #colors[borders];
     border-radius: 8px;
     -webkit-mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
 }

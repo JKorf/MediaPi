@@ -6,7 +6,7 @@
 
 .shows-box{
     position: relative;
-    background: #fff;
+    background: #colors[background2];
     width: calc(50% - 8px);
     display: inline-block;
     vertical-align: top;
@@ -33,7 +33,7 @@
     padding: 6px;
     height: 52px;
     margin-top: -52px;
-    background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.8) 30%);
+    background: linear-gradient(to bottom, #colors[fade1], #colors[fade2] 30%);
     color: #colors[text-light];
     position: relative;
 }
@@ -64,7 +64,7 @@
 }
 
 .show-wrapper{
-    background: #fff;
+    background: #colors[background2];
     position: relative;
 }
 
@@ -116,7 +116,7 @@
 .show-synopsis{
     margin-top: 10px;
     padding-top: 10px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #colors[borders];
 }
 
 .no-shows{
@@ -139,7 +139,7 @@
 .show-episode-view{
     margin-top: 10px;
     padding-top: 10px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #colors[borders];
 }
 
 .show-episode-view-season-title{
@@ -148,7 +148,7 @@
 }
 
 .show-episode-view-seasons{
-    border: 1px solid #ddd;
+    border: 1px solid #colors[borders];
     border-radius: 8px;
     display: inline-flex;
     max-width: 100%;
@@ -158,17 +158,16 @@
 }
 
 .show-episode-view-season{
-    background: linear-gradient(#fCfCfC 0%, #fff 50%, #fCfCfC 100%);
     height: 33px;
     text-align: center;
     line-height: 33px;
     min-width: 40px;
-    border-left: 1px solid #ddd;
+    border-left: 1px solid #colors[borders];
     cursor: pointer;
 }
 
 .show-episode-view-season.selectedseason{
-    background: linear-gradient(#colors[secondary] 10%, #colors[secondary-highlight] 30%, #colors[secondary-highlight] 70%, #colors[secondary] 90%);
+    background: #colors[primary];
     color:#colors[text-light];
 }
 
@@ -184,19 +183,18 @@
 
 .show-episode-view-episodes{
     border-radius: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid #colors[borders];
     -webkit-mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
     overflow: hidden;
 }
 
 .show-episode-view-episode{
-    background: linear-gradient(#fCfCfC 0%, #fff 50%, #fCfCfC 100%);
     min-height: 34px;
     line-height: 34px;
     padding-left: 8px;
     padding-right: 8px;
     position: relative;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #colors[borders];
     max-height: 35px;
     transition: max-height 0.5s;
     overflow: hidden;
@@ -207,9 +205,6 @@
     max-height: 500px;
 }
 
-.show-episode-view-episode.selectedepisode{
-    background: linear-gradient(#fCfCfC 0%, #fff 10%, #fff 90%, #fCfCfC 100%);
-}
 
 .show-episode-view-episode.selectedepisode .show-episode-view-episode-title2{
     font-weight: bold;
@@ -257,7 +252,7 @@
 }
 
 .episode-torrents{
-    border: 1px solid #eee;
+    border: 1px solid #colors[borders];
     border-radius: 8px;
     margin-top: 10px;
     -webkit-mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
@@ -267,13 +262,13 @@
 .episode-torrent{
     position: relative;
     padding: 4px;
-    background: linear-gradient(#fCfCfC 0%, #fff 50%, #fCfCfC 100%);
-    border-top: 1px solid #eee;
+    background: #colors[list2];
+    border-top: 1px solid #colors[borders];
 }
 
 .episode-torrent.selected-torrent{
-    background: linear-gradient(#colors[secondary] 10%, #colors[secondary-highlight] 30%, #colors[secondary-highlight] 70%, #colors[secondary] 90%);
-    color:#colors[text-light];
+    background: #colors[list1];
+    color:#colors[text-primary];
 }
 
 .episode-torrent:first-child{
