@@ -13,8 +13,6 @@
 
     Movies/series kunnen toevoegen aan `want to watch`
 
-    Css aanpassen zodat themes kunnen worden gebruikt
-
     speed graph
 
     Tv control:

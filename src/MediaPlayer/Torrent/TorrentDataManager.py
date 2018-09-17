@@ -21,6 +21,7 @@ class TorrentDataManager:
         self.bitfield = None
         self.calculating_stream_file_hash = False
         self.blocks_done = []
+        self.persistent_pieces = []
 
         self.block_size = Settings.get_int("block_size")
 
@@ -33,13 +34,17 @@ class TorrentDataManager:
 
     def log_queue(self):
         unfinished = [x for x in self._pieces if not x.done]
+        unfinished_next = [x for x in self._pieces if not x.done and x.index >= self.torrent.stream_position]
 
         with Logger.lock:
             Logger.write(3, "-- TorrentDataManager state --")
             first = ""
+            first_next = ""
             if unfinished:
                 first = str(unfinished[0].index)
-            Logger.write(3, "     Data status: first unfinished=" + first + ", total unfinished=" + str(len(unfinished)) +" pieces")
+            if unfinished_next:
+                first_next = str(unfinished_next[0].index)
+            Logger.write(3, "     Data status: first unfinished=" + first + ", first unfinished after stream pos: " + first_next + ", total unfinished=" + str(len(unfinished)) +" pieces")
 
     def unregister(self):
         EventManager.deregister_event(self.event_id_log)
@@ -67,6 +72,7 @@ class TorrentDataManager:
             piece_index = start_piece + index
             persistent = relative_current_byte < stream_start_buffer or current_byte + self.piece_length > self.torrent.media_file.end_byte - stream_end_buffer
             if persistent:
+                self.persistent_pieces.append(piece_index)
                 pers_pieces += str(piece_index) + ", "
 
             if current_byte + self.piece_length > self.torrent.total_size:
@@ -82,25 +88,26 @@ class TorrentDataManager:
         Logger.write(2, "Persistent pieces: " + pers_pieces)
 
     def update_write_blocks(self):
-        for piece_index, offset, data in list(self.blocks_done):
+        for peer, piece_index, offset, data in list(self.blocks_done):
             block = self.get_block_by_offset(piece_index, offset)
             Logger.write(1, 'Received piece message: ' + str(block.piece_index) + ', block: ' + str(block.index))
 
+            peer.download_manager.block_done(block)
             if self.torrent.state == TorrentState.Done:
                 Logger.write(1, 'Received a block but were already done')
-                self.blocks_done.remove((piece_index, offset, data))
+                self.blocks_done.remove((peer, piece_index, offset, data))
                 self.torrent.overhead += len(data)
                 continue
 
             if block.piece_index < self.torrent.stream_position and not block.persistent:
                 Logger.write(1, 'Received a block which is no longer needed')
-                self.blocks_done.remove((piece_index, offset, data))
+                self.blocks_done.remove((peer, piece_index, offset, data))
                 self.torrent.overhead += len(data)
                 continue
 
             if block.done:
                 Logger.write(1, 'Received block but piece was already done')
-                self.blocks_done.remove((piece_index, offset, data))
+                self.blocks_done.remove((peer, piece_index, offset, data))
                 self.torrent.overhead += len(data)
                 continue
 
@@ -109,7 +116,7 @@ class TorrentDataManager:
             self.torrent.download_counter.add_value(block.length)
             Stats.add('total_downloaded', block.length)
 
-            self.blocks_done.remove((piece_index, offset, data))
+            self.blocks_done.remove((peer, piece_index, offset, data))
 
         if self.init_done:
             if self.torrent.state != TorrentState.Done:
@@ -145,8 +152,8 @@ class TorrentDataManager:
     def get_piece_by_index(self, index):
         return [x for x in self._pieces if x.index == index][0]
 
-    def block_done(self, piece_index, offset, data):
-        self.blocks_done.append((piece_index, offset, data))
+    def block_done(self, peer, piece_index, offset, data):
+        self.blocks_done.append((peer, piece_index, offset, data))
 
     def write_block(self, block, data):
         piece = self.get_piece_by_index(block.piece_index)

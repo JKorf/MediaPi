@@ -62,7 +62,7 @@ class PeerMessageHandler:
     def handle_message(self, message):
         if isinstance(message, PieceMessage):
             Logger.write(1, str(self.peer.id) + ' Received piece message: ' + str(message.index) + ', offset ' + str(message.offset))
-            self.peer.torrent.data_manager.block_done(message.index, message.offset, message.data)
+            self.peer.torrent.data_manager.block_done(self.peer, message.index, message.offset, message.data)
             self.peer.torrent.outstanding_requests -= 1
             self.peer.counter.add_value(message.length)
             return

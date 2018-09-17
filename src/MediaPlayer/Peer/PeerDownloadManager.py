@@ -81,6 +81,10 @@ class PeerDownloadManager:
             self.peer.torrent.outstanding_requests += 1
             self.peer.connection_manager.send(request.to_bytes())
 
+    def block_done(self, block):
+        with self.lock:
+            self.downloading = [x for x in self.downloading if x.block_download.block.index != block.index]
+
     def check_current_downloading(self):
         canceled = 0
 
