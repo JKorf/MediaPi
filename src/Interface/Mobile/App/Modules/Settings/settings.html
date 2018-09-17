@@ -1,23 +1,12 @@
 ﻿<div class="view-settings sub-view">
-    <div class="row">
-        <div class="settings-title">Application settings</div>
-        <div class="col-xs-6">GUI</div>
-        <div class="col-xs-6 settings-value"><input type="checkbox" ng-model="settings.gui" /></div>
-    </div>
-     <div class="row">
-        <div class="col-xs-6">Is Raspberry</div>
-        <div class="col-xs-6 settings-value"><input type="checkbox" ng-model="settings.raspberry" /></div>
-    </div>
-     <div class="row">
-        <div class="col-xs-6">External trackers</div>
-        <div class="col-xs-6 settings-value"><input type="checkbox" ng-model="settings.external_trackers" /></div>
-    </div>
-    <div class="row">
-        <div class="settings-title">Subtitle settings</div>
-        <div class="col-xs-6">Subs count</div>
-        <div class="col-xs-6 settings-value"><textbox model="settings.max_sub_files"></textbox></div>
-    </div>
-    <div class="settings-save-btn">
-        <basic-button text="Save" click="saveSettings"></basic-button>
+    <div class="settings-category">
+        <div class="settings-category-title">Appearance</div>
+        <div class="setting">
+            <div class="setting-title">Theme</div>
+            <div class="setting-value">
+                <select ng-model="selectedTheme" ng-options="theme.name for theme in themes" ng-change="themeChanged()">
+                </select>
+            </div>
+        </div>
     </div>
 </div>

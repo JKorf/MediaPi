@@ -1,29 +1,34 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('SettingsController', function ($scope, $rootScope, $http, $state) {
-        Init();
+    angular.module('pi-test').controller('SettingsController', function ($scope, $rootScope, $http, $state, MemoryFactory) {
 
-        $scope.saveSettings = function(){
-            $http.post("/util/save_settings?" +
-            "raspberry=" + $scope.settings.raspberry +
-            "&gui=" + $scope.settings.gui +
-            "&external_trackers=" + $scope.settings.external_trackers +
-            "&max_subs=" + $scope.settings.max_sub_files);
+        $scope.themes = [
+            { name:"Default", file: "default" },
+            { name:"Dark", file: "dark" }
+        ];
 
-            if(confirm("The changes will only take effect after restarting the media player. Do you wish to restart now?")){
-                $http.post('/util/restart_app');
-            }
-        }
-
-        function Init(){
-            $scope.promise = $http.get('/util/get_settings').then(function(result){
-                $scope.settings = result.data;
-                console.log($scope.settings);
-            }, function(er){
-                console.log(er);
+        $scope.themeChanged = function(){
+            MemoryFactory.SetValue("skin", $scope.selectedTheme.file);
+            less.modifyVars({
+              skin:  $scope.selectedTheme.file
             });
         }
 
+        function Init(){
+            var val = MemoryFactory.GetValue("skin");
+            if (!val)
+            {
+                $scope.selectedTheme = $scope.themes[0];
+                return;
+            }
+
+            for(var i = 0; i < $scope.themes.length; i++){
+                if ($scope.themes[i].file == val)
+                    $scope.selectedTheme = $scope.themes[i];
+            }
+        }
+
+        Init();
     });
 
 })();
