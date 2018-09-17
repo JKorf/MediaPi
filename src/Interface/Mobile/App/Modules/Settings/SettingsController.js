@@ -5,7 +5,8 @@
         $scope.themes = [
             { name:"Default", file: "default" },
             { name:"Night (blue)", file: "dark-blue" },
-            { name:"Night (orange)", file: "dark-orange" }
+            { name:"Night (orange)", file: "dark-orange" },
+            { name:"Forest", file: "green" }
         ];
 
         $scope.themeChanged = function(){
