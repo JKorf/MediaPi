@@ -37,10 +37,8 @@
                     $state.go(state);
                 }
 
-                $scope.shutdown = function(){
-                    if (confirm('Are you sure you want to shutdown the Raspberry Pi?')) {
-                        $http.post("/util/test");
-                    }
+                $scope.log = function(){
+                    $http.post("/util/test");
                 }
 
                 $scope.restart = function(){
