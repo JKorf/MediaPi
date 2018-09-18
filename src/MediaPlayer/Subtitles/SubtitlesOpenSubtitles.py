@@ -3,6 +3,8 @@ import gzip
 import struct
 from xmlrpc import client
 
+import time
+
 from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -17,7 +19,8 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
         self.OS_token = None
 
     def get_subtitles(self, size, filename, first_64k, last_64k):
-        self.login()
+        if not self.login():
+            return []
         return self.search(size, filename, self.get_hash(size, first_64k, last_64k))
 
     def login(self):
@@ -26,14 +29,15 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
             try:
                 self.xml_client = client.ServerProxy("http://api.opensubtitles.org:80/xml-rpc")
                 self.OS_token = self.xml_client.LogIn("", "", "en", "mediaplayerjk")['token']
-                break
+                return True
             except Exception as e:
                 Logger.write(2, 'Error creating xml_client try '+ str(current_try) +': ' + str(e))
                 current_try += 1
                 if current_try > 3:
                     EventManager.throw_event(EventType.Error,
                                              ["get_error", "Could not get subtitles from OpenSubtitles"])
-                    break
+                    return False
+                time.sleep(2)
 
     def search(self, size, filename, hash):
         Logger.write(2, "OpenSubtitles: Getting subtitles")

@@ -298,10 +298,12 @@ class HDHandler(web.RequestHandler):
                 play_master_file(self.get_argument("path"), self.get_argument("filename"), 0)
 
             else:
-                HDController.play_file(self.get_argument("filename"), self.get_argument("path"))
+                filename = self.get_argument("filename")
+                HDController.play_file(filename, self.get_argument("path"))
                 file = urllib.parse.unquote(self.get_argument("path"))
-                size, first_64k, last_64k = get_file_info(file)
-                EventManager.throw_event(EventType.HashDataKnown, [size, file, first_64k, last_64k])
+                if not filename.endswith(".jpg"):
+                    size, first_64k, last_64k = get_file_info(file)
+                    EventManager.throw_event(EventType.HashDataKnown, [size, file, first_64k, last_64k])
 
         elif url == "next_image":
             HDController.next_image(self.get_argument("current_path"))
