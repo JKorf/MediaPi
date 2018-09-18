@@ -302,7 +302,7 @@
 
                         if(playing){
                             $scope.playerState.playing_for = ((new Date().getTime() - playStartTime.getTime()) / 1000) + playStartOffset;
-                            if($scope.playerState.playing_for > $scope.playerState.length)
+                            if($scope.playerState.playing_for > $scope.playerState.length && $scope.playerState.length != 0)
                                 $scope.playerState.playing_for = $scope.playerState.length;
                         }
                     }, 1000);

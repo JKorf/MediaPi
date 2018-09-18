@@ -14,7 +14,7 @@
                 <div class="player-stop" ng-click="stop()">
                     <img src="/Images/stop.svg" svg-image />
                 </div>
-                <div ng-if="playerState.state" class="player-info-button" ng-click="info()">
+                <div ng-if="playerState.type == 'Show' || playerState.type == 'Movie'" class="player-info-button" ng-click="info()">
                     <img src="/Images/info.svg" svg-image />
                 </div>
                 <div class="player-settings-button" ng-click="settings()">
