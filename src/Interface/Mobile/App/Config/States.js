@@ -73,11 +73,11 @@
             controller: "YouTubeChannelController"
         });
 
-        $stateProvider.state('debug', {
-            url: '/debug',
-            templateUrl: '/App/Modules/Debug/debug.html',
+        $stateProvider.state('statistics', {
+            url: '/statistics',
+            templateUrl: '/App/Modules/Statistics/statistics.html',
             cache: false,
-            controller: "DebugController"
+            controller: "StatisticsController"
         });
 
         $stateProvider.state('settings', {

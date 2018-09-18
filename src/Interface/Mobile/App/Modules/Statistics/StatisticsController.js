@@ -1,10 +1,7 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('DebugController', function ($scope, $rootScope, $http, $state, $interval, $timeout, ErrorFactory, CacheFactory, MemoryFactory) {
-        var debugInterval;
+    angular.module('pi-test').controller('StatisticsController', function ($scope, $rootScope, $http, $state, $interval, $timeout, ErrorFactory, CacheFactory, MemoryFactory) {
         var infoInterval;
-        var errors;
-        var request;
         var requestInfo;
 
         var minutes = 60;
@@ -12,19 +9,11 @@
         var days = hours * 24;
         var weeks = days * 7;
 
-        $scope.tab = 'info';
-        $scope.errorHeight = 0;
-
         Init();
 
         $scope.$on("$destroy", function(){
-            $interval.cancel(debugInterval);
             $interval.cancel(infoInterval);
-        })
-
-        $scope.switchTab = function(tab){
-            $scope.tab = tab
-        }
+        });
 
         $scope.write_big_number = function(numb){
             if (!numb)
@@ -74,18 +63,7 @@
                 console.log(er);
             });
 
-            $scope.errors = ErrorFactory.getErrors();
-            ErrorFactory.onNewError(function(){
-                $scope.errors = ErrorFactory.getErrors();
-            });
-
-            RequestDebug();
             RequestInfo();
-
-            debugInterval = $interval(function(){
-                RequestDebug();
-            }, 2000);
-
             infoInterval = $interval(function(){
                 RequestInfo();
             }, 5000);
@@ -97,32 +75,6 @@
                 $scope.info = response.data;
             }, function(er){
                 $scope.info = false;
-            });
-        }
-
-        function RequestDebug(){
-            if(request)
-                return;
-
-            request = $http.get("/util/debug").then(function(response){
-                request = false;
-                $scope.debugInfo = response.data;
-
-                if ($scope.debugInfo.torrent_state == 1)
-                    $scope.debugInfo.torrent_state = "Initial";
-                if ($scope.debugInfo.torrent_state == 2)
-                    $scope.debugInfo.torrent_state = "Downloading metadata";
-                if ($scope.debugInfo.torrent_state == 3)
-                    $scope.debugInfo.torrent_state = "Downloading";
-                if ($scope.debugInfo.torrent_state == 4)
-                    $scope.debugInfo.torrent_state = "Paused";
-                if ($scope.debugInfo.torrent_state == 5)
-                    $scope.debugInfo.torrent_state = "Done";
-                if ($scope.debugInfo.torrent_state == 6)
-                    $scope.debugInfo.torrent_state = "Waiting file selection";
-            }, function(er){
-                request = false;
-                $scope.debugInfo = false;
             });
         }
     });

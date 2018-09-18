@@ -7,6 +7,8 @@
             templateUrl: '/App/Directives/Player/player.html',
             link: function ($scope, element, attrs) {
                 var playerStates = [];
+                var request = false;
+
                 playerStates[0] = "Nothing";
                 playerStates[1] = "Opening";
                 playerStates[2] = "Buffering";
@@ -35,6 +37,17 @@
                     $rootScope.openPopup();
                     CacheFactory.Get("/App/Directives/Player/playerSettings.html", 900).then(function(data){
                         $rootScope.setPopupContent("Media settings", false, false, false, data, $scope);
+                    });
+                }
+
+                $scope.info = function(){
+                    $rootScope.openPopup();
+                    RequestMediaInfo();
+                    var mediaInfoInterval = $interval(function(){ RequestMediaInfo(); }, 2000);
+                    CacheFactory.Get("/App/Directives/Player/mediaInfo.html", 900).then(function(data){
+                        $rootScope.setPopupContent("Media info", false, false, false, data, $scope).then(function(data){}, function(data){
+                            $interval.cancel(mediaInfoInterval);
+                        });
                     });
                 }
 
@@ -330,6 +343,32 @@
                     }else{
                         $("player").removeClass("open");
                     }
+                }
+
+                function RequestMediaInfo(){
+                    if(request)
+                        return;
+
+                    request = $http.get("/util/media_info").then(function(response){
+                        request = false;
+                        $scope.mediaInfo = response.data;
+
+                        if ($scope.mediaInfo.torrent_state == 1)
+                            $scope.mediaInfo.torrent_state = "Initial";
+                        if ($scope.mediaInfo.torrent_state == 2)
+                            $scope.mediaInfo.torrent_state = "Downloading metadata";
+                        if ($scope.mediaInfo.torrent_state == 3)
+                            $scope.mediaInfo.torrent_state = "Downloading";
+                        if ($scope.mediaInfo.torrent_state == 4)
+                            $scope.mediaInfo.torrent_state = "Paused";
+                        if ($scope.mediaInfo.torrent_state == 5)
+                            $scope.mediaInfo.torrent_state = "Done";
+                        if ($scope.mediaInfo.torrent_state == 6)
+                            $scope.mediaInfo.torrent_state = "Waiting file selection";
+                    }, function(er){
+                        request = false;
+                        $scope.mediaInfo = false;
+                    });
                 }
             }
         };

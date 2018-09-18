@@ -1,0 +1,67 @@
+<div class="media-info">
+    <div class="row">
+        <div class="col-xs-12 statistics-title">Peers</div>
+        <div class="col-xs-7">Potential: </div>
+        <div class="col-xs-5" ng-class="{'warning-system': mediaInfo.potential < 10}">{{mediaInfo.potential}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">Connected: </div>
+        <div class="col-xs-5">{{mediaInfo.connected}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12 statistics-title">Downloading</div>
+        <div class="col-xs-7">Total Size: </div>
+        <div class="col-xs-5">{{mediaInfo.size}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">Torrent state: </div>
+        <div class="col-xs-5" ng-class="{'ok-system': mediaInfo.torrentState == 'done'}">{{mediaInfo.torrent_state}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">Downloaded: </div>
+        <div class="col-xs-5">{{mediaInfo.downloaded}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">Left: </div>
+        <div class="col-xs-5">{{mediaInfo.left_to_download}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">Speed: </div>
+        <div class="col-xs-5">{{mediaInfo.speed}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">Stream buffer ready: </div>
+        <div class="col-xs-5"  ng-class="{'warning-system': mediaInfo.stream_position == mediaInfo.stream_buffer_position}">{{mediaInfo.stream_buffer_ready}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">Stream buffer total: </div>
+        <div class="col-xs-5">{{mediaInfo.stream_buffer_total}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12 statistics-title">Streaming</div>
+        <div class="col-xs-7">Total streamed: </div>
+        <div class="col-xs-5">{{mediaInfo.bytes_streamed}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">Stream position: </div>
+        <div class="col-xs-5">{{mediaInfo.stream_position}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">Stream buffer position: </div>
+        <div class="col-xs-5">{{mediaInfo.stream_buffer_position}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">Overhead: </div>
+        <div class="col-xs-5">{{mediaInfo.overhead}}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12 statistics-title">System state</div>
+        <div class="col-xs-7">Threads: </div>
+        <div class="col-xs-5">{{mediaInfo.threads}}</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-7">DHT nodes: </div>
+        <div class="col-xs-5">{{mediaInfo.dht_nodes}}</div>
+    </div>
+</div>

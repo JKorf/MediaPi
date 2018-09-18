@@ -14,7 +14,7 @@ from Shared.Stats import Stats
 from Shared.Threading import ThreadManager
 from Shared.Util import to_JSON, parse_bool, RequestFactory, current_time, write_size
 from MediaPlayer.Util.Enums import TorrentState
-from WebServer.Models import DebugInfo, CurrentMedia, Version, Settings, Info, Status, StartUp
+from WebServer.Models import MediaInfo, CurrentMedia, Version, Settings, Info, Status, StartUp
 
 
 class UtilController:
@@ -55,12 +55,12 @@ class UtilController:
         return to_JSON(media)
 
     @staticmethod
-    def debug(start):
+    def media_info(start):
         torrent = start.torrent_manager.torrent
         if torrent is None:
-            de = DebugInfo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ThreadManager.thread_count(), psutil.cpu_percent(), psutil.virtual_memory().percent, 0, 0)
+            de = MediaInfo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ThreadManager.thread_count(), 0, 0)
         else:
-            de = DebugInfo(len(torrent.peer_manager.potential_peers),
+            de = MediaInfo(len(torrent.peer_manager.potential_peers),
                            len(torrent.peer_manager.connected_peers),
                            torrent.total_size,
                            torrent.download_counter.total,
@@ -72,8 +72,6 @@ class UtilController:
                            torrent.stream_position,
                            torrent.stream_buffer_position,
                            ThreadManager.thread_count(),
-                           psutil.cpu_percent(),
-                           psutil.virtual_memory().percent,
                            torrent.left,
                            torrent.overhead)
 

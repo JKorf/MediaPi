@@ -46,6 +46,12 @@ player.open-settings{
     top: 10px;
 }
 
+.player-info-button{
+    position:absolute;
+    right: 44px;
+    top: 10px;
+}
+
 .player-pause-resume{
     position: absolute;
     left: 100px;
@@ -238,12 +244,13 @@ player.open-settings{
 .player-subtitle{
     padding: 4px;
     position:relative;
-    background: #colors[list2];
+    background: #colors[list];
     border-top: 1px solid #colors[borders];
 }
 
 .player-subtitle.selected-sub{
-    background: #colors[list1];
+    background: #colors[list-select];
+    color: #colors[list-select-text];
 }
 
 .player-subtitle:first-child{
@@ -321,6 +328,8 @@ player.open-settings{
 }
 
 .player-audio-track.selected-audio{
+    background: #colors[list-select];
+    color: #colors[list-select-text];
 }
 
 .player-audio-track:first-child{

@@ -45,7 +45,6 @@
 
         function OpenMediaSelection(data)
         {
-        console.log(data);
             var scope =  $rootScope.$new(true);
             scope.selectedFile = false;
             scope.files = data;

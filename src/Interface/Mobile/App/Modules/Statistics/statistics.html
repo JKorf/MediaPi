@@ -1,0 +1,88 @@
+﻿<div class="view-statistics sub-view">
+    <div class="statistics-wrapper">
+         <div class="version-holder">
+            <div class="statistics-title">Build</div>
+            <div class="version-build">
+                <div class="version">{{version.build_date}}</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12 statistics-title">Connections</div>
+            <div class="col-xs-5">Attempted</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_attempted)}}</div>
+        </div>
+
+         <div class="row">
+            <div class="col-xs-5">Failed</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_failed)}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-5">Succeeded</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_succeeded)}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12 statistics-title">Peer sources</div>
+            <div class="col-xs-5">Http tr.</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_http_tracker)}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-5">Udp tr.</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_udp_tracker)}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-5">PEX</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_pex)}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-5">DHT</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_dht)}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12 statistics-title">Timing</div>
+            <div class="col-xs-5">Played</div>
+            <div class="col-xs-7 align-right">{{to_time(info.play_time)}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-5">Online</div>
+            <div class="col-xs-7 align-right">{{to_time(info.running_for)}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12 statistics-title">Download</div>
+            <div class="col-xs-5">Downloaded</div>
+            <div class="col-xs-7 align-right">{{info.total_downloaded}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-5">Max kbps</div>
+            <div class="col-xs-7 align-right">{{info.max_download}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12 statistics-title">Other</div>
+            <div class="col-xs-5">Subs dl</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.subs_downloaded)}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-5">Threads</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.threads_started)}}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-6">
+                </div>
+            <div class="col-xs-6 reset-cache-col">
+                <basic-button class="reset-cache-button" click="resetCache" text="Reset cache"></basic-button>
+            </div>
+        </div>
+    </div>
+</div>

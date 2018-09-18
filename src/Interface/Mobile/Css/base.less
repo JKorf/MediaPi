@@ -340,57 +340,34 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: 20px;
 }
 
-.debug-wrapper{
+.media-info .row:first-child{
+    margin-top: -10px;
+}
+
+.statistics-wrapper{
     background: #colors[background2];
     padding: 0 10px 5px 10px;
 }
 
-.debug-row{
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
-.debug-title{
+.statistics-title{
     font-weight: bold;
     margin: 5px 0 0 0;
 }
 
-.debug-error-msg{
-    border-top: 1px solid #ddd;
-    margin-top: 5px;
-    padding-top: 5px;
+.reset-cache-col{
+    text-align: right;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
-.debug-con{
-    padding-left: 25px !important;
-}
-
-.debug-tab-select{
-    padding-top: 15px;
-}
-
-.debug-tab-item{
-    text-align: center;
-}
-
-.debug-tab-item-inner{
-    border: 1px solid black;
+.reset-cache-button .button{
+    height: 30px;
+    line-height: 30px;
+    font-size: 16px;
 }
 
 .align-right{
     text-align: right;
-}
-
-.error-wrapper{
-    max-height: 200px;
-    overflow: auto;
-    position: relative;
-}
-
-.first-debug-error{
-    border-top: none;
-    margin-top: 0;
-    padding-top: 0;
 }
 
 .warning-system{
@@ -799,6 +776,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .selection-list-inner.selected-item{
+    background: #colors[list-select];
+    color: #colors[list-select-text];
 }
 
 .selection-list-inner:first-child{

@@ -42,10 +42,10 @@ class FileStructure:
                 break
 
 
-class DebugInfo:
+class MediaInfo:
 
     def __init__(self, potential, connected, size, downloaded, speed, buffer_ready, buffer_total, bytes_streamed,
-                 torrent_state, stream_position, stream_buffer_position, threads, cpu, memory, left_to_download, overhead):
+                 torrent_state, stream_position, stream_buffer_position, threads, left_to_download, overhead):
         self.potential = potential
         self.connected = connected
         self.size = write_size(size)
@@ -58,8 +58,6 @@ class DebugInfo:
         self.stream_buffer_position = stream_buffer_position
         self.bytes_streamed = write_size(bytes_streamed)
         self.threads = threads
-        self.cpu = cpu
-        self.memory = memory
         self.dht_nodes = 0
         self.left_to_download = write_size(left_to_download)
         self.overhead = write_size(overhead)

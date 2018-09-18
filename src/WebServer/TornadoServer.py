@@ -162,8 +162,8 @@ class UtilHandler(web.RequestHandler):
         elif url == "get_protected_img":
             data = yield UtilController.get_protected_img(self.get_argument("url"))
             self.write(data)
-        elif url == "debug":
-            self.write(UtilController.debug(TornadoServer.start_obj))
+        elif url == "media_info":
+            self.write(UtilController.media_info(TornadoServer.start_obj))
         elif url == "startup":
             self.write(UtilController.startup())
         elif url == "info":
