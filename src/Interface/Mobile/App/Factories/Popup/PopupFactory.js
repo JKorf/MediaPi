@@ -90,6 +90,9 @@
 
             $(".popup").remove();
             $(".popup-background").remove();
+             if($rootScope.currentPromise && $rootScope.currentPromise.promise.$$state.status == 0)
+                $rootScope.currentPromise.reject("cancel");
+
             $("body").append($compile("<div class='popup-background' ng-click='backgroundClick()'></div>")($rootScope));
             $("body").append($compile(
                 '<div class="popup">' +

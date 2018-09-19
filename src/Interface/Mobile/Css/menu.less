@@ -2,7 +2,7 @@
 
 menu{
     position: fixed;
-    left: -160px;
+    left: -110px;
     width: 160px;
     bottom: 29px;
     top: 50px;
@@ -11,7 +11,7 @@ menu{
 
     background: #colors[background2];
     background-size:cover;
-    transition: left 0.15s linear;
+    transition: left 0.15s linear, bottom 0.5s ease;
     border-right: 1px solid #colors[borders];
     z-index: 2;
 }
@@ -31,7 +31,6 @@ menu.player-open{
     }
 
     menu{
-        display:none;
         left:calc(50% - 512px);
     }
 }
@@ -77,7 +76,7 @@ menu.player-open{
 
 .menu-item-icon{
     position: absolute;
-    right: 8px;
+    right: 13px;
     top: 8px;
 }
 
