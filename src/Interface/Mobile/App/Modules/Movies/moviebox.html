@@ -1,10 +1,10 @@
 <div class="shows-image">
     <protected-img imgclass="movies-image-img" src="movie.poster"></protected-img>
 </div>
+<div class="movies-rating" color-indicator val="movie.rating_percentage" ng-if="movie.rating_percentage" type="percentage">{{movie.rating_percentage}}%</div>
+<div class="movies-rating" color-indicator val="movie.rating_grade" ng-if="movie.rating_grade" type="grade">{{movie.rating_grade}}</div>
 <div class="movies-info">
     <div class="movies-title truncate">{{movie.title}}</div>
     <div class="movies-seasons">{{movie.runtime}} min</div>
     <div class="movies-year">{{movie.year}}</div>
-    <div class="movies-rating" color-indicator val="movie.rating_percentage" ng-if="movie.rating_percentage" type="percentage">{{movie.rating_percentage}}%</div>
-    <div class="movies-rating" color-indicator val="movie.rating_grade" ng-if="movie.rating_grade" type="grade">{{movie.rating_grade}}</div>
 </div>
