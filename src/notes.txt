@@ -13,6 +13,12 @@
 
     Movies/series kunnen toevoegen aan `want to watch`
 
+    Refactor polling to use websocket
+        media_info (debug)
+        player_state
+        status (status bar)
+        stats
+
     speed graph
 
     Tv control:
