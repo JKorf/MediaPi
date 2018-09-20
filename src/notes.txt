@@ -13,6 +13,11 @@
 
     Movies/series kunnen toevoegen aan `want to watch`
 
+    disable popups hd:
+        https://www.raspberrypi.org/forums/viewtopic.php?t=159739
+        https://ubuntuforums.org/showthread.php?t=1935099
+        ~/.config/pcmanfm/LXDE/pcmanfm.conf voor install?
+
     Refactor polling to use websocket
         media_info (debug)
         player_state
