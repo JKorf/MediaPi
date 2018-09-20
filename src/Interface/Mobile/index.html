@@ -6,7 +6,6 @@
     <meta name="viewport" content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
     <title>Mediaplayer</title>
 
-    <meta name="theme-color" content="#3d7ed3">
 
     <!-- for Chrome on Android, multi-resolution icon of 196x196 -->
     <meta name="mobile-web-app-capable" content="yes">
@@ -28,6 +27,8 @@
     <link rel="stylesheet/less" type="text/css" href="Css/torrents.less">
     <link rel="stylesheet/less" type="text/css" href="Css/media_list.less">
     <link rel="stylesheet/less" type="text/css" href="Css/history.less">
+
+    <meta name="theme-color" content="#colors[primary]">
 
     <script src="/App/External/ngSanitize.js"></script>
     <script src="/App/External/angular-ui-router.js"></script>
@@ -104,7 +105,11 @@
     <script src="/App/External/less.js"></script>
 
     <script type="text/javascript">
-        window.addEventListener("load", function() { window.scrollTo(0, 0); });
+        window.addEventListener("load", function()
+        {
+            $('meta[name=theme-color]').attr("content", $(".header").css("background-color"));
+            window.scrollTo(0, 0);
+        });
 
         if ('serviceWorker' in navigator) {
             <!--navigator.serviceWorker.register('/serviceworker.js').then(function() {-->

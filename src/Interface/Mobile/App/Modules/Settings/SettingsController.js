@@ -1,6 +1,6 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('SettingsController', function ($scope, $rootScope, $http, $state, MemoryFactory) {
+    angular.module('pi-test').controller('SettingsController', function ($scope, $rootScope, $http, $state, $timeout, MemoryFactory) {
 
         $scope.themes = [
             { name:"Default", file: "default" },
@@ -13,6 +13,10 @@
             MemoryFactory.SetValue("skin", $scope.selectedTheme.file);
             less.modifyVars({
               skin:  $scope.selectedTheme.file
+            });
+
+            $timeout(function(){
+                $('meta[name=theme-color]').attr("content", $(".header").css("background-color"));
             });
         }
 
