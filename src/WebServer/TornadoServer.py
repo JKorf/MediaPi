@@ -110,8 +110,11 @@ class TornadoServer:
         self.broadcast("request", "media_selection_close")
 
     def media_selection_required(self, files):
-        watched_files = [f[9] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
-        files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in files]
+        if not Settings.get_bool("slave"):
+            watched_files = [f[9] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
+            files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in files]
+        else:
+            files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in files]
         self.broadcast("request", "media_selection", files)
 
     def player_state_changed(self, old_state, state):
@@ -391,8 +394,12 @@ class RealtimeHandler(websocket.WebSocketHandler):
             Logger.write(2, "New connection")
             TornadoServer.clients.append(self)
             if TornadoServer.start_obj.torrent_manager.torrent and TornadoServer.start_obj.torrent_manager.torrent.state == TorrentState.WaitingUserFileSelection:
-                watched_files = [f[9] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
-                files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]]
+                if not Settings.get_bool("slave"):
+                    watched_files = [f[9] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
+                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]]
+                else:
+                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]]
+
                 TornadoServer.broadcast('request', 'media_selection', files)
 
     def on_close(self):
