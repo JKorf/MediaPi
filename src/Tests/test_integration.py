@@ -21,3 +21,4 @@ def test_downloading_start():
             break
         time.sleep(1)
     assert torrent.download_counter.total > 0
+

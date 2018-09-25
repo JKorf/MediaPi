@@ -8,6 +8,7 @@
 5.  Install dependencies:
 sudo apt-get install python3-pyqt4 libxml2-dev libxslt-dev
 sudo pip3 install tornado psutil lxml purl
+(for unit tests: pytest)
 6.  Disable screensaver: sudo apt-get install xscreensaver -> menu preferences -> screensaver -> disable
 7.  Enable overclock/sound via hdmi: sudo nano /boot/config.txt
 	hdmi_group=1
