@@ -389,7 +389,9 @@ class Torrent:
 
     def __set_state(self, value):
         Logger.write(2, "Setting torrent state from " + TorrentState.get_str(self.__state) + " to " + TorrentState.get_str(value))
+        old = self.__state
         self.__state = value
+        EventManager.throw_event(EventType.TorrentStateChange, [old, value])
 
     def get_data_bytes_for_stream(self, start_byte, length):
         return self.output_manager.stream_manager.get_data_for_stream(start_byte + self.media_file.start_byte, length)

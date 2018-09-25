@@ -31,10 +31,11 @@ class TorrentPeerManager:
         self.max_peers_connecting = Settings.get_int("max_peers_connecting")
         self.random = Random()
         self.fast_peers = 0
-        self.disconnect_peer_timeout = 0
+        self.download_start = 0
 
         self.event_id_log = EventManager.register_event(EventType.Log, self.log_peers)
         self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
+        self.event_id_torrent_change = EventManager.register_event(EventType.TorrentStateChange, self.torrent_state_change)
 
         self.high_speed_peers = 0
         self.medium_speed_peers = 0
@@ -42,6 +43,7 @@ class TorrentPeerManager:
     def unregister(self):
         EventManager.deregister_event(self.event_id_log)
         EventManager.deregister_event(self.event_id_stopped)
+        EventManager.deregister_event(self.event_id_torrent_change)
 
     def log_peers(self):
         with Logger.lock:
@@ -54,6 +56,10 @@ class TorrentPeerManager:
             Logger.write(3, "   Complete list: " + str(len(self.complete_peer_list)))
             for peer in self.connected_peers:
                 peer.log()
+
+    def torrent_state_change(self, old_state, new_state):
+        if new_state == TorrentState.Downloading:
+            self.download_start = current_time()
 
     def add_potential_peers_from_ip_port(self, data):
         for ip, port in data:
@@ -150,7 +156,7 @@ class TorrentPeerManager:
 
         for peer in peers_busy:
             self.connecting_peers.remove(peer)
-            self.disconnected_peers.append((peer.uri, peer.source, current_time()))
+            self.disconnected_peers.append((peer.uri, peer.source, current_time(), 0))
 
         for peer in peers_failed_connect:
             self.connecting_peers.remove(peer)
@@ -158,11 +164,12 @@ class TorrentPeerManager:
 
         for peer in peers_disconnected_connected:
             self.connected_peers.remove(peer)
-            self.disconnected_peers.append((peer.uri, peer.source, current_time()))
+            self.disconnected_peers.append((peer.uri, peer.source, current_time(), peer.counter.total))
 
         self.high_speed_peers = len([x for x in self.connected_peers if x.peer_speed == PeerSpeed.High])
         self.medium_speed_peers = len([x for x in self.connected_peers if x.peer_speed == PeerSpeed.Medium])
         self.connected_peers = sorted(self.connected_peers, key=lambda x: x.counter.value, reverse=True)
+        self.disconnected_peers = sorted(self.disconnected_peers, key=lambda x: x[3], reverse=True)
 
         return True
 
@@ -170,24 +177,21 @@ class TorrentPeerManager:
         if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData:
             return True
 
-        if self.disconnect_peer_timeout > current_time():
-            return True
+        if len(self.connected_peers) < self.max_peers_connected ** 0.66:
+            return True  # Don't stop any peers if we have less than 66% of the max amount of peers
 
-        to_stop = len(self.connected_peers) - 25
-        if to_stop > 0:
-            peers_to_check = [x for x in self.connected_peers if current_time() - x.connection_manager.connected_on > 30000]
-            peers_to_check = sorted(peers_to_check, key=lambda x: x.counter.total)
-            for peer in peers_to_check:
-                if peer.counter.value > 5000:
-                    # If peer speed is more than 5kbps don't remove
-                    continue
+        if current_time() - self.download_start < 20000:
+            return True  # Don't drop peers if we only recently started downloading again
 
-                Logger.write(2, "Stopping slowest peer to find a potential faster one. Peer speed last 5 seconds was " + str(write_size(peer.counter.value)) + ", total: " + str(write_size(peer.counter.total)))
-                peer.stop()
-                to_stop -= 1
+        peers_to_check = [x for x in self.connected_peers if current_time() - x.connection_manager.connected_on > 30000]
+        peers_to_check = sorted(peers_to_check, key=lambda x: x.counter.total)
+        for peer in peers_to_check:
+            if peer.counter.value > 5000:
+                # If peer speed is more than 5kbps don't remove
+                break
 
-                if to_stop == 0:
-                    break
+            Logger.write(2, "Stopping slowest peer to find a potential faster one. Peer speed last 5 seconds was " + str(write_size(peer.counter.value)) + ", total: " + str(write_size(peer.counter.total)))
+            peer.stop()
 
         return True
 
