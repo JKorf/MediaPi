@@ -12,7 +12,10 @@ class Stats:
     @staticmethod
     def _get_stat(name):
         if name not in Stats.cache:
-            stat = Stats.database.get_stat(name)
+            if Stats.database is not None:
+                stat = Stats.database.get_stat(name)
+            else:
+                stat = 0
             Stats.cache[name] = stat
         else:
             return Stats.cache[name]

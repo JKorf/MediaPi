@@ -90,10 +90,14 @@ class List(object):
             torrent_link = None
 
         meta_col = cols[1].find('.//font').text_content() # don't need user
+        created = None
+        size = None
+        user = None
         match = self._meta.match(meta_col)
-        created = match.groups()[0].replace('\xa0', ' ')
-        size = match.groups()[1].replace('\xa0', ' ')
-        user = match.groups()[2]  # uploaded by user
+        if match:
+            created = match.groups()[0].replace('\xa0', ' ')
+            size = match.groups()[1].replace('\xa0', ' ')
+            user = match.groups()[2]  # uploaded by user
 
         # last 2 columns for seeders and leechers
         seeders = int(cols[2].text)

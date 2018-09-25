@@ -11,8 +11,6 @@
     Weather
     TV
 
-    File selection op slave kan niet, wordt db voor gebruikt
-
     Movies/series kunnen toevoegen aan `want to watch`
 
     Aangeven als niet gestart kan worden door geen peers, na x tijd geen peers verbonden en geen potential
