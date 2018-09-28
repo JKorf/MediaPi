@@ -52,6 +52,7 @@ class WebsocketController:
             if WebsocketController.program.torrent_manager.torrent is not None:
                 media_data = WebsocketController.get_media_data()
                 WebsocketController.broadcast("update", "media", media_data)
+                WebsocketController.update_loop_count = -1
 
             time.sleep(1)
             WebsocketController.update_loop_count += 1

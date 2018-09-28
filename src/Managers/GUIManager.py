@@ -69,6 +69,9 @@ class GUIManager:
         self.next_episode_manager.reset()
 
     def player_stopped(self, position, length):
+        if not length:
+            return
+
         factor = float(position)/float(length)
         if length - position < 60 and length != position and factor > 0.9:
             self.check_next_episode()
