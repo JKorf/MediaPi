@@ -17,8 +17,6 @@
 
     Regression protocol?
 
-    Als stoppen net voor het einde ook vragen next episode
-
     disable popups hd:
         https://www.raspberrypi.org/forums/viewtopic.php?t=159739
         https://ubuntuforums.org/showthread.php?t=1935099
