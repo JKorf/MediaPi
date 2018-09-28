@@ -25,6 +25,7 @@ from WebServer.Controllers.RadioController import RadioController
 from WebServer.Controllers.ShowController import ShowController
 from WebServer.Controllers.TorrentController import TorrentController
 from WebServer.Controllers.UtilController import UtilController
+from WebServer.Controllers.WebsocketController import WebsocketController
 from WebServer.Controllers.YoutubeController import YoutubeController
 from WebServer.Models import WebSocketMessage, MediaFile
 
@@ -33,7 +34,6 @@ class TornadoServer:
     start_obj = None
     master_ip = None
     clients = []
-    _ws_lock = Lock()
 
     def __init__(self, start):
         self.port = 80
@@ -54,17 +54,6 @@ class TornadoServer:
         ]
 
         self.application = web.Application(handlers)
-
-        EventManager.register_event(EventType.NextEpisodeSelection, self.next_episode_selection)
-        EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.media_selection_required)
-        EventManager.register_event(EventType.TorrentMediaFileSelection, self.media_selected)
-        EventManager.register_event(EventType.PlayerStateChange, self.player_state_changed)
-        EventManager.register_event(EventType.PlayerError, self.player_error)
-        EventManager.register_event(EventType.Seek, self.player_seeking)
-        EventManager.register_event(EventType.SetVolume, self.player_volume)
-        EventManager.register_event(EventType.SetSubtitleId, self.player_subtitle_id)
-        EventManager.register_event(EventType.SetSubtitleOffset, self.player_subtitle_offset)
-        EventManager.register_event(EventType.Error, self.application_error)
 
     def start(self):
         while True:
@@ -102,53 +91,6 @@ class TornadoServer:
                 Logger.write(3, "Failed to connect to remote server, try " + str(i))
                 time.sleep(10)
         return "No internet connection"
-
-    def next_episode_selection(self, path, name, season, episode, type, media_file, img):
-        self.broadcast("request", "next_episode", MediaFile(path, name, 0, season, episode, type, media_file, img, False))
-
-    def media_selected(self, file):
-        self.broadcast("request", "media_selection_close")
-
-    def media_selection_required(self, files):
-        if not Settings.get_bool("slave"):
-            watched_files = [f[9] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
-            files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in files]
-        else:
-            files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in files]
-        self.broadcast("request", "media_selection", files)
-
-    def player_state_changed(self, old_state, state):
-        self.broadcast("player_event", "state_change", state.value)
-
-    def player_error(self):
-        self.broadcast("player_event", "error")
-
-    def player_seeking(self, pos):
-        self.broadcast("player_event", "seek", pos / 1000)
-
-    def player_volume(self, vol):
-        self.broadcast("player_event", "volume", vol)
-
-    def player_subtitle_id(self, id):
-        self.broadcast("player_event", "subtitle_id", id)
-
-    def player_subs_done_change(self, done):
-        self.broadcast("player_event", "subs_done_change", done)
-
-    def player_subtitle_offset(self, offset):
-        self.broadcast("player_event", "subtitle_offset", float(offset) / 1000 / 1000)
-
-    def application_error(self, error_type, error_message):
-        self.broadcast("error_event", error_type, error_message)
-
-    @staticmethod
-    def broadcast(event, method, parameters=None):
-        if parameters is None:
-            parameters = ""
-
-        with TornadoServer._ws_lock:
-            for client in TornadoServer.clients:
-                client.write_message(to_JSON(WebSocketMessage(event, method, parameters)))
 
 
 class StaticFileHandler(tornado.web.StaticFileHandler):
@@ -390,22 +332,10 @@ class RealtimeHandler(websocket.WebSocketHandler):
         return True
 
     def open(self):
-        if self not in TornadoServer.clients:
-            Logger.write(2, "New connection")
-            TornadoServer.clients.append(self)
-            if TornadoServer.start_obj.torrent_manager.torrent and TornadoServer.start_obj.torrent_manager.torrent.state == TorrentState.WaitingUserFileSelection:
-                if not Settings.get_bool("slave"):
-                    watched_files = [f[9] for f in TornadoServer.start_obj.database.get_watched_torrent_files(TornadoServer.start_obj.torrent_manager.torrent.uri)]
-                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]]
-                else:
-                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in [y for y in TornadoServer.start_obj.torrent_manager.torrent.files if y.is_media]]
-
-                TornadoServer.broadcast('request', 'media_selection', files)
+        WebsocketController.opening_client(self)
 
     def on_close(self):
-        if self in TornadoServer.clients:
-            Logger.write(2, "Connection closed")
-            TornadoServer.clients.remove(self)
+        WebsocketController.closing_client(self)
 
 
 class DatabaseHandler(web.RequestHandler):
