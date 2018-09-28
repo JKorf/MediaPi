@@ -11,6 +11,10 @@
     Weather
     TV
 
+    Gaat verder na stoppen torrent met player, refresh fixed het. Omdat er geen nieuwe update komt
+    DataManager neemt te lang, +- 1seconde
+    Subtitle files van master worden niet naar slave gestuurd
+
     Movies/series kunnen toevoegen aan `want to watch`
 
     Aangeven als niet gestart kan worden door geen peers, na x tijd geen peers verbonden en geen potential
