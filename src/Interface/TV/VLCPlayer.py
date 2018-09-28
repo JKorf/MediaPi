@@ -8,7 +8,6 @@ from Interface.TV.vlc import libvlc_get_version, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
-from Shared.Util import current_time
 
 
 class VLCPlayer:
@@ -35,6 +34,7 @@ class VLCPlayer:
 
         self.state = PlayerState.Nothing
         self.state_change_action = None
+        self.player_stopped_action = None
         self.trying_subitems = False
 
         thread = CustomThread(self.watch_time_change, "VLC State watcher")
@@ -112,12 +112,16 @@ class VLCPlayer:
         self.__player.pause()
 
     def stop(self):
+        pos = self.get_position()
+        length = self.get_length()
         self.__player.stop()
         self.type = None
         self.title = None
         self.img = None
         self.path = None
         self.prepared = False
+
+        self.player_stopped_action(pos, length)
 
     def fullscreen_on(self):
         self.__player.set_fullscreen(True)
@@ -198,6 +202,9 @@ class VLCPlayer:
 
     def on_state_change(self, action):
         self.state_change_action = action
+
+    def on_player_stopped(self, action):
+        self.player_stopped_action = action
 
     def hook_events(self):
         self.__event_manager.event_attach(EventType.MediaPlayerOpening, self.state_change_opening)

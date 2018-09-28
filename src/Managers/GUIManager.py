@@ -25,10 +25,11 @@ class GUIManager:
         self.next_episode_manager = NextEpisodeManager(self)
 
         self.player.on_state_change(self.player_state_change)
+        self.player.on_player_stopped(self.player_stopped)
 
         EventManager.register_event(EventType.PreparePlayer, self.prepare_player)
         EventManager.register_event(EventType.StartPlayer, self.start_player)
-        EventManager.register_event(EventType.PlayerStateChange, self.check_next_episode)
+        EventManager.register_event(EventType.PlayerStateChange, self.player_state_changed)
         EventManager.register_event(EventType.StartTorrent, self.reset_next_episode)
         EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
 
@@ -67,10 +68,18 @@ class GUIManager:
     def reset_next_episode(self, url, file):
         self.next_episode_manager.reset()
 
-    def check_next_episode(self, old, new):
+    def player_stopped(self, position, length):
+        factor = float(position)/float(length)
+        if length - position < 60 and length != position and factor > 0.9:
+            self.check_next_episode()
+
+    def player_state_changed(self, old, new):
         if new != PlayerState.Ended:
             return
 
+        self.check_next_episode()
+
+    def check_next_episode(self):
         if self.next_episode_manager.next_type is not None:
             Logger.write(2, "Continuing next episode: " + self.next_episode_manager.next_title)
             EventManager.throw_event(EventType.NextEpisodeSelection, [self.next_episode_manager.next_path,
