@@ -10,6 +10,13 @@
             controller: "HomeController"
         });
 
+        $stateProvider.state('lighting', {
+            url: '/lighting',
+            templateUrl: '/App/Modules/Lighting/lighting.html',
+            cache: false,
+            controller: "LightingController"
+        });
+
         $stateProvider.state('movies', {
             url: '/media/movies',
             templateUrl: '/App/Modules/Media/medialist.html',
