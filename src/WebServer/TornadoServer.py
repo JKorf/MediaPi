@@ -196,7 +196,7 @@ class PlayerHandler(web.RequestHandler):
             PlayerController.stop_player()
 
             if was_waiting_for_file_selection:
-                TornadoServer.broadcast('request', 'media_selection_close', [])
+                WebsocketController.broadcast('request', 'media_selection_close', [])
 
         elif url == "pause_resume_player":
             PlayerController.pause_resume_player()

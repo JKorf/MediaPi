@@ -1,6 +1,6 @@
 ﻿(function () {
 
-    angular.module('pi-test').controller('StatisticsController', function ($scope, $rootScope, $http, $state, $interval, $timeout, ErrorFactory, CacheFactory, MemoryFactory) {
+    angular.module('pi-test').controller('StatisticsController', function ($scope, $rootScope, $http, $state, $interval, $timeout, ErrorFactory, CacheFactory, MemoryFactory, RealtimeFactory) {
         var infoInterval;
         var requestInfo;
 

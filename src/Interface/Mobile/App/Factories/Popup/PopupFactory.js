@@ -11,7 +11,7 @@
             }
 
             if(event == "media_selection_close")
-                $rootScope.closePopup();
+                $rootScope.closePopup("cancel");
         });
 
         function OpenSelectNextEpisode(data){
@@ -38,7 +38,7 @@
 
             $timeout(function(){
                 if(open)
-                    $rootScope.closePopup();
+                    $rootScope.closePopup("cancel");
             }, 1000 * 60 * 30);
 
         }
@@ -75,6 +75,7 @@
                 }, function(action){
                     console.log(action);
                     if (action != "invalid"){
+                        console.log("Stopping player");
                         $http.post("/player/stop_player");
                         $rootScope.$broadcast("stopPlay");
                     }
@@ -91,7 +92,7 @@
             $(".popup").remove();
             $(".popup-background").remove();
              if($rootScope.currentPromise && $rootScope.currentPromise.promise.$$state.status == 0)
-                $rootScope.currentPromise.reject("cancel");
+                $rootScope.currentPromise.reject("invalid");
 
             $("body").append($compile("<div class='popup-background' ng-click='backgroundClick()'></div>")($rootScope));
             $("body").append($compile(
@@ -111,12 +112,12 @@
             $(".popup-content").css("max-height", $window.innerHeight - 240 + "px");
         });
 
-        $rootScope.closePopup = function(){
+        $rootScope.closePopup = function(reject_message){
             $(".popup").remove();
             $(".popup-background").remove();
 
             if($rootScope.currentPromise && $rootScope.currentPromise.promise.$$state.status == 0)
-                $rootScope.currentPromise.reject("invalid");
+                $rootScope.currentPromise.reject(reject_message);
         }
 
         $rootScope.setPopupContent = function(title, showCancel, showOk, modal, content, scope, canConfirmFunc){

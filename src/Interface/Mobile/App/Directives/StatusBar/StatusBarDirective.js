@@ -1,12 +1,12 @@
 ﻿(function () {
-    angular.module('pi-test').directive('statusBar', function ($rootScope, $state, RequestFactory) {
+    angular.module('pi-test').directive('statusBar', function ($rootScope, $state, RealtimeFactory) {
         return {
             restrict: 'E',
             scope: {
             },
             templateUrl: '/App/Directives/StatusBar/statusbar.html',
             link: function ($scope, element, attrs) {
-                statusInterval = RequestFactory.StartRequesting("/util/status", 2000, handleStatus, handleError);
+                RealtimeFactory.register("statusbar", "update", handleStatus);
 
                 var normal = "#999";
                 var orange = "#e07700";
@@ -14,21 +14,24 @@
                 var green = "#7bff0f";
                 var red = "#ff2b2b";
 
-                function handleStatus(response){
-                    $scope.data = response.data;
-                    $(".status-ellipse").css('background', colorForTorrentState($scope.data.torrent_state, $scope.data.buffer_ready, $scope.data.peers_connected, $scope.data.potential_peers));
+                function handleStatus(event, data){
+                    if(event == "status")
+                    {
+                        $scope.data = data;
+                        $(".status-ellipse").css('background', colorForTorrentState($scope.data.torrent_state, $scope.data.buffer_ready, $scope.data.peers_connected, $scope.data.potential_peers));
 
-                    var memcolor = colorForMemory($scope.data.memory);
-                    if (memcolor == normal)
-                        $(".memory-item").css('color', "");
-                    else
-                        $(".memory-item").css('color', memcolor);
+                        var memcolor = colorForMemory($scope.data.memory);
+                        if (memcolor == normal)
+                            $(".memory-item").css('color', "");
+                        else
+                            $(".memory-item").css('color', memcolor);
 
-                    var cpucolor = colorForCpu($scope.data.cpu);
-                    if (cpucolor == normal)
-                        $(".cpu-item").css('color', "");
-                    else
-                        $(".cpu-item").css('color', cpucolor);
+                        var cpucolor = colorForCpu($scope.data.cpu);
+                        if (cpucolor == normal)
+                            $(".cpu-item").css('color', "");
+                        else
+                            $(".cpu-item").css('color', cpucolor);
+                    }
                 }
 
                 function handleError(err){

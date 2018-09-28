@@ -7,8 +7,6 @@
             templateUrl: '/App/Directives/Player/player.html',
             link: function ($scope, element, attrs) {
                 var playerStates = [];
-                var request = false;
-
                 playerStates[0] = "Nothing";
                 playerStates[1] = "Opening";
                 playerStates[2] = "Buffering";
@@ -19,13 +17,12 @@
                 var playStartTime;
                 var playStartOffset;
                 var updater;
-                var playerInterval;
-                var playerInvokeInterval;
 
                 var playing = false;
                 var media = false;
 
-                $scope.playerState = {state:'disconnected'};
+                $scope.playerState = {state:'Nothing'};
+                $rootScope.playerState = 'Nothing';
 
                 Init();
 
@@ -42,11 +39,8 @@
 
                 $scope.info = function(){
                     $rootScope.openPopup();
-                    RequestMediaInfo();
-                    var mediaInfoInterval = $interval(function(){ RequestMediaInfo(); }, 2000);
                     CacheFactory.Get("/App/Directives/Player/mediaInfo.html", 900).then(function(data){
                         $rootScope.setPopupContent("Media info", false, false, false, data, $scope).then(function(data){}, function(data){
-                            $interval.cancel(mediaInfoInterval);
                         });
                     });
                 }
@@ -117,23 +111,22 @@
                 function Init(){
                     $scope.playerState = {}
 
+                    RealtimeFactory.register("PlayerDirective state", "update", function(event, data){
+                        if(event == "player")
+                            HandlePlayerInfo(data);
+
+                        else if(event == "media")
+                            HandleMediaInfo(data);
+                    });
+
                     RealtimeFactory.register("PlayerDirective", "player_event", function(event, data){
                         if(event == "state_change"){
                             state = playerStates[parseInt(data)];
                             ChangeState(state);
-                            if(!playerInvokeInterval)
-                            {
-                                playerInvokeInterval = $timeout(function(){
-                                    // Invoke again after 2 seconds to make sure we got the latest state because invoke wont trigger if already busy
-                                    RequestFactory.InvokeNow(playerInterval);
-                                    playerInvokeInterval = false;
-                                }, 2000);
-                            }
                         }
                         if(event == "error"){
                             ChangeState('error');
                             console.log("error");
-                            RequestFactory.InvokeNow(playerInterval);
                         }
                         if(event == "seek"){
                             playStartTime = new Date();
@@ -150,7 +143,6 @@
                         }
                         if(event == "subs_done_change"){
                             $scope.playerState.subs_done = data;
-                            RequestFactory.InvokeNow(playerInterval);
                         }
                         if(event == "subtitle_offset"){
                             $scope.playerState.subtitle_delay = parseFloat(data);
@@ -160,7 +152,6 @@
                         }
                         if(event == "socket_open"){
                             ChangeState(playerStates[0]);
-                            RequestFactory.InvokeNow(playerInterval);
                         }
 
                         $scope.$apply();
@@ -168,32 +159,26 @@
 
                     initMediaSession();
 
-                    playerInterval = RequestFactory.StartRequesting("/util/player_state", 5000, handlePlayerInfo, handlePlayerError, shouldRequestPlayerState)
-
-                    $scope.$on("$destroy", function(){
-                        RequestFactory.StopRequesting(playerInterval);
-                    });
-
                     $rootScope.$on("startPlay", function(event, args){
-                        handlePlayerInfo({data: {
+                        HandlePlayerInfo({
                             state: 1,
                             title: args.title,
                             type: args.type,
                             playing_for: 0,
                             play_time: 0,
                             length: 0
-                        }});
+                        });
                     });
 
                     $rootScope.$on("stopPlay", function(event, args){
-                        handlePlayerInfo({data: {
+                        HandlePlayerInfo({
                             state: 0,
                             title: "",
                             type: "",
                             playing_for: 0,
                             play_time: 0,
                             length: 0
-                        }});
+                        });
                     });
                 }
 
@@ -263,16 +248,10 @@
                     }
                 }
 
-                function shouldRequestPlayerState(){
-                    if(!media)
-                        return false;
-                    return true;
-                }
-
-                function handlePlayerInfo(response){
-                    response.data.state = playerStates[parseInt(response.data.state)];
-                    ChangeState(response.data.state);
-                    $scope.playerState = response.data;
+                function HandlePlayerInfo(data){
+                    data.state = playerStates[parseInt(data.state)];
+                    ChangeState(data.state);
+                    $scope.playerState = data;
 
                     updateMediaSessionMetaData();
 
@@ -281,22 +260,16 @@
 
                     if($scope.playerState.state != 'Nothing' && $scope.playerState.state != 'Buffering')
                     {
-                        StartPlayTimer();
+                        if(!updater)
+                            StartPlayTimer();
                     }
                 }
 
-                function handlePlayerError(err){
-                    console.log(err);
-                    ChangeState('disconnected');
-                }
-
                 function StartPlayTimer(){
-                    if(updater)
-                        $interval.cancel(updater);
-
                     updater = $interval(function(){
                         if(!media){
                             $interval.cancel(updater);
+                            updater = false;
                             return;
                         }
 
@@ -345,30 +318,21 @@
                     }
                 }
 
-                function RequestMediaInfo(){
-                    if(request)
-                        return;
+                function HandleMediaInfo(data){
+                    $scope.mediaInfo = data;
 
-                    request = $http.get("/util/media_info").then(function(response){
-                        request = false;
-                        $scope.mediaInfo = response.data;
-
-                        if ($scope.mediaInfo.torrent_state == 1)
-                            $scope.mediaInfo.torrent_state = "Initial";
-                        if ($scope.mediaInfo.torrent_state == 2)
-                            $scope.mediaInfo.torrent_state = "Downloading metadata";
-                        if ($scope.mediaInfo.torrent_state == 3)
-                            $scope.mediaInfo.torrent_state = "Downloading";
-                        if ($scope.mediaInfo.torrent_state == 4)
-                            $scope.mediaInfo.torrent_state = "Paused";
-                        if ($scope.mediaInfo.torrent_state == 5)
-                            $scope.mediaInfo.torrent_state = "Done";
-                        if ($scope.mediaInfo.torrent_state == 6)
-                            $scope.mediaInfo.torrent_state = "Waiting file selection";
-                    }, function(er){
-                        request = false;
-                        $scope.mediaInfo = false;
-                    });
+                    if ($scope.mediaInfo.torrent_state == 1)
+                        $scope.mediaInfo.torrent_state = "Initial";
+                    if ($scope.mediaInfo.torrent_state == 2)
+                        $scope.mediaInfo.torrent_state = "Downloading metadata";
+                    if ($scope.mediaInfo.torrent_state == 3)
+                        $scope.mediaInfo.torrent_state = "Downloading";
+                    if ($scope.mediaInfo.torrent_state == 4)
+                        $scope.mediaInfo.torrent_state = "Paused";
+                    if ($scope.mediaInfo.torrent_state == 5)
+                        $scope.mediaInfo.torrent_state = "Done";
+                    if ($scope.mediaInfo.torrent_state == 6)
+                        $scope.mediaInfo.torrent_state = "Waiting file selection";
                 }
             }
         };

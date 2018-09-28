@@ -17,17 +17,13 @@
 
     Regression protocol?
 
+    Als stoppen net voor het einde ook vragen next episode
+
     disable popups hd:
         https://www.raspberrypi.org/forums/viewtopic.php?t=159739
         https://ubuntuforums.org/showthread.php?t=1935099
         ~/.config/pcmanfm/LXDE/pcmanfm.conf voor install?
         /etc/xdg/pcmanfm/LXDE-pi/pcmanfm.conf
-
-    Refactor polling to use websocket
-        media_info (debug)
-        player_state
-        status (status bar)
-        stats
 
     speed graph
 

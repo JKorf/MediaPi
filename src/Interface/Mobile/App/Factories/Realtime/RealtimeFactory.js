@@ -22,7 +22,6 @@
 
             socket.onmessage = function(evnt){
                 var data = JSON.parse(evnt.data);
-
                 for(var i = 0 ; i < registrations.length; i++){
                     if(registrations[i].type == data.type){
                         registrations[i].handler(data.event, data.data);
