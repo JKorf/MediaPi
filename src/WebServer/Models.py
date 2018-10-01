@@ -122,8 +122,9 @@ class Version:
 
 class StartUp:
 
-    def __init__(self, instance_name):
+    def __init__(self, instance_name, lighting_enabled):
         self.instance_name = instance_name
+        self.lighting_enabled = lighting_enabled
 
 
 class TorrentModel:

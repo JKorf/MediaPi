@@ -3,6 +3,7 @@ import time
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
+from WebServer.Controllers.LightController import LightController
 from WebServer.Controllers.WebsocketController import WebsocketController
 from WebServer.TornadoServer import TornadoServer
 
@@ -15,6 +16,8 @@ class WebServerManager:
 
     def start_server(self):
         WebsocketController.init(self.start)
+        LightController.init(self.start)
+
         self.server = TornadoServer(self.start)
         self.server.start()
         if Settings.get_bool("show_gui"):

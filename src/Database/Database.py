@@ -312,4 +312,3 @@ class Database:
             return 0
 
         return float(data[0][1])
-

@@ -4,7 +4,7 @@
         <div class="menu-item-icon"><img src="/Images/home.svg" svg-image /></div>
     </div>
 
-    <div class="menu-item" ng-click="navigate('lighting')" ng-class="{current: currentState == 'lighting'}" ng-if="false">
+    <div class="menu-item" ng-click="navigate('lighting')" ng-class="{current: currentState == 'lighting'}" ng-if="$root.lightingEnabled">
         <div class="menu-item-title">Lighting</div>
         <div class="menu-item-icon"><img src="/Images/lamp.svg" svg-image /></div>
     </div>

@@ -14,6 +14,7 @@ from Shared.Stats import Stats
 from Shared.Threading import ThreadManager
 from Shared.Util import to_JSON, parse_bool, RequestFactory, current_time, write_size
 from MediaPlayer.Util.Enums import TorrentState
+from WebServer.Controllers.LightController import LightController
 from WebServer.Models import MediaInfo, CurrentMedia, Version, Settings, Info, Status, StartUp
 
 
@@ -82,4 +83,5 @@ class UtilController:
 
     @staticmethod
     def startup():
-        return to_JSON(StartUp(AppSettings.get_string("name")))
+        return to_JSON(
+            StartUp(AppSettings.get_string("name"), LightController.enabled))

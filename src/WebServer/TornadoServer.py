@@ -18,6 +18,7 @@ from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, RequestFactory
 from MediaPlayer.Util.Enums import TorrentState
 from MediaPlayer.Util.Util import get_file_info
+from WebServer.Controllers.LightController import LightController
 from WebServer.Controllers.HDController import HDController
 from WebServer.Controllers.MovieController import MovieController
 from WebServer.Controllers.PlayerController import PlayerController
@@ -48,6 +49,7 @@ class TornadoServer:
             (r"/radio/(.*)", RadioHandler),
             (r"/youtube/(.*)", YoutubeHandler),
             (r"/torrent/(.*)", TorrentHandler),
+            (r"/lighting/(.*)", LightHandler),
             (r"/realtime", RealtimeHandler),
             (r"/database/(.*)", DatabaseHandler),
             (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Interface/Mobile", "default_filename": "index.html"})
@@ -325,6 +327,18 @@ class TorrentHandler(web.RequestHandler):
     def post(self, url):
         if url == "play_torrent":
             TorrentController.play_torrent(self.get_argument("url"), self.get_argument("title"))
+
+
+class LightHandler(web.RequestHandler):
+    @gen.coroutine
+    def get(self, url):
+        if url == "get_lights":
+            self.write(LightController.get_lights())
+
+    @gen.coroutine
+    def post(self, url):
+        if url == "switch_light":
+            LightController.switch_light(self.get_argument("id"), self.get_argument("state"))
 
 
 class RealtimeHandler(websocket.WebSocketHandler):
