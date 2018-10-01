@@ -8,6 +8,7 @@ from MediaPlayer.Data import Bitfield, Piece
 from MediaPlayer.Torrent.TorrentPieceHashValidator import TorrentPieceHashValidator
 
 from MediaPlayer.Util.Enums import TorrentState
+from Shared.Util import current_time
 
 
 class TorrentDataManager:
@@ -90,7 +91,7 @@ class TorrentDataManager:
     def update_write_blocks(self):
         for peer, piece_index, offset, data in list(self.blocks_done):
             block = self.get_block_by_offset(piece_index, offset)
-            Logger.write(1, 'Received piece message: ' + str(block.piece_index) + ', block: ' + str(block.index))
+            Logger.write(1, str(peer.id) + ' Received piece message: ' + str(block.piece_index) + ', block: ' + str(block.index))
 
             peer.download_manager.block_done(block)
             if self.torrent.state == TorrentState.Done:

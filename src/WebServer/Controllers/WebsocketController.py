@@ -45,7 +45,7 @@ class WebsocketController:
                 status_data = WebsocketController.get_status_data()
                 WebsocketController.broadcast("update", "status", status_data)
 
-            if WebsocketController.program.gui_manager.player.state != PlayerState.Nothing:
+            if WebsocketController.program.gui_manager.player.state != PlayerState.Nothing or WebsocketController.update_loop_count % 5 == 0:
                 player_data = WebsocketController.get_player_data()
                 WebsocketController.broadcast("update", "player", player_data)
 

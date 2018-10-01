@@ -22,6 +22,8 @@ class PeerDownloadManager:
         self.stopped = False
         self.downloading = []
         self.lock = Lock()
+        self.blocks_done_lock = Lock()
+        self.blocks_done = []
 
         block_size = Settings.get_int("block_size")
         self.low_peer_max_blocks = Settings.get_int("low_peer_max_download_buffer") // block_size
@@ -82,18 +84,19 @@ class PeerDownloadManager:
             self.peer.connection_manager.send(request.to_bytes())
 
     def block_done(self, block):
-        with self.lock:
-            self.downloading = [x for x in self.downloading if x.block_download.block.index != block.index]
+        with self.blocks_done_lock:
+            self.blocks_done.append(block.index)
 
     def check_current_downloading(self):
         canceled = 0
 
+        done_copy = list(self.blocks_done)
         with self.lock:
             for peer_download in list(self.downloading):
-                if peer_download.block_download.block.done:
-                    # Block already done
+                if peer_download.block_download.block.index in done_copy:  # Peer downloaded this block; it's done
                     self.downloading.remove(peer_download)
                     peer_download.block_download.remove_peer(self.peer)
+                    done_copy.remove(peer_download.block_download.block.index)
                     continue
 
                 prio_timeout = 0
@@ -105,6 +108,10 @@ class PeerDownloadManager:
                     self.downloading.remove(peer_download)
                     peer_download.block_download.remove_peer(self.peer)
                     canceled += 1
+
+                with self.blocks_done_lock:
+                    self.blocks_done = [x for x in self.blocks_done if x not in done_copy]
+
         if canceled:
             Logger.write(1, "Canceled " + str(canceled))
 
@@ -124,7 +131,9 @@ class PeerDownloadManager:
                 self.downloading.remove(peer_download[0])
 
     def log(self):
+        cur_downloading = [str(x.block_download.block.index) + ", " for x in self.downloading]
         Logger.write(3, "       Currently downloading: " + str(len(self.downloading)))
+        Logger.write(3, "       Blocks: " + ''.join(str(e) for e in cur_downloading))
         Logger.write(3, "       Speed: " + write_size(self.peer.counter.value))
 
     def stop(self):
