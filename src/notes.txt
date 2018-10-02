@@ -3,13 +3,13 @@
 
     spotify
         https://eltechs.com/run-spotify-on-raspberry-pi/
-
-    Ikea lighting
-        https://learn.pimoroni.com/tutorial/sandyj/controlling-ikea-tradfri-lights-from-your-pi
-
+        
 --- TODO ---
     Weather
     TV
+
+    Ikea lighting
+        https://learn.pimoroni.com/tutorial/sandyj/controlling-ikea-tradfri-lights-from-your-pi
 
     DataManager neemt te lang, +- 1seconde
 
