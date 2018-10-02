@@ -10,6 +10,7 @@
 
     Ikea lighting
         https://learn.pimoroni.com/tutorial/sandyj/controlling-ikea-tradfri-lights-from-your-pi
+        https://github.com/athombv/com.ikea.tradfri/issues/4
 
     DataManager neemt te lang, +- 1seconde
 
