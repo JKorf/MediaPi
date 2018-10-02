@@ -45,7 +45,7 @@ class SubtitleProvider:
         # check file location for files with same name
         file_without_ext = os.path.splitext(filename)
         dir = os.path.dirname(path)
-        subs = [join(dir, f) for f in os.listdir(dir) if isfile(join(dir, f)) and os.path.splitext(f)[0] == file_without_ext[0] and f.endswith('srt')]
+        subs = [join(dir, f) for f in os.listdir(dir) if isfile(join(dir, f)) and self.match_sub(f, file_without_ext[0])]
         if len(subs) > 0:
             return subs
 
@@ -55,6 +55,19 @@ class SubtitleProvider:
         for source in self.subtitle_sources:
             sub_files += source.get_subtitles(size, filename, first, last)
         return sub_files
+
+    def match_sub(self, file_name, media_name):
+        if not file_name.endswith(".srt"):
+            return False
+
+        sep = file_name.split(os.extsep)
+        if len(sep) == 2:
+            return sep[0] == media_name
+
+        if len(sep[len(sep) - 2]) == 2:
+            return file_name[:-7] == media_name
+
+        return os.path.splitext(file_name)[0] == media_name
 
     def search_subtitles(self, size, filename, first_64k, last_64k):
         Logger.write(2, "Hash data known, going to search for subtitles")
