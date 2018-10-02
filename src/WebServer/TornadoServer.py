@@ -5,12 +5,12 @@ import socket
 import time
 import urllib.parse
 import urllib.request
-from threading import Lock
 
 import tornado
 from tornado import gen
 from tornado import ioloop, web, websocket
 
+from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -28,7 +28,6 @@ from WebServer.Controllers.TorrentController import TorrentController
 from WebServer.Controllers.UtilController import UtilController
 from WebServer.Controllers.WebsocketController import WebsocketController
 from WebServer.Controllers.YoutubeController import YoutubeController
-from WebServer.Models import WebSocketMessage, MediaFile
 
 
 class TornadoServer:
@@ -75,10 +74,17 @@ class TornadoServer:
     def stop(self):
         ioloop.IOLoop.instance().stop()
 
-    def notify_master(self, url):
+    @staticmethod
+    def notify_master(url):
         reroute = str(TornadoServer.master_ip) + url
         Logger.write(2, "Sending notification to master at " + reroute)
         RequestFactory.make_request(reroute, "POST")
+
+    @staticmethod
+    def request_master(url):
+        reroute = str(TornadoServer.master_ip) + url
+        Logger.write(2, "Sending request to master at " + reroute)
+        return RequestFactory.make_request(reroute, "GET")
 
     def get_actual_address(self):
         for i in range(3):
@@ -104,13 +110,9 @@ class StaticFileHandler(tornado.web.StaticFileHandler):
 class UtilHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
-        if url == "player_state":
-            self.write(UtilController.player_state(TornadoServer.start_obj))
-        elif url == "get_protected_img":
+        if url == "get_protected_img":
             data = yield UtilController.get_protected_img(self.get_argument("url"))
             self.write(data)
-        elif url == "media_info":
-            self.write(UtilController.media_info(TornadoServer.start_obj))
         elif url == "startup":
             self.write(UtilController.startup())
         elif url == "info":
@@ -119,8 +121,9 @@ class UtilHandler(web.RequestHandler):
             self.write(UtilController.get_settings())
         elif url == "version":
             self.write(UtilController.version(TornadoServer.start_obj))
-        elif url == "status":
-            self.write(UtilController.status(TornadoServer.start_obj))
+        elif url == "get_subtitles":
+            data = TornadoServer.start_obj.torrent_manager.subtitle_provider.search_subtitles_for_file(self.get_argument("path"), self.get_argument("file"))
+            self.write(to_JSON(data))
 
     @gen.coroutine
     def post(self, url):
@@ -140,7 +143,7 @@ class MovieHandler(web.RequestHandler):
         if url == "play_movie":
             MovieController.play_movie(self.get_argument("url"), self.get_argument("id"), self.get_argument("title"), self.get_argument("img", ""))
         elif url == "play_continue":
-            yield MovieController.play_continue(play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"), self.get_argument("mediaFile"))
+            yield MovieController.play_continue(HDController.play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"), self.get_argument("mediaFile"))
 
     @gen.coroutine
     def get(self, url):
@@ -218,22 +221,9 @@ class HDHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
         if Settings.get_bool("slave"):
-            yield self.reroute_to_master()
+            self.write(TornadoServer.request_master(self.request.uri))
         elif url == "drives":
             self.write(HDController.drives())
-        elif url == "get_hash_data": # TODO need to do this different
-            file = self.get_argument("path")
-            size, first, last = get_file_info(file)
-            first_base = base64.b64encode(first)
-            last_base = base64.b64encode(last)
-            obj = {
-                "file": file,
-                "size": size,
-                "first": str(first_base),
-                "last": str(last_base)
-            }
-
-            self.write(json.dumps(obj))
         elif url == "directory":
             self.write(HDController.directory(self.get_argument("path")))
 
@@ -242,7 +232,7 @@ class HDHandler(web.RequestHandler):
         if url == "play_file":
             if Settings.get_bool("slave"):
                 Logger.write(2, self.get_argument("path"))
-                play_master_file(self.get_argument("path"), self.get_argument("filename"), 0)
+                HDController.play_master_file(self.get_argument("path"), self.get_argument("filename"), 0)
 
             else:
                 filename = self.get_argument("filename")
@@ -256,39 +246,6 @@ class HDHandler(web.RequestHandler):
             HDController.next_image(self.get_argument("current_path"))
         elif url == "prev_image":
             HDController.prev_image(self.get_argument("current_path"))
-
-    @gen.coroutine
-    def reroute_to_master(self):
-        reroute = str(TornadoServer.master_ip) + self.request.uri
-        Logger.write(2, "Sending request to master at " + reroute)
-        result = yield RequestFactory.make_request_async(reroute, self.request.method)
-        if result:
-            self.write(result)
-
-@gen.coroutine
-def play_master_file(path, file, position):
-    # play file from master
-    file_location = TornadoServer.master_ip + ":50010/file"
-    if not path.startswith("/"):
-        file_location += "/"
-    HDController.play_file(file,
-                           file_location + urllib.parse.quote_plus(path),
-                           position)
-
-    # request hash from master
-    json_data = yield RequestFactory.make_request_async(
-        Settings.get_string("master_ip") + "/hd/get_hash_data?path=" + urllib.parse.quote_plus(path))
-    if json_data:
-        json_obj = json.loads(json_data.decode())
-        file = json_obj["file"]
-        size = int(json_obj["size"])
-        first = base64.b64decode(json_obj["first"])
-        last = base64.b64decode(json_obj["last"])
-        file = file.split("/")[-1]
-
-        EventManager.throw_event(EventType.HashDataKnown, [size, file, first, last])
-    else:
-        Logger.write(2, "Failed to retrieve stream hash from master")
 
 
 class YoutubeHandler(web.RequestHandler):
@@ -356,8 +313,7 @@ class DatabaseHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
         if Settings.get_bool("slave"):
-            yield self.reroute_to_master()
-            return
+            return TornadoServer.request_master(self.request.uri)
 
         if url == "get_favorites":
             Logger.write(2, "Getting favorites")
@@ -374,7 +330,7 @@ class DatabaseHandler(web.RequestHandler):
     @gen.coroutine
     def post(self, url):
         if Settings.get_bool("slave"):
-            yield self.reroute_to_master()
+            TornadoServer.notify_master(self.request.uri)
             return
 
         if url == "add_watched_torrent_file":
@@ -451,11 +407,3 @@ class DatabaseHandler(web.RequestHandler):
                 int(self.get_argument("position")),
                 self.get_argument("watchedAt"),
                 media_file)
-
-    @gen.coroutine
-    def reroute_to_master(self):
-        reroute = str(TornadoServer.master_ip) + self.request.uri
-        Logger.write(2, "Sending request to master at " + reroute)
-        result = yield RequestFactory.make_request_async(reroute, self.request.method)
-        if result:
-            self.write(result)

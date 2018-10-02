@@ -19,7 +19,8 @@ class StreamListener:
     mime_mapping = {
         ".mp4": "video/mp4",
         ".avi": "video/x-msvideo",
-        ".mkv": "video/mp4"
+        ".mkv": "video/mp4",
+        "srt": "json"
     }
 
     def __init__(self, name, port, arg=None):
@@ -49,7 +50,7 @@ class StreamListener:
         self.thread.start()
 
     def handle_request(self, socket):
-        if len(self.requests) > 0:
+        if len(self.requests) > 0 and self.torrent is not None:
             Logger.write(2, self.name + " new request, closing others")
             for request in self.requests:
                 request.active = False

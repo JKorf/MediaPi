@@ -12,6 +12,7 @@ from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import RequestFactory
 from WebServer.Models import FileStructure
+from WebServer.TornadoServer import TornadoServer
 
 
 class GUIManager:
@@ -169,7 +170,8 @@ class NextEpisodeManager:
             if Settings.get_bool("slave"):
                 index = self.gui_manager.player.path.index("/file/")
                 dir_name = os.path.dirname(self.gui_manager.player.path[index + 6:])
-                result = json.loads(RequestFactory.make_request(str(Settings.get_string("master_ip") + "/hd/directory?path=" + dir_name)).decode())
+                data = TornadoServer.request_master("/hd/directory?path=" + dir_name)
+                result = json.loads(data.decode("utf8"))
                 file_list = result["files"]
             else:
                 dir_name = os.path.dirname(self.gui_manager.player.path)

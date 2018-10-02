@@ -63,7 +63,8 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
                 dic['query'] = filename
                 dic['sublanguageid'] = 'eng'
                 result = self.search_subs(dic)
-                found_subs = self.process_sub_response(result)
+                if result:
+                    found_subs = self.process_sub_response(result)
 
         return found_subs
 
@@ -109,7 +110,7 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
 
             sub_data = base64.b64decode(sub_result['data'][0]['data'])
             sub_act_data = gzip.decompress(sub_data)
-            path = self.save_file(sub_id, sub_act_data)
+            path = SubtitleSourceBase.save_file(sub_id, sub_act_data)
             result.append(path)
 
             sub_count += 1

@@ -1,13 +1,14 @@
 import os
 
+from Shared.Logger import Logger
+
 
 class SubtitleSourceBase:
 
-    def __init__(self):
-        self.sub_file_directory = os.path.dirname(os.path.realpath(__file__)) + "/subs/"
-
-    def save_file(self, filename, data):
-        filename = self.sub_file_directory + str(filename) + ".srt"
+    @staticmethod
+    def save_file(filename, data):
+        filename = os.path.dirname(os.path.realpath(__file__)) + "/subs/" + str(filename) + ".srt"
+        Logger.write(2, "Saved sub file " + filename)
         with open(filename, "wb") as f:
             f.write(data)
         f.close()

@@ -3,9 +3,12 @@ import hashlib
 import os
 from threading import Lock
 
+from os.path import isfile, join
+
 from Interface.TV.VLCPlayer import PlayerState
 from MediaPlayer.Subtitles.SubtitlesOpenSubtitles import SubtitlesOpenSubtitles
 from MediaPlayer.Subtitles.SubtitlesSubDB import SubtitlesSubDB
+from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -37,6 +40,21 @@ class SubtitleProvider:
 
         EventManager.register_event(EventType.HashDataKnown, self.search_subtitles)
         EventManager.register_event(EventType.PlayerStateChange, self.add_subtitles)
+
+    def search_subtitles_for_file(self, path, filename):
+        # check file location for files with same name
+        file_without_ext = os.path.splitext(filename)
+        dir = os.path.dirname(path)
+        subs = [join(dir, f) for f in os.listdir(dir) if isfile(join(dir, f)) and os.path.splitext(f)[0] == file_without_ext[0] and f.endswith('srt')]
+        if len(subs) > 0:
+            return subs
+
+        # check
+        size, first, last = get_file_info(path)
+        sub_files = []
+        for source in self.subtitle_sources:
+            sub_files += source.get_subtitles(size, filename, first, last)
+        return sub_files
 
     def search_subtitles(self, size, filename, first_64k, last_64k):
         Logger.write(2, "Hash data known, going to search for subtitles")
