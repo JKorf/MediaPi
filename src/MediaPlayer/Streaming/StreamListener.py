@@ -20,7 +20,7 @@ class StreamListener:
         ".mp4": "video/mp4",
         ".avi": "video/x-msvideo",
         ".mkv": "video/mp4",
-        "srt": "json"
+        ".srt": "json"
     }
 
     def __init__(self, name, port, arg=None):
