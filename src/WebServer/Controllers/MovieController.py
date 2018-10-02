@@ -55,7 +55,7 @@ class MovieController:
 
     @staticmethod
     @gen.coroutine
-    def play_continue(delegate, type, url, title, image, position, media_file):
+    def play_continue(server, delegate, type, url, title, image, position, media_file):
         Logger.write(2, "Continue " + title + " ("+type+") at " + str(position))
         url = urllib.parse.unquote_plus(url)
         img = urllib.parse.unquote(image)
@@ -72,7 +72,7 @@ class MovieController:
             EventManager.throw_event(EventType.StartTorrent, [url, file])
         else:
             if Settings.get_bool("slave"):
-                yield delegate(url, title, int(float(position)) * 1000)
+                delegate(server, url, title, int(float(position)) * 1000)
             else:
                 if sys.platform == "linux" or sys.platform == "linux2":
                     if not url.startswith("/"):

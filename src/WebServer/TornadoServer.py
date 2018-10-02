@@ -143,7 +143,7 @@ class MovieHandler(web.RequestHandler):
         if url == "play_movie":
             MovieController.play_movie(self.get_argument("url"), self.get_argument("id"), self.get_argument("title"), self.get_argument("img", ""))
         elif url == "play_continue":
-            yield MovieController.play_continue(HDController.play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"), self.get_argument("mediaFile"))
+            MovieController.play_continue(TornadoServer, HDController.play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"), self.get_argument("mediaFile"))
 
     @gen.coroutine
     def get(self, url):
@@ -232,7 +232,7 @@ class HDHandler(web.RequestHandler):
         if url == "play_file":
             if Settings.get_bool("slave"):
                 Logger.write(2, self.get_argument("path"))
-                HDController.play_master_file(self.get_argument("path"), self.get_argument("filename"), 0)
+                HDController.play_master_file(TornadoServer, self.get_argument("path"), self.get_argument("filename"), 0)
 
             else:
                 filename = self.get_argument("filename")
@@ -313,7 +313,8 @@ class DatabaseHandler(web.RequestHandler):
     @gen.coroutine
     def get(self, url):
         if Settings.get_bool("slave"):
-            return TornadoServer.request_master(self.request.uri)
+            self.write(TornadoServer.request_master(self.request.uri))
+            return
 
         if url == "get_favorites":
             Logger.write(2, "Getting favorites")
