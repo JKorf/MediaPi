@@ -30,6 +30,7 @@ class TorrentManager:
         EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
         EventManager.register_event(EventType.NewDHTNode, self.new_dht_node)
+        EventManager.register_event(EventType.NoPeers, self.stop_torrent)
 
     def start_torrent(self, url, media_file):
         if self.torrent is not None:

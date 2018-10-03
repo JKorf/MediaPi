@@ -12,7 +12,18 @@
 
             if(event == "media_selection_close")
                 $rootScope.closePopup("cancel");
+
+             if(event == "no_peers")
+                OpenNoPeers();
         });
+
+        function OpenNoPeers(){
+            var open = true;
+            $rootScope.openPopup();
+            $rootScope.setPopupContent("No peers found", false, true, true, "No peers found to stream. Can't play media.", $rootScope).then(function(action){
+            }, function(action){
+            });
+        }
 
         function OpenSelectNextEpisode(data){
             var open = true;
@@ -40,7 +51,6 @@
                 if(open)
                     $rootScope.closePopup("cancel");
             }, 1000 * 60 * 30);
-
         }
 
         function OpenMediaSelection(data)

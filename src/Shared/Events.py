@@ -40,9 +40,10 @@ class EventType(Enum):
     Log = 30,
 
     NewRequest = 31,
-    TorrentMediaSelectionRequired = 32
-    TorrentMediaFileSelection = 33
-    NextEpisodeSelection = 36
+    TorrentMediaSelectionRequired = 32,
+    TorrentMediaFileSelection = 33,
+    NextEpisodeSelection = 36,
+    NoPeers = 38
 
 
 class EventManager:

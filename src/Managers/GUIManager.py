@@ -47,12 +47,18 @@ class GUIManager:
         EventManager.register_event(EventType.SubtitleDownloaded, self.set_subtitle_file)
         EventManager.register_event(EventType.SetAudioId, self.set_audio_id)
 
+        EventManager.register_event(EventType.NoPeers, self.no_peers)
+
     def start_gui(self):
         self.app, self.gui = GUI.new_gui(self.program)
 
         if self.gui is not None:
             self.gui.showFullScreen()
             sys.exit(self.app.exec_())
+
+    def no_peers(self):
+        self.player.stop()
+        self.next_episode_manager.reset()
 
     def player_state_change(self, prev_state, new_state):
         Logger.write(2, "State change from " + str(prev_state) + " to " + str(new_state))

@@ -26,6 +26,10 @@ class ThreadManager:
 
 class CustomThread:
 
+    @property
+    def is_alive(self):
+        return self.thread.is_alive
+
     def __init__(self, target, thread_name, args=[]):
         self.target = target
         self.args = args

@@ -27,7 +27,7 @@ metadata_block_size=16384
 tracker_peer_request_amount=200
 peer_request_interval=300000
 peer_request_interval_no_potential=30000
-tracker_retry=3
+tracker_retry=1
 
 # Streaming
 max_chunk_size=250000

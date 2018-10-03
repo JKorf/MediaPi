@@ -34,6 +34,7 @@ class WebsocketController:
         EventManager.register_event(EventType.SetSubtitleId, WebsocketController.player_subtitle_id)
         EventManager.register_event(EventType.SetSubtitleOffset, WebsocketController.player_subtitle_offset)
         EventManager.register_event(EventType.Error, WebsocketController.application_error)
+        EventManager.register_event(EventType.NoPeers, WebsocketController.no_peers)
 
         update_thread = CustomThread(WebsocketController.update_loop, "socket update loop")
         update_thread.start()
@@ -90,6 +91,10 @@ class WebsocketController:
                     client.write_message(to_JSON(WebSocketMessage(event, method, parameters)))
                 except:
                     Logger.write(2, "Failed to send msg to client because client is closed")
+
+    @staticmethod
+    def no_peers():
+        WebsocketController.broadcast("request", "no_peers")
 
     @staticmethod
     def next_episode_selection(path, name, season, episode, type, media_file, img):
