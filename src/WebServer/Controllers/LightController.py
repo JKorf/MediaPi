@@ -18,22 +18,26 @@ class LightController:
     @staticmethod
     def init(program):
         if sys.platform == "linux" or sys.platform == "linux2":
-            ip = "192.168.1.0"  # Hub ID
+            ip = "192.168.1.73"  # Hub ID
             identity = Settings.get_string("name")
-            key = program.database.get_stat("LightingId")
+            key = program.database.get_stat("zwhwlZr85gcfAtxr")
             if key == 0:
                 key = None
+                LightController.api_factory = APIFactory(host=ip, psk_id=identity)
+            else:
+                LightController.api_factory = APIFactory(host=ip, psk_id=identity, psk=key)
 
-            LightController.api_factory = APIFactory(host=ip, psk_id=identity, psk=key)
             LightController.api = LightController.api_factory.request
             LightController.gateway = Gateway()
 
             try:
                 if key is None:
+                    Logger.write(2, "No id found for lighting, going to get new")
                     # We don't have a key, generate a new one
                     key = ""  # the key at the bottom of the hub
                     key = LightController.api_factory.generate_psk(key)
                     program.database.update_stat("LightingId", key)
+                    Logger.write(2, "New key retrieved")
 
                 devices_command = LightController.gateway.get_devices()
                 devices_commands = LightController.api(devices_command)
