@@ -16,8 +16,6 @@
 
     Movies/series kunnen toevoegen aan `want to watch`
 
-    Aangeven als niet gestart kan worden door geen peers, na x tijd geen peers verbonden en geen potential
-
     Regression protocol?
 
     disable popups hd:

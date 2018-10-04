@@ -295,7 +295,9 @@ class LightHandler(web.RequestHandler):
     @gen.coroutine
     def post(self, url):
         if url == "switch_light":
-            LightController.switch_light(self.get_argument("id"), self.get_argument("state"))
+            LightController.switch_light(self.get_argument("id"), self.get_argument("state") == "on")
+        elif url == "debug":
+            LightController.debug()
 
 
 class RealtimeHandler(websocket.WebSocketHandler):
