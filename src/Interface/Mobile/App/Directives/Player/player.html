@@ -48,7 +48,7 @@
         </div>
 
         <div class="player-seek" ng-if="playerState.type != 'Image'">
-            <slider model="playerState.playing_for" text="seekToolTip" buffer="playerState.buffered" min="0" max="{{playerState.length}}" on-end-change="seek"></slider>
+            <slider model="playerState.playing_for" text="seekToolTip" buffer="playerState.buffered" min="0" max="{{playerState.length}}" on-end-change="seek()"></slider>
         </div>
 
         <div class="player-timings" ng-if="playerState.type != 'Image'">

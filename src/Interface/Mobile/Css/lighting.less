@@ -1,0 +1,77 @@
+@import "Skins/@{skin}";
+
+.view-lighting{
+}
+
+.light-group{
+    background: #colors[background2];
+    padding: 8px 6px;
+    margin-top: 15px;
+}
+
+.light-group:first-child{
+    margin-top: 0;
+}
+
+.light-group-name{
+    font-weight: bold;
+}
+
+.light-group-switch{
+    padding-top: 8px;
+    margin-top: 8px;
+   border-top: 1px solid #colors[borders];
+}
+
+.light-group-dimmer{
+    height: 24px;
+    padding: 4px;
+    position: relative;
+    padding-top: 8px;
+    margin-top: 8px;
+    border-top: 1px solid #colors[borders];
+}
+
+.light-group-dimmer .slider{
+    margin: 0 30px;
+}
+
+.light-group-warmth .slider{
+    margin: 0 30px;
+}
+
+.light-group-warmth{
+    height: 24px;
+    padding: 4px;
+    padding-top: 8px;
+    margin-top: 8px;
+    border-top: 1px solid #colors[borders];
+    position: relative;
+}
+
+.image-off{
+    opacity: 0.5;
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    left:5px;
+    top:7px;
+}
+
+.image-on{
+    opacity: 1;
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    right:5px;
+    top:7px;
+}
+
+.light-group-warmth .image-off{
+    fill: #d7ecf2;
+    opacity: 1;
+}
+
+.light-group-warmth .image-on{
+    fill: #efd275;
+}

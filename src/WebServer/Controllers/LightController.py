@@ -47,10 +47,16 @@ class LightController:
 
     @staticmethod
     def get_lights():
+        if not LightController.enabled:
+            return to_JSON([])
+
         return to_JSON(LightController.get_devices())
 
     @staticmethod
     def debug():
+        if not LightController.enabled:
+            return
+
         gateway_info = LightController.api(LightController.gateway.get_gateway_info()).raw
         gateway_endpoints = LightController.api(LightController.gateway.get_endpoints())
         devices = LightController.get_devices()
@@ -61,17 +67,30 @@ class LightController:
 
     @staticmethod
     def switch_light(id, state):
+        if not LightController.enabled:
+            return
+
         devices = LightController.get_devices()
         light = [x for x in devices if x.id == id][0]
-        light.light_control.lights[0].set_state(state)
+        light.light_control.set_state(state)
 
     @staticmethod
-    def dim_light(id, amount):
-        pass
+    def warmth_light(id, warmth):
+        if not LightController.enabled:
+            return
+
+        devices = LightController.get_devices()
+        light = [x for x in devices if x.id == id][0]
+        light.light_control.set_color_temp(warmth)
 
     @staticmethod
-    def change_warmth_light(id, amount):
-        pass
+    def dimmer_light(id, amount):
+        if not LightController.enabled:
+            return
+
+        devices = LightController.get_devices()
+        light = [x for x in devices if x.id == id][0]
+        light.light_control.set_dimmer(amount)
 
     @staticmethod
     def get_devices():

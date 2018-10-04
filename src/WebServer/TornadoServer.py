@@ -305,6 +305,10 @@ class LightHandler(BaseHandler):
     def post(self, url):
         if url == "switch_light":
             LightController.switch_light(self.get_argument("id"), self.get_argument("state") == "on")
+        elif url == "warmth_light":
+            LightController.warmth_light(self.get_argument("id"), self.get_argument("warmth"))
+        elif url == "dimmer_light":
+            LightController.dimmer_light(self.get_argument("id"), self.get_argument("dimmer"))
         elif url == "debug":
             LightController.debug()
 

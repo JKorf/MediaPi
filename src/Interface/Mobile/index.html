@@ -27,6 +27,7 @@
     <link rel="stylesheet/less" type="text/css" href="Css/torrents.less">
     <link rel="stylesheet/less" type="text/css" href="Css/media_list.less">
     <link rel="stylesheet/less" type="text/css" href="Css/history.less">
+    <link rel="stylesheet/less" type="text/css" href="Css/lighting.less">
 
     <meta name="theme-color" content="#colors[primary]">
 
@@ -80,6 +81,7 @@
     <script src="/App/Directives/Swipe/SwipeDirective.js"></script>
     <script src="/App/Directives/Fade/FadeDirective.js"></script>
     <script src="/App/Directives/SVGImage/SVGDirective.js"></script>
+    <script src="/App/Directives/Switch/SwitchDirective.js"></script>
 
     <script src="/App/Factories/Memory/MemoryFactory.js"></script>
     <script src="/App/Factories/History/HistoryFactory.js"></script>
@@ -100,7 +102,8 @@
             skin = "default";
 
         less = {
-            globalVars: { skin: skin }
+            globalVars: { skin: skin },
+            logLevel: 1
         }
     </script>
     <script src="/App/External/less.js"></script>

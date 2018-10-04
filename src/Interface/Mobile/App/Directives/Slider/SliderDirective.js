@@ -9,8 +9,8 @@
                 max: "@",
                 step: "@",
                 buffer: "=",
-                onStartChange: "=",
-                onEndChange: "=",
+                onStartChange: "&",
+                onEndChange: "&",
                 tooltipBottom: "="
             },
             templateUrl: '/App/Directives/Slider/slider.html',
