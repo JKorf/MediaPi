@@ -1,6 +1,6 @@
-<div class="switch-off-text">Off</div>
+<div class="switch-off-text"  ng-class="{'switch-text-selected': !model}">Off</div>
 <div class="switch-outer" ng-click="model = !model; onChange(obj)">
     <div class="switch-inner" ng-class="{'switch-on': model}">
     </div>
 </div>
-<div class="switch-on-text">On</div>
+<div class="switch-on-text" ng-class="{'switch-text-selected': model}">On</div>
