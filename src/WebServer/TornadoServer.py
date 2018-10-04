@@ -3,6 +3,7 @@ import json
 import os
 import socket
 import time
+import traceback
 import urllib.parse
 import urllib.request
 
@@ -107,7 +108,15 @@ class StaticFileHandler(tornado.web.StaticFileHandler):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
 
-class UtilHandler(web.RequestHandler):
+class BaseHandler(tornado.web.RequestHandler):
+    def _handle_request_exception(self, e):
+        Logger.write(3, "Error in Tornado requests: " + str(e), 'error')
+        stack_trace = traceback.format_exc().split('\n')
+        for stack_line in stack_trace:
+            Logger.write(3, stack_line)
+
+
+class UtilHandler(BaseHandler):
     @gen.coroutine
     def get(self, url):
         if url == "get_protected_img":
@@ -137,7 +146,7 @@ class UtilHandler(web.RequestHandler):
             UtilController.test()
 
 
-class MovieHandler(web.RequestHandler):
+class MovieHandler(BaseHandler):
     @gen.coroutine
     def post(self, url):
         if url == "play_movie":
@@ -159,7 +168,7 @@ class MovieHandler(web.RequestHandler):
             self.write(data)
 
 
-class ShowHandler(web.RequestHandler):
+class ShowHandler(BaseHandler):
 
     def post(self, url):
         if url == "play_episode":
@@ -179,7 +188,7 @@ class ShowHandler(web.RequestHandler):
             self.write(show)
 
 
-class RadioHandler(web.RequestHandler):
+class RadioHandler(BaseHandler):
     @gen.coroutine
     def get(self, url):
         if url == "get_radios":
@@ -190,7 +199,7 @@ class RadioHandler(web.RequestHandler):
             RadioController.play_radio(self.get_argument("id"))
 
 
-class PlayerHandler(web.RequestHandler):
+class PlayerHandler(BaseHandler):
     def post(self, url):
         if url == "set_subtitle_file":
             PlayerController.set_subtitle_file(self.get_argument("file"))
@@ -217,7 +226,7 @@ class PlayerHandler(web.RequestHandler):
             EventManager.throw_event(EventType.TorrentMediaFileSelection, [urllib.parse.unquote(self.get_argument("path"))])
 
 
-class HDHandler(web.RequestHandler):
+class HDHandler(BaseHandler):
     @gen.coroutine
     def get(self, url):
         if Settings.get_bool("slave"):
@@ -248,7 +257,7 @@ class HDHandler(web.RequestHandler):
             HDController.prev_image(self.get_argument("current_path"))
 
 
-class YoutubeHandler(web.RequestHandler):
+class YoutubeHandler(BaseHandler):
     @gen.coroutine
     def get(self, url):
         if url == "search":
@@ -272,7 +281,7 @@ class YoutubeHandler(web.RequestHandler):
             YoutubeController.play_youtube_url(self.get_argument("url"), self.get_argument("title"))
 
 
-class TorrentHandler(web.RequestHandler):
+class TorrentHandler(BaseHandler):
     @gen.coroutine
     def get(self, url):
         if url == "top":
@@ -286,7 +295,7 @@ class TorrentHandler(web.RequestHandler):
             TorrentController.play_torrent(self.get_argument("url"), self.get_argument("title"))
 
 
-class LightHandler(web.RequestHandler):
+class LightHandler(BaseHandler):
     @gen.coroutine
     def get(self, url):
         if url == "get_lights":
@@ -311,7 +320,7 @@ class RealtimeHandler(websocket.WebSocketHandler):
         WebsocketController.closing_client(self)
 
 
-class DatabaseHandler(web.RequestHandler):
+class DatabaseHandler(BaseHandler):
     @gen.coroutine
     def get(self, url):
         if Settings.get_bool("slave"):
