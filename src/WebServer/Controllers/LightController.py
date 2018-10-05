@@ -1,4 +1,7 @@
 import sys
+import traceback
+import uuid
+
 from pytradfri import Gateway
 from pytradfri.api.libcoap_api import APIFactory
 
@@ -21,7 +24,7 @@ class LightController:
             return
 
         ip = "192.168.1.73"  # Hub ID
-        identity = Settings.get_string("name")
+        identity = uuid.uuid4().hex
         key = program.database.get_stat("LightingId")
         if key == 0:
             key = None
@@ -43,7 +46,9 @@ class LightController:
 
             LightController.enabled = True
         except Exception as e:
-            Logger.write(2, "Failed to initialize lighting: " + str(e), "error")
+            stack_trace = traceback.format_exc().split('\n')
+            for stack_line in stack_trace:
+                Logger.write(3, stack_line)
 
     @staticmethod
     def get_lights():
