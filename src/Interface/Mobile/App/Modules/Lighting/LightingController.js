@@ -17,18 +17,43 @@
          }
 
          function SetTestData(){
-            $scope.devices= [
-                        { id: 1,
-                          name: "Woonkamer spots",
-                          state: false,
-                          warmth: 260,
-                          dimmer: 200},
-                          { id: 2,
-                          name: "Woonkamer overige",
-                          state: true,
-                          warmth: 290,
-                          dimmer: 100}
-                    ];
+            $scope.devices =
+            [
+                {
+                    index: 0,
+                    application_type: 1,
+                    last_seen: 1538726737,
+                    reachable: true,
+                    lights: [
+                        {
+                            supports_dimmer: true,
+                            supports_temp: true,
+                            supports_color: false,
+                            state: true,
+                            dimmer: 200,
+                            color_temp: 260,
+                            hex_color: ""
+                        }
+                    ]
+                },
+                {
+                    index: 1,
+                    application_type: 2,
+                    last_seen: 1538726737,
+                    reachable: true,
+                    lights: [
+                        {
+                            supports_dimmer: true,
+                            supports_temp: true,
+                            supports_color: true,
+                            state: false,
+                            dimmer: 100,
+                            color_temp: 360,
+                            hex_color: "4a418a"
+                        }
+                    ]
+                }
+            ];
          }
 
          $scope.dimmerToolTip = function(value){
@@ -46,17 +71,17 @@
          $scope.switchGroup = function(group)
          {
              if(group.state)
-                $http.post("/lighting/switch_light?id="+group.id+"&state=on");
+                $http.post("/lighting/switch_light?index="+group.index+"&state=on");
              else
-                $http.post("/lighting/switch_light?id="+group.id+"&state=off");
+                $http.post("/lighting/switch_light?index="+group.index+"&state=off");
          };
 
-         $scope.dimmerGroup = function(group){
-              $http.post("/lighting/dimmer_light?id="+group.id+"&dimmer=" + group.dimmer);
+         $scope.dimmerGroup = function(group, amount){
+              $http.post("/lighting/dimmer_light?index="+group.index+"&dimmer=" + amount);
          }
 
-         $scope.warmthGroup = function(group){
-              $http.post("/lighting/warmth_light?id="+group.id+"&warmth=" + group.warmth);
+         $scope.warmthGroup = function(group, amount){
+              $http.post("/lighting/warmth_light?index="+group.index+"&warmth=" + amount);
          }
 
          Init();

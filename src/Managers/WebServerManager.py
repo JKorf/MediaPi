@@ -16,7 +16,8 @@ class WebServerManager:
 
     def start_server(self):
         WebsocketController.init(self.start)
-        LightController.init(self.start)
+        LightController.program = self.start
+        LightController.init()
 
         self.server = TornadoServer(self.start)
         self.server.start()

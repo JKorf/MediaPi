@@ -60,15 +60,15 @@
                     });
                 }
 
-                $scope.seek = function(){
-                    console.log("seek " + $scope.playerState.playing_for);
-                    $http.post("/player/seek?pos=" + $scope.playerState.playing_for);
+                $scope.seek = function(obj, amount){
+                    console.log("seek " + amount);
+                    $http.post("/player/seek?pos=" + amount);
                     ChangeState("Buffering");
                 }
 
-                $scope.volChanged = function(){
-                    console.log("vol " + $scope.playerState.volume);
-                    $http.post("/player/change_volume?vol=" + $scope.playerState.volume);
+                $scope.volChanged = function(obj, amount){
+                    console.log("vol " + amount);
+                    $http.post("/player/change_volume?vol=" + amount);
                 }
 
                 $scope.changeSub = function(sub){
@@ -81,9 +81,9 @@
                     $http.post("/player/set_audio_id?track="+track);
                 }
 
-                $scope.changeSubtitleOffset = function(){
-                    console.log("offset " + $scope.playerState.subtitle_delay);
-                    $http.post("/player/change_subtitle_offset?offset="+ $scope.playerState.subtitle_delay);
+                $scope.changeSubtitleOffset = function(obj, amount){
+                    console.log("offset " + amount);
+                    $http.post("/player/change_subtitle_offset?offset="+ amount);
                 }
 
                 $scope.nextImage = function(){

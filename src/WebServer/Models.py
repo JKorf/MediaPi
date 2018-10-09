@@ -199,3 +199,25 @@ class MediaFile:
         self.media_file = media_file
         self.img = img
         self.seen = seen
+
+
+class LightControl:
+
+    def __init__(self, index, application_type, last_seen, reachable, lights):
+        self.application_type = application_type
+        self.last_seen = last_seen
+        self.reachable = reachable
+        self.lights = lights
+        self.index = index
+
+
+class LightDevice:
+
+    def __init__(self, supports_dimmer, supports_temp, supports_color, state, dimmer, color_temp, hex_color):
+        self.supports_dimmer = supports_dimmer
+        self.supports_temp = supports_temp
+        self.supports_color = supports_color
+        self.state = state
+        self.dimmer = dimmer
+        self.color_temp = color_temp
+        self.hex_color = hex_color

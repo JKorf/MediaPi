@@ -312,3 +312,16 @@ class Database:
             return 0
 
         return float(data[0][1])
+
+    def get_stat_string(self, key):
+        with self.lock:
+            self.connect()
+            self.connection.execute("SELECT * FROM Stats WHERE Name=?", [key])
+            data = self.connection.fetchall()
+
+            self.database.commit()
+            self.disconnect()
+        if not data:
+            return None
+
+        return str(data[0][1])
