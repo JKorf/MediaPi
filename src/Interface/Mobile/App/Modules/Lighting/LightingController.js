@@ -52,6 +52,23 @@
                             hex_color: "4a418a"
                         }
                     ]
+                },
+                {
+                    index: 2,
+                    application_type: 2,
+                    last_seen: 1538726737,
+                    reachable: true,
+                    lights: [
+                        {
+                            supports_dimmer: true,
+                            supports_temp: false,
+                            supports_color: false,
+                            state: false,
+                            dimmer: 100,
+                            color_temp: 360,
+                            hex_color: "4a418a"
+                        }
+                    ]
                 }
             ];
          }

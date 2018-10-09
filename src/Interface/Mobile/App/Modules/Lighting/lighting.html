@@ -6,13 +6,13 @@
         <div class="light-group-switch">
             <switch model="group.lights[0].state" obj="group" on-change="switchGroup"></switch>
         </div>
-        <div class="light-group-dimmer">
+        <div class="light-group-dimmer" ng-if="group.lights[0].supports_dimmer">
             <img class="image-off" src="/Images/bulb.svg" svg-image />
             <slider model="group.lights[0].dimmer" obj="group" text="dimmerToolTip" min="0" max="254" step="1" on-end-change="dimmerGroup" tooltip-bottom="false"></slider>
             <img class="image-on" src="/Images/bulb.svg" svg-image />
         </div>
 
-        <div class="light-group-warmth">
+        <div class="light-group-warmth" ng-if="group.lights[0].supports_temp">
             <img class="image-off" src="/Images/square.svg" svg-image />
             <slider model="group.lights[0].color_temp" obj="group" text="warmthToolTip" min="250" max="454" step="1" on-end-change="warmthGroup" tooltip-bottom="false"></slider>
             <img class="image-on" src="/Images/square.svg" svg-image />
