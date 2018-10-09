@@ -1,3 +1,3 @@
 ﻿(function () {
-    angular.module('pi-test', ['ui.router', 'ngSanitize', 'hmTouchEvents']);
+    angular.module('pi-test', ['ui.router', 'ngSanitize', 'hmTouchEvents', 'minicolors']);
 })();

@@ -1,16 +1,26 @@
 (function () {
 
-    angular.module('pi-test').controller('LightingController', function ($scope, $http) {
+    angular.module('pi-test').controller('LightingController', function ($scope, $http, MemoryFactory) {
         $scope.devices = [];
+        $scope.editing = -1;
+        $scope.colorPickerSettings = {
+            position: 'top left'
+          };
 
          function Init(){
              $http.post("/lighting/debug");
              $http.get("/lighting/get_lights").then(function(data){
                  console.log(data);
                  $scope.devices = data.data;
-
                  if($scope.devices.length == 0)
                     SetTestData();
+
+                 for (var i = 0; i < $scope.devices.length; i++){
+                    $scope.devices[i].lights[0].hex_color = "#" + $scope.devices[i].lights[0].hex_color;
+                    $scope.devices[i].name = getName($scope.devices[i]);
+                }
+
+
              }, function(e){
                 SetTestData();
              });
@@ -100,6 +110,29 @@
          $scope.warmthGroup = function(group, amount){
               $http.post("/lighting/warmth_light?index="+group.index+"&warmth=" + amount);
          }
+
+        $scope.changeColor = function(group){
+              $http.post("/lighting/color_light?index="+group.index+"&color=" + group.lights[0].hex_color.substring(1));
+        }
+
+        function getName(group){
+            var savedName = MemoryFactory.GetValue("Lighting"+group.index);
+            if (!savedName)
+                return group.index;
+            return savedName;
+        }
+
+        $scope.startEdit = function(index){
+            $scope.editing = index;
+        }
+
+        $scope.endEdit = function(index, name){
+            if(!name)
+                name = index;
+
+            MemoryFactory.SetValue("Lighting" + index, name);
+            $scope.editing = -1;
+        }
 
          Init();
     });

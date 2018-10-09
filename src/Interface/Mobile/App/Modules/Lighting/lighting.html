@@ -1,8 +1,20 @@
 <div class="view-lighting sub-view">
     <div class="light-group" ng-repeat="group in devices">
-        <div class="light-group-name">
-            {{group.index}}
+
+        <div class="light-group-name" ng-if="editing != group.index">
+            {{group.name}}
         </div>
+        <div class="light-group-name" ng-if="editing == group.index">
+            <input type="text" ng-model="group.name" ng-blur="endEdit(group.index, group.name)"/>
+        </div>
+
+        <div class="light-group-edit" ng-click="startEdit(group.index)" ng-if="editing != group.index">
+            <img class="light-group-edit-img" src="/Images/settings.svg" svg-image>
+        </div>
+        <div class="light-group-edit" ng-click="endEdit(group.index, group.name)" ng-if="editing == group.index">
+            <img class="light-group-edit-img" src="/Images/save.svg" svg-image>
+        </div>
+
         <div class="light-group-switch">
             <switch model="group.lights[0].state" obj="group" on-change="switchGroup"></switch>
         </div>
@@ -16,6 +28,12 @@
             <img class="image-off" src="/Images/square.svg" svg-image />
             <slider model="group.lights[0].color_temp" obj="group" text="warmthToolTip" min="250" max="454" step="1" on-end-change="warmthGroup" tooltip-bottom="false"></slider>
             <img class="image-on" src="/Images/square.svg" svg-image />
+        </div>
+
+        <div class="light-group-color" ng-if="group.lights[0].supports_color">
+            <div>
+                <input type="hidden" minicolors="colorPickerSettings" ng-model="group.lights[0].hex_color" ng-change="changeColor(group)" />
+            </div>
         </div>
     </div>
 
