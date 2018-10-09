@@ -39,9 +39,10 @@ class LightController:
             if not LightController.initialized:
                 ip = Settings.get_string("tradfri_hub_ip")
                 identity = LightController.program.database.get_stat_string("LightingId")
-                key = LightController.program.database.get_stat("LightingKey")
+                key = LightController.program.database.get_stat_string("LightingKey")
 
                 if identity is None or key is None:
+                    key = None
                     Logger.write(2, "Lighting: No identity/key found, going to generate new")
                     identity = uuid.uuid4().hex
                     LightController.program.database.update_stat("LightingId", identity)  # Generate and save a new id
@@ -56,7 +57,7 @@ class LightController:
                     try:
                         security_code = Settings.get_string("tradfri_hub_code")  # the code at the bottom of the hub
                         key = LightController.api_factory.generate_psk(security_code)
-                        LightController.program.database.update_stat("LightingId", key)  # Save the new key
+                        LightController.program.database.update_stat("LightingKey", key)  # Save the new key
                         Logger.write(2, "Lighting: New key retrieved")
                         LightController.initialized = True
                     except Exception as e:
@@ -77,7 +78,7 @@ class LightController:
 
         result = []
         i = 0
-        for control_device in LightController.devices:
+        for control_device in [x for x in LightController.devices if x.has_light_control]:
             lights = []
             for light in control_device.light_control.lights:
                 lights.append(LightDevice(
@@ -89,7 +90,7 @@ class LightController:
                     light.color_temp,
                     light.hex_color))
 
-            result.append(LightControl(i, control_device.application_type, control_device.last_seen, control_device.reachable, lights))
+            result.append(LightControl(i, control_device.application_type, control_device.last_seen.timestamp(), control_device.reachable, lights))
             i += 1
 
         return to_JSON(result)
