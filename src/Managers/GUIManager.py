@@ -196,7 +196,7 @@ class NextEpisodeManager:
                     self.next_type = "File"
                     self.next_title = potential
                     self.next_path = dir_name + "/" + potential
-                    break
+                    return
             Logger.write(2, "No next episode of file, no matching next season/epi found in file list")
 
         elif self.gui_manager.player.type != "Radio" and self.gui_manager.player.type != "YouTube" and self.gui_manager.player.type != "Image":

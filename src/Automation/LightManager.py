@@ -80,7 +80,11 @@ class LightManager(metaclass=Singleton):
         if not self.check_state():
             return
 
+        Logger.write(2, "Switching light with index " + str(index) + " to state " + str(state))
         light = self.get_device_by_index(index)
+        Logger.write(2, str(light.raw))
+        Logger.write(2, str(light.light_control))
+        Logger.write(2, str(light.lights))
         light.light_control.set_state(state)
 
     def warmth_light(self, index, warmth):

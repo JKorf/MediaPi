@@ -97,7 +97,7 @@
 
          $scope.switchGroup = function(group)
          {
-             if(group.state)
+             if(group.lights[0].state)
                 $http.post("/lighting/switch_light?index="+group.index+"&state=on");
              else
                 $http.post("/lighting/switch_light?index="+group.index+"&state=off");
