@@ -40,8 +40,12 @@ class LightManager(metaclass=Singleton):
                 key = Database().get_stat_string("LightingKey")
 
                 if identity is None or key is None:
-                    key = None
                     Logger.write(2, "Lighting: No identity/key found, going to generate new")
+                    # We don't have all information to connect, reset and start from scratch
+                    Database().remove_stat("LightingId")
+                    Database().remove_stat("LightingKey")
+                    key = None
+
                     identity = uuid.uuid4().hex
                     Database().update_stat("LightingId", identity)  # Generate and save a new id
                     self.api_factory = APIFactory(host=ip, psk_id=identity)
@@ -58,7 +62,7 @@ class LightManager(metaclass=Singleton):
                         Database().update_stat("LightingKey", key)  # Save the new key
                         Logger.write(2, "Lighting: New key retrieved")
                         self.initialized = True
-                    except Exception as e:
+                    except Exception:
                         stack_trace = traceback.format_exc().split('\n')
                         for stack_line in stack_trace:
                             Logger.write(3, stack_line)

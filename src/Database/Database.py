@@ -325,3 +325,10 @@ class Database(metaclass=Singleton):
             return None
 
         return str(data[0][1])
+
+    def remove_stat(self, key):
+        with self.lock:
+            self.connect()
+            self.connection.execute("DELETE FROM Stats WHERE Name=?", [key])
+            self.database.commit()
+            self.disconnect()
