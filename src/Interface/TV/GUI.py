@@ -61,6 +61,7 @@ class GUI(QtGui.QMainWindow):
 
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
         EventManager.register_event(EventType.StartTorrent, self.torrent_start)
+        EventManager.register_event(EventType.StopTorrent, self.torrent_stop)
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.selection_required)
         EventManager.register_event(EventType.TorrentMediaFileSelection, self.selection_done)
 
@@ -90,6 +91,9 @@ class GUI(QtGui.QMainWindow):
 
     def selection_required(self, files):
         self.com.set_file_select.emit()
+
+    def torrent_stop(self):
+        self.com.set_home.emit(None, False)
 
     def selection_done(self, file):
         self.com.set_opening.emit()

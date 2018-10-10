@@ -19,7 +19,6 @@
     Regression protocol?
 
     Loading percentage soms van vorige media
-    Als file selection cancel blijft GUI staan
 
     Next epi not working on pi?
 
