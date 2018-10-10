@@ -18,8 +18,6 @@
 
     Regression protocol?
 
-    Loading percentage soms van vorige media
-
     Next epi not working on pi?
 
     disable popups hd:

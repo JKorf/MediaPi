@@ -146,6 +146,7 @@ class GUI(QtGui.QMainWindow):
 
     def set_opening(self):
         self.update_buffering = True
+        self.loading_panel.set_percent(0)
         self.loading_panel.show()
         self.select_file_panel.hide()
         self.general_info_panel.show()
