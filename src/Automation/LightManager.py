@@ -18,7 +18,6 @@ class LightManager(metaclass=Singleton):
     api = None
     gateway = None
     enabled = False
-    devices = []
     initialized = False
     init_lock = Lock()
 
@@ -100,7 +99,8 @@ class LightManager(metaclass=Singleton):
 
     def get_device_by_index(self, index):
         i = 0
-        for control_device in [x for x in self.devices if x.has_light_control]:
+        lights = self.get_lights()
+        for control_device in [x for x in lights if x.has_light_control]:
             if i == index:
                 return control_device
             i += 1
