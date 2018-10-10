@@ -113,7 +113,7 @@ class LightController:
         if not LightController.check_state():
             return
 
-        light = LightController.devices[index]
+        light = LightController.get_device_by_index(index)
         light.light_control.set_state(state)
 
     @staticmethod
@@ -121,7 +121,7 @@ class LightController:
         if not LightController.check_state():
             return
 
-        light = LightController.devices[index]
+        light = LightController.get_device_by_index(index)
         light.light_control.set_color_temp(warmth)
 
     @staticmethod
@@ -129,13 +129,22 @@ class LightController:
         if not LightController.check_state():
             return
 
-        light = LightController.devices[index]
+        light = LightController.get_device_by_index(index)
         light.light_control.set_dimmer(amount)
 
     @staticmethod
     def get_devices():
         devices_commands = LightController.api(LightController.gateway.get_devices())
         LightController.devices = LightController.api(devices_commands)
+
+    @staticmethod
+    def get_device_by_index(index):
+        i = 0
+        for control_device in [x for x in LightController.devices if x.has_light_control]:
+            if i == index:
+                return control_device
+            i += 1
+        return None
 
     @staticmethod
     def check_state():
