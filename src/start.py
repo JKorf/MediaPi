@@ -2,10 +2,10 @@
 import os
 from datetime import datetime
 
+os.chdir(os.path.dirname(__file__))
+
 from Managers.Observer import Observer
 from Managers.TorrentManager import TorrentManager
-
-os.chdir(os.path.dirname(__file__))
 
 from Automation.LightManager import LightManager
 
