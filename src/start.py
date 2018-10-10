@@ -36,9 +36,9 @@ class Program:
 
         self.is_slave = Settings.get_bool("slave")
 
+        Database().init_database()
         self.init_singletons()
 
-        Database().init_database()
 
         Stats.set('start_time', current_time())
         self.running = True
@@ -70,7 +70,6 @@ class Program:
 
     @staticmethod
     def init_singletons():
-        Database()
         GUIManager()
         TorrentManager()
         Observer()
