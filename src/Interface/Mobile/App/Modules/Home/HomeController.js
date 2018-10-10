@@ -5,8 +5,8 @@
         $scope.favorites = [];
 
         $scope.expandItem = function(evnt){
-            $(evnt.srcElement).closest(".home-item").toggleClass("expanded");
-            $(evnt.srcElement).closest(".home-item-bar").find(".home-item-down-icon").toggleClass("flipped");
+            $(evnt.currentTarget).closest(".home-item").toggleClass("expanded");
+            $(evnt.currentTarget).find(".home-item-down-icon").toggleClass("flipped");
         }
 
         $scope.addLeadingZero = function(val){

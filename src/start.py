@@ -39,7 +39,6 @@ class Program:
         Database().init_database()
         self.init_singletons()
 
-
         Stats.set('start_time', current_time())
         self.running = True
 
