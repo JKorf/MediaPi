@@ -2,10 +2,9 @@ import os
 import urllib.parse
 import urllib.request
 
-import psutil
 from tornado import gen
 
-from Interface.TV.VLCPlayer import PlayerState
+from Automation.LightManager import LightManager
 from Shared.Events import EventManager
 from Shared.Events import EventType
 from Shared.Logger import Logger
@@ -13,9 +12,7 @@ from Shared.Settings import Settings as AppSettings
 from Shared.Stats import Stats
 from Shared.Threading import ThreadManager
 from Shared.Util import to_JSON, parse_bool, RequestFactory, current_time, write_size
-from MediaPlayer.Util.Enums import TorrentState
-from WebServer.Controllers.LightController import LightController
-from WebServer.Models import MediaInfo, CurrentMedia, Version, Settings, Info, Status, StartUp
+from WebServer.Models import Settings, Info, StartUp
 
 
 class UtilController:
@@ -28,10 +25,6 @@ class UtilController:
                     write_size(Stats.total('max_download_speed')))
 
         return to_JSON(info)
-
-    @staticmethod
-    def version(start):
-        return to_JSON(Version(start.version))
 
     @staticmethod
     @gen.coroutine
@@ -84,4 +77,4 @@ class UtilController:
     @staticmethod
     def startup():
         return to_JSON(
-            StartUp(AppSettings.get_string("name"), LightController.enabled))
+            StartUp(AppSettings.get_string("name"), LightManager().enabled))

@@ -2,11 +2,14 @@
 import os
 from datetime import datetime
 
-os.chdir(os.path.dirname(__file__))
-
-from Managers.GUIManager import GUIManager
 from Managers.Observer import Observer
 from Managers.TorrentManager import TorrentManager
+
+os.chdir(os.path.dirname(__file__))
+
+from Automation.LightManager import LightManager
+
+from Managers.GUIManager import GUIManager
 from Managers.WebServerManager import WebServerManager
 
 import sys
@@ -33,23 +36,20 @@ class Program:
 
         self.is_slave = Settings.get_bool("slave")
 
-        self.database = Database()
-        self.database.init_database()
+        self.init_singletons()
 
-        Stats.database = self.database
+        Database().init_database()
+
         Stats.set('start_time', current_time())
         self.running = True
-
-        self.gui_manager = GUIManager(self)
-        self.webserver_manager = WebServerManager(self)
-        self.torrent_manager = TorrentManager(self)
-        self.observer = Observer(self)
 
         self.init_sound()
         self.init_folders()
 
-        self.webserver_manager.start_server()
+        WebServerManager().start_server()
         self.version = datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S")
+
+        LightManager().init()
 
         if not self.is_slave:
             self.file_listener = StreamListener("MasterFileServer", 50010)
@@ -63,10 +63,19 @@ class Program:
 
         Logger.write(2, "Started")
         if Settings.get_bool("show_gui"):
-            self.gui_manager.start_gui()
+            GUIManager().start_gui()
         else:
             while self.running:
                 time.sleep(5)
+
+    @staticmethod
+    def init_singletons():
+        Database()
+        GUIManager()
+        TorrentManager()
+        Observer()
+        WebServerManager()
+        LightManager()
 
     @staticmethod
     def init_sound():

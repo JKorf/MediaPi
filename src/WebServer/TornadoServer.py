@@ -1,5 +1,3 @@
-import base64
-import json
 import os
 import socket
 import time
@@ -11,7 +9,8 @@ import tornado
 from tornado import gen
 from tornado import ioloop, web, websocket
 
-from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
+from Database.Database import Database
+from Managers.TorrentManager import TorrentManager
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -32,14 +31,12 @@ from WebServer.Controllers.YoutubeController import YoutubeController
 
 
 class TornadoServer:
-    start_obj = None
     master_ip = None
     clients = []
 
-    def __init__(self, start):
+    def __init__(self):
         self.port = 80
         TornadoServer.master_ip = Settings.get_string("master_ip")
-        TornadoServer.start_obj = start
         handlers = [
             (r"/util/(.*)", UtilHandler),
             (r"/movies/(.*)", MovieHandler),
@@ -128,10 +125,8 @@ class UtilHandler(BaseHandler):
             self.write(UtilController.info())
         elif url == "get_settings":
             self.write(UtilController.get_settings())
-        elif url == "version":
-            self.write(UtilController.version(TornadoServer.start_obj))
         elif url == "get_subtitles":
-            data = TornadoServer.start_obj.torrent_manager.subtitle_provider.search_subtitles_for_file(self.get_argument("path"), self.get_argument("file"))
+            data = TorrentManager().subtitle_provider.search_subtitles_for_file(self.get_argument("path"), self.get_argument("file"))
             self.write(to_JSON(data))
 
     @gen.coroutine
@@ -206,7 +201,7 @@ class PlayerHandler(BaseHandler):
         elif url == "set_subtitle_id":
             PlayerController.set_subtitle_id(self.get_argument("sub"))
         elif url == "stop_player":
-            was_waiting_for_file_selection = TornadoServer.start_obj.torrent_manager.torrent and TornadoServer.start_obj.torrent_manager.torrent.state == TorrentState.WaitingUserFileSelection
+            was_waiting_for_file_selection = TorrentManager().torrent and TorrentManager().torrent.state == TorrentState.WaitingUserFileSelection
             PlayerController.stop_player()
 
             if was_waiting_for_file_selection:
@@ -333,15 +328,15 @@ class DatabaseHandler(BaseHandler):
 
         if url == "get_favorites":
             Logger.write(2, "Getting favorites")
-            self.write(to_JSON(TornadoServer.start_obj.database.get_favorites()))
+            self.write(to_JSON(Database().get_favorites()))
 
         if url == "get_history":
             Logger.write(2, "Getting history")
-            self.write(to_JSON(TornadoServer.start_obj.database.get_history()))
+            self.write(to_JSON(Database().get_history()))
 
         if url == "get_unfinished_items":
             Logger.write(2, "Getting unfinished items")
-            self.write(to_JSON(TornadoServer.start_obj.database.get_watching_items()))
+            self.write(to_JSON(Database().get_watching_items()))
 
     @gen.coroutine
     def post(self, url):
@@ -351,21 +346,21 @@ class DatabaseHandler(BaseHandler):
 
         if url == "add_watched_torrent_file":
             Logger.write(2, "Adding to watched torrent files")
-            TornadoServer.start_obj.database.add_watched_torrent_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("mediaFile"), self.get_argument("watchedAt"))
+            Database().add_watched_torrent_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("mediaFile"), self.get_argument("watchedAt"))
 
         if url == "add_watched_file":
             Logger.write(2, "Adding to watched files")
-            TornadoServer.start_obj.database.add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"))
+            Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"))
 
         if url == "add_watched_youtube":
             Logger.write(2, "Adding to watched youtube")
-            TornadoServer.start_obj.database.add_watched_youtube(
+            Database().add_watched_youtube(
                 self.get_argument("title"),
                 self.get_argument("watchedAt"))
 
         if url == "add_watched_movie":
             Logger.write(2, "Adding to watched movie")
-            TornadoServer.start_obj.database.add_watched_movie(
+            Database().add_watched_movie(
                 self.get_argument("title"),
                 self.get_argument("movieId"),
                 self.get_argument("image"),
@@ -373,7 +368,7 @@ class DatabaseHandler(BaseHandler):
 
         if url == "add_watched_episode":
             Logger.write(2, "Adding to watched episodes")
-            TornadoServer.start_obj.database.add_watched_episode(
+            Database().add_watched_episode(
                 self.get_argument("title"),
                 self.get_argument("showId"),
                 self.get_argument("image"),
@@ -383,19 +378,19 @@ class DatabaseHandler(BaseHandler):
 
         if url == "remove_watched":
             Logger.write(2, "Remove watched")
-            TornadoServer.start_obj.database.remove_watched(self.get_argument("id"))
+            Database().remove_watched(self.get_argument("id"))
 
         if url == "add_favorite":
             Logger.write(2, "Adding to favorites")
-            TornadoServer.start_obj.database.add_favorite(self.get_argument("id"), self.get_argument("type"), self.get_argument("title"), self.get_argument("image"))
+            Database().add_favorite(self.get_argument("id"), self.get_argument("type"), self.get_argument("title"), self.get_argument("image"))
 
         if url == "remove_favorite":
             Logger.write(2, "Removing from favorites")
-            TornadoServer.start_obj.database.remove_favorite(self.get_argument("id"))
+            Database().remove_favorite(self.get_argument("id"))
 
         if url == "remove_unfinished":
             Logger.write(2, "Removing unfinished")
-            TornadoServer.start_obj.database.remove_watching_item(
+            Database().remove_watching_item(
                 urllib.parse.unquote(self.get_argument("url")))
 
         if url == "add_unfinished":
@@ -404,7 +399,7 @@ class DatabaseHandler(BaseHandler):
             media_file = self.get_argument("mediaFile")
             if media_file == "None" or media_file == "null":
                 media_file = None
-            TornadoServer.start_obj.database.add_watching_item(
+            Database().add_watching_item(
                 self.get_argument("type"),
                 self.get_argument("name"),
                 urllib.parse.unquote(self.get_argument("url")),
@@ -418,7 +413,7 @@ class DatabaseHandler(BaseHandler):
             if media_file == "None" or media_file == "null":
                 media_file = None
 
-            TornadoServer.start_obj.database.update_watching_item(
+            Database().update_watching_item(
                 urllib.parse.unquote(self.get_argument("url")),
                 int(self.get_argument("position")),
                 self.get_argument("watchedAt"),

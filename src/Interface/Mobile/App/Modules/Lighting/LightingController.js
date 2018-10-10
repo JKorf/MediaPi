@@ -8,7 +8,7 @@
           };
 
          function Init(){
-             $http.post("/lighting/debug");
+             //$http.post("/lighting/debug");
              $http.get("/lighting/get_lights").then(function(data){
                  console.log(data);
                  $scope.devices = data.data;

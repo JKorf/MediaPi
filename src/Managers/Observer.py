@@ -2,26 +2,27 @@ import subprocess
 import time
 import urllib.parse
 
+from Database.Database import Database
+from Managers.GUIManager import GUIManager
+from Managers.TorrentManager import TorrentManager
 from Shared.Events import EventType, EventManager
-from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Stats import Stats
 from Shared.Threading import CustomThread
-from Shared.Util import current_time
+from Shared.Util import current_time, Singleton
 from WebServer.TornadoServer import TornadoServer
 
 
-class Observer:
+class Observer(metaclass=Singleton):
     @property
     def torrent(self):
-        return self.start.torrent_manager.torrent
+        return TorrentManager().torrent
 
     @property
     def player(self):
-        return self.start.gui_manager.player
+        return GUIManager().player
 
-    def __init__(self, start):
-        self.start = start
+    def __init__(self):
         self.added_unfinished = False
         self.removed_unfinished = False
         self.last_play_update_time = 0
@@ -95,7 +96,7 @@ class Observer:
                     if self.is_slave:
                         TornadoServer.notify_master("/database/remove_unfinished?url=" + urllib.parse.quote(path))
                     else:
-                        self.start.database.remove_watching_item(path)
+                        Database().remove_watching_item(path)
 
             elif self.player.get_position() > 10 and not self.added_unfinished and not self.removed_unfinished:
                 # Add unfinished
@@ -106,7 +107,7 @@ class Observer:
                     notify_url += "&mediaFile=" + urllib.parse.quote(str(media_file))
                     TornadoServer.  notify_master(notify_url)
                 else:
-                    self.start.database.add_watching_item(watching_type, self.player.title, path, self.player.img, self.player.get_length(), current_time(), media_file)
+                    Database().add_watching_item(watching_type, self.player.title, path, self.player.img, self.player.get_length(), current_time(), media_file)
 
             if not self.removed_unfinished and self.player.get_position() > 10:
                 # Update unfinished
@@ -118,7 +119,7 @@ class Observer:
                         notify_url += "&mediaFile=" + urllib.parse.quote(str(media_file))
                         TornadoServer.notify_master(notify_url)
                     else:
-                        self.start.database.update_watching_item(path, pos, current_time(), media_file)
+                        Database().update_watching_item(path, pos, current_time(), media_file)
 
             time.sleep(5)
 
@@ -130,7 +131,7 @@ class Observer:
             network_ssid = out.split(":")[1]
 
         while True:
-            if not self.start.gui_manager.gui:
+            if not GUIManager().gui:
                 time.sleep(5)
                 continue
 
@@ -155,7 +156,7 @@ class Observer:
 
                                 if key_value[0] == "Quality":
                                     value_max = key_value[1].split("/")
-                                    self.start.gui_manager.gui.set_wifi_quality(float(value_max[0]) / float(value_max[1]) * 100)
+                                    GUIManager().gui.set_wifi_quality(float(value_max[0]) / float(value_max[1]) * 100)
             else:
                 proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
                 out, err = proc.communicate()
@@ -163,6 +164,6 @@ class Observer:
                 for line in lines:
                     if "Signal" in line:
                         split = line.split(":")
-                        self.start.gui_manager.gui.set_wifi_quality(float(split[1].replace("%", "")))
+                        GUIManager().gui.set_wifi_quality(float(split[1].replace("%", "")))
 
             time.sleep(15)

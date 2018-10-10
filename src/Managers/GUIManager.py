@@ -5,20 +5,20 @@ import urllib.parse
 
 from Interface.TV.GUI import GUI
 from Interface.TV.VLCPlayer import VLCPlayer, PlayerState
+from Managers.TorrentManager import TorrentManager
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
-from Shared.Util import RequestFactory
+from Shared.Util import RequestFactory, Singleton
 from WebServer.Models import FileStructure
 from WebServer.TornadoServer import TornadoServer
 
 
-class GUIManager:
+class GUIManager(metaclass=Singleton):
 
-    def __init__(self, program):
-        self.program = program
+    def __init__(self):
         self.gui = None
         self.app = None
         self.player = VLCPlayer()
@@ -50,7 +50,7 @@ class GUIManager:
         EventManager.register_event(EventType.NoPeers, self.no_peers)
 
     def start_gui(self):
-        self.app, self.gui = GUI.new_gui(self.program)
+        self.app, self.gui = GUI.new_gui(self)
 
         if self.gui is not None:
             self.gui.showFullScreen()
@@ -110,7 +110,7 @@ class GUIManager:
         self.player.play()
 
     def torrent_media_file_set(self):
-        self.player.play(0, self.program.torrent_manager.torrent.media_file.name)
+        self.player.play(0, TorrentManager().torrent.media_file.name)
         self.next_episode_manager.check_next_episode()
 
     def start_torrent(self, url):
@@ -198,10 +198,10 @@ class NextEpisodeManager:
                     break
 
         elif self.gui_manager.player.type != "Radio" and self.gui_manager.player.type != "YouTube" and self.gui_manager.player.type != "Image":
-            season, epi = try_parse_season_episode(self.gui_manager.program.torrent_manager.torrent.media_file.path)
+            season, epi = try_parse_season_episode(TorrentManager().torrent.media_file.path)
             if season != 0 and epi != 0:
                 # Try to get next episode from same torrent
-                for file in self.gui_manager.program.torrent_manager.torrent.files:
+                for file in TorrentManager().torrent.files:
                     if not is_media_file(file.path):
                         continue
 
@@ -212,7 +212,7 @@ class NextEpisodeManager:
                         self.next_episode = epi + 1
                         self.next_type = "Torrent"
                         self.next_title = self.gui_manager.player.title.replace("E" + self.add_leading_zero(epi), "E" + self.add_leading_zero(epi + 1))
-                        self.next_path = self.gui_manager.program.torrent_manager.torrent.uri
+                        self.next_path = TorrentManager().torrent.uri
                         self.next_media_file = file.name
                         break
 

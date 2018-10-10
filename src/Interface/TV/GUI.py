@@ -11,6 +11,7 @@ from PyQt4.QtCore import *
 from os.path import isfile, join
 
 from Interface.TV.VLCPlayer import PlayerState
+from Managers.TorrentManager import TorrentManager
 from Shared.Events import EventManager, EventType
 from Shared.Settings import Settings
 
@@ -26,9 +27,10 @@ class Communicate(QtCore.QObject):
 class GUI(QtGui.QMainWindow):
     base_image_path = os.getcwd() + "/Interface/TV/Images/"
 
-    def __init__(self, program):
+    def __init__(self, gui_manager):
         super(GUI, self).__init__()
 
+        self.gui_manager = gui_manager
         self.hide_background = False
         self.base_background_address = self.base_image_path + "backgrounds/"
         self.black_address = GUI.base_image_path + "/black.png"
@@ -37,7 +39,6 @@ class GUI(QtGui.QMainWindow):
 
         self.update_buffering = False
         self.palette = QtGui.QPalette()
-        self.program = program
 
         self.quality = 0
         self.address = "-"
@@ -82,9 +83,9 @@ class GUI(QtGui.QMainWindow):
         self.set_home(None, True)
 
     @classmethod
-    def new_gui(cls, program):
+    def new_gui(cls, gui_manager):
         GUI.app = QtGui.QApplication(sys.argv)
-        myapp = GUI(program)
+        myapp = GUI(gui_manager)
         return GUI.app, myapp
 
     def selection_required(self, files):
@@ -100,10 +101,10 @@ class GUI(QtGui.QMainWindow):
         if new_state == PlayerState.Opening:
             self.com.set_opening.emit()
         elif new_state == PlayerState.Playing:
-            if self.program.gui_manager.player.type != 'Radio':
+            if self.gui_manager.player.type != 'Radio':
                 self.com.set_none.emit()
             else:
-                self.com.set_home.emit(self.program.gui_manager.player.title, False)
+                self.com.set_home.emit(self.gui_manager.player.title, False)
         elif new_state == PlayerState.Nothing:
             self.com.set_home.emit(None, False)
 
@@ -176,18 +177,18 @@ class GUI(QtGui.QMainWindow):
         if not self.update_buffering:
             return
 
-        if self.program.torrent_manager.torrent and self.program.torrent_manager.torrent.media_file:
-            percentage_done = math.floor(min(((7500000 - self.program.torrent_manager.torrent.bytes_missing_for_buffering) / 7500000) * 100, 99))
+        if TorrentManager().torrent and TorrentManager().torrent.media_file:
+            percentage_done = math.floor(min(((7500000 - TorrentManager().torrent.bytes_missing_for_buffering) / 7500000) * 100, 99))
             self.loading_panel.set_percent(percentage_done)
 
         QtCore.QTimer.singleShot(1000, lambda: self.update_buffer_info())
 
     def get_media_length(self):
-        actual = self.program.gui_manager.player.get_length()
+        actual = self.gui_manager.player.get_length()
         if actual:
             return actual
 
-        if self.program.gui_manager.player.type == "Movie":
+        if self.gui_manager.player.type == "Movie":
             return 120 * 60
         else:
             return 20 * 60

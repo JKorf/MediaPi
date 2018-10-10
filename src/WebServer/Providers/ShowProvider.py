@@ -3,7 +3,7 @@ from tornado import gen
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from Shared.Util import current_time, RequestFactory
+from Shared.Util import RequestFactory
 
 
 class ShowProvider:

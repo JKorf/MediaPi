@@ -4,7 +4,10 @@ import time
 
 import psutil
 
+from Database.Database import Database
 from Interface.TV.VLCPlayer import PlayerState
+import Managers.GUIManager
+from Managers.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -18,12 +21,10 @@ class WebsocketController:
 
     clients = []
     _ws_lock = Lock()
-    program = None
     update_loop_count = 0
 
     @staticmethod
-    def init(program):
-        WebsocketController.program = program
+    def init():
         EventManager.register_event(EventType.NextEpisodeSelection, WebsocketController.next_episode_selection)
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, WebsocketController.media_selection_required)
         EventManager.register_event(EventType.TorrentMediaFileSelection, WebsocketController.media_selected)
@@ -46,11 +47,11 @@ class WebsocketController:
                 status_data = WebsocketController.get_status_data()
                 WebsocketController.broadcast("update", "status", status_data)
 
-            if WebsocketController.program.gui_manager.player.state != PlayerState.Nothing or WebsocketController.update_loop_count % 5 == 0:
+            if Managers.GUIManager.GUIManager().player.state != PlayerState.Nothing or WebsocketController.update_loop_count % 5 == 0:
                 player_data = WebsocketController.get_player_data()
                 WebsocketController.broadcast("update", "player", player_data)
 
-            if WebsocketController.program.torrent_manager.torrent is not None:
+            if TorrentManager().torrent is not None:
                 media_data = WebsocketController.get_media_data()
                 WebsocketController.broadcast("update", "media", media_data)
                 WebsocketController.update_loop_count = -1
@@ -65,12 +66,12 @@ class WebsocketController:
         if client not in WebsocketController.clients:
             Logger.write(2, "New connection")
             WebsocketController.clients.append(client)
-            if WebsocketController.program.torrent_manager.torrent and WebsocketController.program.torrent_manager.torrent.state == TorrentState.WaitingUserFileSelection:
+            if TorrentManager().torrent and TorrentManager().torrent.state == TorrentState.WaitingUserFileSelection:
                 if not Settings.get_bool("slave"):
-                    watched_files = [f[9] for f in WebsocketController.program.database.get_watched_torrent_files(WebsocketController.program.torrent_manager.torrent.uri)]
-                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in [y for y in WebsocketController.program.torrent_manager.torrent.files if y.is_media]]
+                    watched_files = [f[9] for f in Database.get_watched_torrent_files(TorrentManager().torrent.uri)]
+                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in [y for y in TorrentManager().torrent.files if y.is_media]]
                 else:
-                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in [y for y in WebsocketController.program.torrent_manager.torrent.files if y.is_media]]
+                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in [y for y in TorrentManager().torrent.files if y.is_media]]
 
                 client.write_message(to_JSON(WebSocketMessage('request', 'media_selection', files)))
 
@@ -107,7 +108,7 @@ class WebsocketController:
     @staticmethod
     def media_selection_required(files):
         if not Settings.get_bool("slave"):
-            watched_files = [f[9] for f in WebsocketController.program.database.get_watched_torrent_files(WebsocketController.program.torrent_manager.torrent.uri)]
+            watched_files = [f[9] for f in Database().get_watched_torrent_files(TorrentManager().torrent.uri)]
             files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in files]
         else:
             files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in files]
@@ -152,55 +153,55 @@ class WebsocketController:
         torrent_state = -1
         connected_peers = -1
         potential_peers = -1
-        if WebsocketController.program.torrent_manager.torrent:
-            speed = write_size(WebsocketController.program.torrent_manager.torrent.download_counter.value)
-            ready = WebsocketController.program.torrent_manager.torrent.bytes_ready_in_buffer
-            torrent_state = WebsocketController.program.torrent_manager.torrent.state
-            connected_peers = len(WebsocketController.program.torrent_manager.torrent.peer_manager.connected_peers)
-            potential_peers = len(WebsocketController.program.torrent_manager.torrent.peer_manager.potential_peers)
+        if TorrentManager().torrent:
+            speed = write_size(TorrentManager().torrent.download_counter.value)
+            ready = TorrentManager().torrent.bytes_ready_in_buffer
+            torrent_state = TorrentManager().torrent.state
+            connected_peers = len(TorrentManager().torrent.peer_manager.connected_peers)
+            potential_peers = len(TorrentManager().torrent.peer_manager.potential_peers)
 
         return Status(speed, ready, psutil.cpu_percent(), psutil.virtual_memory().percent, torrent_state, connected_peers, potential_peers)
 
     @staticmethod
     def get_player_data():
-        state = WebsocketController.program.gui_manager.player.state
+        state = Managers.GUIManager.GUIManager().player.state
 
-        if not WebsocketController.program.gui_manager.player.prepared:
+        if not Managers.GUIManager.GUIManager().player.prepared:
             if state == PlayerState.Nothing or state == PlayerState.Ended:
                 return CurrentMedia(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)
 
         if state == PlayerState.Nothing or state == PlayerState.Ended:
             state = PlayerState.Opening
 
-        title = WebsocketController.program.gui_manager.player.title
+        title = Managers.GUIManager.GUIManager().player.title
         percentage = 0
-        if WebsocketController.program.torrent_manager.torrent is not None and WebsocketController.program.torrent_manager.torrent.media_file is not None:
-            buffered = WebsocketController.program.torrent_manager.torrent.bytes_ready_in_buffer
-            percentage = buffered / WebsocketController.program.torrent_manager.torrent.media_file.length * 100
-            if WebsocketController.program.torrent_manager.torrent.state == TorrentState.Done:
+        if TorrentManager().torrent is not None and TorrentManager().torrent.media_file is not None:
+            buffered = TorrentManager().torrent.bytes_ready_in_buffer
+            percentage = buffered / TorrentManager().torrent.media_file.length * 100
+            if TorrentManager().torrent.state == TorrentState.Done:
                 percentage = 100
 
         media = CurrentMedia(state.value,
-                             WebsocketController.program.gui_manager.player.type,
+                             Managers.GUIManager.GUIManager().player.type,
                              title,
-                             WebsocketController.program.gui_manager.player.path,
-                             WebsocketController.program.gui_manager.player.img,
-                             WebsocketController.program.gui_manager.player.get_position(),
-                             WebsocketController.program.gui_manager.player.get_length(),
-                             WebsocketController.program.gui_manager.player.get_volume(),
-                             WebsocketController.program.gui_manager.player.get_length(),
-                             WebsocketController.program.gui_manager.player.get_selected_sub(),
-                             WebsocketController.program.gui_manager.player.get_subtitle_tracks(),
-                             WebsocketController.program.gui_manager.player.get_subtitle_delay() / 1000 / 1000,
+                             Managers.GUIManager.GUIManager().player.path,
+                             Managers.GUIManager.GUIManager().player.img,
+                             Managers.GUIManager.GUIManager().player.get_position(),
+                             Managers.GUIManager.GUIManager().player.get_length(),
+                             Managers.GUIManager.GUIManager().player.get_volume(),
+                             Managers.GUIManager.GUIManager().player.get_length(),
+                             Managers.GUIManager.GUIManager().player.get_selected_sub(),
+                             Managers.GUIManager.GUIManager().player.get_subtitle_tracks(),
+                             Managers.GUIManager.GUIManager().player.get_subtitle_delay() / 1000 / 1000,
                              True,
-                             WebsocketController.program.gui_manager.player.get_audio_tracks(),
-                             WebsocketController.program.gui_manager.player.get_audio_track(),
+                             Managers.GUIManager.GUIManager().player.get_audio_tracks(),
+                             Managers.GUIManager.GUIManager().player.get_audio_track(),
                              percentage)
         return media
 
     @staticmethod
     def get_media_data():
-        torrent = WebsocketController.program.torrent_manager.torrent
+        torrent = TorrentManager().torrent
         if torrent is None:
             de = MediaInfo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ThreadManager.thread_count(), 0, 0)
         else:
@@ -220,6 +221,6 @@ class WebsocketController:
                            torrent.overhead)
 
         if Settings.get_bool("dht"):
-            de.add_dht(WebsocketController.program.torrent_manager.dht.routing_table.count_nodes())
+            de.add_dht(TorrentManager().dht.routing_table.count_nodes())
 
         return de

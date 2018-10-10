@@ -1,6 +1,7 @@
 import datetime
 import time
 
+from Database.Database import Database
 from Interface.TV.VLCPlayer import PlayerState
 from MediaPlayer.DHT.DHTEngine import DHTEngine
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
@@ -8,15 +9,14 @@ from MediaPlayer.Torrent.Torrent import Torrent
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from Shared.Util import current_time
+from Shared.Util import current_time, Singleton
 
 
-class TorrentManager:
+class TorrentManager(metaclass=Singleton):
 
-    def __init__(self, start):
-        self.start = start
+    def __init__(self):
         self.torrent = None
-        self.subtitle_provider = SubtitleProvider(self.start)
+        self.subtitle_provider = SubtitleProvider()
         self.last_torrent_start = 0
 
         self.dht_enabled = Settings.get_bool("dht")
@@ -54,8 +54,8 @@ class TorrentManager:
             time.sleep(1)
 
     def media_file_set(self):
-        if self.start.database.last_history_add < self.last_torrent_start - 100:
-            self.start.database.add_watched_torrent_file(self.torrent.name, self.torrent.uri, self.torrent.media_file.path, datetime.datetime.now().isoformat())
+        if Database().last_history_add < self.last_torrent_start - 100:
+            Database().add_watched_torrent_file(self.torrent.name, self.torrent.uri, self.torrent.media_file.path, datetime.datetime.now().isoformat())
 
     def player_state_change(self, old_state, new_state):
         if new_state == PlayerState.Ended:

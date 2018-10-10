@@ -6,10 +6,10 @@ from threading import Lock
 
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from Shared.Util import current_time
+from Shared.Util import current_time, Singleton
 
 
-class Database:
+class Database(metaclass=Singleton):
 
     def __init__(self):
         self.path = Settings.get_string("base_folder") + "database.data"

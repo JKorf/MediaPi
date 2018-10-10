@@ -1,19 +1,18 @@
 from threading import Lock
 
-from Shared.Util import current_time
+from Database.Database import Database
 
 
 class Stats:
 
-    database = None
     lock = Lock()
     cache = dict()
 
     @staticmethod
     def _get_stat(name):
         if name not in Stats.cache:
-            if Stats.database is not None:
-                stat = Stats.database.get_stat(name)
+            if Database() is not None:
+                stat = Database().get_stat(name)
             else:
                 stat = 0
             Stats.cache[name] = stat
@@ -32,7 +31,7 @@ class Stats:
             copy = Stats.cache.copy()
 
         for key, val in copy.items():
-            Stats.database.update_stat(key, val)
+            Database().update_stat(key, val)
 
     @staticmethod
     def add(name, value):

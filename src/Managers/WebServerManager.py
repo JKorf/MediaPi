@@ -1,34 +1,32 @@
 import time
 
+from Managers.GUIManager import GUIManager
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
-from WebServer.Controllers.LightController import LightController
+from Shared.Util import Singleton
 from WebServer.Controllers.WebsocketController import WebsocketController
 from WebServer.TornadoServer import TornadoServer
 
 
-class WebServerManager:
+class WebServerManager(metaclass=Singleton):
 
-    def __init__(self, start):
+    def __init__(self):
         self.server = None
-        self.start = start
 
     def start_server(self):
-        WebsocketController.init(self.start)
-        LightController.program = self.start
-        LightController.init()
+        WebsocketController.init()
 
-        self.server = TornadoServer(self.start)
+        self.server = TornadoServer()
         self.server.start()
         if Settings.get_bool("show_gui"):
             thread = CustomThread(self.set_address, "Set gui address")
             thread.start()
 
     def set_address(self):
-        while not self.start.gui_manager.gui:
+        while not GUIManager().gui:
             time.sleep(1)
 
         actual_address = self.server.get_actual_address()
         Logger.write(3, "WebServer running on " + actual_address)
-        self.start.gui_manager.gui.set_address(actual_address)
+        GUIManager().gui.set_address(actual_address)

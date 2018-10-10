@@ -3,7 +3,7 @@ import urllib.parse
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from Shared.Util import current_time, RequestFactory
+from Shared.Util import RequestFactory
 from WebServer.Providers.Movies.Movie import Movie
 from tornado import gen
 
