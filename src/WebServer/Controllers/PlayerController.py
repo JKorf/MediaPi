@@ -7,7 +7,7 @@ class PlayerController:
     @staticmethod
     def set_subtitle_file(file):
         Logger.write(2, "Setting subtitle file: " + file)
-        EventManager.throw_event(EventType.SetSubtitleFile, [file])
+        EventManager.throw_event(EventType.SetSubtitleFiles, [[file]])
 
     @staticmethod
     def set_subtitle_id(sub):

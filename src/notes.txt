@@ -14,8 +14,6 @@
 
     DataManager neemt te lang, +- 1seconde
 
-    Movies/series kunnen toevoegen aan `want to watch`
-
     Regression protocol?
 
     disable popups hd:

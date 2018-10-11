@@ -112,8 +112,9 @@ class HDController:
         data = json.loads(server.request_master("/util/get_subtitles?path=" + urllib.parse.quote_plus(path) + "&file=" + urllib.parse.quote_plus(file)).decode('utf8'))
         i = 0
         Logger.write(2, "Master returned " + str(len(data)) + " subs")
+        paths = []
         for sub in data:
             i += 1
             sub_data = server.request_master(":50010/file/" + sub)
-            file = SubtitleSourceBase.save_file("master_" + str(i), sub_data)
-            EventManager.throw_event(EventType.SubtitleDownloaded, [file])
+            paths.append(SubtitleSourceBase.save_file("master_" + str(i), sub_data))
+        EventManager.throw_event(EventType.SubtitlesDownloaded, [paths])

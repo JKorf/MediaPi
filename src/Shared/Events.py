@@ -18,11 +18,12 @@ class EventType(Enum):
     PlayerPaused = 13,
     PlayerError = 14,
     PlayerStateChange = 15,
+    PlayerMediaLoaded = 39,
 
-    SetSubtitleFile = 16,
+    SetSubtitleFiles = 16,
     SetSubtitleId = 17,
     SetSubtitleOffset = 18,
-    SubtitleDownloaded = 19,
+    SubtitlesDownloaded = 19,
 
     SetAudioId = 22,
 

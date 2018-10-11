@@ -41,10 +41,10 @@ class GUIManager(metaclass=Singleton):
 
         EventManager.register_event(EventType.TorrentMediaFileSet, self.torrent_media_file_set)
 
-        EventManager.register_event(EventType.SetSubtitleFile, self.set_subtitle_file)
+        EventManager.register_event(EventType.SetSubtitleFiles, self.set_subtitle_files)
         EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_id)
         EventManager.register_event(EventType.SetSubtitleOffset, self.set_subtitle_offset)
-        EventManager.register_event(EventType.SubtitleDownloaded, self.set_subtitle_file)
+        EventManager.register_event(EventType.SubtitlesDownloaded, self.set_subtitle_files)
         EventManager.register_event(EventType.SetAudioId, self.set_audio_id)
 
         EventManager.register_event(EventType.NoPeers, self.no_peers)
@@ -61,6 +61,9 @@ class GUIManager(metaclass=Singleton):
         self.next_episode_manager.reset()
 
     def player_state_change(self, prev_state, new_state):
+        if prev_state == PlayerState.Opening and new_state == PlayerState.Playing:
+            EventManager.throw_event(EventType.PlayerMediaLoaded, [self.player.get_length_ms()])
+
         Logger.write(2, "State change from " + str(prev_state) + " to " + str(new_state))
         EventManager.throw_event(EventType.PlayerStateChange, [prev_state, new_state])
 
@@ -129,8 +132,8 @@ class GUIManager(metaclass=Singleton):
     def seek(self, pos):
         self.player.set_time(pos)
 
-    def set_subtitle_file(self, file):
-        self.player.set_subtitle_file(file)
+    def set_subtitle_files(self, file):
+        self.player.set_subtitle_files(file)
 
     def set_subtitle_id(self, id):
         self.player.set_subtitle_track(id)

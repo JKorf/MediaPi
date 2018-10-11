@@ -147,6 +147,9 @@ class VLCPlayer:
     def get_length(self):
         return int(self.__player.get_length() / 1000)
 
+    def get_length_ms(self):
+        return int(self.__player.get_length())
+
     def set_time(self, pos):
         self.__player.set_time(pos)
 
@@ -172,10 +175,12 @@ class VLCPlayer:
             result.append((trackid, trackname.decode('utf8')))
         return result
 
-    def set_subtitle_file(self, file):
-        file = file.replace("/", os.sep).replace("\\", os.sep)
-        # NOTE this must be called after Play()
-        return self.__player.video_set_subtitle_file(file)
+    def set_subtitle_files(self, files):
+        Logger.write(2, "Adding " + str(len(files)) + " subtitle files")
+        for file in reversed(files):
+            file = file.replace("/", os.sep).replace("\\", os.sep)
+            # NOTE this must be called after Play()
+            self.__player.video_set_subtitle_file(file)
 
     def set_subtitle_track(self, id):
         self.__player.video_set_spu(id)
@@ -285,15 +290,6 @@ class VLCPlayer:
         old = self.state
         self.state = new
         self.state_change_action(old, self.state)
-
-
-class MediaItem:
-
-    def __init__(self, type, title, url, img):
-        self.type = type
-        self.title = title
-        self.url = url
-        self.img = img
 
 
 class PlayerState(Enum):

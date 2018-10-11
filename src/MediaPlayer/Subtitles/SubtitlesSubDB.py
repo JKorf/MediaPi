@@ -10,7 +10,7 @@ class SubtitlesSubDB(SubtitleSourceBase):
     def __init__(self):
         super().__init__()
 
-    def get_subtitles(self, size, filename, first_64k, last_64k):
+    def get_subtitles(self, size, file_length, filename, first_64k, last_64k):
 
         data = first_64k + last_64k
         hash = hashlib.md5(data).hexdigest()
