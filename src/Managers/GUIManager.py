@@ -219,7 +219,7 @@ class NextEpisodeManager:
                     self.next_title = self.gui_manager.player.title.replace("E" + self.add_leading_zero(epi), "E" + self.add_leading_zero(epi + 1))
                     self.next_path = TorrentManager().torrent.uri
                     self.next_media_file = file.name
-                    break
+                    return
 
             if self.next_type is None:
                 #  Try to get next episode from shows list
