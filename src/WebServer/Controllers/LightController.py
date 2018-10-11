@@ -16,9 +16,9 @@ class LightController:
             lights = []
             for light in control_device.light_control.lights:
                 lights.append(LightDevice(
-                    light.supported_features & SUPPORT_BRIGHTNESS,
-                    light.supported_features & SUPPORT_COLOR_TEMP,
-                    light.supported_features & SUPPORT_HEX_COLOR,
+                    control_device.light_control.can_set_dimmer,
+                    control_device.light_control.can_set_temp,
+                    control_device.light_control.can_set_color,
                     light.state,
                     light.dimmer,
                     light.color_temp,

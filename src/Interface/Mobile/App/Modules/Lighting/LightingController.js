@@ -95,9 +95,9 @@
             return Math.round((value - min) / (max - min) * 100) + "%";
          }
 
-         $scope.switchGroup = function(group)
+         $scope.switchGroup = function(group, state)
          {
-             if(group.lights[0].state)
+             if(state)
                 $http.post("/lighting/switch_light?index="+group.index+"&state=on");
              else
                 $http.post("/lighting/switch_light?index="+group.index+"&state=off");
