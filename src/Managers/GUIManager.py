@@ -169,6 +169,9 @@ class NextEpisodeManager:
         self.next_episode = 0
 
     def check_next_episode(self):
+        if self.gui_manager.player.type == "Radio" or self.gui_manager.player.type == "YouTube" or self.gui_manager.player.type == "Image":
+            return
+
         if self.gui_manager.player.type == "File":
             self.reset()
             # Try to get next episode from same folder
@@ -201,55 +204,54 @@ class NextEpisodeManager:
                     self.next_path = dir_name + "/" + potential
                     return
             Logger.write(2, "No next episode of file, no matching next season/epi found in file list")
+            return
 
-        elif self.gui_manager.player.type != "Radio" and self.gui_manager.player.type != "YouTube" and self.gui_manager.player.type != "Image":
-            season, epi = try_parse_season_episode(TorrentManager().torrent.media_file.path)
-            if season == 0 or epi == 0:
-                Logger.write(2, "No next episode found, season/epi not parsed")
-                return
+        season, epi = try_parse_season_episode(TorrentManager().torrent.media_file.path)
+        if season == 0 or epi == 0:
+            Logger.write(2, "No next episode found, season/epi not parsed")
+            return
 
-            # Try to get next episode from same torrent
-            for file in TorrentManager().torrent.files:
-                if not is_media_file(file.path):
-                    continue
+        # Try to get next episode from same torrent
+        for file in TorrentManager().torrent.files:
+            if not is_media_file(file.path):
+                continue
 
-                s, e = try_parse_season_episode(file.path)
-                if s == season and e == epi + 1:
-                    Logger.write(2, "Found next episode: " + file.path)
-                    self.next_season = s
-                    self.next_episode = epi + 1
-                    self.next_type = "Torrent"
-                    self.next_title = self.gui_manager.player.title.replace("E" + self.add_leading_zero(epi), "E" + self.add_leading_zero(epi + 1))
-                    self.next_path = TorrentManager().torrent.uri
-                    self.next_media_file = file.name
-                    return
-
-            if self.next_type is None:
-                #  Try to get next episode from shows list
-                season, epi = try_parse_season_episode(self.gui_manager.player.title)
-                if season == 0 or epi == 0:
-                    Logger.write(2, "No next episode of show, season/epi not parsed")
-                    return
-
-                show = self.gui_manager.player.title[8:]
-                results = json.loads(RequestFactory.make_request("http://127.0.0.1/shows/get_shows?page=1&orderby=trending&keywords=" + urllib.parse.quote(show)).decode('utf8'))
-                if len(results) == 0:
-                    Logger.write(2, "No next episode of show, request returned no results for shows")
-                    return
-
-                show = json.loads(RequestFactory.make_request("http://127.0.0.1/shows/get_show?id=" + urllib.parse.quote(results[0]["_id"])).decode('utf8'))
-                next_epi = [x for x in show["episodes"] if x["season"] == season and x["episode"] == epi + 1]
-                if len(next_epi) == 0:
-                    Logger.write(2, "No next episode of show, request returned no results for next epi")
-                    return
-
-                Logger.write(2, "Found next episode: " + next_epi[0]["title"])
-                self.next_season = season
+            s, e = try_parse_season_episode(file.path)
+            if s == season and e == epi + 1:
+                Logger.write(2, "Found next episode: " + file.path)
+                self.next_season = s
                 self.next_episode = epi + 1
                 self.next_type = "Torrent"
                 self.next_title = self.gui_manager.player.title.replace("E" + self.add_leading_zero(epi), "E" + self.add_leading_zero(epi + 1))
-                self.next_path = next_epi[0]["torrents"]["0"]["url"]
-                self.next_img = self.gui_manager.player.img
+                self.next_path = TorrentManager().torrent.uri
+                self.next_media_file = file.name
+                return
+
+        #  Try to get next episode from shows list
+        season, epi = try_parse_season_episode(self.gui_manager.player.title)
+        if season == 0 or epi == 0:
+            Logger.write(2, "No next episode of show, season/epi not parsed")
+            return
+
+        show = self.gui_manager.player.title[8:]
+        results = json.loads(RequestFactory.make_request("http://127.0.0.1/shows/get_shows?page=1&orderby=trending&keywords=" + urllib.parse.quote(show)).decode('utf8'))
+        if len(results) == 0:
+            Logger.write(2, "No next episode of show, request returned no results for shows")
+            return
+
+        show = json.loads(RequestFactory.make_request("http://127.0.0.1/shows/get_show?id=" + urllib.parse.quote(results[0]["_id"])).decode('utf8'))
+        next_epi = [x for x in show["episodes"] if x["season"] == season and x["episode"] == epi + 1]
+        if len(next_epi) == 0:
+            Logger.write(2, "No next episode of show, request returned no results for next epi")
+            return
+
+        Logger.write(2, "Found next episode: " + next_epi[0]["title"])
+        self.next_season = season
+        self.next_episode = epi + 1
+        self.next_type = "Torrent"
+        self.next_title = self.gui_manager.player.title.replace("E" + self.add_leading_zero(epi), "E" + self.add_leading_zero(epi + 1))
+        self.next_path = next_epi[0]["torrents"]["0"]["url"]
+        self.next_img = self.gui_manager.player.img
 
     def add_leading_zero(self, val):
         i = int(val)
