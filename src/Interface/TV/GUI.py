@@ -1,5 +1,9 @@
+import json
 import os
 import sys
+import calendar
+from collections import Counter
+from datetime import datetime
 from random import Random
 
 import time
@@ -13,7 +17,10 @@ from os.path import isfile, join
 from Interface.TV.VLCPlayer import PlayerState
 from Managers.TorrentManager import TorrentManager
 from Shared.Events import EventManager, EventType
+from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Threading import CustomThread
+from Shared.Util import RequestFactory
 
 
 class Communicate(QtCore.QObject):
@@ -22,6 +29,7 @@ class Communicate(QtCore.QObject):
     set_home = QtCore.pyqtSignal([str, bool])
     set_opening = QtCore.pyqtSignal()
     set_file_select = QtCore.pyqtSignal()
+    update_weather = QtCore.pyqtSignal([list])
 
 
 class GUI(QtGui.QMainWindow):
@@ -53,6 +61,7 @@ class GUI(QtGui.QMainWindow):
         self.com.set_home.connect(self.set_home)
         self.com.set_opening.connect(self.set_opening)
         self.com.set_file_select.connect(self.set_file_select)
+        self.com.update_weather.connect(self.update_weather)
 
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 
@@ -69,6 +78,7 @@ class GUI(QtGui.QMainWindow):
         self.loading_panel = LoadingPanel(self, self.width / 2 - 150, self.height / 2 - 100, 300, 200)
         self.select_file_panel = SelectFilePanel(self, self.width / 2 - 150, self.height / 2 - 90, 300, 180)
         self.time_panel = TimePanel(self, self.width - 200, self.height - 88, 190, 78)
+        self.weather_panel = WeatherPanel(self, 10, self.height - 150)
 
         self.background_timer = QtCore.QTimer(self)
         self.background_timer.setInterval(1000 * 60 * 15)
@@ -80,8 +90,18 @@ class GUI(QtGui.QMainWindow):
         self.update_timer.timeout.connect(self.update_time)
         self.update_timer.start()
 
+        self.weather_timer = QtCore.QTimer(self)
+        self.weather_timer.setInterval(1000 * 60 * 30)
+        self.weather_timer.timeout.connect(self.update_weather)
+        self.weather_timer.start()
+
         self.setCursor(Qt.BlankCursor)
-        self.set_home(None, True)
+        t = CustomThread(self.init, "Gui init")
+        t.start()
+
+    def init(self):
+        self.com.set_home.emit(None, True)
+        self.com.update_weather.emit(self.get_weather_data())
 
     @classmethod
     def new_gui(cls, gui_manager):
@@ -206,11 +226,54 @@ class GUI(QtGui.QMainWindow):
     def set_wifi_quality(self, quality):
         self.quality = quality
 
+    def update_weather(self, data=None):
+        self.weather_panel.update_weather(data or self.get_weather_data())
+
+    def get_weather_data(self):
+        api_key = "ba7d7c80475db4a254c38fd0295468f1"
+        url = "http://api.openweathermap.org/data/2.5/forecast?id=2750947&units=metric&appid=" + api_key
+        result = RequestFactory.make_request(url)
+        if not result:
+            Logger.write(2, "Failed to get weather data")
+            return
+
+        data = json.loads(result.decode('utf8'))
+        days = data['list']
+        current_day = datetime.fromtimestamp(days[0]['dt']).day
+        update_data = []
+        for i in range(3):
+            day, max, min, image = self.determine_day_weather([x for x in days if datetime.fromtimestamp(x['dt']).day == current_day + i])
+            Logger.write(2, str(day) + " max: " + str(max) + ", min: " + str(min) + ", image: " + str(image))
+            update_data.append((day, min, max, image))
+        return update_data
+
+    def determine_day_weather(self, data):
+        day = calendar.day_name[datetime.fromtimestamp(data[0]['dt']).date().weekday()]
+        max_temp = round(max([x['main']['temp_max'] for x in data]))
+        min_temp = round(min([x['main']['temp_min'] for x in data]))
+
+        image_c = self.determine_image([x['weather'][0]['icon'] for x in data if 6 <= datetime.fromtimestamp(x['dt']).hour <= 22])
+        image = GUI.base_image_path + "Weather/" + image_c + ".png"
+        return day, max_temp, min_temp, image
+
+    def determine_image(self, images):
+        images = [x.replace('n', 'd') for x in images]
+        down_images = [x for x in images if x in ["09d", "10d", "13d"]]
+        if len(down_images) >= len(images) // 2:
+            return down_images[0]
+
+        counts = Counter(images)
+        for key,value in counts.items():
+            if value >= len(images) // 2:
+                return key
+        return max(set(images), key=images.count)
+
 
 class InfoWidget(QtGui.QWidget):
 
     def __init__(self, parent, x, y, width, height):
         QtGui.QWidget.__init__(self, parent)
+        self.parent_obj = parent
 
         self.setGeometry(x, y, width, height)
 
@@ -222,21 +285,30 @@ class InfoWidget(QtGui.QWidget):
         qp.fillPath(path, QtGui.QBrush(QtGui.QColor(0, 0, 0, 200)))
         qp.end()
 
-    def create_label(self, font_size, width, text):
+    def create_label(self, owner, font_size, width, text):
         font = QtGui.QFont("Lucida", font_size)
         font.setStyleStrategy(QtGui.QFont.PreferAntialias)
-        lbl = QtGui.QLabel(self)
+        lbl = QtGui.QLabel(owner)
         lbl.setFont(font)
         lbl.setStyleSheet("color: #bbb;")
         lbl.setFixedWidth(width)
         lbl.setText(text)
         return lbl
 
-    def create_img(self, width, height, src):
-        lbl = QtGui.QLabel(self)
+    def create_img(self, owner, width, height, src):
+        lbl = QtGui.QLabel(owner)
         lbl.setFixedWidth(width)
         lbl.setFixedHeight(height)
         lbl.setPixmap(QtGui.QPixmap(src))
+        return lbl
+
+    def create_scaled_img(self, owner, width, height, src):
+        lbl = QtGui.QLabel(owner)
+        lbl.setFixedWidth(width)
+        lbl.setFixedHeight(height)
+        pixmap = QtGui.QPixmap(src)
+        pixmap = pixmap.scaledToWidth(width)
+        lbl.setPixmap(pixmap)
         return lbl
 
 
@@ -245,7 +317,7 @@ class GeneralInfoPanel(InfoWidget):
     def __init__(self, parent, x, y, width, height):
         InfoWidget.__init__(self, parent, x, y, width, height)
 
-        self.title = self.create_label(20, width, "Mediaplayer")
+        self.title = self.create_label(self, 20, width, "Mediaplayer")
         self.title.move(0, 6)
         self.title.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
 
@@ -255,19 +327,19 @@ class GeneralInfoPanel(InfoWidget):
         self.line.setFrameShadow(QtGui.QFrame.Sunken)
         self.line.setStyleSheet("border: 2px solid #bbb;")
 
-        self.name_lbl = self.create_label(13, width, "Name")
+        self.name_lbl = self.create_label(self, 13, width, "Name")
         self.name_lbl.move(10, 56)
-        self.name_val = self.create_label(13, width - 20, Settings.get_string("name"))
+        self.name_val = self.create_label(self, 13, width - 20, Settings.get_string("name"))
         self.name_val.move(10, 56)
         self.name_val.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        self.ip_lbl = self.create_label(13, width, "IP")
+        self.ip_lbl = self.create_label(self, 13, width, "IP")
         self.ip_lbl.move(10, 76)
-        self.ip_val = self.create_label(13, width - 20, "")
+        self.ip_val = self.create_label(self, 13, width - 20, "")
         self.ip_val.move(10, 76)
         self.ip_val.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        self.con_lbl = self.create_label(13, width, "WiFi quality")
+        self.con_lbl = self.create_label(self, 13, width, "WiFi quality")
         self.con_lbl.move(10, 96)
 
         self.wifi_strength_bar = PercentageBar(self, 150, 102, 100, 12)
@@ -279,9 +351,9 @@ class GeneralInfoPanel(InfoWidget):
         self.playing_line.setFrameShadow(QtGui.QFrame.Sunken)
         self.playing_line.setStyleSheet("border: 1px solid #777;")
 
-        self.playing_lbl = self.create_label(13, width, "Now playing")
+        self.playing_lbl = self.create_label(self, 13, width, "Now playing")
         self.playing_lbl.move(10, 130)
-        self.playing_val = self.create_label(13, width - 20, "")
+        self.playing_val = self.create_label(self, 13, width - 20, "")
         self.playing_val.move(10, 130)
         self.playing_val.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
@@ -312,7 +384,7 @@ class LoadingPanel(InfoWidget):
     def __init__(self, parent, x, y, width, height):
         InfoWidget.__init__(self, parent, x, y, width, height)
 
-        self.title = self.create_label(16, width, "Loading ..")
+        self.title = self.create_label(self, 16, width, "Loading ..")
         self.title.setAlignment(Qt.AlignCenter)
         self.title.move(10, 26)
         self.title.show()
@@ -330,12 +402,12 @@ class SelectFilePanel(InfoWidget):
     def __init__(self, parent, x, y, width, height):
         InfoWidget.__init__(self, parent, x, y, width, height)
 
-        self.title = self.create_label(16, width, "Select a file to stream")
+        self.title = self.create_label(self, 16, width, "Select a file to stream")
         self.title.setAlignment(Qt.AlignCenter)
         self.title.move(10, 26)
         self.title.show()
 
-        self.select_img = self.create_img(64, 64, GUI.base_image_path + "select_file.png")
+        self.select_img = self.create_img(self, 64, 64, GUI.base_image_path + "select_file.png")
         self.select_img.setAlignment(Qt.AlignCenter)
         self.select_img.move(width / 2 - 32, 75)
         self.select_img.show()
@@ -345,13 +417,13 @@ class TimePanel(InfoWidget):
     def __init__(self, parent, x, y, width, height):
         InfoWidget.__init__(self, parent, x, y, width, height)
 
-        self.time_lbl = self.create_label(16, width, "")
+        self.time_lbl = self.create_label(self, 16, width, "")
         self.time_lbl.setAlignment(Qt.AlignCenter)
         self.setFixedWidth(width)
         self.time_lbl.move(0, 10)
         self.time_lbl.show()
 
-        self.date_lbl = self.create_label(16, width, "")
+        self.date_lbl = self.create_label(self, 16, width, "")
         self.date_lbl.setAlignment(Qt.AlignCenter)
         self.setFixedWidth(width)
         self.date_lbl.move(0, 40)
@@ -360,6 +432,72 @@ class TimePanel(InfoWidget):
     def update_time(self):
         self.time_lbl.setText(time.strftime('%H:%M'))
         self.date_lbl.setText(time.strftime('%a %d %b %Y'))
+
+
+class WeatherPanel(InfoWidget):
+    def __init__(self, parent, x, y):
+        InfoWidget.__init__(self, parent, x, y, 340, 140)
+
+        self.block_today = WeatherBlock(self, 10, 10, 100, 120, "Today")
+        self.block_today.show()
+
+        self.block_tom = WeatherBlock(self, 120, 10, 100, 120, "Tom")
+        self.block_tom.show()
+
+        self.block_tom_2 = WeatherBlock(self, 230, 10, 100, 120, "Tom2")
+        self.block_tom_2.show()
+
+    def update_weather(self, data):
+        self.block_today.set_value("Today", data[0][1], data[0][2], data[0][3])
+        self.block_tom.set_value(data[1][0], data[1][1], data[1][2], data[1][3])
+        self.block_tom_2.set_value(data[2][0], data[2][1], data[2][2], data[2][3])
+
+
+class WeatherBlock(QtGui.QWidget):
+    def __init__(self, parent, x, y, width, height, text):
+        QtGui.QWidget.__init__(self, parent)
+        self.setGeometry(x, y, width, height)
+
+        self.parent_obj = parent
+        self.image_label = None
+        self.image = None
+        self.max = 0
+        self.min = 0
+        self.text = text
+
+        self.image_label = self.parent_obj.create_scaled_img(self, 60, 60, "")
+        self.image_label.move(20, 20)
+        self.image_label.show()
+
+        self.text_label = self.parent_obj.create_label(self, 14, 100, text)
+        self.text_label.move(0, 0)
+        self.text_label.setAlignment(Qt.AlignCenter)
+        self.text_label.show()
+
+        self.max_label = self.parent_obj.create_label(self, 12, 100, "-")
+        self.max_label.move(0, 80)
+        self.max_label.setAlignment(Qt.AlignCenter)
+        self.max_label.show()
+
+        self.min_label = self.parent_obj.create_label(self, 8, 100, "-")
+        self.min_label.move(0, 100)
+        self.min_label.setAlignment(Qt.AlignCenter)
+        self.min_label.setStyleSheet("color: #a5d9ff;")
+        self.min_label.show()
+
+    def set_value(self, day, min, max, image):
+        self.image = image
+        self.max = max
+        self.min = min
+
+        pixmap = QtGui.QPixmap(image)
+        pixmap = pixmap.scaledToWidth(60)
+        self.image_label.setPixmap(pixmap)
+
+        self.text_label.setText(day)
+        self.min_label.setText(str(min) + " °C")
+        self.max_label.setText(str(max) + " °C")
+        self.update()
 
 
 class PercentageBar(QtGui.QWidget):
