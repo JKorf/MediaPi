@@ -230,7 +230,7 @@ class GUI(QtGui.QMainWindow):
         self.weather_panel.update_weather(data or self.get_weather_data())
 
     def get_weather_data(self):
-        api_key = "ba7d7c80475db4a254c38fd0295468f1"
+        api_key = Settings.get_string("open_weather_map_key")
         url = "http://api.openweathermap.org/data/2.5/forecast?id=2750947&units=metric&appid=" + api_key
         result = RequestFactory.make_request(url)
         if not result:
@@ -243,7 +243,7 @@ class GUI(QtGui.QMainWindow):
         update_data = []
         for i in range(3):
             day, max, min, image = self.determine_day_weather([x for x in days if datetime.fromtimestamp(x['dt']).day == current_day + i])
-            Logger.write(2, str(day) + " max: " + str(max) + ", min: " + str(min) + ", image: " + str(image))
+            Logger.write(1, str(day) + " max: " + str(max) + ", min: " + str(min) + ", image: " + str(image))
             update_data.append((day, min, max, image))
         return update_data
 
