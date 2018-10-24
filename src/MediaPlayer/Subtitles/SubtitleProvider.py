@@ -21,7 +21,6 @@ class SubtitleProvider:
             SubtitlesOpenSubtitles(),
         ]
 
-        self.max_sub_files = Settings.get_int("max_subtitles_files")
         self.sub_file_directory = os.path.dirname(os.path.realpath(__file__)) + "/subs/"
         self.sub_files = []
         self.sub_files_lock = Lock()

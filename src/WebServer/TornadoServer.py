@@ -123,17 +123,13 @@ class UtilHandler(BaseHandler):
             self.write(UtilController.startup())
         elif url == "info":
             self.write(UtilController.info())
-        elif url == "get_settings":
-            self.write(UtilController.get_settings())
         elif url == "get_subtitles":
             data = TorrentManager().subtitle_provider.search_subtitles_for_file(self.get_argument("path"), self.get_argument("file"))
             self.write(to_JSON(data))
 
     @gen.coroutine
     def post(self, url):
-        if url == "save_settings":
-            UtilController.save_settings(self.get_argument("raspberry"), self.get_argument("gui"), self.get_argument("external_trackers"), self.get_argument("max_subs"))
-        elif url == "shutdown":
+        if url == "shutdown":
             UtilController.shutdown()
         elif url == "restart_pi":
             UtilController.restart_pi()

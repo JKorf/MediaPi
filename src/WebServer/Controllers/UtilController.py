@@ -39,23 +39,6 @@ class UtilController:
         return result
 
     @staticmethod
-    def get_settings():
-        set = Settings(AppSettings.get_bool("raspberry"),
-                       AppSettings.get_bool("show_gui"),
-                       AppSettings.get_bool("use_external_trackers"),
-                       AppSettings.get_int("max_subtitles_files"))
-        return to_JSON(set)
-
-    @staticmethod
-    def save_settings(raspberry, gui, external_trackers, max_subs):
-        Logger.write(2, 'Saving new settings')
-
-        AppSettings.set_setting("raspberry", parse_bool(raspberry))
-        AppSettings.set_setting("show_gui", parse_bool(gui))
-        AppSettings.set_setting("use_external_trackers", parse_bool(external_trackers))
-        AppSettings.set_setting("max_subtitles_files", int(max_subs))
-
-    @staticmethod
     def test():
         Logger.write(2, "============== Test ===============")
         EventManager.throw_event(EventType.Log, [])
