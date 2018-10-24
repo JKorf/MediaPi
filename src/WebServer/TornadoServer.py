@@ -76,16 +76,21 @@ class TornadoServer:
         tornado.ioloop.IOLoop.instance().stop()
 
     @staticmethod
-    def notify_master(url):
+    async def notify_master_async(url):
         reroute = str(TornadoServer.master_ip) + url
         Logger.write(2, "Sending notification to master at " + reroute)
-        RequestFactory.make_request(reroute, "POST")
+        await RequestFactory.make_request_async(reroute, "POST")
 
     @staticmethod
     def request_master(url):
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(TornadoServer.request_master_async(url))
+
+    @staticmethod
+    async def request_master_async(url):
         reroute = str(TornadoServer.master_ip) + url
         Logger.write(2, "Sending request to master at " + reroute)
-        return RequestFactory.make_request(reroute, "GET")
+        return await RequestFactory.make_request_async(reroute, "GET")
 
     def get_actual_address(self):
         for i in range(3):
@@ -117,10 +122,9 @@ class BaseHandler(tornado.web.RequestHandler):
 
 
 class UtilHandler(BaseHandler):
-    @gen.coroutine
-    def get(self, url):
+    async def get(self, url):
         if url == "get_protected_img":
-            data = yield UtilController.get_protected_img(self.get_argument("url"))
+            data = await UtilController.get_protected_img(self.get_argument("url"))
             self.write(data)
         elif url == "startup":
             self.write(UtilController.startup())
@@ -130,7 +134,6 @@ class UtilHandler(BaseHandler):
             data = TorrentManager().subtitle_provider.search_subtitles_for_file(self.get_argument("path"), self.get_argument("file"))
             self.write(to_JSON(data))
 
-    @gen.coroutine
     def post(self, url):
         if url == "shutdown":
             UtilController.shutdown()
@@ -141,24 +144,22 @@ class UtilHandler(BaseHandler):
 
 
 class MovieHandler(BaseHandler):
-    @gen.coroutine
     def post(self, url):
         if url == "play_movie":
             MovieController.play_movie(self.get_argument("url"), self.get_argument("id"), self.get_argument("title"), self.get_argument("img", ""))
         elif url == "play_continue":
             MovieController.play_continue(TornadoServer, HDController.play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"), self.get_argument("mediaFile"))
 
-    @gen.coroutine
-    def get(self, url):
+    async def get(self, url):
         if url == "get_movies":
-            data = yield MovieController.get_movies(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
+            data = await MovieController.get_movies(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
             self.write(data)
         if url == "get_movies_all":
-            data = yield MovieController.get_movies_all(self.get_argument("page"), self.get_argument("orderby"),
+            data = await MovieController.get_movies_all(self.get_argument("page"), self.get_argument("orderby"),
                                                      self.get_argument("keywords"))
             self.write(data)
         elif url == "get_movie":
-            data = yield MovieController.get_movie(self.get_argument("id"))
+            data = await MovieController.get_movie(self.get_argument("id"))
             self.write(data)
 
 
@@ -168,22 +169,20 @@ class ShowHandler(BaseHandler):
         if url == "play_episode":
             ShowController.play_episode(self.get_argument("url"), self.get_argument("title"), self.get_argument("img", ""))
 
-    @gen.coroutine
-    def get(self, url):
+    async def get(self, url):
         if url == "get_shows":
-            data = yield ShowController.get_shows(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
+            data = await ShowController.get_shows(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
             self.write(data)
         if url == "get_shows_all":
-            data = yield ShowController.get_shows_all(self.get_argument("page"), self.get_argument("orderby"),
+            data = await ShowController.get_shows_all(self.get_argument("page"), self.get_argument("orderby"),
                                                    self.get_argument("keywords"))
             self.write(data)
         elif url == "get_show":
-            show = yield ShowController.get_show(self.get_argument("id"))
+            show = await ShowController.get_show(self.get_argument("id"))
             self.write(show)
 
 
 class RadioHandler(BaseHandler):
-    @gen.coroutine
     def get(self, url):
         if url == "get_radios":
             self.write(RadioController.get_radios())
@@ -221,21 +220,19 @@ class PlayerHandler(BaseHandler):
 
 
 class HDHandler(BaseHandler):
-    @gen.coroutine
-    def get(self, url):
+    async def get(self, url):
         if Settings.get_bool("slave"):
-            self.write(TornadoServer.request_master(self.request.uri))
+            self.write(await TornadoServer.request_master_async(self.request.uri))
         elif url == "drives":
             self.write(HDController.drives())
         elif url == "directory":
             self.write(HDController.directory(self.get_argument("path")))
 
-    @gen.coroutine
-    def post(self, url):
+    async def post(self, url):
         if url == "play_file":
             if Settings.get_bool("slave"):
                 Logger.write(2, self.get_argument("path"))
-                HDController.play_master_file(TornadoServer, self.get_argument("path"), self.get_argument("filename"), 0)
+                await HDController.play_master_file(TornadoServer, self.get_argument("path"), self.get_argument("filename"), 0)
 
             else:
                 filename = self.get_argument("filename")
@@ -252,22 +249,20 @@ class HDHandler(BaseHandler):
 
 
 class YoutubeHandler(BaseHandler):
-    @gen.coroutine
-    def get(self, url):
+    async def get(self, url):
         if url == "search":
-            data = yield YoutubeController.search(self.get_argument("query"), self.get_argument("type"))
+            data = await YoutubeController.search(self.get_argument("query"), self.get_argument("type"))
             self.write(data)
         elif url == "home":
-            data = yield YoutubeController.home()
+            data = await YoutubeController.home()
             self.write(data)
         elif url == "channel_info":
-            data = yield YoutubeController.channel_info(self.get_argument("id"))
+            data = await YoutubeController.channel_info(self.get_argument("id"))
             self.write(data)
         elif url == "channel_feed":
-            data = yield YoutubeController.channel_feed(self.get_argument("id"))
+            data = await YoutubeController.channel_feed(self.get_argument("id"))
             self.write(data)
 
-    @gen.coroutine
     def post(self, url):
         if url == "play_youtube":
             YoutubeController.play_youtube(self.get_argument("id"), self.get_argument("title"))
@@ -276,26 +271,22 @@ class YoutubeHandler(BaseHandler):
 
 
 class TorrentHandler(BaseHandler):
-    @gen.coroutine
     def get(self, url):
         if url == "top":
             self.write(TorrentController.top())
         elif url == "search":
             self.write(TorrentController.search(self.get_argument("keywords")))
 
-    @gen.coroutine
     def post(self, url):
         if url == "play_torrent":
             TorrentController.play_torrent(self.get_argument("url"), self.get_argument("title"))
 
 
 class LightHandler(BaseHandler):
-    @gen.coroutine
     def get(self, url):
         if url == "get_lights":
             self.write(LightController.get_lights())
 
-    @gen.coroutine
     def post(self, url):
         if url == "switch_light":
             LightController.switch_light(int(self.get_argument("index")), self.get_argument("state") == "on")
@@ -303,8 +294,6 @@ class LightHandler(BaseHandler):
             LightController.warmth_light(int(self.get_argument("index")), int(self.get_argument("warmth")))
         elif url == "dimmer_light":
             LightController.dimmer_light(int(self.get_argument("index")), int(self.get_argument("dimmer")))
-        elif url == "debug":
-            LightController.debug()
 
 
 class RealtimeHandler(websocket.WebSocketHandler):
@@ -319,10 +308,9 @@ class RealtimeHandler(websocket.WebSocketHandler):
 
 
 class DatabaseHandler(BaseHandler):
-    @gen.coroutine
-    def get(self, url):
+    async def get(self, url):
         if Settings.get_bool("slave"):
-            self.write(TornadoServer.request_master(self.request.uri))
+            self.write(await TornadoServer.request_master_async(self.request.uri))
             return
 
         if url == "get_favorites":
@@ -337,10 +325,9 @@ class DatabaseHandler(BaseHandler):
             Logger.write(2, "Getting unfinished items")
             self.write(to_JSON(Database().get_watching_items()))
 
-    @gen.coroutine
-    def post(self, url):
+    async def post(self, url):
         if Settings.get_bool("slave"):
-            TornadoServer.notify_master(self.request.uri)
+            await TornadoServer.notify_master_async(self.request.uri)
             return
 
         if url == "add_watched_torrent_file":

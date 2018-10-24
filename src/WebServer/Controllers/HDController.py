@@ -99,7 +99,7 @@ class HDController:
         HDController.play_file(images[current_index], os.path.join(dir, images[current_index]))
 
     @staticmethod
-    def play_master_file(server, path, file, position):
+    async def play_master_file(server, path, file, position):
         # play file from master
         file_location = server.master_ip + ":50010/file"
         if not path.startswith("/"):
@@ -109,12 +109,13 @@ class HDController:
                                position)
 
         # request hash from master
-        data = json.loads(server.request_master("/util/get_subtitles?path=" + urllib.parse.quote_plus(path) + "&file=" + urllib.parse.quote_plus(file)).decode('utf8'))
+        string_data = await server.request_master_async("/util/get_subtitles?path=" + urllib.parse.quote_plus(path) + "&file=" + urllib.parse.quote_plus(file))
+        data = json.loads(string_data.decode('utf8'))
         i = 0
         Logger.write(2, "Master returned " + str(len(data)) + " subs")
         paths = []
         for sub in data:
             i += 1
-            sub_data = server.request_master(":50010/file/" + sub)
+            sub_data = await server.request_master_async(":50010/file/" + sub)
             paths.append(SubtitleSourceBase.save_file("master_" + str(i), sub_data))
         EventManager.throw_event(EventType.SubtitlesDownloaded, [paths])

@@ -94,7 +94,7 @@ class Observer(metaclass=Singleton):
                 if not self.removed_unfinished:
                     self.removed_unfinished = True
                     if self.is_slave:
-                        TornadoServer.notify_master("/database/remove_unfinished?url=" + urllib.parse.quote(path))
+                        TornadoServer.notify_master_async("/database/remove_unfinished?url=" + urllib.parse.quote(path))
                     else:
                         Database().remove_watching_item(path)
 
@@ -105,7 +105,7 @@ class Observer(metaclass=Singleton):
                     notify_url = "/database/add_unfinished?url=" + urllib.parse.quote(path) + "&name=" + urllib.parse.quote(self.player.title) + "&length=" + str(self.player.get_length()) \
                                                                 + "&time=" + str(current_time()) + "&image=" + urllib.parse.quote(img) + "&type=" + watching_type
                     notify_url += "&mediaFile=" + urllib.parse.quote(str(media_file))
-                    TornadoServer.  notify_master(notify_url)
+                    TornadoServer.  notify_master_async(notify_url)
                 else:
                     Database().add_watching_item(watching_type, self.player.title, path, self.player.img, self.player.get_length(), current_time(), media_file)
 
@@ -117,7 +117,7 @@ class Observer(metaclass=Singleton):
                     if self.is_slave:
                         notify_url = "/database/update_unfinished?url=" + urllib.parse.quote(path) + "&position=" + str(pos) + "&watchedAt=" + str(current_time())
                         notify_url += "&mediaFile=" + urllib.parse.quote(str(media_file))
-                        TornadoServer.notify_master(notify_url)
+                        TornadoServer.notify_master_async(notify_url)
                     else:
                         Database().update_watching_item(path, pos, current_time(), media_file)
 

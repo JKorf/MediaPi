@@ -16,29 +16,26 @@ class ShowController:
     server_uri = "http://localhost:50009/torrent"
 
     @staticmethod
-    @gen.coroutine
-    def get_shows(page, orderby, keywords):
+    async def get_shows(page, orderby, keywords):
         if len(keywords) == 0:
-            response = yield ShowProvider.get_list(page, orderby)
+            response = await ShowProvider.get_list(page, orderby)
             return response
         else:
-            response = yield ShowProvider.search(page, orderby, urllib.parse.quote(keywords))
+            response = await ShowProvider.search(page, orderby, urllib.parse.quote(keywords))
             return response
 
     @staticmethod
-    @gen.coroutine
-    def get_shows_all(page, orderby, keywords):
+    async def get_shows_all(page, orderby, keywords):
         if len(keywords) == 0:
-            response = yield ShowProvider.get_list(page, orderby, True)
+            response = await ShowProvider.get_list(page, orderby, True)
             return response
         else:
-            response = yield ShowProvider.search(page, orderby, urllib.parse.quote(keywords), True)
+            response = await ShowProvider.search(page, orderby, urllib.parse.quote(keywords), True)
             return response
 
     @staticmethod
-    @gen.coroutine
-    def get_show(id):
-        response = yield ShowProvider.get_by_id(id)
+    async def get_show(id):
+        response = await ShowProvider.get_by_id(id)
         return response
 
     @staticmethod

@@ -85,6 +85,10 @@ class SubtitleProvider:
 
     def download_subs(self, old_state, new_state):
         if old_state == PlayerState.Opening and new_state == PlayerState.Playing:
+            if not self.file_name:
+                Logger.write(2, "Subs not prepared, skipping")
+                return
+
             Logger.write(2, "Going to search subs. Size: " + str(self.file_size) + ", length: " + str(self.file_length) + ", name: " + self.file_name)
             self.sub_files = []
             for source in self.subtitle_sources:

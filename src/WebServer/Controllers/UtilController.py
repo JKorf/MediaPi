@@ -2,8 +2,6 @@ import os
 import urllib.parse
 import urllib.request
 
-from tornado import gen
-
 from Automation.LightManager import LightManager
 from Shared.Events import EventManager
 from Shared.Events import EventType
@@ -11,8 +9,8 @@ from Shared.Logger import Logger
 from Shared.Settings import Settings as AppSettings
 from Shared.Stats import Stats
 from Shared.Threading import ThreadManager
-from Shared.Util import to_JSON, parse_bool, RequestFactory, current_time, write_size
-from WebServer.Models import Settings, Info, StartUp
+from Shared.Util import to_JSON, RequestFactory, current_time, write_size
+from WebServer.Models import Info, StartUp
 
 
 class UtilController:
@@ -27,10 +25,9 @@ class UtilController:
         return to_JSON(info)
 
     @staticmethod
-    @gen.coroutine
-    def get_protected_img(url):
+    async def get_protected_img(url):
         try:
-            result = yield RequestFactory.make_request_async(url)
+            result = await RequestFactory.make_request_async(url)
             if not result:
                 Logger.write(2, "Couldnt get image: " + urllib.parse.unquote(url))
                 result = open(os.getcwd() + "/Interface/Mobile/Images/unknown.png", "rb").read()

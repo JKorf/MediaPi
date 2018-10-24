@@ -12,17 +12,16 @@ class ShowProvider:
     shows_data = []
 
     @staticmethod
-    @gen.coroutine
-    def get_list(page, orderby, all=False):
+    async def get_list(page, orderby, all=False):
         Logger.write(2, "Get shows list")
         if all:
             data = b""
             for i in range(int(page)):
-                new_data = yield RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby)
+                new_data = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby)
                 if new_data is not None:
                     data = ShowProvider.append_result(data, new_data)
         else:
-            data = yield RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby)
+            data = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby)
 
         if data is not None:
             ShowProvider.shows_data = data
@@ -34,26 +33,24 @@ class ShowProvider:
         return ShowProvider.shows_data
 
     @staticmethod
-    @gen.coroutine
-    def search(page, orderby, keywords, all=False):
+    async def search(page, orderby, keywords, all=False):
         Logger.write(2, "Search shows " + keywords)
         if all:
             data = b""
             for i in range(int(page)):
-                new_data = yield RequestFactory.make_request_async(
+                new_data = await RequestFactory.make_request_async(
                     ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby + "&keywords=" + keywords)
                 if new_data is not None:
                     data = ShowProvider.append_result(data, new_data)
             return data
         else:
-            data = yield RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby + "&keywords="+keywords)
+            data = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby + "&keywords="+keywords)
             return data
 
     @staticmethod
-    @gen.coroutine
-    def get_by_id(id):
+    async def get_by_id(id):
         Logger.write(2, "Get show by id " + id)
-        response = yield RequestFactory.make_request_async(ShowProvider.shows_api_path + "show/" + id)
+        response = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "show/" + id)
         return response
 
     @staticmethod
