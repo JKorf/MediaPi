@@ -1,3 +1,4 @@
+import asyncio
 import os
 import socket
 import time
@@ -8,6 +9,7 @@ import urllib.request
 import tornado
 from tornado import gen
 from tornado import ioloop, web, websocket
+from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
 from Database.Database import Database
 from Managers.TorrentManager import TorrentManager
@@ -55,6 +57,12 @@ class TornadoServer:
         self.application = web.Application(handlers)
 
     def start(self):
+        thread = CustomThread(self.internal_start, "Tornado server", [])
+        thread.start()
+
+    def internal_start(self):
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        asyncio.set_event_loop_policy(AnyThreadEventLoopPolicy())
         while True:
             try:
                 self.application.listen(self.port)
@@ -62,15 +70,10 @@ class TornadoServer:
                 break
             except OSError:
                 self.port += 1
-
-        thread = CustomThread(self.internal_start, "Tornado server", [])
-        thread.start()
-
-    def internal_start(self):
-        ioloop.IOLoop.instance().start()
+        tornado.ioloop.IOLoop.instance().start()
 
     def stop(self):
-        ioloop.IOLoop.instance().stop()
+        tornado.ioloop.IOLoop.instance().stop()
 
     @staticmethod
     def notify_master(url):
