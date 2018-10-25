@@ -8,7 +8,6 @@
           };
 
          function Init(){
-             //$http.post("/lighting/debug");
              $http.get("/lighting/get_lights").then(function(data){
                  console.log(data);
                  $scope.devices = data.data;
@@ -19,8 +18,6 @@
                     $scope.devices[i].lights[0].hex_color = "#" + $scope.devices[i].lights[0].hex_color;
                     $scope.devices[i].name = getName($scope.devices[i]);
                 }
-
-
              }, function(e){
                 SetTestData();
              });

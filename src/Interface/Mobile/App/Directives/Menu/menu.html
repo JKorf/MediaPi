@@ -9,6 +9,11 @@
         <div class="menu-item-icon"><img src="/Images/lamp.svg" svg-image /></div>
     </div>
 
+    <div class="menu-item" ng-click="navigate('tv')" ng-class="{current: currentState == 'tv'}" ng-if="false">
+        <div class="menu-item-title">TV</div>
+        <div class="menu-item-icon"><img src="/Images/show.svg" svg-image/></div>
+    </div>
+
     <div class="menu-item" ng-click="navigate('shows')" ng-class="{current: currentState == 'shows' || currentState == 'show'}">
         <div class="menu-item-title">Shows</div>
         <div class="menu-item-icon"><img src="/Images/show.svg" svg-image/></div>

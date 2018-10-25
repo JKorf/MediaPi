@@ -11,6 +11,7 @@ from tornado import gen
 from tornado import ioloop, web, websocket
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
+from Automation.TVManager import TVManager
 from Database.Database import Database
 from Managers.TorrentManager import TorrentManager
 from Shared.Events import EventManager, EventType
@@ -49,6 +50,7 @@ class TornadoServer:
             (r"/youtube/(.*)", YoutubeHandler),
             (r"/torrent/(.*)", TorrentHandler),
             (r"/lighting/(.*)", LightHandler),
+            (r"/tv/(.*)", TVHandler),
             (r"/realtime", RealtimeHandler),
             (r"/database/(.*)", DatabaseHandler),
             (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Interface/Mobile", "default_filename": "index.html"})
@@ -294,6 +296,22 @@ class LightHandler(BaseHandler):
             LightController.warmth_light(int(self.get_argument("index")), int(self.get_argument("warmth")))
         elif url == "dimmer_light":
             LightController.dimmer_light(int(self.get_argument("index")), int(self.get_argument("dimmer")))
+
+
+class TVHandler(BaseHandler):
+    def get(self, url):
+        if url == "get_devices":
+            self.write(to_JSON(TVManager().get_inputs()))
+
+    def post(self, url):
+        if url == "tv_on":
+            TVManager().turn_tv_on()
+        elif url == "tv_off":
+            TVManager().turn_tv_off()
+        elif url == "channel_up":
+            TVManager().channel_up()
+        elif url == "channel_down":
+            TVManager().channel_down()
 
 
 class RealtimeHandler(websocket.WebSocketHandler):

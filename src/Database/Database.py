@@ -55,13 +55,16 @@ class Database(metaclass=Singleton):
             Logger.write(2, "DB version higher than software, can't process")
             raise Exception("DB version invalid")
 
+        changed = False
         while db_version != self.current_version:
             Logger.write(2, "Database version " + str(db_version) + ", latest is " + str(self.current_version) + ". Upgrading")
             self.upgrade(db_version)
             db_version += 1
+            changed = True
 
-        Logger.write(2, "Database upgrade completed")
         self.disconnect()
+        if changed:
+            Logger.write(2, "Database upgrade completed")
 
     def upgrade(self, number):
         new_version = number + 1

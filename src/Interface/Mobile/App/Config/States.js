@@ -17,6 +17,13 @@
             controller: "LightingController"
         });
 
+        $stateProvider.state('tv', {
+            url: '/tv',
+            templateUrl: '/App/Modules/TV/tv.html',
+            cache: false,
+            controller: "TVController"
+        });
+
         $stateProvider.state('movies', {
             url: '/media/movies',
             templateUrl: '/App/Modules/Media/medialist.html',

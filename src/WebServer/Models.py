@@ -221,3 +221,12 @@ class LightDevice:
         self.dimmer = dimmer
         self.color_temp = color_temp
         self.hex_color = hex_color
+
+
+class CecDevice:
+
+    def __init__(self):
+        self.address = None
+        self.active = False
+        self.vendor = None
+        self.osd = None
