@@ -252,14 +252,15 @@ class GUI(QtGui.QMainWindow):
         max_temp = round(max([x['main']['temp_max'] for x in data]))
         min_temp = round(min([x['main']['temp_min'] for x in data]))
 
-        image_c = self.determine_image([x['weather'][0]['icon'] for x in data if 6 <= datetime.fromtimestamp(x['dt']).hour <= 22])
+        today_images = [x['weather'][0]['icon'] for x in data if 6 <= datetime.fromtimestamp(x['dt']).hour]
+        image_c = self.determine_image(today_images)
         image = GUI.base_image_path + "Weather/" + image_c + ".png"
         return day, max_temp, min_temp, image
 
     def determine_image(self, images):
         images = [x.replace('n', 'd') for x in images]
         down_images = [x for x in images if x in ["09d", "10d", "13d"]]
-        if len(down_images) >= len(images) // 2:
+        if len(down_images) >= math.ceil(len(images) / 2.0):
             return down_images[0]
 
         counts = Counter(images)
