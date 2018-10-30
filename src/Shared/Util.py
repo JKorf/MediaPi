@@ -41,8 +41,7 @@ def write_time_from_seconds(t):
 class RequestFactory:
 
     @staticmethod
-    @gen.coroutine
-    def make_request_async(url, method='GET', body=None, heads=None, request_timeout=10, connect_timeout=10, useragent=None):
+    async def make_request_async(url, method='GET', body=None, heads=None, request_timeout=10, connect_timeout=10, useragent=None):
         try:
             com = dict(headers)
             if heads:
@@ -52,7 +51,7 @@ class RequestFactory:
 
             async_http_client = AsyncHTTPClient()
             http_request = HTTPRequest(url, method=method, headers=com, body=body, request_timeout=request_timeout, connect_timeout=connect_timeout, user_agent=useragent)
-            http_response = yield async_http_client.fetch(http_request)
+            http_response = await async_http_client.fetch(http_request)
             return http_response.body
         except Exception as e:
             Logger.write(2, "Error requesting url " + url + ": " + str(e))

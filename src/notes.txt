@@ -20,8 +20,8 @@
     speed graph
 
     Tv control:
-        https://ownyourbits.com/2017/02/02/control-your-raspberry-pi-with-your-tv-remote/
-        https://blog.gordonturner.com/2016/12/14/using-cec-client-on-a-raspberry-pi/
+        hdmi_ignore_cec_init=1 in /boot/config.txt
+        sudo apt-get install cec-utils
 
     zram: https://eltechs.com/overclock-raspberry-pi-3/
     Try with new case:

@@ -23,12 +23,11 @@ class YoutubeController:
     headers = None
 
     @staticmethod
-    @gen.coroutine
-    def search(query, type):
+    async def search(query, type):
         Logger.write(2, "Searching youtube for " + query)
         path = "search?part=snippet&q=" +query + "&type=video,channel&maxResults=20"
 
-        data = yield YoutubeController.internal_make_request(path)
+        data = await YoutubeController.internal_make_request(path)
         if data is None:
             return
         result = []
@@ -54,10 +53,9 @@ class YoutubeController:
         return to_JSON(result).encode('utf8')
 
     @staticmethod
-    @gen.coroutine
-    def home():
+    async def home():
         path = "subscriptions?part=snippet&mine=true&maxResults=50"
-        subscriptions = yield YoutubeController.internal_make_request(path)
+        subscriptions = await YoutubeController.internal_make_request(path)
         if subscriptions is None:
             return
         channel_ids = []
@@ -71,20 +69,19 @@ class YoutubeController:
             futures.append(YoutubeController.uploads_for_channel(channel_id, uploads, 7))
 
         for future in futures:
-            yield future
+            await future
 
         uploads.sort(key=lambda x: x['uploaded'], reverse=True)
 
         return to_JSON(uploads).encode('utf8')
 
     @staticmethod
-    @gen.coroutine
-    def channel_info(channel_id):
+    async def channel_info(channel_id):
         path = "channels?part=snippet%2CcontentDetails%2Cstatistics&id=" + channel_id
-        channel_info = yield YoutubeController.internal_make_request(path)
+        channel_info = await YoutubeController.internal_make_request(path)
 
         videos = []
-        yield YoutubeController.uploads_for_channel(channel_id, videos, 28)
+        await YoutubeController.uploads_for_channel(channel_id, videos, 28)
         result = {
             'title': channel_info["items"][0]["snippet"]["title"],
             'description': channel_info["items"][0]["snippet"]["description"],
@@ -99,19 +96,17 @@ class YoutubeController:
         return to_JSON(result).encode('utf8')
 
     @staticmethod
-    @gen.coroutine
-    def channel_feed(channel_id):
+    async def channel_feed(channel_id):
         videos = []
-        yield YoutubeController.uploads_for_channel(channel_id, videos, 28)
+        await YoutubeController.uploads_for_channel(channel_id, videos, 28)
         return to_JSON(videos).encode('utf8')
 
     @staticmethod
-    @gen.coroutine
-    def uploads_for_channel(channel_id, uploads, time):
+    async def uploads_for_channel(channel_id, uploads, time):
         last_week = date.today() - timedelta(days=time)
         date_string = last_week.strftime("%Y-%m-%d")
         path = "activities?part=contentDetails,snippet&channelId=" + channel_id + "&maxResults=50&publishedAfter=" + date_string + "T00:00:00.000Z"
-        channel_activities = yield YoutubeController.internal_make_request(path)
+        channel_activities = await YoutubeController.internal_make_request(path)
         if channel_activities is None:
             return
         for activity in channel_activities['items']:
@@ -143,22 +138,21 @@ class YoutubeController:
         EventManager.throw_event(EventType.StartPlayer, [])
 
     @staticmethod
-    @gen.coroutine
-    def internal_make_request(uri):
+    async def internal_make_request(uri):
         if YoutubeController.access_token is None:
-            refreshed = yield YoutubeController.internal_do_refresh_token()
+            refreshed = await YoutubeController.internal_do_refresh_token()
             if not refreshed:
                 return None
 
-            data = yield YoutubeController.internal_make_request(uri)
+            data = await YoutubeController.internal_make_request(uri)
             return data
 
         Logger.write(1, "Requesting " + YoutubeController.api + uri)
-        response = yield RequestFactory.make_request_async(YoutubeController.api + uri, "GET", None, YoutubeController.headers, 15, 15)
+        response = await RequestFactory.make_request_async(YoutubeController.api + uri, "GET", None, YoutubeController.headers, 15, 15)
         if response is None:
             if YoutubeController.token_received + (YoutubeController.token_expires * 1000) < current_time():
-                yield YoutubeController.internal_do_refresh_token()
-                data = yield YoutubeController.internal_make_request(uri)
+                await YoutubeController.internal_do_refresh_token()
+                data = await YoutubeController.internal_make_request(uri)
                 return data
             else:
                 return None
@@ -166,8 +160,7 @@ class YoutubeController:
         return json.loads(response.decode())
 
     @staticmethod
-    @gen.coroutine
-    def internal_do_refresh_token():
+    async def internal_do_refresh_token():
         Logger.write(2, "Refreshing token")
 
         fields = { "client_id": YoutubeController.client_id,
@@ -175,7 +168,7 @@ class YoutubeController:
                    "refresh_token": YoutubeController.refresh_token,
                    "grant_type": "refresh_token"}
 
-        req = yield RequestFactory.make_request_async(YoutubeController.auth_server, "POST", urlencode(fields).encode())
+        req = await RequestFactory.make_request_async(YoutubeController.auth_server, "POST", urlencode(fields).encode())
         if not req:
             return False
 

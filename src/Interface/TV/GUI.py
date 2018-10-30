@@ -449,6 +449,9 @@ class WeatherPanel(InfoWidget):
         self.block_tom_2.show()
 
     def update_weather(self, data):
+        if data is None:
+            return
+
         self.block_today.set_value("Today", data[0][1], data[0][2], data[0][3])
         self.block_tom.set_value(data[1][0], data[1][1], data[1][2], data[1][3])
         self.block_tom_2.set_value(data[2][0], data[2][1], data[2][2], data[2][3])

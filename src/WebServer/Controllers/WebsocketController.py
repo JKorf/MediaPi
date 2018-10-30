@@ -1,3 +1,4 @@
+import traceback
 from threading import Lock
 
 import time
@@ -91,7 +92,7 @@ class WebsocketController:
                 try:
                     client.write_message(to_JSON(WebSocketMessage(event, method, parameters)))
                 except:
-                    Logger.write(2, "Failed to send msg to client because client is closed")
+                    Logger.write(2, "Failed to send msg to client because client is closed: " + traceback.format_exc())
 
     @staticmethod
     def no_peers():

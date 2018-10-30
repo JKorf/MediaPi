@@ -2,8 +2,6 @@ import os
 import urllib.parse
 import urllib.request
 
-from tornado import gen
-
 from Automation.LightManager import LightManager
 from Shared.Events import EventManager
 from Shared.Events import EventType
@@ -11,8 +9,8 @@ from Shared.Logger import Logger
 from Shared.Settings import Settings as AppSettings
 from Shared.Stats import Stats
 from Shared.Threading import ThreadManager
-from Shared.Util import to_JSON, parse_bool, RequestFactory, current_time, write_size
-from WebServer.Models import Settings, Info, StartUp
+from Shared.Util import to_JSON, RequestFactory, current_time, write_size
+from WebServer.Models import Info, StartUp
 
 
 class UtilController:
@@ -27,33 +25,15 @@ class UtilController:
         return to_JSON(info)
 
     @staticmethod
-    @gen.coroutine
-    def get_protected_img(url):
+    async def get_protected_img(url):
         try:
-            result = yield RequestFactory.make_request_async(url)
+            result = await RequestFactory.make_request_async(url)
             if not result:
                 Logger.write(2, "Couldnt get image: " + urllib.parse.unquote(url))
                 result = open(os.getcwd() + "/Interface/Mobile/Images/unknown.png", "rb").read()
         except Exception:
             result = open(os.getcwd() + "/Interface/Mobile/Images/noimage.png", "rb").read()
         return result
-
-    @staticmethod
-    def get_settings():
-        set = Settings(AppSettings.get_bool("raspberry"),
-                       AppSettings.get_bool("show_gui"),
-                       AppSettings.get_bool("use_external_trackers"),
-                       AppSettings.get_int("max_subtitles_files"))
-        return to_JSON(set)
-
-    @staticmethod
-    def save_settings(raspberry, gui, external_trackers, max_subs):
-        Logger.write(2, 'Saving new settings')
-
-        AppSettings.set_setting("raspberry", parse_bool(raspberry))
-        AppSettings.set_setting("show_gui", parse_bool(gui))
-        AppSettings.set_setting("use_external_trackers", parse_bool(external_trackers))
-        AppSettings.set_setting("max_subtitles_files", int(max_subs))
 
     @staticmethod
     def test():
