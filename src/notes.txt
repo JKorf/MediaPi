@@ -19,6 +19,10 @@
 
     speed graph
 
+    bypass raspbian?
+        https://raspberrypi.stackexchange.com/questions/57128/how-to-boot-into-own-python-script-gui-only
+        vlc?
+
     Tv control:
         hdmi_ignore_cec_init=1 in /boot/config.txt
         sudo apt-get install cec-utils

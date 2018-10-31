@@ -1,6 +1,6 @@
 (function () {
 
-    angular.module('pi-test').controller('LightingController', function ($scope, $http, MemoryFactory) {
+    angular.module('pi-test').controller('LightingController', function ($scope, $http, MemoryFactory, RequestFactory) {
         $scope.devices = [];
         $scope.editing = -1;
         $scope.colorPickerSettings = {
@@ -8,19 +8,36 @@
           };
 
          function Init(){
-             $http.get("/lighting/get_lights").then(function(data){
-                 console.log(data);
-                 $scope.devices = data.data;
-                 if($scope.devices.length == 0)
-                    SetTestData();
+            var requestInterval = RequestFactory.StartRequesting("/lighting/get_lights", 5000, ProcessData, SetTestData);
+            RequestFactory.InvokeNow(requestInterval);
+            $scope.$on('$destroy', function() {
+                RequestFactory.StopRequesting(requestInterval);
+            });
+         }
 
-                 for (var i = 0; i < $scope.devices.length; i++){
-                    $scope.devices[i].lights[0].hex_color = "#" + $scope.devices[i].lights[0].hex_color;
-                    $scope.devices[i].name = getName($scope.devices[i]);
-                }
-             }, function(e){
+         function ProcessData(data){
+            if($scope.devices.length == 0)
+                 $scope.devices = data.data;
+
+             if($scope.devices.length == 0)
                 SetTestData();
-             });
+            else
+            {
+                for(var i = 0; i < $scope.devices.length; i++){
+                    for(var j = 0; j < $scope.devices[i].lights.length; j++){
+                        console.log(data);
+                        $scope.devices[i].lights[j].state = data.data[i].lights[j].state;
+                        $scope.devices[i].lights[j].dimmer = data.data[i].lights[j].dimmer;
+                        $scope.devices[i].lights[j].color_temp = data.data[i].lights[j].color_temp;
+                        $scope.devices[i].lights[j].hex_color = data.data[i].lights[j].hex_color;
+                    }
+                }
+            }
+
+             for (var i = 0; i < $scope.devices.length; i++){
+                $scope.devices[i].lights[0].hex_color = "#" + $scope.devices[i].lights[0].hex_color;
+                $scope.devices[i].name = getName($scope.devices[i]);
+            }
          }
 
          function SetTestData(){
