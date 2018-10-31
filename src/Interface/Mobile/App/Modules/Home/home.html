@@ -36,7 +36,7 @@
             <div class="home-item-down-icon"><img ng-src="/Images/down.svg" svg-image /></div>
         </div>
         <div class="home-item-content">
-            <div class="home-watched-item" ng-repeat="file in history | filter: {Type: 'File'} | orderBy: '-WatchedAt'" ng-click="goToFile(file.url)">
+            <div class="home-watched-item" ng-repeat="file in history | filter: {Type: 'File'} | orderBy: '-WatchedAt'" ng-click="goToFile(file.URL)">
                 <div class="home-watched-img"><img ng-src="/Images/unknown.png" /></div>
                 <div class="home-watched-title truncate">{{getFileName(file.URL)}}</div>
                 <div class="home-watched-time">{{timeToTimespan(file.WatchedAt)}}</div>
