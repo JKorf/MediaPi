@@ -10,6 +10,8 @@ from MediaPlayer.Torrent.TorrentPieceHashValidator import TorrentPieceHashValida
 from MediaPlayer.Util.Enums import TorrentState
 from Shared.Util import current_time
 
+from Shared.Timer import Timer
+
 
 class TorrentDataManager:
 
@@ -89,11 +91,16 @@ class TorrentDataManager:
         Logger.write(2, "Persistent pieces: " + pers_pieces)
 
     def update_write_blocks(self):
+        block_count = 0
         for peer, piece_index, offset, data in list(self.blocks_done):
+            block_count += 1
+            #timer = Timer("Write blocks " + str(block_count))
+
             block = self.get_block_by_offset(piece_index, offset)
             Logger.write(1, str(peer.id) + ' Received piece message: ' + str(block.piece_index) + ', block: ' + str(block.index))
 
             peer.download_manager.block_done(block)
+            #timer.log("Peer block_done")
             if self.torrent.state == TorrentState.Done:
                 Logger.write(1, 'Received a block but were already done')
                 self.blocks_done.remove((peer, piece_index, offset, data))
@@ -112,12 +119,17 @@ class TorrentDataManager:
                 self.torrent.overhead += len(data)
                 continue
 
+            #timer.log("Checks")
+
             self.write_block(block, data)
+            #timer.log("Write blocks")
+
             self.torrent.left -= block.length
             self.torrent.download_counter.add_value(block.length)
             Stats.add('total_downloaded', block.length)
 
             self.blocks_done.remove((peer, piece_index, offset, data))
+            #timer.log("Done")
 
         if self.init_done:
             if self.torrent.state != TorrentState.Done:

@@ -13,7 +13,7 @@ from WebServer.Providers.TorrentProvider import TPB, CATEGORIES, ORDERS, Torrent
 class TorrentController:
     @staticmethod
     def top():
-        t = TPB('https://pirataibay.in/')
+        t = TPB('https://proxyonetpb.pet/')
         result = []
         for torrent in t.top(200):
             result.append(TorrentModel(torrent.title, torrent.seeders, torrent.leechers, torrent.size, str(torrent.url), torrent.sub_category))
