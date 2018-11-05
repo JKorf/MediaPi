@@ -108,19 +108,19 @@ class Piece:
             self.blocks[index] = Block(self.block_start_index + index, self.index, index, index * self.block_size,
                                      self.start_byte + (index * self.block_size), self.block_size, self.persistent)
         if partial_block != 0:
-            self.blocks[self.block_start_index + len(self.blocks)] = Block(self.block_start_index + len(self.blocks), self.index, len(self.blocks),
+            self.blocks[len(self.blocks)] = Block(self.block_start_index + len(self.blocks), self.index, len(self.blocks),
                                      len(self.blocks) * self.block_size, self.start_byte + (len(self.blocks) * self.block_size), partial_block, self.persistent)
         self.total_blocks = len(self.blocks)
 
     def get_block_by_offset(self, offset_in_piece):
         index = int(math.floor(offset_in_piece / self.block_size))
-        return self.blocks[index]
+        return self.blocks.get(index)
 
     def write_block(self, block, data):
         block.write_data(data)
         self.block_writes += 1
-        if self.block_writes >= self.block_size:
-            if len([x for x in self.blocks.items() if not x.done]) == 0:
+        if self.block_writes >= self.total_blocks:
+            if len([x for x in self.blocks.values() if not x.done]) == 0:
                 self.done = True
 
     def get_data(self):
@@ -128,7 +128,7 @@ class Piece:
             return None
 
         data = bytearray()
-        for block in self.blocks.items():
+        for block in self.blocks.values():
             if not block.done:
                 return None
             data.extend(block.data)
@@ -138,12 +138,12 @@ class Piece:
         if self.persistent:
             raise Exception("Can't clear persistent pieces")
 
-        for block in self.blocks.items():
+        for block in self.blocks.values():
             block.clear()
 
     def reset(self):
         self.block_writes = 0
-        for block in self.blocks.items():
+        for block in self.blocks.values():
             block.clear()
             block.done = False
         self.done = False

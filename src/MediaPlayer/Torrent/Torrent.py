@@ -84,7 +84,7 @@ class Torrent:
         start_piece = self.media_file.start_piece(self.piece_length)
         pieces_to_check = 5000000 // self.piece_length
         for piece in self.data_manager.get_pieces_by_index_range(start_piece, start_piece + pieces_to_check):
-            for block in piece.blocks.items():
+            for block in piece.blocks.values():
                 if block.done:
                     missing -= block.length
 
@@ -146,7 +146,7 @@ class Torrent:
         self.user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
 
         self.engine = Engine.Engine('Main Engine', Settings.get_int("main_engine_tick_rate"))
-        self.peer_message_engine = Engine.Engine('Peer Message Engine', 200)
+        self.message_engine = Engine.Engine('Peer Message Engine', 200)
         self.download_counter = Counter()
 
         self.tracker_manager = TrackerManager(self)
@@ -244,14 +244,14 @@ class Torrent:
         self.engine.queue_repeating_work_item("torrent_download_manager_prio", 5000, self.download_manager.update_priority)
         self.engine.queue_repeating_work_item("output_manager", 1000, self.output_manager.update)
         self.engine.queue_repeating_work_item("counter", 1000, self.download_counter.update)
-        self.engine.queue_repeating_work_item("data_manager", 200, self.data_manager.update_write_blocks)
         self.engine.queue_repeating_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
         self.engine.queue_repeating_work_item("stream_manager", 1000, self.output_manager.stream_manager.update)
 
-        self.peer_message_engine.queue_repeating_work_item("peer_messages", 200, self.peer_manager.process_peer_messages)
+        self.message_engine.queue_repeating_work_item("data_manager", 200, self.data_manager.update_write_blocks)
+        self.message_engine.queue_repeating_work_item("peer_messages", 200, self.peer_manager.process_peer_messages)
 
         self.engine.start()
-        self.peer_message_engine.start()
+        self.message_engine.start()
         self.network_manager.start()
         self.clear_subs_folder()
         Logger.write(3, "Torrent started")
@@ -404,7 +404,7 @@ class Torrent:
         EventManager.deregister_event(self.user_file_selected_id)
 
         self.engine.stop()
-        self.peer_message_engine.stop()
+        self.message_engine.stop()
         time.sleep(0.5) # Allow all updates to finish
 
         self.output_manager.stop()
@@ -415,7 +415,7 @@ class Torrent:
             file.close()
 
         self.engine = None
-        self.peer_message_engine = None
+        self.message_engine = None
         self.tracker_manager = None
         self.peer_manager = None
         self.data_manager = None
