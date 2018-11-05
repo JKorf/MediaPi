@@ -19,3 +19,9 @@ class TransactionIdManager:
             else:
                 TransactionIdManager.current_id = bytearray(2)
         return bencode(bytes(result))
+
+
+class DHTTaskState:
+    Initial = 0,
+    Running = 1,
+    Done = 2
