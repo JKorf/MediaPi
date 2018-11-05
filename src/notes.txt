@@ -7,8 +7,10 @@
 --- TODO ---
     TV
 
-    DataManager neemt te lang, +- 1seconde
-    overscan?
+    overscan
+        Adjust with https://github.com/ukscone/set_overscan
+
+    zigbee connectie?
 
     Single app for multiple slaves
 
