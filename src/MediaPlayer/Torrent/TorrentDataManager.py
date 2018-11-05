@@ -15,7 +15,7 @@ class TorrentDataManager:
 
     def __init__(self, torrent):
         self.torrent = torrent
-        self._pieces = []
+        self._pieces = dict()
         self.init_done = False
         self.total_pieces = 0
         self.piece_length = 0
@@ -34,8 +34,8 @@ class TorrentDataManager:
         self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
 
     def log_queue(self):
-        unfinished = [x for x in self._pieces if not x.done]
-        unfinished_next = [x for x in self._pieces if not x.done and x.index >= self.torrent.stream_position]
+        unfinished = [x for x in self._pieces.items() if not x.done]
+        unfinished_next = [x for x in self._pieces.items() if not x.done and x.index >= self.torrent.stream_position]
 
         with Logger.lock:
             Logger.write(3, "-- TorrentDataManager state --")
@@ -78,9 +78,9 @@ class TorrentDataManager:
 
             if current_byte + self.piece_length > self.torrent.total_size:
                 # last piece, is not full length
-                self._pieces.append(Piece(piece_index, piece_index * blocks_per_piece, current_byte, self.torrent.total_size - current_byte, persistent))
+                self._pieces[piece_index] = Piece(piece_index, piece_index * blocks_per_piece, current_byte, self.torrent.total_size - current_byte, persistent)
             else:
-                self._pieces.append(Piece(piece_index, piece_index * blocks_per_piece, current_byte, self.piece_length, persistent))
+                self._pieces[piece_index] = Piece(piece_index, piece_index * blocks_per_piece, current_byte, self.piece_length, persistent)
 
             current_byte += self.piece_length
 
@@ -121,7 +121,7 @@ class TorrentDataManager:
 
         if self.init_done:
             if self.torrent.state != TorrentState.Done:
-                if len([x for x in self._pieces if x.index >= self.torrent.stream_position and not x.done]) == 0:
+                if len([x for x in self._pieces.items() if x.index >= self.torrent.stream_position and not x.done]) == 0:
                     self.torrent.torrent_done()
 
         return True
@@ -142,16 +142,13 @@ class TorrentDataManager:
         return self.get_piece_by_index(piece_index).get_block_by_offset(offset_in_piece)
 
     def get_piece_by_offset(self, offset):
-        return [x for x in self._pieces if x.start_byte <= offset and x.end_byte >= offset][0]
-
-    def get_pieces_by_byte_range(self, start, end):
-        return [x for x in self._pieces if x.start_byte > start - self.piece_length and x.end_byte <= end + self.piece_length]
+        return [x for x in self._pieces.items() if x.start_byte <= offset and x.end_byte >= offset][0]
 
     def get_pieces_by_index_range(self, start, end):
-        return [x for x in self._pieces if x.index >= start and x.index < end]
+        return [x for x in self._pieces.items() if x.index >= start and x.index < end]
 
     def get_piece_by_index(self, index):
-        return [x for x in self._pieces if x.index == index][0]
+        return self._pieces[index]
 
     def block_done(self, peer, piece_index, offset, data):
         self.blocks_done.append((peer, piece_index, offset, data))
@@ -174,13 +171,8 @@ class TorrentDataManager:
             current_byte_to_search = start_byte + current_read
             piece_index = int(math.floor(current_byte_to_search / self.piece_length))
 
-            ps = [x for x in self._pieces if x.index == piece_index]
-            if len(ps) > 0:
-                current_piece = ps[0]
-            else:
-                current_piece = None
-
-            if current_piece is None:
+            current_piece = self._pieces[piece_index]
+            if not current_piece:
                 return None
 
             data = current_piece.get_data()

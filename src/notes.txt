@@ -9,7 +9,7 @@
 
     DataManager neemt te lang, +- 1seconde
 
-    Regression protocol?
+    Single app for multiple slaves
 
     disable popups hd:
         https://www.raspberrypi.org/forums/viewtopic.php?t=159739

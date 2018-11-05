@@ -84,7 +84,7 @@ class Torrent:
         start_piece = self.media_file.start_piece(self.piece_length)
         pieces_to_check = 5000000 // self.piece_length
         for piece in self.data_manager.get_pieces_by_index_range(start_piece, start_piece + pieces_to_check):
-            for block in piece.blocks:
+            for block in piece.blocks.items():
                 if block.done:
                     missing -= block.length
 

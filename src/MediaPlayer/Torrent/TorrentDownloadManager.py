@@ -109,7 +109,7 @@ class TorrentDownloadManager:
         Logger.write(2, "Starting download queue queuing")
         start_time = current_time()
         left = 0
-        for piece in self.torrent.data_manager._pieces:
+        for piece in self.torrent.data_manager._pieces.items():
             if piece.start_byte > self.torrent.media_file.end_byte or piece.index < start_position or piece.end_byte < self.torrent.media_file.start_byte:
                 continue
 
@@ -117,7 +117,7 @@ class TorrentDownloadManager:
                 continue
 
             piece.reset()
-            for block in piece.blocks:
+            for block in piece.blocks.items():
                 self.queue.append(BlockDownload(block, piece))
                 left += block.length
 
@@ -278,7 +278,7 @@ class TorrentDownloadManager:
 
     def redownload_piece(self, piece):
         with self.queue_lock:
-            for block in piece.blocks:
+            for block in piece.blocks.items():
                 self.torrent.left += block.length
                 block_download = BlockDownload(block, piece)
                 self.queue.insert(0, block_download)

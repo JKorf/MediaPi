@@ -92,7 +92,9 @@ class Piece:
         self.end_byte = start_byte + length
         self.length = length
         self.done = False
-        self.blocks = []
+        self.blocks = dict()
+        self.block_writes = 0
+        self.total_blocks = 0
         self.block_size = Settings.get_int("block_size")
         self.priority = 0
         self.persistent = persistent
@@ -103,26 +105,30 @@ class Piece:
         partial_block = self.length % self.block_size
         whole_blocks = int(math.floor(self.length / self.block_size))
         for index in range(whole_blocks):
-            self.blocks.append(Block(self.block_start_index + index, self.index, index, index * self.block_size,
-                                     self.start_byte + (index * self.block_size), self.block_size, self.persistent))
+            self.blocks[index] = Block(self.block_start_index + index, self.index, index, index * self.block_size,
+                                     self.start_byte + (index * self.block_size), self.block_size, self.persistent)
         if partial_block != 0:
-            self.blocks.append(Block(self.block_start_index + len(self.blocks), self.index, len(self.blocks),
-                                     len(self.blocks) * self.block_size, self.start_byte + (len(self.blocks) * self.block_size), partial_block, self.persistent))
+            self.blocks[self.block_start_index + len(self.blocks)] = Block(self.block_start_index + len(self.blocks), self.index, len(self.blocks),
+                                     len(self.blocks) * self.block_size, self.start_byte + (len(self.blocks) * self.block_size), partial_block, self.persistent)
+        self.total_blocks = len(self.blocks)
 
     def get_block_by_offset(self, offset_in_piece):
-        return next((x for x in self.blocks if x.start_byte_in_piece == offset_in_piece), None)
+        index = int(math.floor(offset_in_piece / self.block_size))
+        return self.blocks[index]
 
     def write_block(self, block, data):
         block.write_data(data)
-        if len([x for x in self.blocks if not x.done]) == 0:
-            self.done = True
+        self.block_writes += 1
+        if self.block_writes >= self.block_size:
+            if len([x for x in self.blocks.items() if not x.done]) == 0:
+                self.done = True
 
     def get_data(self):
         if not self.done:
             return None
 
         data = bytearray()
-        for block in self.blocks:
+        for block in self.blocks.items():
             if not block.done:
                 return None
             data.extend(block.data)
@@ -132,11 +138,12 @@ class Piece:
         if self.persistent:
             raise Exception("Can't clear persistent pieces")
 
-        for block in self.blocks:
+        for block in self.blocks.items():
             block.clear()
 
     def reset(self):
-        for block in self.blocks:
+        self.block_writes = 0
+        for block in self.blocks.items():
             block.clear()
             block.done = False
         self.done = False
