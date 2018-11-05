@@ -3,7 +3,7 @@ import time
 
 from Database.Database import Database
 from Interface.TV.VLCPlayer import PlayerState
-from MediaPlayer.DHT.DHTEngine import DHTEngine
+from MediaPlayer.DHT2.Engine import DHTEngine
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
 from MediaPlayer.Torrent.Torrent import Torrent
 from Shared.Events import EventType, EventManager
@@ -22,7 +22,7 @@ class TorrentManager(metaclass=Singleton):
         self.dht_enabled = Settings.get_bool("dht")
         if self.dht_enabled:
             self.dht = DHTEngine()
-            self.dht.start()
+            self.dht.initialize()
             EventManager.register_event(EventType.RequestDHTPeers, self.request_dht_peers)
 
         EventManager.register_event(EventType.StartTorrent, self.start_torrent)

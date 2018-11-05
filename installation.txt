@@ -4,6 +4,8 @@
 
 3.  Enable ssh in desktop -> preferences -> raspberry config -> interfaces -> ssh
 
+4.  Set correct time
+
 4.  Disable screensaver: sudo apt-get install xscreensaver -> menu preferences -> screensaver -> disable
 
 5.  Install VLC with hardware acceleration: https://www.raspberrypi.org/forums/viewtopic.php?f=66&t=195221

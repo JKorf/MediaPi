@@ -12,7 +12,7 @@
 
     zigbee connectie?
 
-    Single app for multiple slaves
+    Single phone ui for multiple slaves
 
     disable popups hd:
         https://www.raspberrypi.org/forums/viewtopic.php?t=159739
@@ -26,9 +26,7 @@
         https://raspberrypi.stackexchange.com/questions/57128/how-to-boot-into-own-python-script-gui-only
         vlc?
 
-    Tv control:
-        hdmi_ignore_cec_init=1 in /boot/config.txt
-        sudo apt-get install cec-utils
+    Tv control
 
     zram: https://eltechs.com/overclock-raspberry-pi-3/
     Try with new case:
