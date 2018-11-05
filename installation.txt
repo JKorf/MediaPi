@@ -10,7 +10,7 @@
 
 5.  Install dependencies:
 sudo apt-get install python3-pyqt4 libxml2-dev libxslt-dev
-sudo pip3 install tornado psutil lxml purl
+sudo pip3 install tornado psutil lxml purl pytradfri
 (for unit tests: pytest)
 
 6.  Make coap client for lighting controll:

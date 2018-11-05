@@ -1,9 +1,9 @@
 # Instance config
-name=PC
+name=Woonkamer
 slave=False
-master_ip=http://127.0.0.1
+master_ip=http://192.168.1.100
 
-tradfri_hub_ip=192.168.1.73
+tradfri_hub_ip=192.168.2.73
 tradfri_hub_code=zwhwlZr85gcfAtxr
 open_weather_map_key=ba7d7c80475db4a254c38fd0295468f1
 
@@ -12,6 +12,7 @@ log_folder=/home/pi/Scripts/Logs
 serie_api=https://api-fetch.website/tv/
 movie_api=https://api-fetch.website/tv/
 base_folder=/home/pi/Scripts/
+master_base_folder=C:/
 
 # Connections
 max_peers_connecting=20
@@ -30,15 +31,16 @@ metadata_block_size=16384
 tracker_peer_request_amount=200
 peer_request_interval=300000
 peer_request_interval_no_potential=30000
-tracker_retry=1
+tracker_retry=3
 
 # Streaming
 max_chunk_size=250000
 max_bytes_ready_in_buffer=100000000
 max_bytes_reached_threshold=30000000
-stream_start_buffer=4000000
+stream_start_buffer=5000000
 stream_pause_tolerance=30000000
-stream_end_buffer_tolerance=4000000
+stream_initial_end_buffer=1500000
+stream_end_buffer_tolerance=5000000
 network_caching=5000
 
 # Application
@@ -51,3 +53,6 @@ raspberry=False
 # DHT
 dht=False
 dht_request_interval=900000
+
+# Subtitles
+max_subtitles_files=3

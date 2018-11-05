@@ -192,6 +192,7 @@ class GUI(QtGui.QMainWindow):
         self.select_file_panel.hide()
         self.time_panel.hide()
         self.loading_panel.hide()
+        self.weather_panel.hide()
 
     def close(self):
         self.background_timer.stop()

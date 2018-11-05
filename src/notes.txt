@@ -8,6 +8,7 @@
     TV
 
     DataManager neemt te lang, +- 1seconde
+    overscan?
 
     Single app for multiple slaves
 

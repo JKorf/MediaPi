@@ -54,7 +54,7 @@ class TVManager(metaclass=Singleton):
         return self.__request(self.__construct_request(TVManager.pi_source, TVManager.tv_source, '82:' + TVManager.decoder_source + '0:00'))
 
     def turn_tv_on(self):
-        return self.__request('echo on ' + TVManager.tv_source + ' | cec-client -s')
+        return self.__request('echo "on ' + TVManager.tv_source + '" | cec-client -s')
 
     def turn_tv_off(self):
         return self.__request(self.__construct_request(TVManager.pi_source, TVManager.tv_source, "36"))

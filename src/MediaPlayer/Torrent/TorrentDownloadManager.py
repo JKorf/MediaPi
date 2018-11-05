@@ -2,6 +2,7 @@ from threading import Lock
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Timer import Timer
 from Shared.Util import current_time
 from MediaPlayer.Torrent.Prioritizer import StreamPrioritizer
 from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
@@ -66,7 +67,6 @@ class TorrentDownloadManager:
     def update_priority(self, full=False, lock=True):
         if not self.init:
             return True
-
         if lock:
             self.queue_lock.acquire()
 
@@ -86,7 +86,9 @@ class TorrentDownloadManager:
         start = self.torrent.stream_position
         if full:
             start = self.torrent.media_file.start_piece(self.torrent.piece_length)
+
         pieces_to_look_at = self.torrent.data_manager.get_pieces_by_index_range(start, start + amount)
+
         for piece in pieces_to_look_at:
             piece.priority = self.prioritizer.prioritize_piece_index(piece.index)
         if full:
