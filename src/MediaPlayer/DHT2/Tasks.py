@@ -54,7 +54,7 @@ class FindNodeTask(BaseTask):
         self.complete_on_no_requests = True
         request = QueryDHTMessage.create_find_node(self.node_id, self.target)
         self.send_request(request,
-                          "r",
+                          b"r",
                           self.dht_engine.routing_table.buckets[0].nodes[0].ip,
                           self.dht_engine.routing_table.buckets[0].nodes[0].port,
                           self.initialize_response,

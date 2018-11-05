@@ -79,6 +79,8 @@ class Socket:
             elif len(pending) == 1:
                 Logger.write(1, "DHT message response")
                 pending[0].on_response(received.message) # answer to request
+                self.received_messages.remove(received)
+                self.awaiting_messages.remove(pending[0])
             else:
                 Logger.write(1, "DHT message multiple pending?")
 
