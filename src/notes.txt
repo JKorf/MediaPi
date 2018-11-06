@@ -30,6 +30,15 @@
 
     zram: https://eltechs.com/overclock-raspberry-pi-3/
     Try with new case:
+        disable_overscan=1
+        overscan_left=-16
+        overscan_right=-16
+        overscan_top=-16
+        overscan_bottom=-16
+
+        hdmi_group=1
+        hdmi_mode=19
+
         total_mem=1024
         arm_freq=1400
         gpu_freq=500

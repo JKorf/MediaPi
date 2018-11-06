@@ -149,7 +149,7 @@ class TorrentDataManager:
         return [x for x in self._pieces.values() if x.start_byte <= offset and x.end_byte >= offset][0]
 
     def get_pieces_by_index_range(self, start, end):
-        return [x for x in self._pieces.values() if x.index >= start and x.index < end]
+        return [x for x in list(self._pieces.values()) if x.index >= start and x.index < end]
 
     def get_piece_by_index(self, index):
         return self._pieces.get(index)
