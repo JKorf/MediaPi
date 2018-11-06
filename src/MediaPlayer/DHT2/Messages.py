@@ -8,9 +8,8 @@ from MediaPlayer.Util.Bencode import BTFailure
 
 class PendingMessage:
 
-    def __init__(self, node_message, expecting_response_type, send_at, on_response, on_timeout):
+    def __init__(self, node_message, send_at, on_response, on_timeout):
         self.message = node_message
-        self.expecting_response_type = expecting_response_type
         self.send_at = send_at
         self.on_response = on_response
         self.on_timeout = on_timeout

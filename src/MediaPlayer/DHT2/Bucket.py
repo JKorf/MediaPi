@@ -20,6 +20,9 @@ class Bucket:
     def fits(self, id):
         return self.start <= id < self.end
 
+    def contains_node(self, id_bytes):
+        return len([x for x in self.nodes if x.bytes_id == id_bytes]) == 1
+
     def full(self):
         return len([x for x in self.nodes if x.state != NodeState.Bad]) == self.max_nodes
 
@@ -29,3 +32,6 @@ class Bucket:
 
         self.nodes.append(node)
         self.last_changed = current_time()
+
+    def questionable_nodes(self):
+        return [x for x in self.nodes if x.state == NodeState.Questionable]

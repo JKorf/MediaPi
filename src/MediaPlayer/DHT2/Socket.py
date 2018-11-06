@@ -2,7 +2,7 @@ from socket import socket, AF_INET, SOCK_DGRAM
 
 import time
 
-from MediaPlayer.DHT2.Messages import NodeMessage, BaseDHTMessage, PendingMessage
+from MediaPlayer.DHT2.Messages import NodeMessage, BaseDHTMessage, PendingMessage, ErrorDHTMessage
 from Shared.Logger import Logger
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
@@ -10,12 +10,15 @@ from Shared.Util import current_time
 
 class Socket:
 
-    def __init__(self, port):
+    def __init__(self, port, on_node_seen, on_node_timeout):
         self.port = port
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.settimeout(0.1)
         self.message_thread = CustomThread(self.message_thread_action, "DHT message thread", [])
         self.running = False
+
+        self.node_seen_handler = on_node_seen
+        self.node_timeout_handler = on_node_timeout
 
         self.last_send = 0
         self.received_messages = []
@@ -28,8 +31,8 @@ class Socket:
         self.running = True
         self.message_thread.start()
 
-    def send_message(self, msg, expecting_response_type, ip, port, on_response, on_timeout):
-        self.to_send_messages.append(PendingMessage(NodeMessage(ip, port, msg), expecting_response_type, 0, on_response, on_timeout))
+    def send_message(self, msg, ip, port, on_response, on_timeout):
+        self.to_send_messages.append(PendingMessage(NodeMessage(ip, port, msg), 0, on_response, on_timeout))
 
     def message_thread_action(self):
         Logger.write(2, "Starting DHT socket")
@@ -46,6 +49,11 @@ class Socket:
                 msg_object = BaseDHTMessage.from_bytes(data)
                 if msg_object is None:
                     return
+
+                if isinstance(msg_object, ErrorDHTMessage):
+                    Logger.write(2, "DHT error message: " + str(msg_object.errorcode) + " " + str(msg_object.errormsg))
+                else:
+                    self.node_seen_handler(msg_object.id, sender[0], sender[1])
 
                 msg = NodeMessage(sender[0], sender[1], msg_object)
                 self.received_messages.append(msg)
@@ -69,11 +77,12 @@ class Socket:
         for pending in list(self.awaiting_messages):
             if current_time() - pending.send_at > 10000:
                 Logger.write(1, "DHT message timeout")
+                self.node_timeout_handler(pending.message.ip, pending.message.port)
                 pending.on_timeout()
                 self.awaiting_messages.remove(pending)
 
         for received in list(self.received_messages):
-            pending = [x for x in self.awaiting_messages if x.message.ip == received.ip and x.message.port == received.port and received.message.message_type == x.expecting_response_type]
+            pending = [x for x in self.awaiting_messages if x.message.message.transaction_id == received.message.transaction_id]
             if len(pending) == 0:
                 Logger.write(1, "DHT message request? No pending")
             elif len(pending) == 1:
