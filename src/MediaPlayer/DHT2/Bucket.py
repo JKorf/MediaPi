@@ -21,17 +21,17 @@ class Bucket:
         return self.start <= id < self.end
 
     def contains_node(self, id_bytes):
-        return len([x for x in self.nodes if x.bytes_id == id_bytes]) == 1
+        return len([x for x in self.nodes if x.byte_id == id_bytes]) == 1
 
     def full(self):
-        return len([x for x in self.nodes if x.state != NodeState.Bad]) == self.max_nodes
+        return len([x for x in self.nodes if x.node_state != NodeState.Bad]) == self.max_nodes
 
     def add_node(self, node):
         if len(self.nodes) >= self.max_nodes:
-            self.nodes = [x for x in self.nodes if x.state != NodeState.Bad]
+            self.nodes = [x for x in self.nodes if x.node_state != NodeState.Bad]
 
         self.nodes.append(node)
         self.last_changed = current_time()
 
     def questionable_nodes(self):
-        return [x for x in self.nodes if x.state == NodeState.Questionable]
+        return [x for x in self.nodes if x.node_state == NodeState.Questionable]

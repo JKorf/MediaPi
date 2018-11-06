@@ -53,7 +53,7 @@ class Socket:
                 if isinstance(msg_object, ErrorDHTMessage):
                     Logger.write(2, "DHT error message: " + str(msg_object.errorcode) + " " + str(msg_object.errormsg))
                 else:
-                    self.node_seen_handler(msg_object.id, sender[0], sender[1])
+                    self.node_seen_handler(sender[0], sender[1], msg_object.id)
 
                 msg = NodeMessage(sender[0], sender[1], msg_object)
                 self.received_messages.append(msg)

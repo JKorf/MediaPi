@@ -87,7 +87,7 @@ class FindNodeTask(BaseTask):
         to_request = max(self.max_outstanding_requests - self.outstanding_requests, len(self.available_nodes))
         requested = 0
         for node in list(self.available_nodes):
-            request = QueryDHTMessage.create_find_node(self.node_id, self.target)
+            request = QueryDHTMessage.create_find_node(self.node_id, self.target.byte_id)
             self.send_request(request, node.ip, node.port, self.find_node_response, self.find_node_timeout)
             self.available_nodes.remove(node)
             requested += 1
@@ -95,28 +95,30 @@ class FindNodeTask(BaseTask):
                 break
 
     def find_node_response(self, data):
-        Logger.write(2, "FindNode request got a response with " + str(len(data.nodes) // 26) + " nodes")
-        self.found_nodes += 1
-        found_nodes = Node.from_bytes_multiple(data.nodes)
-        self.append_nodes(found_nodes)
-        self.request_nodes()
+        if b"nodes" in data.response:
+            Logger.write(2, "FindNode request got a response with " + str(len(data.nodes) // 26) + " nodes")
+            self.found_nodes += 1
+            found_nodes = Node.from_bytes_multiple(data.nodes)
+            self.append_nodes(found_nodes)
+            self.request_nodes()
+        else:
+            s = ""
         self.check_done()
 
     def append_nodes(self, nodes):
         with self.closest_nodes_lock:
             for node in nodes:
-                if len([x for x in self.closest_nodes if x[0].byte_id == node.byte_id]) == 0:
-                    self.closest_nodes.append((node, False))
+                if len([x for x in self.closest_nodes if x.node.byte_id == node.byte_id]) == 0:
+                    self.closest_nodes.append(CloseNode(node))
 
-            self.closest_nodes.sort(key=lambda x: x[0].distance(self.target))
+            self.closest_nodes.sort(key=lambda x: x.node.distance(self.target.int_id))
 
             for node in self.closest_nodes[:10]:
-                if node[1]:
+                if node.requested:
                     continue
 
-                node[1] = True
-                if not self.dht_engine.routing_table.contains_node(node[0].byte_id):
-                    self.available_nodes.append(node[0])
+                node.requested = True
+                self.available_nodes.append(node.node)
 
     def find_node_timeout(self):
         Logger.write(2, "FindNode request timed out")
@@ -126,3 +128,9 @@ class FindNodeTask(BaseTask):
         if self.outstanding_requests == 0:
             Logger.write(2, "FindNode found " + str(self.found_nodes) + " nodes")
             self.complete()
+
+
+class CloseNode:
+    def __init__(self, node):
+        self.node = node
+        self.requested = False

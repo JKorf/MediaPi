@@ -25,6 +25,7 @@ class Table:
         return sum(len(x.nodes) for x in self.buckets)
 
     def add_node(self, node):
+        node.seen()
         for bucket in self.buckets:
             if bucket.fits(node.int_id):
                 self.add_to_bucket(bucket, node)
@@ -57,12 +58,12 @@ class Table:
         if bucket.full():
             questionable_nodes = bucket.questionable_nodes()
             if len(questionable_nodes) != 0:
-                task = PingTask(self.dht_engine, self.dht_engine.byte_id, questionable_nodes[0])
+                task = PingTask(self.dht_engine, self.dht_engine.own_node.byte_id, questionable_nodes[0])
                 task.on_complete = lambda: self.add_to_bucket(bucket, node)  # when the ping returns the node is either bad or no longer questionable
                 task.execute()
                 return
 
-            if bucket.fits(self.dht_engine.int_id):
+            if bucket.fits(self.dht_engine.own_node.int_id):
                 Logger.write(1, "Bucket is full, splitting")
                 split_nodes = bucket.split()
                 new_range = (bucket.end - bucket.start) // 2
