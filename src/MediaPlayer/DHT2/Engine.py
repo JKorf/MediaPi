@@ -3,11 +3,15 @@ import os
 import time
 from random import Random
 
+from MediaPlayer.DHT2.Messages import ResponseDHTMessage
 from MediaPlayer.DHT2.Node import Node, NodeState
 from MediaPlayer.DHT2.Socket import Socket
 from MediaPlayer.DHT2.Table import Table
-from MediaPlayer.DHT2.Tasks import FindNodeTask
+from MediaPlayer.DHT2.Tasks import FindNodeTask, GetPeersTask, PingTask
+from MediaPlayer.DHT2.Util import TokenManager
 from MediaPlayer.Engine.Engine import Engine
+from MediaPlayer.Util.Enums import PeerSource
+from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Util import Singleton, current_time
 
@@ -18,12 +22,18 @@ class DHTEngine(metaclass=Singleton):
         self.own_node = None
 
         self.routing_table = Table(self)
-        self.socket = Socket(50010, self.on_node_seen, self.on_node_timeout)
+        self.socket = Socket(50010, self.on_node_seen, self.on_node_timeout, self.on_query)
         self.engine = Engine("DHT Engine", 5000)
         self.engine.queue_repeating_work_item("DHT Refresh buckets", 1000 * 60, self.refresh_buckets)
-        self.engine.queue_repeating_work_item("DHT Save nodes", 1000 * 60 * 5, self.save_nodes)
+        self.engine.queue_repeating_work_item("DHT Save nodes", 1000 * 60 * 5, self.save_nodes, False)
 
         self.running_tasks = []
+
+        EventManager.register_event(EventType.RequestPeers, self.search_peers)
+        EventManager.register_event(EventType.NewDHTNode, self.add_node)
+
+    def add_node(self, ip, port):
+        self.start_task(PingTask(self, self.own_node.byte_id, ip, port))
 
     def on_node_seen(self, ip, port, id):
         if self.routing_table.contains_node(id):
@@ -33,6 +43,26 @@ class DHTEngine(metaclass=Singleton):
 
     def on_node_timeout(self, ip, port):
         self.routing_table.fail_node(ip, port)
+
+    def on_query(self, ip, port, message):
+        if message.query == b"ping":
+            response = ResponseDHTMessage.create_ping_response(self.own_node.byte_value, message.transaction_id)
+            self.socket.send_response(response, ip, port)
+        elif message.query == b"find_nodes":
+            found_node = self.routing_table.get_node(message.target)
+            if found_node is not None:
+                self.socket.send_response(ResponseDHTMessage.create_find_node_response(self.own_node.byte_id, message.transaction_id, None, found_node.byte_id), ip, port)
+            else:
+                closest_nodes = self.routing_table.get_closest_nodes(message.target)
+                self.socket.send_response(ResponseDHTMessage.create_find_node_response(self.own_node.byte_id, message.transaction_id, bytes(Node.node_bytes_multiple(closest_nodes)), None), ip, port)
+        elif message.query == b"get_peers":
+            closest_nodes = self.routing_table.get_closest_nodes(message.info_hash)
+            token = TokenManager.generate_token(Node(ip, port, message.id))
+            self.socket.send_response(ResponseDHTMessage.create_get_peers_response(self.own_node.byte_id, message.transaction_id, bytes(Node.node_bytes_multiple(closest_nodes)), None, token), ip, port)
+        elif message.query == b"announce_peer":
+            pass
+        else:
+            Logger.write(1, "DHT received unknown query: " + str(message.query))
 
     def start(self):
         byte_id, nodes = self.load_nodes()
@@ -45,6 +75,9 @@ class DHTEngine(metaclass=Singleton):
         self.engine.start()
         self.start_task(FindNodeTask(self, self.own_node.byte_id, self.own_node, self.routing_table.all_nodes()))
 
+    def search_peers(self, torrent):
+        self.start_task(GetPeersTask(self, self.own_node.byte_id, torrent.info_hash.sha1_hashed_bytes, self.routing_table.get_closest_nodes(hash)), lambda x: EventManager.throw_event(EventType.PeersFound, [x.found_peers, PeerSource.DHT]))
+
     def start_task(self, task, on_complete=None):
         task.on_complete = lambda: self.end_task(task, on_complete)
         self.running_tasks.append(task)
@@ -54,7 +87,7 @@ class DHTEngine(metaclass=Singleton):
         Logger.write(2, "DHT task " + type(task).__name__ + " completed in " + str(task.end_time - task.start_time) + "ms")
         self.running_tasks.remove(task)
         if on_complete:
-            on_complete()
+            on_complete(task)
 
     def refresh_buckets(self):
         for bucket in list(self.routing_table.buckets):
@@ -62,9 +95,8 @@ class DHTEngine(metaclass=Singleton):
                 self.start_task(FindNodeTask(self, self.own_node.byte_id, Random().randint(bucket.start, bucket.end), self.routing_table.all_nodes()))
 
     def save_nodes(self):
-        return
         all_nodes = bytearray()
-        all_nodes.extend(self.byte_id)
+        all_nodes.extend(self.own_node.byte_id)
         for node in self.routing_table.all_nodes():
             if node.node_state != NodeState.Bad:
                 all_nodes.extend(node.node_bytes())
@@ -80,7 +112,3 @@ class DHTEngine(metaclass=Singleton):
             return data[0:20], Node.from_bytes_multiple(data[20:])
         except FileNotFoundError:
             return None, []
-
-DHTEngine().start()
-
-time.sleep(100)

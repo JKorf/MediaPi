@@ -127,8 +127,6 @@ class Torrent:
         self.uploaded = 0
         self.piece_length = 0
         self.piece_hashes = None
-        self.available_leechers = 0
-        self.available_seeders = 0
         self.announce_uris = []
         self.info_hash = None
         self.files = []
@@ -149,7 +147,7 @@ class Torrent:
         self.message_engine = Engine.Engine('Peer Message Engine', 200)
         self.download_counter = Counter()
 
-        self.tracker_manager = TrackerManager(self)
+        self.tracker_manager = TrackerManager()
         self.peer_manager = TorrentPeerManager(self)
         self.data_manager = TorrentDataManager(self)
         self.download_manager = TorrentDownloadManager(self)
@@ -236,7 +234,6 @@ class Torrent:
         else:
             self.__set_state(TorrentState.Downloading)
 
-        self.engine.queue_repeating_work_item("tracker_manager", 10000, self.tracker_manager.update)
         self.engine.queue_repeating_work_item("peer_manager_new", 1000, self.peer_manager.update_new_peers)
         self.engine.queue_repeating_work_item("peer_manager_status", 500, self.peer_manager.update_peer_status)
         self.engine.queue_repeating_work_item("peer_manager_bad_peers", 30000, self.peer_manager.update_bad_peers)

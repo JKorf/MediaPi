@@ -2,7 +2,7 @@ from socket import socket, AF_INET, SOCK_DGRAM
 
 import time
 
-from MediaPlayer.DHT2.Messages import NodeMessage, BaseDHTMessage, PendingMessage, ErrorDHTMessage
+from MediaPlayer.DHT2.Messages import NodeMessage, BaseDHTMessage, QueryMessage, ErrorDHTMessage, QueryDHTMessage, ResponseDHTMessage
 from Shared.Logger import Logger
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
@@ -10,7 +10,7 @@ from Shared.Util import current_time
 
 class Socket:
 
-    def __init__(self, port, on_node_seen, on_node_timeout):
+    def __init__(self, port, on_node_seen, on_node_timeout, on_query):
         self.port = port
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.settimeout(0.1)
@@ -19,6 +19,7 @@ class Socket:
 
         self.node_seen_handler = on_node_seen
         self.node_timeout_handler = on_node_timeout
+        self.query_handler = on_query
 
         self.last_send = 0
         self.received_messages = []
@@ -31,8 +32,11 @@ class Socket:
         self.running = True
         self.message_thread.start()
 
-    def send_message(self, msg, ip, port, on_response, on_timeout):
-        self.to_send_messages.append(PendingMessage(NodeMessage(ip, port, msg), 0, on_response, on_timeout))
+    def send_response(self, msg, ip, port):
+        self.to_send_messages.append(NodeMessage(ip, port, msg))
+
+    def send_query(self, msg, ip, port, on_response, on_timeout):
+        self.to_send_messages.append(QueryMessage(NodeMessage(ip, port, msg), 0, on_response, on_timeout))
 
     def message_thread_action(self):
         Logger.write(2, "Starting DHT socket")
@@ -52,6 +56,7 @@ class Socket:
 
                 if isinstance(msg_object, ErrorDHTMessage):
                     Logger.write(2, "DHT error message: " + str(msg_object.errorcode) + " " + str(msg_object.errormsg))
+                    continue
                 else:
                     self.node_seen_handler(sender[0], sender[1], msg_object.id)
 
@@ -64,12 +69,18 @@ class Socket:
     def send(self):
         for pending in list(self.to_send_messages):
             try:
-                data = pending.message.message.to_bytes()
-                self.socket.sendto(data, (pending.message.ip, pending.message.port))
-                pending.send_at = current_time()
-                self.awaiting_messages.append(pending)
-                self.to_send_messages.remove(pending)
-                Logger.write(1, "Sent DHT message")
+                if pending is QueryMessage:
+                    data = pending.message.to_bytes()
+                    self.socket.sendto(data, (pending.ip, pending.port))
+                    self.to_send_messages.remove(pending)
+                    Logger.write(1, "Sent DHT response")
+                else:
+                    data = pending.message.message.to_bytes()
+                    self.socket.sendto(data, (pending.message.ip, pending.message.port))
+                    pending.send_at = current_time()
+                    self.awaiting_messages.append(pending)
+                    self.to_send_messages.remove(pending)
+                    Logger.write(1, "Sent DHT query")
             except OSError as e:
                 Logger.write(1, "Failed to send: " + str(e))
 
@@ -82,14 +93,20 @@ class Socket:
                 self.awaiting_messages.remove(pending)
 
         for received in list(self.received_messages):
-            pending = [x for x in self.awaiting_messages if x.message.message.transaction_id == received.message.transaction_id]
-            if len(pending) == 0:
-                Logger.write(1, "DHT message request? No pending")
-            elif len(pending) == 1:
+            if received.message is QueryDHTMessage:
+                self.query_handler(received.ip, received.port, received.message)
+                self.received_messages.remove(received)
+                continue
+
+            elif received.message is ResponseDHTMessage:
+                pending = [x for x in self.awaiting_messages if x.message.message.transaction_id == received.message.transaction_id]
+                if len(pending) == 0:
+                    Logger.write(1, "DHT response for no request (timed out?)")
+                    self.received_messages.remove(received)
+                    continue
+
                 Logger.write(1, "DHT message response")
-                pending[0].on_response(received.message) # answer to request
+                pending[0].on_response(received.message)  # answer to request
                 self.received_messages.remove(received)
                 self.awaiting_messages.remove(pending[0])
-            else:
-                Logger.write(1, "DHT message multiple pending?")
 

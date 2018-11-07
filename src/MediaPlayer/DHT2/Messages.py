@@ -6,7 +6,7 @@ from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 
 
-class PendingMessage:
+class QueryMessage:
 
     def __init__(self, node_message, send_at, on_response, on_timeout):
         self.message = node_message

@@ -33,5 +33,11 @@ class Bucket:
         self.nodes.append(node)
         self.last_changed = current_time()
 
+    def get_node(self, id):
+        nodes = [x for x in self.nodes if x.byte_id == id]
+        if len(nodes) != 0:
+            return nodes[0]
+        return None
+
     def questionable_nodes(self):
         return [x for x in self.nodes if x.node_state == NodeState.Questionable]

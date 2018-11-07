@@ -22,14 +22,12 @@ class TorrentManager(metaclass=Singleton):
         self.dht_enabled = Settings.get_bool("dht")
         if self.dht_enabled:
             self.dht = DHTEngine()
-            self.dht.initialize()
-            EventManager.register_event(EventType.RequestDHTPeers, self.request_dht_peers)
+            self.dht.start()
 
         EventManager.register_event(EventType.StartTorrent, self.start_torrent)
         EventManager.register_event(EventType.TorrentMediaFileSet, self.media_file_set)
         EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
-        EventManager.register_event(EventType.NewDHTNode, self.new_dht_node)
         EventManager.register_event(EventType.NoPeers, self.stop_torrent)
 
     def start_torrent(self, url, media_file):
@@ -68,14 +66,3 @@ class TorrentManager(metaclass=Singleton):
         if self.torrent:
             self.torrent.stop()
             self.torrent = None
-
-    def new_dht_node(self, ip, port):
-        if self.dht_enabled:
-            self.dht.add_node_by_ip_port(ip, port)
-
-    def request_dht_peers(self, torrent):
-        if self.dht_enabled:
-            self.dht.get_peers(torrent, self.add_peers_from_dht)
-
-    def add_peers_from_dht(self, torrent, peers):
-        torrent.peer_manager.add_potential_peers_from_ip_port(peers)

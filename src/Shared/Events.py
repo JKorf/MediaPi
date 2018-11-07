@@ -37,14 +37,16 @@ class EventType(Enum):
     Error = 27,
 
     NewDHTNode = 28,
-    RequestDHTPeers = 29,
     Log = 30,
 
     NewRequest = 31,
     TorrentMediaSelectionRequired = 32,
     TorrentMediaFileSelection = 33,
     NextEpisodeSelection = 36,
-    NoPeers = 38
+    NoPeers = 38,
+
+    PeersFound = 40,
+    RequestPeers = 41,
 
 
 class EventManager:

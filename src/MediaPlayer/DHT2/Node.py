@@ -35,6 +35,20 @@ class Node:
         self.request_timeouts += 1
 
     @staticmethod
+    def node_bytes_multiple(nodes):
+        result = bytearray()
+        for node in nodes:
+            result.extend(node.node_bytes())
+        return result
+
+    @staticmethod
+    def ip_port_bytes_multiple(nodes):
+        result = bytearray()
+        for node in nodes:
+            result.extend(node.ip_port_bytes())
+        return result
+
+    @staticmethod
     def from_bytes(data):
         offset, id = read_bytes(data, 20, 0)
         ip, port = ip_port_from_bytes(data[20: 26])

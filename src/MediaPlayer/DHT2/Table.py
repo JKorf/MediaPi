@@ -48,6 +48,17 @@ class Table:
                 return True
         return False
 
+    def get_node(self, id):
+        for bucket in self.buckets:
+            node = bucket.get_node(id)
+            if node is not None:
+                return node
+
+    def get_closest_nodes(self, id):
+        int_id = int(id.hex(), 16)
+        all_nodes = self.all_nodes()
+        return sorted(all_nodes, key=lambda x: x.distance(int_id))[:8]
+
     def all_nodes(self):
         result = []
         for bucket in list(self.buckets):
@@ -58,7 +69,7 @@ class Table:
         if bucket.full():
             questionable_nodes = bucket.questionable_nodes()
             if len(questionable_nodes) != 0:
-                task = PingTask(self.dht_engine, self.dht_engine.own_node.byte_id, questionable_nodes[0])
+                task = PingTask(self.dht_engine, self.dht_engine.own_node.byte_id, questionable_nodes[0].ip, questionable_nodes[0].port)
                 task.on_complete = lambda: self.add_to_bucket(bucket, node)  # when the ping returns the node is either bad or no longer questionable
                 task.execute()
                 return

@@ -191,9 +191,13 @@ class StreamListener:
                 Logger.write(2, self.name + " socket no longer open 1: " + str(requested_byte) + ", " + str(length))
                 return
 
+            if not self.running:
+                Logger.write(2, self.name + " canceling retrieved data because we are no longer running 1")
+                return
+
             data = data_delegate(requested_byte + written, part_length)
             if not self.running:
-                Logger.write(2, self.name + " canceling retrieved data because we are no longer running")
+                Logger.write(2, self.name + " canceling retrieved data because we are no longer running 2")
                 return
 
             if not self.is_open(socket):

@@ -12,7 +12,6 @@ from Shared.Util import current_time, write_size
 
 
 class TorrentPeerManager:
-
     __peer_id = 0
 
     @property
@@ -29,14 +28,18 @@ class TorrentPeerManager:
         self.complete_peer_list = []
         self.max_peers_connected = Settings.get_int("max_peers_connected")
         self.max_peers_connecting = Settings.get_int("max_peers_connecting")
+        self.peer_request_interval = Settings.get_int("peer_request_interval")
+        self.peer_request_interval_no_potential = Settings.get_int("peer_request_interval_no_potential")
         self.random = Random()
         self.fast_peers = 0
         self.download_start = 0
         self.start_time = current_time()
+        self.last_peer_request = 0
 
         self.event_id_log = EventManager.register_event(EventType.Log, self.log_peers)
         self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
         self.event_id_torrent_change = EventManager.register_event(EventType.TorrentStateChange, self.torrent_state_change)
+        self.event_id_peers_found = EventManager.register_event(EventType.PeersFound, self.add_potential_peers)
 
         self.high_speed_peers = 0
         self.medium_speed_peers = 0
@@ -45,6 +48,7 @@ class TorrentPeerManager:
         EventManager.deregister_event(self.event_id_log)
         EventManager.deregister_event(self.event_id_stopped)
         EventManager.deregister_event(self.event_id_torrent_change)
+        EventManager.deregister_event(self.event_id_peers_found)
 
     def log_peers(self):
         with Logger.lock:
@@ -61,10 +65,6 @@ class TorrentPeerManager:
     def torrent_state_change(self, old_state, new_state):
         if new_state == TorrentState.Downloading:
             self.download_start = current_time()
-
-    def add_potential_peers_from_ip_port(self, data):
-        for ip, port in data:
-            self.add_potential_peers("tcp://" + ip + ":" + str(port), PeerSource.DHT)
 
     def add_potential_peers(self, uri, source):
         if len(self.potential_peers) > 1000:
@@ -107,17 +107,23 @@ class TorrentPeerManager:
         if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData and self.torrent.state != TorrentState.WaitingUserFileSelection:
             return True
 
+        if current_time() - self.last_peer_request > self.peer_request_interval or \
+                                len(self.potential_peers) <= 10 and current_time() - self.last_peer_request > self.peer_request_interval_no_potential:
+            Logger.write(2, "Requesting peers")
+            EventManager.throw_event(EventType.RequestPeers, [self.torrent])
+            self.last_peer_request = current_time()
+
         if len(self.potential_peers) == 0 and \
                         len(self.connecting_peers) == 0 and \
                         len(self.connected_peers) == 0 and \
-                        current_time() - self.start_time > 45000:
+                                current_time() - self.start_time > 45000:
             Logger.write(2, "No peers found for torrent")
             EventManager.throw_event(EventType.NoPeers, [])
             return False
 
         peer_list = list(self.potential_peers)  # Try connecting to new peers from potential list
         if len(peer_list) == 0:
-            peer_list = [(x[0], x[1]) for x in self.disconnected_peers if current_time() - x[2] > 30000]  # If we dont have any new peers to try, try connecting to disconnected peers
+            peer_list = [x for x in self.disconnected_peers if current_time() - x[2] > 30000]  # If we dont have any new peers to try, try connecting to disconnected peers
             if len(peer_list) == 0:
                 return True  # No peers available
 

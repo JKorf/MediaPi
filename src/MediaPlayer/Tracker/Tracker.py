@@ -54,12 +54,14 @@ class HttpTracker:
         if b"peers" not in dict:
             return False
 
-        peers = dict[b"peers"]
-        total_peers = int(len(peers) / 6)
+        peers_data = dict[b"peers"]
+        total_peers = int(len(peers_data) / 6)
         offset = 0
+        peers = []
         for index in range(total_peers):
-            torrent.peer_manager.add_potential_peers(uri_from_bytes(peers[offset:offset + 6]), PeerSource.HttpTracker)
+            peers.append(uri_from_bytes(peers_data[offset:offset + 6]))
             offset += 6
+        EventManager.throw_event(EventType.PeersFound, [peers, PeerSource.HttpTracker])
 
 
 class UdpTracker:
@@ -116,51 +118,36 @@ class UdpTracker:
         if response_message is None or response_message.error is not None:
             return False
 
-        torrent.available_leechers = response_message.leechers
-        torrent.available_seeders = response_message.seeders
-        torrent.peer_manager.add_potential_peers(response_message.peers, PeerSource.UdpTracker)
+        EventManager.throw_event(EventType.PeersFound, [response_message.peers, PeerSource.UdpTracker])
         return True
 
 
 class TrackerManager:
 
-    def __init__(self, torrent):
-        self.torrent = torrent
+    def __init__(self):
         self.trackers = []
         self.initialized = False
         self.running = True
-        self.peer_request_interval = Settings.get_int("peer_request_interval")
-        self.peer_request_interval_no_potential = Settings.get_int("peer_request_interval_no_potential")
+
         self.tracker_retry = Settings.get_int("tracker_retry")
-        self.dht_request_interval = Settings.get_int("dht_request_interval")
         self.last_dht_get = 0
 
-    def update(self):
-        if not self.initialized:
-            self.initialized = True
-            for uri in self.torrent.announce_uris:
+        self.request_peers_id = EventManager.register_event(EventType.RequestPeers, self.request_peers)
+
+    def request_peers(self, torrent):
+        for uri in torrent.announce_uris:
+            if len([x for x in self.trackers if x.host == uri]) == 0:
                 tracker = TrackerFactory.create_tracker(uri)
                 if tracker is not None:
                     self.trackers.append(tracker)
 
-        if len(self.torrent.peer_manager.potential_peers) > 1000:
-            return True
-
         for tracker in self.trackers:
             if tracker.could_connect:
-                if (current_time() - tracker.last_announce > self.peer_request_interval) or \
-                        (len(self.torrent.peer_manager.potential_peers) < 10 and current_time() - tracker.last_announce > self.peer_request_interval_no_potential):
-                    thread = CustomThread(self.tracker_announce, "Tracker announce", [tracker])
-                    thread.start()
+                thread = CustomThread(self.tracker_announce, "Tracker announce", [tracker, torrent])
+                thread.start()
 
-        if current_time() - self.last_dht_get > self.dht_request_interval:
-            self.last_dht_get = current_time()
-            EventManager.throw_event(EventType.RequestDHTPeers, [self.torrent])
-
-        return True
-
-    def tracker_announce(self, tracker):
-        if not tracker.announce_torrent(self.torrent):
+    def tracker_announce(self, tracker, torrent):
+        if not tracker.announce_torrent(torrent):
             if tracker.try_number > self.tracker_retry:
                 return
 
@@ -170,7 +157,7 @@ class TrackerManager:
             if not self.running:
                 return
             tracker.try_number += 1
-            self.tracker_announce(tracker)
+            self.tracker_announce(tracker, torrent)
         else:
             tracker.try_number = 0
             tracker.could_connect = True
@@ -186,3 +173,4 @@ class TrackerManager:
 
     def stop(self):
         self.running = False
+        EventManager.deregister_event(self.request_peers_id)
