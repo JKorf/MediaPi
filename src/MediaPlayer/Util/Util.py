@@ -45,7 +45,7 @@ def uri_to_bytes(uri):
 
 
 def ip_port_to_bytes(ip, port):
-    result = socket.inet_aton(ip) + bytearray(2)
+    result = bytearray(socket.inet_aton(ip)) + bytearray(2)
     Network.write_ushort(result, port, 4)
     return result
 

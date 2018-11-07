@@ -21,8 +21,6 @@ class BaseTask:
         self.start_time = 0
         self.end_time = 0
 
-        self.execute_internal = None
-
     def execute(self):
         self.start_time = current_time()
         self.state = DHTTaskState.Running
