@@ -25,7 +25,7 @@ class DHTEngine(metaclass=Singleton):
         self.routing_table = Table(self)
         self.socket = Socket(Settings.get_int("dht_port"), self.on_node_seen, self.on_node_timeout, self.on_query)
         self.engine = Engine("DHT Engine", 5000)
-        self.engine.queue_repeating_work_item("DHT Refresh buckets", 1000 * 60, self.refresh_buckets)
+        self.engine.queue_repeating_work_item("DHT Refresh buckets", 1000 * 60, self.refresh_buckets, False)
         self.engine.queue_repeating_work_item("DHT Save nodes", 1000 * 60 * 5, self.save_nodes, False)
 
         self.running_tasks = []
@@ -94,6 +94,7 @@ class DHTEngine(metaclass=Singleton):
         for bucket in list(self.routing_table.buckets):
             if current_time() - bucket.last_changed > 1000 * 60 * 15:
                 self.start_task(FindNodeTask(self, self.own_node.byte_id, Random().randint(bucket.start, bucket.end), self.routing_table.all_nodes()))
+        return True
 
     def save_nodes(self):
         all_nodes = bytearray()
@@ -105,6 +106,7 @@ class DHTEngine(metaclass=Singleton):
         Logger.write(2, "DHT: Saving " + str(len(all_nodes) // 26) + " nodes")
         with open('dht.data', 'wb') as w:
             w.write(all_nodes)
+        return True
 
     def load_nodes(self):
         try:

@@ -7,18 +7,9 @@
 --- TODO ---
     TV
 
-    overscan
-        Adjust with https://github.com/ukscone/set_overscan
-
     zigbee connectie?
 
     Single phone ui for multiple slaves
-
-    disable popups hd:
-        https://www.raspberrypi.org/forums/viewtopic.php?t=159739
-        https://ubuntuforums.org/showthread.php?t=1935099
-        ~/.config/pcmanfm/LXDE/pcmanfm.conf voor install?
-        /etc/xdg/pcmanfm/LXDE-pi/pcmanfm.conf
 
     speed graph
 
@@ -30,15 +21,6 @@
 
     zram: https://eltechs.com/overclock-raspberry-pi-3/
     Try with new case:
-        disable_overscan=1
-        overscan_left=-16
-        overscan_right=-16
-        overscan_top=-16
-        overscan_bottom=-16
-
-        hdmi_group=1
-        hdmi_mode=19
-
         total_mem=1024
         arm_freq=1400
         gpu_freq=500
