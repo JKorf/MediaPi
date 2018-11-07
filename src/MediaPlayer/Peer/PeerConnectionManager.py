@@ -16,7 +16,6 @@ class PeerConnectionManager:
         self.uri = uri
         self.received_bytes = []
         self.to_send_bytes = bytearray()
-        self.on_disconnect = None
         self.connection_state = ConnectionState.Initial
         self.connected_on = 0
         self.last_communication = 0

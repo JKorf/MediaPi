@@ -16,7 +16,6 @@ class TorrentDownloadManager:
 
         self.init = False
         self.prio = False
-        self.reprio_after_metadata = False
         self.last_get_result = 0, 0
         self.last_get_time = 0
         self.upped_prios = []

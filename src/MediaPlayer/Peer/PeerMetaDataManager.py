@@ -1,6 +1,7 @@
 from time import sleep
 
 from Shared.Logger import Logger
+from Shared.Settings import Settings
 from Shared.Util import current_time
 from MediaPlayer.ExtensionManager import ProtocolExtensionManager
 from MediaPlayer.Peer.PeerMessages import BitfieldMessage, InterestedMessage, HandshakeMessage, ExtensionHandshakeMessage, \
@@ -82,7 +83,7 @@ class PeerMetaDataManager:
             self.port_send = True
             if self.peer.extension_manager.peer_supports(ExtensionName.DHT):
                 Logger.write(1, str(self.peer.id) + ' sending port message')
-                self.peer.connection_manager.send(PortMessage(50000).to_bytes())
+                self.peer.connection_manager.send(PortMessage(Settings.get_int("dht_port")).to_bytes())
 
         if not self.bitfield_done:
             Logger.write(1, str(self.peer.id) + ' Sending initial bitfield')

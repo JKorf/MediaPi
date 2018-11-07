@@ -13,6 +13,7 @@ from MediaPlayer.Engine.Engine import Engine
 from MediaPlayer.Util.Enums import PeerSource
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Settings import Settings
 from Shared.Util import Singleton, current_time
 
 
@@ -22,7 +23,7 @@ class DHTEngine(metaclass=Singleton):
         self.own_node = None
 
         self.routing_table = Table(self)
-        self.socket = Socket(50010, self.on_node_seen, self.on_node_timeout, self.on_query)
+        self.socket = Socket(Settings.get_int("dht_port"), self.on_node_seen, self.on_node_timeout, self.on_query)
         self.engine = Engine("DHT Engine", 5000)
         self.engine.queue_repeating_work_item("DHT Refresh buckets", 1000 * 60, self.refresh_buckets)
         self.engine.queue_repeating_work_item("DHT Save nodes", 1000 * 60 * 5, self.save_nodes, False)

@@ -80,7 +80,6 @@ class PeerDownloadManager:
             request = RequestMessage(block_download.block.piece_index, block_download.block.start_byte_in_piece, block_download.block.length)
             Logger.write(1, str(self.peer.id) + ' Sending request for piece ' + str(request.index) + ", block " + str(
                 request.offset // 16384))
-            self.peer.torrent.outstanding_requests += 1
             self.peer.connection_manager.send(request.to_bytes())
 
     def block_done(self, block):

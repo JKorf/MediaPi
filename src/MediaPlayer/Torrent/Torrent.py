@@ -64,14 +64,6 @@ class Torrent:
         return self.output_manager.stream_manager.consecutive_pieces_last_index
 
     @property
-    def last_byte_requested(self):
-        return self.output_manager.stream_manager.last_request
-
-    @property
-    def streamserver_running(self):
-        return self.output_manager.stream_manager.listener.running
-
-    @property
     def bytes_streamed(self):
         return self.output_manager.stream_manager.listener.bytes_send
 
@@ -138,7 +130,6 @@ class Torrent:
 
         self.stream_file_hash = None
         self.to_download_bytes = 0
-        self.outstanding_requests = 0
         self.overhead = 0
 
         self.user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
@@ -250,15 +241,7 @@ class Torrent:
         self.engine.start()
         self.message_engine.start()
         self.network_manager.start()
-        self.clear_subs_folder()
         Logger.write(3, "Torrent started")
-
-    def clear_subs_folder(self):
-        folder = Settings.get_string("base_folder") + "/subs/"
-        for the_file in os.listdir(folder):
-            file_path = os.path.join(folder, the_file)
-            if os.path.isfile(file_path):
-                os.unlink(file_path)
 
     def parse_info_dictionary(self, info_dict):
         self.name = info_dict[b'name'].decode('utf8')

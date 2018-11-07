@@ -14,10 +14,6 @@ from Shared.Util import current_time, write_size
 class TorrentPeerManager:
     __peer_id = 0
 
-    @property
-    def connected_peer_list(self):
-        return list(self.connected_peers)
-
     def __init__(self, torrent):
         self.torrent = torrent
         self.potential_peers = []
@@ -31,7 +27,6 @@ class TorrentPeerManager:
         self.peer_request_interval = Settings.get_int("peer_request_interval")
         self.peer_request_interval_no_potential = Settings.get_int("peer_request_interval_no_potential")
         self.random = Random()
-        self.fast_peers = 0
         self.download_start = 0
         self.start_time = current_time()
         self.last_peer_request = 0

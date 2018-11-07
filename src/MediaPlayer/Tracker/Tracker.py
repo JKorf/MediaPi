@@ -75,7 +75,6 @@ class UdpTracker:
         self.connection_id = 0
         self.connection_id_retrieved = 0
         self.try_number = 0
-        self.initial = True
         self.connection = UdpClient(host, port)
         self.tracker_peer_request_amount = Settings.get_int("tracker_peer_request_amount")
 

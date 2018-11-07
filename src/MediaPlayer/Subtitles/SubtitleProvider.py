@@ -21,7 +21,7 @@ class SubtitleProvider:
             SubtitlesOpenSubtitles(),
         ]
 
-        self.sub_file_directory = os.path.dirname(os.path.realpath(__file__)) + "/subs/"
+        self.sub_file_directory = Settings.get_string("base_folder") + "subs/"
         self.sub_files = []
         self.sub_files_lock = Lock()
 

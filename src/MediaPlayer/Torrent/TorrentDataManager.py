@@ -20,7 +20,6 @@ class TorrentDataManager:
         self.total_pieces = 0
         self.piece_length = 0
         self.bitfield = None
-        self.calculating_stream_file_hash = False
         self.blocks_done = []
         self.persistent_pieces = []
         self.blocks_done_lock = Lock()

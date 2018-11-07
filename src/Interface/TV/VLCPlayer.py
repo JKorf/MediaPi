@@ -177,7 +177,10 @@ class VLCPlayer:
 
     def set_subtitle_files(self, files):
         Logger.write(2, "Adding " + str(len(files)) + " subtitle files")
+        pi = Settings.get_bool("raspberry")
         for file in reversed(files):
+            if not pi and file[1] != ":":
+                file = "C:" + file
             file = file.replace("/", os.sep).replace("\\", os.sep)
             # NOTE this must be called after Play()
             self.__player.video_set_subtitle_file(file)

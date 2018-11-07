@@ -51,3 +51,4 @@ raspberry=False
 # DHT
 dht=False
 dht_request_interval=900000
+dht_port=50010
