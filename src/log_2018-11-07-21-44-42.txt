@@ -1,0 +1,29 @@
+
+Time           | Thread                         | File                      | Function                       | #Line  | Type    | Message
+--------------------------------------------------------------------------------------------------------------------------------------------
+20:44:42.491   | MainThread                     | start.py                  | __init__                       | #34    | info    | Starting
+20:44:42.531   | MainThread                     | VLCPlayer.py              | instantiate_vlc                | #45    | info    | VLC parameters: ['--verbose=1', '--network-caching=5000', '--ipv4-timeout=500', '--image-duration=-1', '--logfile=/home/pi/Scripts/Logs/vlclog_2018-11-07-21-44-42.txt', '--file-logging', '--codec=omxil', '--vout=omxil_vout', '--file-caching=5000']
+20:44:42.897   | MainThread                     | VLCPlayer.py              | instantiate_vlc                | #47    | info    | VLC version 2.2.8 Weatherwax
+20:44:42.974   | MainThread                     | start.py                  | init_sound                     | #81    | info    | Settings sound to 100%
+20:44:43.040   | Tornado server                 | TornadoServer.py          | internal_start                 | #71    | info    | Tornado server running on port 80
+20:44:43.124   | MainThread                     | LightManager.py           | init                           | #69    | info    | Lighting: Previously saved key found
+20:44:43.128   | MainThread                     | start.py                  | __init__                       | #57    | info    | MediaPlayer build [2018-11-07 21:42:30]
+20:44:43.130   | MainThread                     | start.py                  | __init__                       | #58    | info    | Slave: False
+20:44:43.133   | MainThread                     | start.py                  | __init__                       | #61    | info    | Pi: True
+20:44:43.134   | MainThread                     | start.py                  | __init__                       | #63    | info    | Started
+20:44:43.181   | Listener: MasterFileServer     | StreamListener.py         | start                          | #278   | info    | StreamServer MasterFileServer listening on port 50010
+20:44:43.348   | Tornado server                 | WebsocketController.py    | opening_client                 | #68    | info    | New connection
+20:44:43.364   | Tornado server                 | WebsocketController.py    | opening_client                 | #68    | info    | New connection
+20:44:44.047   | Set gui address                | WebServerManager.py       | set_address                    | #31    | info    | WebServer running on 192.168.2.100:80
+20:44:44.125   | Tornado server                 | WebsocketController.py    | opening_client                 | #68    | info    | New connection
+20:48:09.832   | Tornado server                 | WebsocketController.py    | closing_client                 | #82    | info    | Connection closed
+20:48:10.802   | Tornado server                 | WebsocketController.py    | opening_client                 | #68    | info    | New connection
+20:48:10.929   | Tornado server                 | TVManager.py              | __request                      | #95    | info    | TV manager sending command: echo "scan" | cec-client RPI -s
+20:48:18.518   | Tornado server                 | TVManager.py              | __request                      | #97    | info    | TV manager result: b'opening a connection to the CEC adapter...\nrequesting CEC bus information ...\nCEC bus information\n===================\ndevice #0: TV\naddress:       0.0.0.0\nactive source: no\nvendor:        Unknown\nosd string:    TV\nCEC version:   unknown\npower status:  on\nlanguage:      dut\n\n\ndevice #1: Recorder 1\naddress:       3.0.0.0\nactive source: yes\nvendor:        Pulse Eight\nosd string:    CECTester\nCEC version:   1.4\npower status:  on\nlanguage:      eng\n\n\ndevice #4: Playback 1\naddress:       1.0.0.0\nactive source: no\nvendor:        Google\nosd string:    Chromecast\nCEC version:   1.4\npower status:  on\nlanguage:      ???\n\n\ncurrently active source: Recorder 1 (1)\n'
+20:53:03.162   | Tornado server                 | WebsocketController.py    | closing_client                 | #82    | info    | Connection closed
+20:53:04.086   | Tornado server                 | WebsocketController.py    | opening_client                 | #68    | info    | New connection
+20:53:04.346   | Tornado server                 | TVManager.py              | __request                      | #95    | info    | TV manager sending command: echo "scan" | cec-client RPI -s
+20:53:12.879   | Tornado server                 | TVManager.py              | __request                      | #97    | info    | TV manager result: b'opening a connection to the CEC adapter...\nrequesting CEC bus information ...\nCEC bus information\n===================\ndevice #0: TV\naddress:       0.0.0.0\nactive source: no\nvendor:        Unknown\nosd string:    TV\nCEC version:   unknown\npower status:  on\nlanguage:      dut\n\n\ndevice #1: Recorder 1\naddress:       3.0.0.0\nactive source: yes\nvendor:        Pulse Eight\nosd string:    CECTester\nCEC version:   1.4\npower status:  on\nlanguage:      eng\n\n\ndevice #4: Playback 1\naddress:       1.0.0.0\nactive source: no\nvendor:        Google\nosd string:    Chromecast\nCEC version:   1.4\npower status:  on\nlanguage:      ???\n\n\ncurrently active source: Recorder 1 (1)\n'
+21:00:38.077   | Tornado server                 | WebsocketController.py    | closing_client                 | #82    | info    | Connection closed
+21:00:38.087   | Tornado server                 | WebsocketController.py    | closing_client                 | #82    | info    | Connection closed
+21:00:38.092   | Tornado server                 | WebsocketController.py    | closing_client                 | #82    | info    | Connection closed
