@@ -32,9 +32,6 @@ class TVManager(metaclass=Singleton):
         "9": 29,
      }
 
-    def __init__(self):
-        pass
-
     def channel_up(self):
         return self.__send_key(TVManager.key_map['channel_up'])
 

@@ -93,7 +93,7 @@ class DHTEngine(metaclass=Singleton):
     def refresh_buckets(self):
         for bucket in list(self.routing_table.buckets):
             if current_time() - bucket.last_changed > 1000 * 60 * 15:
-                self.start_task(FindNodeTask(self, self.own_node.byte_id, Random().randint(bucket.start, bucket.end), self.routing_table.all_nodes()))
+                self.start_task(FindNodeTask(self, self.own_node.byte_id, Node(0, 0, Random().randint(bucket.start, bucket.end).to_bytes(20, byteorder='big')), self.routing_table.all_nodes()))
         return True
 
     def save_nodes(self):
