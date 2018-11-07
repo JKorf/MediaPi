@@ -47,9 +47,9 @@ class DHTEngine(metaclass=Singleton):
 
     def on_query(self, ip, port, message):
         if message.query == b"ping":
-            response = ResponseDHTMessage.create_ping_response(self.own_node.byte_value, message.transaction_id)
+            response = ResponseDHTMessage.create_ping_response(self.own_node.byte_id, message.transaction_id)
             self.socket.send_response(response, ip, port)
-        elif message.query == b"find_nodes":
+        elif message.query == b"find_node":
             found_node = self.routing_table.get_node(message.target)
             if found_node is not None:
                 self.socket.send_response(ResponseDHTMessage.create_find_node_response(self.own_node.byte_id, message.transaction_id, None, found_node.byte_id), ip, port)

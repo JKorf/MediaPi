@@ -69,7 +69,7 @@ class Socket:
     def send(self):
         for pending in list(self.to_send_messages):
             try:
-                if pending is QueryMessage:
+                if not isinstance(pending, QueryMessage):
                     data = pending.message.to_bytes()
                     self.socket.sendto(data, (pending.ip, pending.port))
                     self.to_send_messages.remove(pending)
@@ -93,12 +93,12 @@ class Socket:
                 self.awaiting_messages.remove(pending)
 
         for received in list(self.received_messages):
-            if received.message is QueryDHTMessage:
+            if isinstance(received.message, QueryDHTMessage):
                 self.query_handler(received.ip, received.port, received.message)
                 self.received_messages.remove(received)
                 continue
 
-            elif received.message is ResponseDHTMessage:
+            elif isinstance(received.message, ResponseDHTMessage):
                 pending = [x for x in self.awaiting_messages if x.message.message.transaction_id == received.message.transaction_id]
                 if len(pending) == 0:
                     Logger.write(1, "DHT response for no request (timed out?)")
