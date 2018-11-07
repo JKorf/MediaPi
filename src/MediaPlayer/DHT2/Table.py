@@ -75,7 +75,7 @@ class Table:
                 return
 
             if bucket.fits(self.dht_engine.own_node.int_id):
-                Logger.write(1, "Bucket is full, splitting")
+                Logger.write(1, "DHT: Bucket is full, splitting")
                 split_nodes = bucket.split()
                 new_range = (bucket.end - bucket.start) // 2
                 new_bucket = Bucket(bucket.start, bucket.end + new_range)
@@ -87,7 +87,7 @@ class Table:
                 else:
                     self.add_to_bucket(bucket, node)
             else:
-                Logger.write(1, "Skipping adding of node, bucket is full")
+                Logger.write(1, "DHT: Skipping adding of node, bucket is full")
         else:
             bucket.add_node(node)
-            Logger.write(1, "Node added to bucket")
+            Logger.write(1, "DHT: Node added to bucket")

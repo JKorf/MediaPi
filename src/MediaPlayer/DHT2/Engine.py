@@ -63,7 +63,7 @@ class DHTEngine(metaclass=Singleton):
         elif message.query == b"announce_peer":
             pass
         else:
-            Logger.write(1, "DHT received unknown query: " + str(message.query))
+            Logger.write(2, "DHT: received unknown query: " + str(message.query))
 
     def start(self):
         byte_id, nodes = self.load_nodes()
@@ -85,7 +85,7 @@ class DHTEngine(metaclass=Singleton):
         task.execute()
 
     def end_task(self, task, on_complete):
-        Logger.write(2, "DHT task " + type(task).__name__ + " completed in " + str(task.end_time - task.start_time) + "ms")
+        Logger.write(2, "DHT: " + type(task).__name__ + " completed in " + str(task.end_time - task.start_time) + "ms")
         self.running_tasks.remove(task)
         if on_complete:
             on_complete(task)
@@ -102,7 +102,7 @@ class DHTEngine(metaclass=Singleton):
             if node.node_state != NodeState.Bad:
                 all_nodes.extend(node.node_bytes())
 
-        Logger.write(1, "DHT: Saving " + str(len(all_nodes) // 26) + " nodes")
+        Logger.write(2, "DHT: Saving " + str(len(all_nodes) // 26) + " nodes")
         with open('dht.data', 'wb') as w:
             w.write(all_nodes)
 
@@ -110,6 +110,8 @@ class DHTEngine(metaclass=Singleton):
         try:
             with open("dht.data", "rb") as file:
                 data = file.read()
-            return data[0:20], Node.from_bytes_multiple(data[20:])
+            nodes = Node.from_bytes_multiple(data[20:])
+            Logger.write(2, "DHT: Starting with " + str(len(nodes)) + " nodes")
+            return data[0:20], nodes
         except FileNotFoundError:
             return None, []
