@@ -2,16 +2,15 @@ import json
 import os
 import subprocess
 import sys
+import time
 import urllib.parse
 import urllib.request
-
-import time
 
 from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Util import to_JSON
-from WebServer.Models import FileStructure
+from UI.Web.Server.Models import FileStructure
 
 
 class HDController:

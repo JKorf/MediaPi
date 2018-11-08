@@ -7,30 +7,29 @@ import urllib.parse
 import urllib.request
 
 import tornado
-from tornado import gen
+from UI.Web.Server.Controllers.HDController import HDController
+from UI.Web.Server.Controllers.LightController import LightController
+from UI.Web.Server.Controllers.MovieController import MovieController
+from UI.Web.Server.Controllers.RadioController import RadioController
+from UI.Web.Server.Controllers.ShowController import ShowController
+from UI.Web.Server.Controllers.TorrentController import TorrentController
+from UI.Web.Server.Controllers.UtilController import UtilController
+from UI.Web.Server.Controllers.WebsocketController import WebsocketController
+from UI.Web.Server.Controllers.YoutubeController import YoutubeController
 from tornado import ioloop, web, websocket
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
-from Automation.TVManager import TVManager
+from Automation.TVController import TVManager
 from Database.Database import Database
 from Managers.TorrentManager import TorrentManager
+from MediaPlayer.Util.Enums import TorrentState
+from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, RequestFactory
-from MediaPlayer.Util.Enums import TorrentState
-from MediaPlayer.Util.Util import get_file_info
-from WebServer.Controllers.LightController import LightController
-from WebServer.Controllers.HDController import HDController
-from WebServer.Controllers.MovieController import MovieController
-from WebServer.Controllers.PlayerController import PlayerController
-from WebServer.Controllers.RadioController import RadioController
-from WebServer.Controllers.ShowController import ShowController
-from WebServer.Controllers.TorrentController import TorrentController
-from WebServer.Controllers.UtilController import UtilController
-from WebServer.Controllers.WebsocketController import WebsocketController
-from WebServer.Controllers.YoutubeController import YoutubeController
+from UI.Web.Server.Controllers.PlayerController import PlayerController
 
 
 class TornadoServer:
@@ -53,7 +52,7 @@ class TornadoServer:
             (r"/tv/(.*)", TVHandler),
             (r"/realtime", RealtimeHandler),
             (r"/database/(.*)", DatabaseHandler),
-            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/Interface/Mobile", "default_filename": "index.html"})
+            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/Web/Interface", "default_filename": "index.html"})
         ]
 
         self.application = web.Application(handlers)
@@ -69,6 +68,8 @@ class TornadoServer:
             try:
                 self.application.listen(self.port)
                 Logger.write(2, "Tornado server running on port " + str(self.port))
+                time.sleep(5)
+                self.get_actual_address()
                 break
             except OSError:
                 self.port += 1
@@ -101,12 +102,14 @@ class TornadoServer:
                 s.connect(("gmail.com", 80))
                 ip = s.getsockname()[0]
                 s.close()
-                return ip + ":" + str(self.port)
+                actual_address = ip + ":" + str(self.port)
+                Logger.write(3, "WebServer running on " + actual_address)
+                EventManager.throw_event(EventType.RetrievedAddress, [actual_address])
+                return
 
             except Exception as e:
                 Logger.write(3, "Failed to connect to remote server, try " + str(i))
                 time.sleep(10)
-        return "No internet connection"
 
 
 class StaticFileHandler(tornado.web.StaticFileHandler):

@@ -47,6 +47,7 @@ class EventType(Enum):
 
     PeersFound = 40,
     RequestPeers = 41,
+    RetrievedAddress = 42,
 
 
 class EventManager:

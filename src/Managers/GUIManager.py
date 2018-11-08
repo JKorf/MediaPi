@@ -3,8 +3,9 @@ import os
 import sys
 import urllib.parse
 
-from Interface.TV.GUI import GUI
-from Interface.TV.VLCPlayer import VLCPlayer, PlayerState
+from UI.TV.GUI import GUI
+from UI.TV.VLCPlayer import VLCPlayer, PlayerState
+
 from Managers.TorrentManager import TorrentManager
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
@@ -12,8 +13,7 @@ from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import RequestFactory, Singleton
-from WebServer.Models import FileStructure
-from WebServer.TornadoServer import TornadoServer
+from UI.Web.Server.Models import FileStructure
 
 
 class GUIManager(metaclass=Singleton):
@@ -183,7 +183,8 @@ class NextEpisodeManager:
             if Settings.get_bool("slave"):
                 index = self.gui_manager.player.path.index("/file/")
                 dir_name = os.path.dirname(self.gui_manager.player.path[index + 6:])
-                data = TornadoServer.request_master("/hd/directory?path=" + dir_name)
+
+                data = RequestFactory.make_request(Settings.get_string("master_ip") + "/hd/directory?path=" + dir_name, "GET")
                 result = json.loads(data.decode("utf8"))
                 file_list = result["files"]
             else:

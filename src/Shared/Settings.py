@@ -32,7 +32,7 @@ class Settings:
 
     @staticmethod
     def save_setting(name, value):
-        with fileinput.FileInput(os.getcwd() + '/settings.txt', inplace=True) as file:
+        with fileinput.FileInput(os.getcwd() + '/Solution/settings.txt', inplace=True) as file:
             for line in file:
                 if line.startswith(name):
                     print(name+"="+str(value))
@@ -45,7 +45,7 @@ class Settings:
             return
 
         Settings.content = dict()
-        for line in open(os.getcwd() + '/settings.txt', 'rt'):
+        for line in open(os.getcwd() + '/Solution/settings.txt', 'rt'):
             l = line.replace('\r', '').replace('\n', '')
             if len(l) == 0 or l.startswith("#") or '=' not in l:
                 continue

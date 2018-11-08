@@ -1,6 +1,5 @@
 import base64
 import hashlib
-import os
 import urllib.parse
 import urllib.request
 from threading import Lock
@@ -8,10 +7,6 @@ from threading import Lock
 import math
 
 import time
-
-import re
-
-from Interface.TV.VLCPlayer import PlayerState
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger

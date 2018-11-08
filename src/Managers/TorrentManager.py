@@ -2,7 +2,7 @@ import datetime
 import time
 
 from Database.Database import Database
-from Interface.TV.VLCPlayer import PlayerState
+from UI.TV.VLCPlayer import PlayerState
 from MediaPlayer.DHT.Engine import DHTEngine
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
 from MediaPlayer.Torrent.Torrent import Torrent

@@ -14,7 +14,7 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import *
 from os.path import isfile, join
 
-from Interface.TV.VLCPlayer import PlayerState
+from UI.TV.VLCPlayer import PlayerState
 from Managers.TorrentManager import TorrentManager
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -33,7 +33,7 @@ class Communicate(QtCore.QObject):
 
 
 class GUI(QtGui.QMainWindow):
-    base_image_path = os.getcwd() + "/Interface/TV/Images/"
+    base_image_path = os.getcwd() + "/UI/TV/Images/"
 
     def __init__(self, gui_manager):
         super(GUI, self).__init__()
@@ -73,6 +73,7 @@ class GUI(QtGui.QMainWindow):
         EventManager.register_event(EventType.StopTorrent, self.torrent_stop)
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.selection_required)
         EventManager.register_event(EventType.TorrentMediaFileSelection, self.selection_done)
+        EventManager.register_event(EventType.RetrievedAddress, self.set_address)
 
         self.general_info_panel = GeneralInfoPanel(self, 10, 10, 260, 160)
         self.loading_panel = LoadingPanel(self, self.width / 2 - 150, self.height / 2 - 100, 300, 200)

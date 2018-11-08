@@ -3,7 +3,6 @@ from datetime import timedelta, date
 import json
 import time
 from urllib.parse import urlencode, unquote
-from tornado import gen
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger

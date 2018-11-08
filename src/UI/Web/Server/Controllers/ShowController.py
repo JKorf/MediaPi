@@ -1,13 +1,11 @@
-import urllib.request
-import urllib.parse
-
 import time
-from tornado import gen
+import urllib.parse
+import urllib.request
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from WebServer.Providers.ShowProvider import ShowProvider
+from UI.Web.Server.Providers.ShowProvider import ShowProvider
 
 
 class ShowController:

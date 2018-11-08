@@ -1,13 +1,12 @@
+import time
 import traceback
 from threading import Lock
 
-import time
-
 import psutil
+from UI.TV.VLCPlayer import PlayerState
 
-from Database.Database import Database
-from Interface.TV.VLCPlayer import PlayerState
 import Managers.GUIManager
+from Database.Database import Database
 from Managers.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState
 from Shared.Events import EventManager, EventType
@@ -15,7 +14,7 @@ from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread, ThreadManager
 from Shared.Util import to_JSON, write_size
-from WebServer.Models import MediaFile, WebSocketMessage, Status, CurrentMedia, MediaInfo
+from UI.Web.Server.Models import MediaFile, WebSocketMessage, Status, CurrentMedia, MediaInfo
 
 
 class WebsocketController:

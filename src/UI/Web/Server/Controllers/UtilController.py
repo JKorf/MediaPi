@@ -2,7 +2,7 @@ import os
 import urllib.parse
 import urllib.request
 
-from Automation.LightManager import LightManager
+from Automation.LightController import LightManager
 from Shared.Events import EventManager
 from Shared.Events import EventType
 from Shared.Logger import Logger
@@ -10,7 +10,7 @@ from Shared.Settings import Settings as AppSettings
 from Shared.Stats import Stats
 from Shared.Threading import ThreadManager
 from Shared.Util import to_JSON, RequestFactory, current_time, write_size
-from WebServer.Models import Info, StartUp
+from UI.Web.Server.Models import Info, StartUp
 
 
 class UtilController:

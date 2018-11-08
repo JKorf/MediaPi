@@ -2,15 +2,16 @@
 import os
 from datetime import datetime
 
+from UI.Web.Server.TornadoServer import TornadoServer
+
 os.chdir(os.path.dirname(__file__))
 
 from Managers.Observer import Observer
 from Managers.TorrentManager import TorrentManager
 
-from Automation.LightManager import LightManager
+from Automation.LightController import LightManager
 
 from Managers.GUIManager import GUIManager
-from Managers.WebServerManager import WebServerManager
 
 import sys
 import time
@@ -45,7 +46,8 @@ class Program:
         self.init_sound()
         self.init_folders()
 
-        WebServerManager().start_server()
+        self.server = TornadoServer()
+        self.server.start()
         self.version = datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S")
 
         LightManager().init()
@@ -72,7 +74,6 @@ class Program:
         GUIManager()
         TorrentManager()
         Observer()
-        WebServerManager()
         LightManager()
 
     @staticmethod

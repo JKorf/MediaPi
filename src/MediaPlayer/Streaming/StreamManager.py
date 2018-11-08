@@ -1,7 +1,7 @@
 import math
 from threading import Lock
 
-from Interface.TV.VLCPlayer import PlayerState
+from UI.TV.VLCPlayer import PlayerState
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings

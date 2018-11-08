@@ -1,8 +1,6 @@
-from pytradfri.const import SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_HEX_COLOR
-
-from Automation.LightManager import LightManager
+from Automation.LightController import LightManager
 from Shared.Util import to_JSON
-from WebServer.Models import LightControl, LightDevice
+from UI.Web.Server.Models import LightControl, LightDevice
 
 
 class LightController:

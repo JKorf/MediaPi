@@ -140,13 +140,13 @@ class DHTEngine(metaclass=Singleton):
                 all_nodes.extend(node.node_bytes())
 
         Logger.write(2, "DHT: Saving " + str(len(all_nodes) // 26) + " nodes")
-        with open('dht.data', 'wb') as w:
+        with open('Solution/dht.data', 'wb') as w:
             w.write(all_nodes)
         return True
 
     def load_nodes(self):
         try:
-            with open("dht.data", "rb") as file:
+            with open("Solution/dht.data", "rb") as file:
                 data = file.read()
             nodes = Node.from_bytes_multiple(data[20:])
             Logger.write(2, "DHT: Starting with " + str(len(nodes)) + " nodes")

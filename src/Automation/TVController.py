@@ -2,7 +2,7 @@ import subprocess
 
 from Shared.Logger import Logger
 from Shared.Util import Singleton
-from WebServer.Models import CecDevice
+from UI.Web.Server.Models import CecDevice
 
 
 class TVManager(metaclass=Singleton):

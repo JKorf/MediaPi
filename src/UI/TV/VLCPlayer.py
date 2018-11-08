@@ -3,8 +3,8 @@ import os
 import time
 from enum import Enum
 
-from Interface.TV import vlc
-from Interface.TV.vlc import libvlc_get_version, EventType
+from UI.TV import vlc
+from UI.TV.vlc import libvlc_get_version, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread

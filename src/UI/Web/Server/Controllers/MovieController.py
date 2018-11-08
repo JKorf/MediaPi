@@ -1,14 +1,12 @@
 import sys
+import time
 import urllib.parse
 import urllib.request
-
-import time
-from tornado import gen
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from WebServer.Providers.Movies.PopcornMovieProvider import PopcornMovieProvider
+from UI.Web.Server.Providers.Movies.PopcornMovieProvider import PopcornMovieProvider
 
 
 class MovieController:

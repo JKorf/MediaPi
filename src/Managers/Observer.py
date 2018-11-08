@@ -10,7 +10,7 @@ from Shared.Settings import Settings
 from Shared.Stats import Stats
 from Shared.Threading import CustomThread
 from Shared.Util import current_time, Singleton
-from WebServer.TornadoServer import TornadoServer
+from UI.Web.Server.TornadoServer import TornadoServer
 
 
 class Observer(metaclass=Singleton):
