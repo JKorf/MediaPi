@@ -48,6 +48,7 @@ class EventType(Enum):
     PeersFound = 40,
     RequestPeers = 41,
     RetrievedAddress = 42,
+    WiFiQualityUpdate = 43,
 
 
 class EventManager:

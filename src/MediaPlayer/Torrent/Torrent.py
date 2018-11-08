@@ -312,8 +312,8 @@ class Torrent:
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
         self.__set_state(TorrentState.Downloading)
         self.to_download_bytes = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
-        Logger.write(2, "To download: " + str(self.to_download_bytes) + " ("+ str(self.to_download_bytes - self.media_file.length) +" overhead), piece length: " + str(self.piece_length))
-        EventManager.throw_event(EventType.TorrentMediaFileSet, [])
+        Logger.write(2, "To download: " + str(self.to_download_bytes) + " (" + str(self.to_download_bytes - self.media_file.length) + " overhead), piece length: " + str(self.piece_length))
+        EventManager.throw_event(EventType.TorrentMediaFileSet, [self.media_file.name])
 
     def user_file_selected(self, file_path):
         Logger.write(2, "User selected media file: " + file_path)

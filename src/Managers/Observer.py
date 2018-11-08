@@ -3,13 +3,13 @@ import time
 import urllib.parse
 
 from Database.Database import Database
-from Managers.GUIManager import GUIManager
 from Managers.TorrentManager import TorrentManager
 from Shared.Events import EventType, EventManager
 from Shared.Settings import Settings
 from Shared.Stats import Stats
 from Shared.Threading import CustomThread
 from Shared.Util import current_time, Singleton
+from UI.TV.VLCPlayer import VLCPlayer
 from UI.Web.Server.TornadoServer import TornadoServer
 
 
@@ -17,10 +17,6 @@ class Observer(metaclass=Singleton):
     @property
     def torrent(self):
         return TorrentManager().torrent
-
-    @property
-    def player(self):
-        return GUIManager().player
 
     def __init__(self):
         self.added_unfinished = False
@@ -65,12 +61,12 @@ class Observer(metaclass=Singleton):
 
     def update_unfinished(self):
         while True:
-            if not self.player.path:
+            if not VLCPlayer().path:
                 time.sleep(5)
                 continue
 
             watching_type = "torrent"
-            if self.player.type == "File":
+            if VLCPlayer().type == "File":
                 watching_type = "file"
 
             media_file = None
@@ -79,17 +75,17 @@ class Observer(metaclass=Singleton):
                     media_file = self.torrent.media_file.name
                 path = self.torrent.uri
             else:
-                path = self.player.path
+                path = VLCPlayer().path
 
             if path.startswith(self.master_path):
                 path = path[len(self.master_path):]
 
-            img = self.player.img
+            img = VLCPlayer().img
             if not img:
                 img = ""
 
             # Update time for resuming
-            if self.player.get_position() > 0 and self.player.get_length() - self.player.get_position() < 30:
+            if VLCPlayer().get_position() > 0 and VLCPlayer().get_length() - VLCPlayer().get_position() < 30:
                 # Remove unfinished, we're < 30 secs from end
                 if not self.removed_unfinished:
                     self.removed_unfinished = True
@@ -98,20 +94,20 @@ class Observer(metaclass=Singleton):
                     else:
                         Database().remove_watching_item(path)
 
-            elif self.player.get_position() > 10 and not self.added_unfinished and not self.removed_unfinished:
+            elif VLCPlayer().get_position() > 10 and not self.added_unfinished and not self.removed_unfinished:
                 # Add unfinished
                 self.added_unfinished = True
                 if self.is_slave:
-                    notify_url = "/database/add_unfinished?url=" + urllib.parse.quote(path) + "&name=" + urllib.parse.quote(self.player.title) + "&length=" + str(self.player.get_length()) \
+                    notify_url = "/database/add_unfinished?url=" + urllib.parse.quote(path) + "&name=" + urllib.parse.quote(VLCPlayer().title) + "&length=" + str(VLCPlayer().get_length()) \
                                                                 + "&time=" + str(current_time()) + "&image=" + urllib.parse.quote(img) + "&type=" + watching_type
                     notify_url += "&mediaFile=" + urllib.parse.quote(str(media_file))
                     TornadoServer.  notify_master_async(notify_url)
                 else:
-                    Database().add_watching_item(watching_type, self.player.title, path, self.player.img, self.player.get_length(), current_time(), media_file)
+                    Database().add_watching_item(watching_type, VLCPlayer().title, path, VLCPlayer().img, VLCPlayer().get_length(), current_time(), media_file)
 
-            if not self.removed_unfinished and self.player.get_position() > 10:
+            if not self.removed_unfinished and VLCPlayer().get_position() > 10:
                 # Update unfinished
-                pos = self.player.get_position()
+                pos = VLCPlayer().get_position()
                 if self.last_play_update_time != pos:
                     self.last_play_update_time = pos
                     if self.is_slave:
@@ -131,10 +127,6 @@ class Observer(metaclass=Singleton):
             network_ssid = out.split(":")[1]
 
         while True:
-            if not GUIManager().gui:
-                time.sleep(5)
-                continue
-
             if rasp:
                 proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
                 out, err = proc.communicate()
@@ -156,7 +148,7 @@ class Observer(metaclass=Singleton):
 
                                 if key_value[0] == "Quality":
                                     value_max = key_value[1].split("/")
-                                    GUIManager().gui.set_wifi_quality(float(value_max[0]) / float(value_max[1]) * 100)
+                                    EventManager.throw_event(EventType.WiFiQualityUpdate, [float(value_max[0]) / float(value_max[1]) * 100])
             else:
                 proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
                 out, err = proc.communicate()
@@ -164,6 +156,6 @@ class Observer(metaclass=Singleton):
                 for line in lines:
                     if "Signal" in line:
                         split = line.split(":")
-                        GUIManager().gui.set_wifi_quality(float(split[1].replace("%", "")))
+                        EventManager.throw_event(EventType.WiFiQualityUpdate, [float(split[1].replace("%", ""))])
 
             time.sleep(15)

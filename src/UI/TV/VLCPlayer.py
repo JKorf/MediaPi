@@ -3,14 +3,16 @@ import os
 import time
 from enum import Enum
 
+from Shared.Events import EventManager, EventType
+from Shared.Util import Singleton
 from UI.TV import vlc
-from UI.TV.vlc import libvlc_get_version, EventType
+from UI.TV.vlc import libvlc_get_version, EventType as VLCEventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 
 
-class VLCPlayer:
+class VLCPlayer(metaclass=Singleton):
 
     def __init__(self):
         self.__end_action = None
@@ -33,9 +35,27 @@ class VLCPlayer:
         self.prepared = False
 
         self.state = PlayerState.Nothing
-        self.state_change_action = None
-        self.player_stopped_action = None
+
         self.trying_subitems = False
+        self.youtube_end_counter = 0
+
+        EventManager.register_event(EventType.SetSubtitleFiles, self.set_subtitle_files)
+        EventManager.register_event(EventType.SetSubtitleId, self.set_audio_track)
+        EventManager.register_event(EventType.SetSubtitleOffset, self.set_subtitle_delay)
+        EventManager.register_event(EventType.SubtitlesDownloaded, self.set_subtitle_files)
+        EventManager.register_event(EventType.SetAudioId, self.set_audio_track)
+
+        EventManager.register_event(EventType.PauseResumePlayer, self.pause_resume)
+        EventManager.register_event(EventType.SetVolume, self.set_volume)
+        EventManager.register_event(EventType.Seek, self.set_time)
+
+        EventManager.register_event(EventType.PreparePlayer, self.prepare_play)
+        EventManager.register_event(EventType.StartPlayer, self.play)
+        EventManager.register_event(EventType.StopPlayer, self.stop)
+
+        EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
+        EventManager.register_event(EventType.TorrentMediaFileSet, self.torrent_media_file_set)
+        EventManager.register_event(EventType.NoPeers, self.stop)
 
         thread = CustomThread(self.watch_time_change, "VLC State watcher")
         thread.start()
@@ -108,6 +128,12 @@ class VLCPlayer:
                 params.append("demux=avformat")
         return params
 
+    def torrent_media_file_set(self, file_name):
+        self.play(0, file_name)
+
+    def user_file_selected(self, path):
+        self.title = os.path.basename(path)
+
     def pause_resume(self):
         self.__player.pause()
 
@@ -120,8 +146,8 @@ class VLCPlayer:
         self.img = None
         self.path = None
         self.prepared = False
-
-        self.player_stopped_action(pos, length)
+        self.youtube_end_counter = 0
+        EventManager.throw_event(EventType.PlayerStopped, [pos, length])
 
     def fullscreen_on(self):
         self.__player.set_fullscreen(True)
@@ -215,12 +241,12 @@ class VLCPlayer:
         self.player_stopped_action = action
 
     def hook_events(self):
-        self.__event_manager.event_attach(EventType.MediaPlayerOpening, self.state_change_opening)
-        self.__event_manager.event_attach(EventType.MediaPlayerPlaying, self.state_change_playing)
-        self.__event_manager.event_attach(EventType.MediaPlayerPaused, self.state_change_paused)
-        self.__event_manager.event_attach(EventType.MediaPlayerStopped, self.state_change_stopped)
-        self.__event_manager.event_attach(EventType.MediaPlayerEndReached, self.state_change_end_reached)
-        self.__event_manager.event_attach(EventType.MediaPlayerEncounteredError, self.on_error)
+        self.__event_manager.event_attach(VLCEventType.MediaPlayerOpening, self.state_change_opening)
+        self.__event_manager.event_attach(VLCEventType.MediaPlayerPlaying, self.state_change_playing)
+        self.__event_manager.event_attach(VLCEventType.MediaPlayerPaused, self.state_change_paused)
+        self.__event_manager.event_attach(VLCEventType.MediaPlayerStopped, self.state_change_stopped)
+        self.__event_manager.event_attach(VLCEventType.MediaPlayerEndReached, self.state_change_end_reached)
+        self.__event_manager.event_attach(VLCEventType.MediaPlayerEncounteredError, self.on_error)
 
     def state_change_opening(self, event):
         if self.state != PlayerState.Opening:
@@ -292,7 +318,17 @@ class VLCPlayer:
     def change_state(self, new):
         old = self.state
         self.state = new
-        self.state_change_action(old, self.state)
+
+        if old == PlayerState.Opening and new == PlayerState.Playing:
+            EventManager.throw_event(EventType.PlayerMediaLoaded, [self.get_length_ms()])
+
+        Logger.write(2, "State change from " + str(old) + " to " + str(new))
+        EventManager.throw_event(EventType.PlayerStateChange, [old, new])
+
+        if new == PlayerState.Ended:
+            if self.type != "YouTube":
+                thread = CustomThread(self.stop, "Stopping player")
+                thread.start()
 
 
 class PlayerState(Enum):

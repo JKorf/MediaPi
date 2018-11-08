@@ -3,9 +3,8 @@ import traceback
 from threading import Lock
 
 import psutil
-from UI.TV.VLCPlayer import PlayerState
+from UI.TV.VLCPlayer import PlayerState, VLCPlayer
 
-import Managers.GUIManager
 from Database.Database import Database
 from Managers.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState
@@ -47,7 +46,7 @@ class WebsocketController:
                 status_data = WebsocketController.get_status_data()
                 WebsocketController.broadcast("update", "status", status_data)
 
-            if Managers.GUIManager.GUIManager().player.state != PlayerState.Nothing or WebsocketController.update_loop_count % 5 == 0:
+            if VLCPlayer().state != PlayerState.Nothing or WebsocketController.update_loop_count % 5 == 0:
                 player_data = WebsocketController.get_player_data()
                 WebsocketController.broadcast("update", "player", player_data)
 
@@ -164,16 +163,16 @@ class WebsocketController:
 
     @staticmethod
     def get_player_data():
-        state = Managers.GUIManager.GUIManager().player.state
+        state = VLCPlayer().state
 
-        if not Managers.GUIManager.GUIManager().player.prepared:
+        if not VLCPlayer().prepared:
             if state == PlayerState.Nothing or state == PlayerState.Ended:
                 return CurrentMedia(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)
 
         if state == PlayerState.Nothing or state == PlayerState.Ended:
             state = PlayerState.Opening
 
-        title = Managers.GUIManager.GUIManager().player.title
+        title = VLCPlayer().title
         percentage = 0
         if TorrentManager().torrent is not None and TorrentManager().torrent.media_file is not None:
             buffered = TorrentManager().torrent.bytes_ready_in_buffer
@@ -182,20 +181,20 @@ class WebsocketController:
                 percentage = 100
 
         media = CurrentMedia(state.value,
-                             Managers.GUIManager.GUIManager().player.type,
+                             VLCPlayer().type,
                              title,
-                             Managers.GUIManager.GUIManager().player.path,
-                             Managers.GUIManager.GUIManager().player.img,
-                             Managers.GUIManager.GUIManager().player.get_position(),
-                             Managers.GUIManager.GUIManager().player.get_length(),
-                             Managers.GUIManager.GUIManager().player.get_volume(),
-                             Managers.GUIManager.GUIManager().player.get_length(),
-                             Managers.GUIManager.GUIManager().player.get_selected_sub(),
-                             Managers.GUIManager.GUIManager().player.get_subtitle_tracks(),
-                             Managers.GUIManager.GUIManager().player.get_subtitle_delay() / 1000 / 1000,
+                             VLCPlayer().path,
+                             VLCPlayer().img,
+                             VLCPlayer().get_position(),
+                             VLCPlayer().get_length(),
+                             VLCPlayer().get_volume(),
+                             VLCPlayer().get_length(),
+                             VLCPlayer().get_selected_sub(),
+                             VLCPlayer().get_subtitle_tracks(),
+                             VLCPlayer().get_subtitle_delay() / 1000 / 1000,
                              True,
-                             Managers.GUIManager.GUIManager().player.get_audio_tracks(),
-                             Managers.GUIManager.GUIManager().player.get_audio_track(),
+                             VLCPlayer().get_audio_tracks(),
+                             VLCPlayer().get_audio_track(),
                              percentage)
         return media
 

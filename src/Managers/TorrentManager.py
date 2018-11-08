@@ -2,7 +2,6 @@ import datetime
 import time
 
 from Database.Database import Database
-from UI.TV.VLCPlayer import PlayerState
 from MediaPlayer.DHT.Engine import DHTEngine
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
 from MediaPlayer.Torrent.Torrent import Torrent
@@ -10,6 +9,7 @@ from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import current_time, Singleton
+from UI.TV.VLCPlayer import PlayerState
 
 
 class TorrentManager(metaclass=Singleton):
@@ -51,7 +51,7 @@ class TorrentManager(metaclass=Singleton):
 
             time.sleep(1)
 
-    def media_file_set(self):
+    def media_file_set(self, file_name):
         if Database().last_history_add < self.last_torrent_start - 100:
             Database().add_watched_torrent_file(self.torrent.name, self.torrent.uri, self.torrent.media_file.path, datetime.datetime.now().isoformat())
 

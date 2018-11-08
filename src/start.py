@@ -2,6 +2,9 @@
 import os
 from datetime import datetime
 
+from MediaPlayer.NextEpisodeManager import NextEpisodeManager
+from UI.TV.GUI import GUI
+from UI.TV.VLCPlayer import VLCPlayer
 from UI.Web.Server.TornadoServer import TornadoServer
 
 os.chdir(os.path.dirname(__file__))
@@ -10,8 +13,6 @@ from Managers.Observer import Observer
 from Managers.TorrentManager import TorrentManager
 
 from Automation.LightController import LightManager
-
-from Managers.GUIManager import GUIManager
 
 import sys
 import time
@@ -64,14 +65,20 @@ class Program:
 
         Logger.write(2, "Started")
         if Settings.get_bool("show_gui"):
-            GUIManager().start_gui()
+            self.app, self.gui = GUI.new_gui(self)
+
+            if self.gui is not None:
+                self.gui.showFullScreen()
+                sys.exit(self.app.exec_())
+
         else:
             while self.running:
                 time.sleep(5)
 
     @staticmethod
     def init_singletons():
-        GUIManager()
+        VLCPlayer()
+        NextEpisodeManager()
         TorrentManager()
         Observer()
         LightManager()

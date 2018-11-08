@@ -74,6 +74,7 @@ class GUI(QtGui.QMainWindow):
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.selection_required)
         EventManager.register_event(EventType.TorrentMediaFileSelection, self.selection_done)
         EventManager.register_event(EventType.RetrievedAddress, self.set_address)
+        EventManager.register_event(EventType.WiFiQualityUpdate, self.set_wifi_quality)
 
         self.general_info_panel = GeneralInfoPanel(self, 10, 10, 260, 160)
         self.loading_panel = LoadingPanel(self, self.width / 2 - 150, self.height / 2 - 100, 300, 200)

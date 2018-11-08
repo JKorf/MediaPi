@@ -62,6 +62,7 @@ class TornadoServer:
         thread.start()
 
     def internal_start(self):
+        WebsocketController.init()
         asyncio.set_event_loop(asyncio.new_event_loop())
         asyncio.set_event_loop_policy(AnyThreadEventLoopPolicy())
         while True:
