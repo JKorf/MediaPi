@@ -15,6 +15,10 @@ class Node:
             return NodeState.Questionable
         return NodeState.Good
 
+    @property
+    def uri(self):
+        return "tcp://" + self.ip + ":" + str(self.port)
+
     def __init__(self, ip, port, id):
         self.byte_id = id
         self.int_id = int(self.byte_id.hex(), 16)

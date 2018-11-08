@@ -3,7 +3,7 @@ import os
 import time
 from random import Random
 
-from MediaPlayer.DHT2.Messages import ResponseDHTMessage
+from MediaPlayer.DHT2.Messages import ResponseDHTMessage, ErrorDHTMessage
 from MediaPlayer.DHT2.Node import Node, NodeState
 from MediaPlayer.DHT2.Socket import Socket
 from MediaPlayer.DHT2.Table import Table
@@ -29,6 +29,7 @@ class DHTEngine(metaclass=Singleton):
         self.engine.queue_repeating_work_item("DHT Save nodes", 1000 * 60 * 5, self.save_nodes, False)
 
         self.running_tasks = []
+        self.torrent_nodes = dict()
 
         EventManager.register_event(EventType.RequestPeers, self.search_peers)
         EventManager.register_event(EventType.NewDHTNode, self.add_node)
@@ -37,6 +38,7 @@ class DHTEngine(metaclass=Singleton):
     def log_table(self):
         with Logger.lock:
             Logger.write(3, "-- DHT routing table --")
+            Logger.write(3, "Torrent nodes: " + str(len(self.torrent_nodes)))
             Logger.write(3, "Own ID: " + str(self.own_node.int_id))
             for bucket in sorted(self.routing_table.buckets, key=lambda x: x.start):
                 Logger.write(3, "Bucket from " + str(bucket.start) + " to " + str(bucket.end) + ", " + str(len(bucket.nodes)) + " nodes")
@@ -54,22 +56,41 @@ class DHTEngine(metaclass=Singleton):
         self.routing_table.fail_node(ip, port)
 
     def on_query(self, ip, port, message):
+        request_node = Node(ip, port, message.id)
         if message.query == b"ping":
             response = ResponseDHTMessage.create_ping_response(self.own_node.byte_id, message.transaction_id)
             self.socket.send_response(response, ip, port)
+            Logger.write(1, "DHT: Sent ping response")
         elif message.query == b"find_node":
             found_node = self.routing_table.get_node(message.target)
             if found_node is not None:
                 self.socket.send_response(ResponseDHTMessage.create_find_node_response(self.own_node.byte_id, message.transaction_id, None, found_node.byte_id), ip, port)
+                Logger.write(1, "DHT: Sent find_node response; found node")
             else:
                 closest_nodes = self.routing_table.get_closest_nodes(message.target)
                 self.socket.send_response(ResponseDHTMessage.create_find_node_response(self.own_node.byte_id, message.transaction_id, bytes(Node.node_bytes_multiple(closest_nodes)), None), ip, port)
+                Logger.write(1, "DHT: Sent find_node response; sending " + str(len(closest_nodes)) + " closest nodes")
         elif message.query == b"get_peers":
-            closest_nodes = self.routing_table.get_closest_nodes(message.info_hash)
-            token = TokenManager.generate_token(Node(ip, port, message.id))
-            self.socket.send_response(ResponseDHTMessage.create_get_peers_response(self.own_node.byte_id, message.transaction_id, bytes(Node.node_bytes_multiple(closest_nodes)), None, token), ip, port)
+            token = TokenManager.generate_token(request_node)
+            if message.info_hash in self.torrent_nodes:
+                nodes = Node.node_bytes_multiple(self.torrent_nodes[message.info_hash])
+                response = ResponseDHTMessage.create_get_peers_response(self.own_node.byte_id, message.transaction_id, None, bytes(nodes), token)
+                Logger.write(1, "DHT: Sent get_peers response; found " + str(len(nodes)) + " peers")
+            else:
+                closest_nodes = self.routing_table.get_closest_nodes(message.info_hash)
+                response = ResponseDHTMessage.create_get_peers_response(self.own_node.byte_id, message.transaction_id, bytes(Node.node_bytes_multiple(closest_nodes)), None, token)
+                Logger.write(1, "DHT: Sent get_peers response; sending closest " + str(len(closest_nodes)) + " nodes")
+            self.socket.send_response(response, ip, port)
         elif message.query == b"announce_peer":
-            pass
+            if not TokenManager.verify_token(request_node, message.token):
+                self.socket.send_response(ErrorDHTMessage(message.transaction_id, 203, "Invalid token"), ip, port)
+                Logger.write(1, "DHT: Received invalid token for announce_peer")
+            else:
+                if message.info_hash not in self.torrent_nodes:
+                    self.torrent_nodes[message.info_hash] = []
+                self.torrent_nodes[message.message.info_hash].append(request_node)
+                self.socket.send_response(ResponseDHTMessage.create_announce_peer_response(self.own_node.byte_id, message.transaction_id), ip, port)
+                Logger.write(1, "DHT: Received announce_peer, added to dict")
         else:
             Logger.write(2, "DHT: received unknown query: " + str(message.query))
 
@@ -85,6 +106,10 @@ class DHTEngine(metaclass=Singleton):
         self.start_task(FindNodeTask(self, self.own_node.byte_id, self.own_node, self.routing_table.all_nodes()))
 
     def search_peers(self, torrent):
+        if torrent.info_hash.sha1_hashed_bytes in self.torrent_nodes:
+            Logger.write(2, "DHT: found " + str(len(self.torrent_nodes[torrent.info_hash.sha1_hashed_bytes])) + " nodes in torrent_nodes")
+            EventManager.throw_event(EventType.PeersFound, [[x.uri for x in self.torrent_nodes[torrent.info_hash.sha1_hashed_bytes]], PeerSource.DHT])
+
         self.start_task(GetPeersTask(self, self.own_node.byte_id, torrent.info_hash.sha1_hashed_bytes, self.routing_table.get_closest_nodes(hash)), lambda x: EventManager.throw_event(EventType.PeersFound, [x.found_peers, PeerSource.DHT]))
 
     def start_task(self, task, on_complete=None):

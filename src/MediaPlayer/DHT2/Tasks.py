@@ -162,7 +162,8 @@ class GetPeersTask(BaseTask):
         if b'values' in data.response:
             Logger.write(1, "DHT: GetPeers request got values response")
             for peer_data in data.values:
-                self.found_peers.append(ip_port_from_bytes(peer_data))
+                ip, port = ip_port_from_bytes(peer_data)
+                self.found_peers.append("tcp://" + ip + ":" + str(port))
 
         elif b'nodes' in data.response:
             Logger.write(1, "DHT: GetPeers request got nodes response")
