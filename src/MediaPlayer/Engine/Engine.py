@@ -48,12 +48,6 @@ class Engine:
     def queue_repeating_work_item(self, name, interval, work_item, initial_invoke=True):
         self.work_items.append(EngineWorkItem(name, interval, work_item, initial_invoke))
 
-    def queue_single_work_item(self, name, work_item):
-        self.work_items.append(EngineWorkItem(name, -1, work_item))
-
-    def invoke_work_item(self, name):
-        [x for x in self.work_items if x.name is name][0].last_run_time = 0
-
     def stop(self):
         self.running = False
         EventManager.deregister_event(self.event_id)
@@ -88,7 +82,7 @@ class Engine:
         if self.own_time.ticks > 1:
             with Logger.lock:
                 Logger.write(3, "-- Engine "+self.name + " --")
-                log_str = self.own_time.print()
+                log_str = self.own_time.print() + ", tick time: " + str(self.tick_time)
                 if self.current_item:
                     log_str += ", CT: " + str(current_time() - self.start_time) + " @ " + str(self.current_item.name)
                 Logger.write(3, log_str)

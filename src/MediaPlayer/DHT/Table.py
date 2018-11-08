@@ -5,6 +5,7 @@ from MediaPlayer.DHT.Bucket import Bucket
 from MediaPlayer.DHT.Node import Node
 from MediaPlayer.DHT.Tasks import PingTask
 from Shared.Logger import Logger
+from Shared.Util import current_time
 
 
 class Table:
@@ -29,18 +30,22 @@ class Table:
         for bucket in self.buckets:
             if bucket.fits(node.int_id):
                 self.add_to_bucket(bucket, node)
+                return
 
     def update_node(self, id):
         for bucket in self.buckets:
             for node in bucket.nodes:
                 if node.byte_id == id:
                     node.seen()
+                    bucket.last_update = current_time()
+                    return
 
     def fail_node(self, ip, port):
         for bucket in self.buckets:
             for node in bucket.nodes:
                 if node.ip == ip and node.port == port:
                     node.fail()
+                    return
 
     def contains_node(self, id_bytes):
         for bucket in self.buckets:
@@ -65,12 +70,12 @@ class Table:
             result.extend(bucket.nodes)
         return result
 
-    def add_to_bucket(self, bucket, node):
+    def add_to_bucket(self, bucket, new_node):
         if bucket.full():
             questionable_nodes = bucket.questionable_nodes()
             if len(questionable_nodes) != 0:
                 task = PingTask(self.dht_engine, self.dht_engine.own_node.byte_id, questionable_nodes[0].ip, questionable_nodes[0].port)
-                task.on_complete = lambda: self.add_to_bucket(bucket, node)  # when the ping returns the node is either bad or no longer questionable
+                task.on_complete = lambda: self.add_to_bucket(bucket, new_node)  # when the ping returns the node is either bad or no longer questionable
                 task.execute()
                 return
 
@@ -81,13 +86,14 @@ class Table:
                 split_nodes = bucket.split()
                 for node in split_nodes:
                     new_bucket.add_node(node)
+
                 self.buckets.append(new_bucket)
-                if new_bucket.fits(node.int_id):
-                    self.add_to_bucket(new_bucket, node)
+                if new_bucket.fits(new_node.int_id):
+                    self.add_to_bucket(new_bucket, new_node)
                 else:
-                    self.add_to_bucket(bucket, node)
+                    self.add_to_bucket(bucket, new_node)
             else:
                 Logger.write(1, "DHT: Skipping adding of node, bucket is full")
         else:
-            bucket.add_node(node)
-            Logger.write(1, "DHT: Node added to bucket")
+            bucket.add_node(new_node)
+            Logger.write(1, "DHT: Node " + str(new_node.int_id) + " added to bucket")
