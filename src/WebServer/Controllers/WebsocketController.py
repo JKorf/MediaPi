@@ -222,6 +222,6 @@ class WebsocketController:
                            torrent.overhead)
 
         if Settings.get_bool("dht"):
-            de.add_dht(TorrentManager().dht.routing_table.count_nodes())
+            de.add_dht(len(TorrentManager().dht.routing_table.all_nodes()))
 
         return de

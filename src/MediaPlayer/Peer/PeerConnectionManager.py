@@ -5,7 +5,7 @@ from Shared.Stats import Stats
 from Shared.Util import current_time
 from MediaPlayer.Connections import TcpClient
 from MediaPlayer.Peer.PeerMessages import KeepAliveMessage
-from MediaPlayer.Util.Enums import ConnectionState, ReceiveState
+from MediaPlayer.Util.Enums import ConnectionState, ReceiveState, PeerSource
 from MediaPlayer.Util.Network import *
 
 
@@ -43,10 +43,21 @@ class PeerConnectionManager:
             return
 
         self.connected_on = current_time()
+        self.add_connected_peer_stat(self.peer.source)
         Stats.add('peers_connect_success', 1)
         Logger.write(1, str(self.peer.id) + ' connected to ' + str(self.uri.netloc))
         self.connection_state = ConnectionState.Connected
         self.connection.socket.setblocking(0)
+
+    def add_connected_peer_stat(self, source):
+        if source == PeerSource.DHT:
+            Stats.add('peers_source_dht_connected', 1)
+        elif source == PeerSource.HttpTracker:
+            Stats.add('peers_source_http_tracker_connected', 1)
+        elif source == PeerSource.UdpTracker:
+            Stats.add('peers_source_udp_tracker_connected', 1)
+        elif source == PeerSource.PeerExchange:
+            Stats.add('peers_source_exchange_connected', 1)
 
     def on_readable(self):
         self.handle_read()

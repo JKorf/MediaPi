@@ -55,7 +55,7 @@ class RequestFactory:
             return http_response.body
         except Exception as e:
             Logger.write(2, "Error requesting url " + url + ": " + str(e))
-            return None
+            return ""
 
     @staticmethod
     def make_request(path, method="GET", useragent=None):

@@ -69,15 +69,21 @@ class MediaInfo:
 class Info:
 
     def __init__(self, running_for, peers_attempted, peers_failed, peers_succeeded, peers_from_dht, peers_from_udp_tracker, peers_from_http_tracker, peers_from_pex,
-                 total_downloaded, threads_started, subs_downloaded, play_time, max_download):
+                 total_downloaded, threads_started, subs_downloaded, play_time, max_download, connected_dht, connected_udp, connected_http, connected_pex):
         self.running_for = running_for
         self.peers_attempted = peers_attempted
         self.peers_failed = peers_failed
         self.peers_succeeded = peers_succeeded
+
         self.peers_from_dht = peers_from_dht
         self.peers_from_udp_tracker = peers_from_udp_tracker
         self.peers_from_http_tracker = peers_from_http_tracker
         self.peers_from_pex = peers_from_pex
+        self.peers_from_dht_connected = connected_dht
+        self.peers_from_udp_tracker_connected = connected_udp
+        self.peers_from_http_tracker_connected = connected_http
+        self.peers_from_pex_connected = connected_pex
+
         self.total_downloaded = total_downloaded
         self.threads_started = threads_started
         self.subs_downloaded = subs_downloaded

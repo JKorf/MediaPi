@@ -3,12 +3,12 @@ import os
 import time
 from random import Random
 
-from MediaPlayer.DHT2.Messages import ResponseDHTMessage, ErrorDHTMessage
-from MediaPlayer.DHT2.Node import Node, NodeState
-from MediaPlayer.DHT2.Socket import Socket
-from MediaPlayer.DHT2.Table import Table
-from MediaPlayer.DHT2.Tasks import FindNodeTask, GetPeersTask, PingTask
-from MediaPlayer.DHT2.Util import TokenManager
+from MediaPlayer.DHT.Messages import ResponseDHTMessage, ErrorDHTMessage
+from MediaPlayer.DHT.Node import Node, NodeState
+from MediaPlayer.DHT.Socket import Socket
+from MediaPlayer.DHT.Table import Table
+from MediaPlayer.DHT.Tasks import FindNodeTask, GetPeersTask, PingTask
+from MediaPlayer.DHT.Util import TokenManager
 from MediaPlayer.Engine.Engine import Engine
 from MediaPlayer.Util.Enums import PeerSource
 from Shared.Events import EventManager, EventType
@@ -110,7 +110,7 @@ class DHTEngine(metaclass=Singleton):
             Logger.write(2, "DHT: found " + str(len(self.torrent_nodes[torrent.info_hash.sha1_hashed_bytes])) + " nodes in torrent_nodes")
             EventManager.throw_event(EventType.PeersFound, [[x.uri for x in self.torrent_nodes[torrent.info_hash.sha1_hashed_bytes]], PeerSource.DHT])
 
-        self.start_task(GetPeersTask(self, self.own_node.byte_id, torrent.info_hash.sha1_hashed_bytes, self.routing_table.get_closest_nodes(hash)), lambda x: EventManager.throw_event(EventType.PeersFound, [x.found_peers, PeerSource.DHT]))
+        self.start_task(GetPeersTask(self, self.own_node.byte_id, torrent.info_hash.sha1_hashed_bytes, self.routing_table.get_closest_nodes(torrent.info_hash.sha1_hashed_bytes)), lambda x: EventManager.throw_event(EventType.PeersFound, [x.found_peers, PeerSource.DHT]))
 
     def start_task(self, task, on_complete=None):
         Logger.write(1, "DHT: starting " + type(task).__name__)
@@ -119,7 +119,7 @@ class DHTEngine(metaclass=Singleton):
         task.execute()
 
     def end_task(self, task, on_complete):
-        Logger.write(2, "DHT: " + type(task).__name__ + " completed in " + str(task.end_time - task.start_time) + "ms")
+        Logger.write(1, "DHT: " + type(task).__name__ + " completed in " + str(task.end_time - task.start_time) + "ms")
         self.running_tasks.remove(task)
         if on_complete:
             on_complete(task)

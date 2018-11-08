@@ -24,6 +24,26 @@
         </div>
 
         <div class="row">
+            <div class="col-xs-1"></div>
+             <div class="col-xs-3">DHT</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_dht_connected)}}</div>
+        </div>
+        <div class="row">
+            <div class="col-xs-1"></div>
+             <div class="col-xs-3">Http tr.</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_http_tracker_connected)}}</div>
+        </div>
+        <div class="row">
+            <div class="col-xs-1"></div>
+             <div class="col-xs-3">Udp tr.</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_udp_tracker_connected)}}</div>
+        </div>
+        <div class="row">
+            <div class="col-xs-1"></div>
+             <div class="col-xs-3">PEX</div>
+            <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_pex_connected)}}</div>
+        </div>
+        <div class="row">
             <div class="col-xs-12 statistics-title">Peer sources</div>
             <div class="col-xs-5">Http tr.</div>
             <div class="col-xs-7 align-right">{{write_big_number(info.peers_from_http_tracker)}}</div>

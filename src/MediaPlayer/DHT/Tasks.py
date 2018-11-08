@@ -1,9 +1,9 @@
 from random import Random
 from threading import Lock
 
-from MediaPlayer.DHT2.Node import Node
-from MediaPlayer.DHT2.Messages import QueryDHTMessage
-from MediaPlayer.DHT2.Util import DHTTaskState
+from MediaPlayer.DHT.Node import Node
+from MediaPlayer.DHT.Messages import QueryDHTMessage
+from MediaPlayer.DHT.Util import DHTTaskState
 from MediaPlayer.Util.Util import ip_port_from_bytes
 from Shared.Logger import Logger
 from Shared.Util import current_time
@@ -137,7 +137,7 @@ class GetPeersTask(BaseTask):
         super().__init__(dht_engine)
         self.id = id
         self.info_hash = info_hash
-        self.info_hash_int = int(info_hash.hex, 16)
+        self.info_hash_int = int(info_hash.hex(), 16)
         self.available_nodes = []
         self.closest_nodes = []
         self.closest_nodes_lock = Lock()
@@ -194,7 +194,7 @@ class GetPeersTask(BaseTask):
 
     def check_done(self):
         if self.outstanding_requests == 0:
-            Logger.write(2, "DHT: GetPeers found " + str(self.found_peers) + " peers")
+            Logger.write(2, "DHT: GetPeers found " + str(len(self.found_peers)) + " peers")
             self.complete()
 
 

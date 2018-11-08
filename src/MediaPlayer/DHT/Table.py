@@ -1,9 +1,9 @@
 import os
 import socket
 
-from MediaPlayer.DHT2.Bucket import Bucket
-from MediaPlayer.DHT2.Node import Node
-from MediaPlayer.DHT2.Tasks import PingTask
+from MediaPlayer.DHT.Bucket import Bucket
+from MediaPlayer.DHT.Node import Node
+from MediaPlayer.DHT.Tasks import PingTask
 from Shared.Logger import Logger
 
 

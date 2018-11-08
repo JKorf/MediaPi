@@ -129,8 +129,6 @@ class TrackerManager:
         self.running = True
 
         self.tracker_retry = Settings.get_int("tracker_retry")
-        self.last_dht_get = 0
-
         self.request_peers_id = EventManager.register_event(EventType.RequestPeers, self.request_peers)
 
     def request_peers(self, torrent):

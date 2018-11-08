@@ -1,8 +1,26 @@
 import abc
 
+from MediaPlayer.DHT.Util import TransactionIdManager
 from Shared.Logger import Logger
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
+
+
+class QueryMessage:
+
+    def __init__(self, node_message, send_at, on_response, on_timeout):
+        self.message = node_message
+        self.send_at = send_at
+        self.on_response = on_response
+        self.on_timeout = on_timeout
+
+
+class NodeMessage:
+
+    def __init__(self, ip, port, message):
+        self.ip = ip
+        self.port = port
+        self.message = message
 
 
 class BaseDHTMessage:
@@ -66,6 +84,7 @@ class QueryDHTMessage(BaseDHTMessage):
         self.query = query
         self.args = args
         self.node_id = node_id
+        self.transaction_id = TransactionIdManager.next_trans_id()
         if not self.args:
             self.args = dict()
         self.args[b'id'] = self.node_id
