@@ -12,7 +12,7 @@ from Shared.Util import current_time, Singleton
 class Database(metaclass=Singleton):
 
     def __init__(self):
-        self.path = Settings.get_string("base_folder") + "database.data"
+        self.path = Settings.get_string("base_folder") + "Solution/database.data"
         self.slave = Settings.get_bool("slave")
         self.database = None
         self.connection = None

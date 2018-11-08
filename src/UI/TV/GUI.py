@@ -161,6 +161,7 @@ class GUI(QtGui.QMainWindow):
         self.general_info_panel.set_currently_playing(self.currently_playing)
         self.general_info_panel.show()
         self.select_file_panel.hide()
+        self.weather_panel.show()
         self.time_panel.show()
         self.loading_panel.hide()
         if cycle_background or should_cycle_background:
