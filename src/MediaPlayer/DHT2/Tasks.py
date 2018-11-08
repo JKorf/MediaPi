@@ -84,6 +84,7 @@ class FindNodeTask(BaseTask):
 
     def execute_internal(self):
         self.request_nodes()
+        self.check_done()
 
     def request_nodes(self):
         to_request = max(self.max_outstanding_requests - self.outstanding_requests, len(self.available_nodes))

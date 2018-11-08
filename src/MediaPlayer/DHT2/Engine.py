@@ -32,6 +32,14 @@ class DHTEngine(metaclass=Singleton):
 
         EventManager.register_event(EventType.RequestPeers, self.search_peers)
         EventManager.register_event(EventType.NewDHTNode, self.add_node)
+        EventManager.register_event(EventType.Log, self.log_table)
+
+    def log_table(self):
+        with Logger.lock:
+            Logger.write(3, "-- DHT routing table --")
+            Logger.write(3, "Own ID: " + str(self.own_node.int_id))
+            for bucket in sorted(self.routing_table.buckets, key=lambda x: x.start):
+                Logger.write(3, "Bucket from " + str(bucket.start) + " to " + str(bucket.end) + ", " + str(len(bucket.nodes)) + " nodes")
 
     def add_node(self, ip, port):
         self.start_task(PingTask(self, self.own_node.byte_id, ip, port))
@@ -80,6 +88,7 @@ class DHTEngine(metaclass=Singleton):
         self.start_task(GetPeersTask(self, self.own_node.byte_id, torrent.info_hash.sha1_hashed_bytes, self.routing_table.get_closest_nodes(hash)), lambda x: EventManager.throw_event(EventType.PeersFound, [x.found_peers, PeerSource.DHT]))
 
     def start_task(self, task, on_complete=None):
+        Logger.write(1, "DHT: starting " + type(task).__name__)
         task.on_complete = lambda: self.end_task(task, on_complete)
         self.running_tasks.append(task)
         task.execute()

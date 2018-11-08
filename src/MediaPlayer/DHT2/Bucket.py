@@ -1,4 +1,5 @@
 from MediaPlayer.DHT2.Node import NodeState
+from Shared.Logger import Logger
 from Shared.Util import current_time
 
 
@@ -10,6 +11,8 @@ class Bucket:
         self.max_nodes = 8
         self.nodes = []
         self.last_changed = 0
+
+        Logger.write(1, "Creating new bucket from " + str(self.start) + " to " + str(self.end))
 
     def split(self):
         self.start += (self.end - self.start) // 2
