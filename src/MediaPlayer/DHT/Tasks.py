@@ -114,7 +114,7 @@ class FindNodeTask(BaseTask):
 
             self.closest_nodes.sort(key=lambda x: x.node.distance(self.target.int_id))
 
-            for node in self.closest_nodes[:10]:
+            for node in self.closest_nodes[:8]:
                 if node.requested:
                     continue
 
@@ -181,7 +181,7 @@ class GetPeersTask(BaseTask):
 
             self.closest_nodes.sort(key=lambda x: x.node.distance(self.info_hash_int))
 
-            for node in self.closest_nodes[:10]:
+            for node in self.closest_nodes[:8]:
                 if node.requested:
                     continue
 
