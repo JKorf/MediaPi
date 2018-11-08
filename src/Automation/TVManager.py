@@ -93,7 +93,7 @@ class TVManager(metaclass=Singleton):
     def __request(self, command):
         try:
             Logger.write(2, "TV manager sending command: " + command)
-            result = str(subprocess.check_output(command + ' -d ' + TVManager.debug_level, shell=True))
+            result = subprocess.check_output(command + ' -d ' + TVManager.debug_level, shell=True).decode("utf8")
             Logger.write(2, "TV manager result: " + str(result))
             return result
         except subprocess.TimeoutExpired:
