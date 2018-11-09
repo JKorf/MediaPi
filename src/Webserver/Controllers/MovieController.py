@@ -3,6 +3,7 @@ import time
 import urllib.parse
 import urllib.request
 
+from Webserver.Models import Media
 from Webserver.Providers.Movies.PopcornMovieProvider import PopcornMovieProvider
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -45,7 +46,7 @@ class MovieController:
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
-        EventManager.throw_event(EventType.PreparePlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, urllib.parse.unquote(img), 0, None])
+        EventManager.throw_event(EventType.PreparePlayer, [Media("Movie", id, urllib.parse.unquote(title), MovieController.server_uri, None, urllib.parse.unquote(img), 0)])
         EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), None])
 
     @staticmethod
@@ -62,7 +63,7 @@ class MovieController:
             if file == "null":
                 file = None
 
-            EventManager.throw_event(EventType.PreparePlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, img, int(float(position)) * 1000, media_file])
+            EventManager.throw_event(EventType.PreparePlayer, [Media("Movie", 0, urllib.parse.unquote(title), MovieController.server_uri, media_file, img, int(float(position)) * 1000)]) #TODO
             EventManager.throw_event(EventType.StartTorrent, [url, file])
         else:
             if Settings.get_bool("slave"):
@@ -71,5 +72,5 @@ class MovieController:
                 if sys.platform == "linux" or sys.platform == "linux2":
                     if not url.startswith("/"):
                         url = "/" + url
-                EventManager.throw_event(EventType.PreparePlayer, ["File", urllib.parse.unquote(title), url, img, int(float(position)) * 1000, url])
+                EventManager.throw_event(EventType.PreparePlayer, [Media("File", 0, urllib.parse.unquote(title), url, url, img, int(float(position)) * 1000)])#TODO
                 EventManager.throw_event(EventType.StartPlayer, [])

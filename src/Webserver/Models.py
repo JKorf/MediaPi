@@ -235,3 +235,17 @@ class CecDevice:
         self.active = False
         self.vendor = None
         self.osd = None
+
+
+class Media:
+
+    def __init__(self, type, id, title, path, file, image, start_time, season=0, episode=0):
+        self.image = image
+        self.id = id
+        self.title = title
+        self.path = path
+        self.file = file
+        self.type = type
+        self.start_time = start_time
+        self.season = season
+        self.episode = episode

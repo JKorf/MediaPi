@@ -26,12 +26,7 @@ class VLCPlayer(metaclass=Singleton):
 
         self.set_volume(75)
 
-        self.type = None
-        self.title = None
-        self.path = None
-        self.img = None
-        self.time = 0
-        self.filename = None
+        self.media = None
         self.prepared = False
 
         self.state = PlayerState.Nothing
@@ -66,13 +61,8 @@ class VLCPlayer(metaclass=Singleton):
         self.__vlc_instance = vlc.Instance("vlc", *parameters)
         Logger.write(3, "VLC version " + libvlc_get_version().decode('utf8'))
 
-    def prepare_play(self, type, title, url, img=None, time=0, filename=None):
-        self.type = type
-        self.title = title
-        self.path = url
-        self.img = img
-        self.time = time
-        self.filename = filename
+    def prepare_play(self, media):
+        self.media = media
         self.prepared = True
 
     def play(self, time=0, filename=None):
@@ -80,20 +70,20 @@ class VLCPlayer(metaclass=Singleton):
             raise ValueError("Player not prepared")
 
         if time != 0:
-            self.time = time
+            self.media.start_time = time
         if filename is not None:
-            self.filename = filename
+            self.media.file = filename
 
         parameters = self.get_play_parameters()
 
-        Logger.write(2, "VLC Play | Type: " + self.type)
-        Logger.write(2, "VLC Play | Title: " + self.title)
-        Logger.write(2, "VLC Play | Url: " + self.path)
-        Logger.write(2, "VLC Play | Time: " + str(self.time))
-        Logger.write(2, "VLC Play | Filename: " + str(self.filename))
+        Logger.write(2, "VLC Play | Type: " + self.media.type)
+        Logger.write(2, "VLC Play | Title: " + self.media.title)
+        Logger.write(2, "VLC Play | Url: " + self.media.path)
+        Logger.write(2, "VLC Play | Time: " + str(self.media.start_time))
+        Logger.write(2, "VLC Play | Filename: " + str(self.media.file))
         Logger.write(2, "VLC Play | Parameters: " + str(parameters))
 
-        self.__player.set_mrl(self.path, *parameters)
+        self.__player.set_mrl(self.media.path, *parameters)
         return self.__player.play() != -1
 
     @staticmethod
@@ -115,16 +105,16 @@ class VLCPlayer(metaclass=Singleton):
 
     def get_play_parameters(self):
         params = []
-        if self.type == "YouTube":
+        if self.media.type == "YouTube":
             params.append("lua-intf=youtube")
 
-        if self.time != 0:
-            params.append("start-time=" + str(self.time // 1000))
+        if self.media.start_time != 0:
+            params.append("start-time=" + str(self.media.start_time // 1000))
 
-        if self.type != "File":
-            if self.time != 0 and self.filename.endswith("mp4"):
+        if self.media.type != "File":
+            if self.media.start_time != 0 and self.media.file.endswith("mp4"):
                 params.append("demux=avformat")
-            elif self.filename is not None and self.filename.endswith("avi"):
+            elif self.media.file is not None and self.media.file.endswith("avi"):
                 params.append("demux=avformat")
         return params
 
@@ -132,7 +122,7 @@ class VLCPlayer(metaclass=Singleton):
         self.play(0, file_name)
 
     def user_file_selected(self, path):
-        self.title = os.path.basename(path)
+        self.media.title = os.path.basename(path)
 
     def pause_resume(self):
         self.__player.pause()
@@ -141,10 +131,7 @@ class VLCPlayer(metaclass=Singleton):
         pos = self.get_position()
         length = self.get_length()
         self.__player.stop()
-        self.type = None
-        self.title = None
-        self.img = None
-        self.path = None
+        self.media = None
         self.prepared = False
         self.youtube_end_counter = 0
         EventManager.throw_event(EventType.PlayerStopped, [pos, length])
@@ -320,7 +307,7 @@ class VLCPlayer(metaclass=Singleton):
         EventManager.throw_event(EventType.PlayerStateChange, [old, new])
 
         if new == PlayerState.Ended:
-            if self.type != "YouTube":
+            if self.media.type != "YouTube":
                 thread = CustomThread(self.stop, "Stopping player")
                 thread.start()
 

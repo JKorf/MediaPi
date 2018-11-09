@@ -5,7 +5,7 @@ from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Util import to_JSON
 from Webserver.Controllers.MovieController import MovieController
-from Webserver.Models import TorrentModel
+from Webserver.Models import TorrentModel, Media
 from Webserver.Providers.TorrentProvider import TPB, Torrent, CATEGORIES, ORDERS
 
 
@@ -37,4 +37,4 @@ class TorrentController:
         time.sleep(1)
         if url.endswith('.torrent') or url.startswith('magnet:'):
             EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), None])
-            EventManager.throw_event(EventType.PreparePlayer, ["Movie", urllib.parse.unquote(title), MovieController.server_uri, None, 0, None])
+            EventManager.throw_event(EventType.PreparePlayer, [Media("Torrent", 0, urllib.parse.unquote(title), MovieController.server_uri, None, None, 0)])

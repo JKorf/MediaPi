@@ -150,7 +150,6 @@
                 var path = concatPath($scope.current.path, file);
                 $http.post("/hd/play_file?filename=" + encodeURIComponent(file)+"&path=" + encodeURIComponent(path));
 
-                HistoryFactory.AddWatchedFile(file, path, new Date());
                 $timeout(function(){
                     HistoryFactory.GetWatched().then(function(data){
                         $scope.watchedFiles = data;

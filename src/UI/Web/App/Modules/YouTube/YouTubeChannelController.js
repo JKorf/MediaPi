@@ -35,7 +35,6 @@
         $scope.watchVideo = function(media){
             ConfirmationFactory.confirm_play().then(function(){
                 $rootScope.$broadcast("startPlay", {title: media.title, type: "YouTube"});
-                HistoryFactory.AddWatchedYouTube(media.title, new Date())
                 $http.post('/youtube/play_youtube?id=' + media.id+'&title=' + encodeURIComponent(media.title));
             });
         }

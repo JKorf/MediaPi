@@ -104,12 +104,12 @@ class Database(metaclass=Singleton):
             self.disconnect()
         return data
 
-    def add_watched_file(self, title, url, watched_at):
+    def add_watched_file(self, title, url, watched_at, media_file):
         if self.slave:
             raise PermissionError("Cant call add_watched_file on slave")
 
-        sql = "INSERT INTO History (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
-        parameters = ["File", title, url, watched_at]
+        sql = "INSERT INTO History (Type, Title, URL, WatchedAt, MediaFile) VALUES (?, ?, ?, ?, ?)"
+        parameters = ["File", title, url, watched_at, media_file]
 
         with self.lock:
             self.connect()
@@ -119,41 +119,41 @@ class Database(metaclass=Singleton):
             self.database.commit()
             self.disconnect()
 
-    def add_watched_episode(self, title, show_id, image, season, episode, watched_at):
+    def add_watched_episode(self, title, show_id, url, media_file, image, season, episode, watched_at):
         if self.slave:
             raise PermissionError("Cant call add_watched_episode on slave")
 
         with self.lock:
             self.connect()
             self.connection.execute("INSERT INTO History " +
-                                    "(Type, ImdbId, Title, Image, Season, Episode, WatchedAt)" +
-                                    " VALUES (?, ?, ?, ?, ?, ?, ?)", ["Show", str(show_id), title, str(image), str(season), str(episode), str(watched_at)])
+                                    "(Type, ImdbId, Title, Image, URL, MediaFile, Season, Episode, WatchedAt)" +
+                                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", ["Show", str(show_id), title, str(image), str(url), str(media_file), str(season), str(episode), str(watched_at)])
             self.last_history_add = current_time()
             self.database.commit()
             self.disconnect()
 
-    def add_watched_youtube(self, title, watched_at):
+    def add_watched_youtube(self, title, watched_at, id, url):
         if self.slave:
             raise PermissionError("Cant call add_watched_youtube on slave")
 
         with self.lock:
             self.connect()
             self.connection.execute("INSERT INTO History " +
-                                    "(Type, title, WatchedAt)" +
-                                    " VALUES (?, ?, ?)", ["YouTube", title, str(watched_at)])
+                                    "(Type, title, WatchedAt, ImdbId, URL)" +
+                                    " VALUES (?, ?, ?, ?, ?)", ["YouTube", title, str(watched_at), id, url])
             self.last_history_add = current_time()
             self.database.commit()
             self.disconnect()
 
-    def add_watched_movie(self, title, movie_id, image, watched_at):
+    def add_watched_movie(self, title, movie_id, image, watched_at, url, media_file):
         if self.slave:
             raise PermissionError("Cant call add_watched_movie on slave")
 
         with self.lock:
             self.connect()
             self.connection.execute("INSERT INTO History " +
-                                    "(Type, ImdbId, Title, Image, WatchedAt)" +
-                                    " VALUES (?, ?, ?, ?, ?)", ["Movie", str(movie_id), title, str(image), str(watched_at)])
+                                    "(Type, ImdbId, Title, Image, WatchedAt, URL, MediaFile)" +
+                                    " VALUES (?, ?, ?, ?, ?, ?, ?)", ["Movie", str(movie_id), title, str(image), str(watched_at), str(url), str(media_file)])
             self.last_history_add = current_time()
             self.database.commit()
             self.disconnect()

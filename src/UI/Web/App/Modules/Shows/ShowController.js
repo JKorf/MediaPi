@@ -51,15 +51,12 @@
                 $rootScope.$broadcast("startPlay", {title: "[S"+addLeadingZero(episode.season)+"E"+addLeadingZero(episode.episode)+"] " + $scope.show.title, type: "Show"});
 
                 var title = "[S"+addLeadingZero(episode.season)+"E"+addLeadingZero(episode.episode)+"]" + encodeURIComponent(" " + $scope.show.title);
-                $http.post('/shows/play_episode?url=' + encodeURIComponent(episode.torrents[$scope.selectedResolution.resolution].url) + '&title=' + title + '&img=' + encodeURIComponent($scope.show.images.poster));
-
-                HistoryFactory.AddWatchedShow($scope.show._id, $scope.show.title, encodeURIComponent($scope.show.images.poster), episode.season, episode.episode, new Date());
-                $timeout(function(){
-                    HistoryFactory.GetWatchedForShow($stateParams.id).then(function(data){
-                        console.log(data);
-                        $scope.watched = data;
-                    });
-                }, 2000);
+                $http.post('/shows/play_episode?url=' + encodeURIComponent(episode.torrents[$scope.selectedResolution.resolution].url) +
+                '&title=' + title +
+                '&id=' + $scope.show._id +
+                '&season=' + episode.season +
+                '&episode=' + episode.episode +
+                '&img=' + encodeURIComponent($scope.show.images.poster));
             });
         }
 

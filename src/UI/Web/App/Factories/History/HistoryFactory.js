@@ -1,55 +1,8 @@
 (function () {
 
-    angular.module('pi-test').factory('HistoryFactory', function ($q, $http) {
+    angular.module('pi-test').factory('HistoryFactory', function ($q, $http, CacheFactory) {
         var factory = {};
         var watched = [];
-
-        factory.AddWatchedShow = function(showId, title, img, epiSeason, epiNr, watchedAt){
-            factory.GetWatched().then(function(){
-                $http.post("/database/add_watched_episode?showId=" + showId
-                        + "&title=" + encodeURIComponent(title)
-                        + "&image=" + encodeURIComponent(img)
-                        + "&episodeSeason=" + epiSeason
-                        + "&episodeNumber=" + epiNr
-                         + "&watchedAt=" + encodeURIComponent(watchedAt)).then(function(){
-                              retrieve();
-                         });
-            });
-        }
-
-        factory.AddWatchedMovie = function(movieId, title, img, watchedAt){
-            factory.GetWatched().then(function(){
-                $http.post("/database/add_watched_movie?movieId=" + movieId
-                        + "&title=" + encodeURIComponent(title)
-                        + "&image=" + encodeURIComponent(img)
-                         + "&watchedAt=" + encodeURIComponent(watchedAt)).then(function(){
-                              retrieve();
-                         });
-            });
-        }
-
-        factory.AddWatchedFile = function(title, url, watchedAt){
-            factory.GetWatched().then(function(){
-                $http.post("/database/add_watched_file?"
-                        + "title=" + encodeURIComponent(title)
-                        + "&url=" + encodeURIComponent(url)
-                         + "&watchedAt=" + encodeURIComponent(watchedAt)).then(function(){
-                              retrieve();
-                         });
-
-            });
-        }
-
-        factory.AddWatchedYouTube = function(title, watchedAt){
-            factory.GetWatched().then(function(){
-                $http.post("/database/add_watched_youtube?"
-                        + "title=" + encodeURIComponent(title)
-                         + "&watchedAt=" + encodeURIComponent(watchedAt)).then(function(){
-                              retrieve();
-                         });
-
-            });
-        }
 
         factory.RemoveWatched = function(id){
             $http.post("/database/remove_watched?"
@@ -61,12 +14,11 @@
         factory.GetWatched = function(){
             var promise = $q.defer();
 
-            if(watched.length == 0)
-                retrieve().then(function(){
-                    promise.resolve(watched);
-                });
-            else
+            retrieve().then(function(){
                 promise.resolve(watched);
+            }, function(){
+                promise.reject()
+            });
 
             return promise.promise;
         }
@@ -100,12 +52,11 @@
         function retrieve()
         {
             var promise = $q.defer();
-            $http.get("/database/get_history").then(function(data){
+            CacheFactory.Get("/database/get_history", 60).then(function(data){
 
                 watched = [];
-                for(var i = 0; i < data.data.length; i++)
-                    watched.push(parse_history(data.data[i]));
-
+                for(var i = 0; i < data.length; i++)
+                    watched.push(parse_history(data[i]));
                 sort();
                 promise.resolve(watched);
             });
@@ -128,7 +79,7 @@
                 "Type": obj[2],
                 "Title": obj[3],
                 "Image": obj[4],
-                "WatchedAt": new Date(obj[5]),
+                "WatchedAt": new Date().setTime(obj[5]),
                 "Season": obj[6],
                 "Episode": obj[7],
                 "URL": obj[8],

@@ -3,6 +3,7 @@ import time
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Util import to_JSON
+from Webserver.Models import Media
 from Webserver.Providers.RadioProvider import RadioProvider
 
 
@@ -19,5 +20,5 @@ class RadioController:
         radio = RadioProvider.get_by_id(int(id))
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
-        EventManager.throw_event(EventType.PreparePlayer, ["Radio", radio.name, radio.url, radio.image, 0, None])
+        EventManager.throw_event(EventType.PreparePlayer, [Media("Radio", id, radio.name, radio.url, None, radio.image, 0)])
         EventManager.throw_event(EventType.StartPlayer, [])

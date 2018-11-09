@@ -5,6 +5,7 @@ import urllib.request
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Webserver.Models import Media
 from Webserver.Providers.ShowProvider import ShowProvider
 
 
@@ -37,10 +38,10 @@ class ShowController:
         return response
 
     @staticmethod
-    def play_episode(url, title, img):
+    def play_episode(url, id, title, img, season, episode):
         Logger.write(2, "Play epi: " + url)
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(1)
         EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), None])
-        EventManager.throw_event(EventType.PreparePlayer, ["Show", urllib.parse.unquote(title), ShowController.server_uri, urllib.parse.unquote(img), 0, None])
+        EventManager.throw_event(EventType.PreparePlayer, [Media("Show", id, urllib.parse.unquote(title), ShowController.server_uri, None, urllib.parse.unquote(img), 0, season, episode)])

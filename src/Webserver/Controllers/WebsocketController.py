@@ -6,7 +6,7 @@ import psutil
 
 from Database.Database import Database
 from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
-from MediaPlayer.TorrentManager import TorrentManager
+from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Util.Enums import TorrentState
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -50,7 +50,7 @@ class WebsocketController:
                 player_data = WebsocketController.get_player_data()
                 WebsocketController.broadcast("update", "player", player_data)
 
-            if TorrentManager().torrent is not None:
+            if MediaManager().torrent is not None:
                 media_data = WebsocketController.get_media_data()
                 WebsocketController.broadcast("update", "media", media_data)
                 WebsocketController.update_loop_count = -1
@@ -65,12 +65,12 @@ class WebsocketController:
         if client not in WebsocketController.clients:
             Logger.write(2, "New connection")
             WebsocketController.clients.append(client)
-            if TorrentManager().torrent and TorrentManager().torrent.state == TorrentState.WaitingUserFileSelection:
+            if MediaManager().torrent and MediaManager().torrent.state == TorrentState.WaitingUserFileSelection:
                 if not Settings.get_bool("slave"):
-                    watched_files = [f[9] for f in Database().get_watched_torrent_files(TorrentManager().torrent.uri)]
-                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in [y for y in TorrentManager().torrent.files if y.is_media]]
+                    watched_files = [f[9] for f in Database().get_watched_torrent_files(MediaManager().torrent.uri)]
+                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in [y for y in MediaManager().torrent.files if y.is_media]]
                 else:
-                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in [y for y in TorrentManager().torrent.files if y.is_media]]
+                    files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in [y for y in MediaManager().torrent.files if y.is_media]]
 
                 client.write_message(to_JSON(WebSocketMessage('request', 'media_selection', files)))
 
@@ -107,7 +107,7 @@ class WebsocketController:
     @staticmethod
     def media_selection_required(files):
         if not Settings.get_bool("slave"):
-            watched_files = [f[9] for f in Database().get_watched_torrent_files(TorrentManager().torrent.uri)]
+            watched_files = [f[9] for f in Database().get_watched_torrent_files(MediaManager().torrent.uri)]
             files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in files]
         else:
             files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in files]
@@ -152,12 +152,12 @@ class WebsocketController:
         torrent_state = -1
         connected_peers = -1
         potential_peers = -1
-        if TorrentManager().torrent:
-            speed = write_size(TorrentManager().torrent.download_counter.value)
-            ready = TorrentManager().torrent.bytes_ready_in_buffer
-            torrent_state = TorrentManager().torrent.state
-            connected_peers = len(TorrentManager().torrent.peer_manager.connected_peers)
-            potential_peers = len(TorrentManager().torrent.peer_manager.potential_peers)
+        if MediaManager().torrent:
+            speed = write_size(MediaManager().torrent.download_counter.value)
+            ready = MediaManager().torrent.bytes_ready_in_buffer
+            torrent_state = MediaManager().torrent.state
+            connected_peers = len(MediaManager().torrent.peer_manager.connected_peers)
+            potential_peers = len(MediaManager().torrent.peer_manager.potential_peers)
 
         return Status(speed, ready, psutil.cpu_percent(), psutil.virtual_memory().percent, torrent_state, connected_peers, potential_peers)
 
@@ -172,19 +172,19 @@ class WebsocketController:
         if state == PlayerState.Nothing or state == PlayerState.Ended:
             state = PlayerState.Opening
 
-        title = VLCPlayer().title
+        title = VLCPlayer().media.title
         percentage = 0
-        if TorrentManager().torrent is not None and TorrentManager().torrent.media_file is not None:
-            buffered = TorrentManager().torrent.bytes_ready_in_buffer
-            percentage = buffered / TorrentManager().torrent.media_file.length * 100
-            if TorrentManager().torrent.state == TorrentState.Done:
+        if MediaManager().torrent is not None and MediaManager().torrent.media_file is not None:
+            buffered = MediaManager().torrent.bytes_ready_in_buffer
+            percentage = buffered / MediaManager().torrent.media_file.length * 100
+            if MediaManager().torrent.state == TorrentState.Done:
                 percentage = 100
 
         media = CurrentMedia(state.value,
-                             VLCPlayer().type,
+                             VLCPlayer().media.type,
                              title,
-                             VLCPlayer().path,
-                             VLCPlayer().img,
+                             VLCPlayer().media.path,
+                             VLCPlayer().media.image,
                              VLCPlayer().get_position(),
                              VLCPlayer().get_length(),
                              VLCPlayer().get_volume(),
@@ -200,7 +200,7 @@ class WebsocketController:
 
     @staticmethod
     def get_media_data():
-        torrent = TorrentManager().torrent
+        torrent = MediaManager().torrent
         if torrent is None:
             de = MediaInfo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ThreadManager.thread_count(), 0, 0)
         else:
@@ -220,6 +220,6 @@ class WebsocketController:
                            torrent.overhead)
 
         if Settings.get_bool("dht"):
-            de.add_dht(len(TorrentManager().dht.routing_table.all_nodes()))
+            de.add_dht(len(MediaManager().dht.routing_table.all_nodes()))
 
         return de

@@ -33,15 +33,11 @@
                 if(data.type == "File"){
                     $rootScope.$broadcast("startPlay", {title: data.filename, type: "File"});
                     $http.post("/hd/play_file?path=" + encodeURIComponent(data.path) + "&filename=" + encodeURIComponent(data.title));
-                    HistoryFactory.AddWatchedFile(data.title, data.path, new Date());
                     $rootScope.$broadcast("startPlay", {title: data.title, type: "File"});
                 }
                 else{
                     $http.post("/movies/play_continue?type=torrent&url=" + encodeURIComponent(data.path) + "&title=" + encodeURIComponent(data.title) +"&image="+encodeURIComponent(data.img)+"&position=0&mediaFile=" + encodeURIComponent(data.media_file));
                     $rootScope.$broadcast("startPlay", {title: data.title, type: "Show"});
-                    HistoryFactory.LastWatchedShow().then(function(show){
-                         HistoryFactory.AddWatchedShow(show.ImdbId, show.Title, data.img, parseInt(data.season), parseInt(data.episode), new Date());
-                    });
                 }
             }, function(action){
                 console.log(action);

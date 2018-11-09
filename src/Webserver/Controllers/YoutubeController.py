@@ -8,6 +8,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Util import current_time, to_JSON
+from Webserver.Models import Media
 
 
 class YoutubeController:
@@ -125,7 +126,7 @@ class YoutubeController:
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
-        EventManager.throw_event(EventType.PreparePlayer, ["YouTube", unquote(title), 'http://www.youtube.com/watch?v=' + id, None, 0, None])
+        EventManager.throw_event(EventType.PreparePlayer, [Media("YouTube", id, unquote(title), 'http://www.youtube.com/watch?v=' + id, None, None, 0)])
         EventManager.throw_event(EventType.StartPlayer, [])
 
     @staticmethod
@@ -134,7 +135,7 @@ class YoutubeController:
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
-        EventManager.throw_event(EventType.PreparePlayer, ["YouTube", unquote(title), unquote(url), None, 0, None])
+        EventManager.throw_event(EventType.PreparePlayer, [Media("YouTube", None, unquote(title), unquote(url), None, None, 0)])
         EventManager.throw_event(EventType.StartPlayer, [])
 
     @staticmethod

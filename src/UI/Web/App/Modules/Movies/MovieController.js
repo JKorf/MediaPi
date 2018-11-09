@@ -33,8 +33,6 @@
                 $rootScope.$broadcast("startPlay", {title: $scope.movie.title, type: "Movie"});
 
                 $http.post('/movies/play_movie?url=' + encodeURIComponent($scope.selectedTorrent.url) + '&id=' + $scope.movie.id + '&title=' + encodeURIComponent($scope.movie.title) + '&img=' + encodeURIComponent($scope.movie.poster));
-
-                HistoryFactory.AddWatchedMovie($scope.movie.id, $scope.movie.title, encodeURIComponent($scope.movie.poster), new Date());
             });
         }
 

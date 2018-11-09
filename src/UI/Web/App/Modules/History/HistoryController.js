@@ -25,10 +25,6 @@
                         data[i].Image = undefined;
                     else
                         data[i].Image = decodeURIComponent(data[i].Image);
-
-                    if (!data[i].Title.endsWith("]") && data[i].Season){
-                        data[i].Title += " [S" + addLeadingZero(data[i].Season) + "E" + addLeadingZero(data[i].Episode) + "]";
-                    }
                 }
 
                 $scope.history = data;

@@ -13,8 +13,8 @@ os.chdir(os.path.dirname(__file__))
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from Webserver.TornadoServer import TornadoServer
-from MediaPlayer.TorrentManager import TorrentManager
-from MediaPlayer.UnfinishedMediaTracker import UnfinishedMediaTracker
+from MediaPlayer.MediaManager import MediaManager
+from MediaPlayer.MediaTracker import MediaTracker
 from MediaPlayer.Streaming.StreamListener import StreamListener
 
 from UI.TV.GUI import GUI
@@ -55,7 +55,7 @@ class Program:
         LightManager().init()
         WiFiController().start()
         Stats().start()
-        UnfinishedMediaTracker().start()
+        MediaTracker().start()
 
         if not self.is_slave:
             self.file_listener = StreamListener("MasterFileServer", 50010)
@@ -69,7 +69,7 @@ class Program:
 
         Logger.write(2, "Started")
         if Settings.get_bool("show_gui"):
-            self.app, self.gui = GUI.new_gui(self)
+            self.app, self.gui = GUI.new_gui()
 
             if self.gui is not None:
                 self.gui.showFullScreen()
@@ -84,9 +84,9 @@ class Program:
         Stats()
         VLCPlayer()
         NextEpisodeManager()
-        UnfinishedMediaTracker()
+        MediaTracker()
         WiFiController()
-        TorrentManager()
+        MediaManager()
         LightManager()
 
     @staticmethod

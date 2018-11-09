@@ -3,7 +3,7 @@ import os
 import urllib.parse
 
 from MediaPlayer.Player.VLCPlayer import VLCPlayer, PlayerState
-from MediaPlayer.TorrentManager import TorrentManager
+from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -64,27 +64,27 @@ class NextEpisodeManager(metaclass=Singleton):
                                                                       self.next_img])
 
     def check_next_episode(self):
-        if VLCPlayer().type == "Radio" or VLCPlayer().type == "YouTube" or VLCPlayer().type == "Image":
+        if VLCPlayer().media.type == "Radio" or VLCPlayer().media.type == "YouTube" or VLCPlayer().media.type == "Image":
             self.reset()
             return
 
-        if VLCPlayer().type == "File":
+        if VLCPlayer().media.type == "File":
             self.reset()
             # Try to get next episode from same folder
-            season, epi = try_parse_season_episode(VLCPlayer().path)
+            season, epi = try_parse_season_episode(VLCPlayer().media.path)
             if season == 0 or epi == 0:
                 Logger.write(2, "No next episode of file, season/epi not parsed")
                 return
 
             if Settings.get_bool("slave"):
-                index = VLCPlayer().path.index("/file/")
-                dir_name = os.path.dirname(VLCPlayer().path[index + 6:])
+                index = VLCPlayer().media.path.index("/file/")
+                dir_name = os.path.dirname(VLCPlayer().media.path[index + 6:])
 
                 data = RequestFactory.make_request(Settings.get_string("master_ip") + "/hd/directory?path=" + dir_name, "GET")
                 result = json.loads(data.decode("utf8"))
                 file_list = result["files"]
             else:
-                dir_name = os.path.dirname(VLCPlayer().path)
+                dir_name = os.path.dirname(VLCPlayer().media.path)
                 file_list = FileStructure(dir_name).files
 
             for potential in file_list:
@@ -103,13 +103,13 @@ class NextEpisodeManager(metaclass=Singleton):
             Logger.write(2, "No next episode of file, no matching next season/epi found in file list")
             return
 
-        season, epi = try_parse_season_episode(TorrentManager().torrent.media_file.path)
+        season, epi = try_parse_season_episode(MediaManager().torrent.media_file.path)
         if season == 0 or epi == 0:
             Logger.write(2, "No next episode found, season/epi not parsed")
             return
 
         # Try to get next episode from same torrent
-        for file in TorrentManager().torrent.files:
+        for file in MediaManager().torrent.files:
             if not is_media_file(file.path):
                 continue
 
@@ -119,18 +119,18 @@ class NextEpisodeManager(metaclass=Singleton):
                 self.next_season = s
                 self.next_episode = epi + 1
                 self.next_type = "Torrent"
-                self.next_title = VLCPlayer().title.replace("E" + self.add_leading_zero(epi), "E" + self.add_leading_zero(epi + 1))
-                self.next_path = TorrentManager().torrent.uri
+                self.next_title = VLCPlayer().media.title.replace("E" + self.add_leading_zero(epi), "E" + self.add_leading_zero(epi + 1))
+                self.next_path = MediaManager().torrent.uri
                 self.next_media_file = file.name
                 return
 
         #  Try to get next episode from shows list
-        season, epi = try_parse_season_episode(VLCPlayer().title)
+        season, epi = try_parse_season_episode(VLCPlayer().media.title)
         if season == 0 or epi == 0:
             Logger.write(2, "No next episode of show, season/epi not parsed")
             return
 
-        show = VLCPlayer().title[8:]
+        show = VLCPlayer().media.title[8:]
         results = json.loads(RequestFactory.make_request("http://127.0.0.1/shows/get_shows?page=1&orderby=trending&keywords=" + urllib.parse.quote(show)).decode('utf8'))
         if len(results) == 0:
             Logger.write(2, "No next episode of show, request returned no results for shows")
@@ -146,9 +146,9 @@ class NextEpisodeManager(metaclass=Singleton):
         self.next_season = season
         self.next_episode = epi + 1
         self.next_type = "Torrent"
-        self.next_title = VLCPlayer().title.replace("E" + self.add_leading_zero(epi), "E" + self.add_leading_zero(epi + 1))
+        self.next_title = VLCPlayer().media.title.replace("E" + self.add_leading_zero(epi), "E" + self.add_leading_zero(epi + 1))
         self.next_path = next_epi[0]["torrents"]["0"]["url"]
-        self.next_img = VLCPlayer().img
+        self.next_img = VLCPlayer().media.image
 
     @staticmethod
     def add_leading_zero(val):

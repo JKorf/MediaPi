@@ -10,7 +10,7 @@ from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Util import to_JSON
-from Webserver.Models import FileStructure
+from Webserver.Models import FileStructure, Media
 
 
 class HDController:
@@ -47,10 +47,10 @@ class HDController:
         filename = urllib.parse.unquote(filename)
 
         if filename.endswith(".jpg"):
-            EventManager.throw_event(EventType.PreparePlayer, ["Image", filename, file, None, 0, filename])
+            EventManager.throw_event(EventType.PreparePlayer, [Media("Image", 0, filename, file, None, None, 0)])
             EventManager.throw_event(EventType.StartPlayer, [])
         else:
-            EventManager.throw_event(EventType.PreparePlayer, ["File", filename, file, None, position, filename])
+            EventManager.throw_event(EventType.PreparePlayer, [Media("File", 0, filename, file, filename, None, 0)])
             EventManager.throw_event(EventType.StartPlayer, [])
 
     @staticmethod

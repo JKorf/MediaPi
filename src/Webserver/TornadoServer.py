@@ -19,7 +19,7 @@ from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
 from Controllers.TVController import TVManager
 from Database.Database import Database
-from MediaPlayer.TorrentManager import TorrentManager
+from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Util.Enums import TorrentState
 from MediaPlayer.Util.Util import get_file_info
 from Webserver.Controllers.ShowController import ShowController
@@ -83,6 +83,11 @@ class TornadoServer:
         await RequestFactory.make_request_async(reroute, "POST")
 
     @staticmethod
+    def notify_master(url):
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(TornadoServer.notify_master_async(url))
+
+    @staticmethod
     def request_master(url):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(TornadoServer.request_master_async(url))
@@ -118,7 +123,7 @@ class UtilHandler(BaseHandler):
         elif url == "info":
             self.write(UtilController.info())
         elif url == "get_subtitles":
-            data = TorrentManager().subtitle_provider.search_subtitles_for_file(self.get_argument("path"), self.get_argument("file"))
+            data = MediaManager().subtitle_provider.search_subtitles_for_file(self.get_argument("path"), self.get_argument("file"))
             self.write(to_JSON(data))
 
     def post(self, url):
@@ -154,7 +159,7 @@ class ShowHandler(BaseHandler):
 
     def post(self, url):
         if url == "play_episode":
-            ShowController.play_episode(self.get_argument("url"), self.get_argument("title"), self.get_argument("img", ""))
+            ShowController.play_episode(self.get_argument("url"), self.get_argument("id"), self.get_argument("title"), self.get_argument("img", ""), self.get_argument("season"), self.get_argument("episode"))
 
     async def get(self, url):
         if url == "get_shows":
@@ -186,7 +191,7 @@ class PlayerHandler(BaseHandler):
         elif url == "set_subtitle_id":
             PlayerController.set_subtitle_id(self.get_argument("sub"))
         elif url == "stop_player":
-            was_waiting_for_file_selection = TorrentManager().torrent and TorrentManager().torrent.state == TorrentState.WaitingUserFileSelection
+            was_waiting_for_file_selection = MediaManager().torrent and MediaManager().torrent.state == TorrentState.WaitingUserFileSelection
             PlayerController.stop_player()
 
             if was_waiting_for_file_selection:
@@ -339,13 +344,15 @@ class DatabaseHandler(BaseHandler):
 
         if url == "add_watched_file":
             Logger.write(2, "Adding to watched files")
-            Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"))
+            Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"), self.get_argument("mediaFile"))
 
         if url == "add_watched_youtube":
             Logger.write(2, "Adding to watched youtube")
             Database().add_watched_youtube(
                 self.get_argument("title"),
-                self.get_argument("watchedAt"))
+                self.get_argument("watchedAt"),
+                self.get_argument("id"),
+                self.get_argument("url"))
 
         if url == "add_watched_movie":
             Logger.write(2, "Adding to watched movie")
@@ -353,16 +360,28 @@ class DatabaseHandler(BaseHandler):
                 self.get_argument("title"),
                 self.get_argument("movieId"),
                 self.get_argument("image"),
-                self.get_argument("watchedAt"))
+                self.get_argument("watchedAt"),
+                self.get_argument("url"),
+                self.get_argument("mediaFile"))
 
         if url == "add_watched_episode":
             Logger.write(2, "Adding to watched episodes")
             Database().add_watched_episode(
                 self.get_argument("title"),
                 self.get_argument("showId"),
+                self.get_argument("url"),
+                self.get_argument("mediaFile"),
                 self.get_argument("image"),
                 self.get_argument("episodeSeason"),
                 self.get_argument("episodeNumber"),
+                self.get_argument("watchedAt"))
+
+        if url == "add_watched_torrent":
+            Logger.write(2, "Adding to watched episodes")
+            Database().add_watched_torrent_file(
+                self.get_argument("title"),
+                self.get_argument("url"),
+                self.get_argument("mediaFile"),
                 self.get_argument("watchedAt"))
 
         if url == "remove_watched":
