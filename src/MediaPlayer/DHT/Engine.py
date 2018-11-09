@@ -2,6 +2,7 @@ import os
 
 import time
 from random import Random
+from threading import Lock
 
 from MediaPlayer.DHT.Messages import ResponseDHTMessage, ErrorDHTMessage
 from MediaPlayer.DHT.Node import Node, NodeState
@@ -23,6 +24,8 @@ class DHTEngine(metaclass=Singleton):
         self.own_node = None
 
         self.routing_table = Table(self)
+        self.table_lock = Lock()
+
         self.socket = Socket(Settings.get_int("dht_port"), self.on_node_seen, self.on_node_timeout, self.on_query)
         self.engine = Engine("DHT Engine", 5000)
         self.engine.queue_repeating_work_item("DHT Refresh buckets", 1000 * 60, self.refresh_buckets, False)
@@ -47,10 +50,11 @@ class DHTEngine(metaclass=Singleton):
         self.start_task(PingTask(self, self.own_node.byte_id, ip, port))
 
     def on_node_seen(self, ip, port, id):
-        if self.routing_table.contains_node(id):
-            self.routing_table.update_node(id)
-        else:
-            self.routing_table.add_node(Node(ip, port, id))
+        with self.table_lock:
+            if self.routing_table.contains_node(id):
+                self.routing_table.update_node(id)
+            else:
+                self.routing_table.add_node(Node(ip, port, id))
 
     def on_node_timeout(self, ip, port):
         self.routing_table.fail_node(ip, port)

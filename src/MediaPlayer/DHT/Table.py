@@ -88,10 +88,7 @@ class Table:
                     new_bucket.add_node(node)
 
                 self.buckets.append(new_bucket)
-                if new_bucket.fits(new_node.int_id):
-                    self.add_to_bucket(new_bucket, new_node)
-                else:
-                    self.add_to_bucket(bucket, new_node)
+                self.add_node(new_node)
             else:
                 Logger.write(1, "DHT: Skipping adding of node, bucket is full")
         else:
