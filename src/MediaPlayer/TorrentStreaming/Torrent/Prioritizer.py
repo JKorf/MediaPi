@@ -20,7 +20,7 @@ class StreamPrioritizer:
             self.start_piece = self.torrent.media_file.start_piece(self.torrent.piece_length)
             self.end_piece = self.torrent.media_file.end_piece(self.torrent.piece_length)
             self.stream_end_buffer_pieces = self.torrent.data_manager.get_piece_by_offset(self.torrent.media_file.end_byte - Settings.get_int("stream_end_buffer_tolerance")).index
-            self.stream_play_buffer_high_priority = max(1500000 // self.torrent.piece_length, 2) # TODO setting
+            self.stream_play_buffer_high_priority = max(1500000 // self.torrent.piece_length, 2)  # TODO setting
 
         if piece_index in self.torrent.download_manager.upped_prios:
             return 100
@@ -34,10 +34,10 @@ class StreamPrioritizer:
             return 0
 
         if piece_index <= self.start_piece + math.ceil(self.max_chunk_size / self.torrent.piece_length) or piece_index > self.end_piece - math.ceil(self.max_chunk_size / self.torrent.piece_length):
-            return 101 # Highest prio on start, to be able to return the first data, and end to be able to calc hash
+            return 101  # Highest prio on start, to be able to return the first data, and end to be able to calc hash
 
         if piece_index >= self.stream_end_buffer_pieces:
-            return 101 - ((self.end_piece - piece_index) / 100000) # Second highest prio on start, to be able to return metadata at end of file
+            return 101 - ((self.end_piece - piece_index) / 100000)  # Second highest prio on start, to be able to return metadata at end of file
 
         if self.torrent.end_game:
             return 100
@@ -47,4 +47,3 @@ class StreamPrioritizer:
 
         dif_bytes = dif*self.torrent.piece_length
         return max(10, round(100 - (dif_bytes / 1000 / 1000), 4))
-

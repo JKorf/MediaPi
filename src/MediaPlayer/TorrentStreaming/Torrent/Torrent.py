@@ -387,7 +387,7 @@ class Torrent:
 
         self.engine.stop()
         self.message_engine.stop()
-        time.sleep(0.5) # Allow all updates to finish
+        time.sleep(0.5)  # Allow all updates to finish
 
         self.output_manager.stop()
         self.peer_manager.stop()
@@ -417,9 +417,9 @@ class InfoHash:
         self.url_encoded = None
 
     @classmethod
-    def from_info_dict(cls, dict):
+    def from_info_dict(cls, info_dict):
         infohash = InfoHash()
-        infohash.sha1_hashed_bytes = hashlib.sha1(Bencode.bencode(dict)).digest()
+        infohash.sha1_hashed_bytes = hashlib.sha1(Bencode.bencode(info_dict)).digest()
         infohash.url_encoded = urllib.parse.quote_plus(infohash.sha1_hashed_bytes)
         return infohash
 
@@ -475,7 +475,7 @@ class TorrentDownloadFile:
         self.done = True
         Logger.write(2, "File " + self.name + " done")
 
-    def write(self, offset_in_file: object, data: object) -> object:
+    def write(self, offset_in_file, data):
         with self.__lock:
             self.open()
 

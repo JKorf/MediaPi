@@ -5,6 +5,15 @@ import urllib.parse
 import urllib.request
 
 import tornado
+from Webserver.Controllers.HDController import HDController
+from Webserver.Controllers.LightController import LightController
+from Webserver.Controllers.MovieController import MovieController
+from Webserver.Controllers.PlayerController import PlayerController
+from Webserver.Controllers.RadioController import RadioController
+from Webserver.Controllers.TorrentController import TorrentController
+from Webserver.Controllers.UtilController import UtilController
+from Webserver.Controllers.WebsocketController import WebsocketController
+from Webserver.Controllers.YoutubeController import YoutubeController
 from tornado import ioloop, web, websocket
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
@@ -13,21 +22,13 @@ from Database.Database import Database
 from MediaPlayer.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState
 from MediaPlayer.Util.Util import get_file_info
+from Webserver.Controllers.ShowController import ShowController
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
-from Shared.Util import to_JSON, RequestFactory
-from UI.Web.Server.Controllers.HDController import HDController
-from UI.Web.Server.Controllers.LightController import LightController
-from UI.Web.Server.Controllers.MovieController import MovieController
-from UI.Web.Server.Controllers.PlayerController import PlayerController
-from UI.Web.Server.Controllers.RadioController import RadioController
-from UI.Web.Server.Controllers.ShowController import ShowController
-from UI.Web.Server.Controllers.TorrentController import TorrentController
-from UI.Web.Server.Controllers.UtilController import UtilController
-from UI.Web.Server.Controllers.WebsocketController import WebsocketController
-from UI.Web.Server.Controllers.YoutubeController import YoutubeController
+from Shared.Util import to_JSON
 
 
 class TornadoServer:
@@ -50,7 +51,7 @@ class TornadoServer:
             (r"/tv/(.*)", TVHandler),
             (r"/realtime", RealtimeHandler),
             (r"/database/(.*)", DatabaseHandler),
-            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/Web/Interface", "default_filename": "index.html"})
+            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/Web", "default_filename": "index.html"})
         ]
 
         self.application = web.Application(handlers)

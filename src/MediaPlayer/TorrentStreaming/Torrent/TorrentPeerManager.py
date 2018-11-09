@@ -78,7 +78,8 @@ class TorrentPeerManager:
             self.potential_peers.append((urlparse(uri), source))
             self.add_potential_peer_stat(source)
 
-    def add_potential_peer_stat(self, source):
+    @staticmethod
+    def add_potential_peer_stat(source):
         if source == PeerSource.DHT:
             Stats.add('peers_source_dht', 1)
         elif source == PeerSource.HttpTracker:

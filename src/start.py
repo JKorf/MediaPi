@@ -9,7 +9,7 @@ from Controllers.WiFiController import WiFiController
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from UI.TV.GUI import GUI
-from UI.Web.Server.TornadoServer import TornadoServer
+from Webserver.TornadoServer import TornadoServer
 from MediaPlayer.TorrentManager import TorrentManager
 from Controllers.LightController import LightManager
 from MediaPlayer.UnfinishedMediaTracker import UnfinishedMediaTracker

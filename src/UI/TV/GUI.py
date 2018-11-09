@@ -17,9 +17,9 @@ from MediaPlayer.Player.VLCPlayer import PlayerState
 from MediaPlayer.TorrentManager import TorrentManager
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
-from Shared.Util import RequestFactory
 
 
 class Communicate(QtCore.QObject):

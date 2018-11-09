@@ -9,7 +9,6 @@ from Shared.Settings import Settings
 
 
 class Logger:
-
     log_level = 1
     file = None
     lock = RLock()
@@ -27,34 +26,34 @@ class Logger:
             Logger.file = open(log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt", 'ab', buffering=0)
             Logger.file.write("\r\n".encode('utf8'))
             Logger.file.write(("Time".ljust(14) + " | "
-                      + "Thread".ljust(30) + " | "
-                      + "File".ljust(25) + " | "
-                      + "Function".ljust(30) + " | #"
-                      + "Line".ljust(5) + " | "
-                      + "Type".ljust(7) + " | "
-                      + "Message\r\n").encode("utf8"))
+                               + "Thread".ljust(30) + " | "
+                               + "File".ljust(25) + " | "
+                               + "Function".ljust(30) + " | #"
+                               + "Line".ljust(5) + " | "
+                               + "Type".ljust(7) + " | "
+                               + "Message\r\n").encode("utf8"))
             Logger.file.write(("-" * 140 + "\r\n").encode("utf8"))
             print("Log location: " + log_path)
 
         if Logger.log_level <= log_priority:
             info = get_info()
-            strInfo = datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3].ljust(14) + " | "\
-                      + threading.currentThread().getName().ljust(30) + " | "\
-                      + path_leaf(info.filename).ljust(25) + " | "\
-                      + info.function.ljust(30) + " | #"\
-                      + str(info.lineno).ljust(5) + " | "\
-                      + str(type).ljust(7) + " | "\
-                      + message
-            file_log = strInfo
+            str_info = datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3].ljust(14) + " | " \
+                       + threading.currentThread().getName().ljust(30) + " | " \
+                       + path_leaf(info.filename).ljust(25) + " | " \
+                       + info.function.ljust(30) + " | #" \
+                       + str(info.lineno).ljust(5) + " | " \
+                       + str(type).ljust(7) + " | " \
+                       + message
+            file_log = str_info
             if type == 'error':
-                strInfo = "\033[91m" + strInfo + "\033[0m"
+                str_info = "\033[91m" + str_info + "\033[0m"
 
             if log_priority == 3:
-                strInfo = '\033[1m' + strInfo + '\033[0m'
+                str_info = '\033[1m' + str_info + '\033[0m'
 
             with Logger.lock:
                 if not Settings.get_bool("raspberry"):
-                    print(strInfo)
+                    print(str_info)
 
                 Logger.file.write((file_log + "\r\n").encode('utf8'))
 

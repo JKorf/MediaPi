@@ -9,20 +9,20 @@ class Settings:
     @staticmethod
     def get_int(name):
         Settings.check_settings()
-        set = Settings.content[name]
-        return int(set)
+        setting = Settings.content[name]
+        return int(setting)
 
     @staticmethod
     def get_string(name):
         Settings.check_settings()
-        set = Settings.content[name]
-        return str(set)
+        setting = Settings.content[name]
+        return str(setting)
 
     @staticmethod
     def get_bool(name):
         Settings.check_settings()
-        set = Settings.content[name]
-        return set == 'True'
+        setting = Settings.content[name]
+        return setting == 'True'
 
     @staticmethod
     def set_setting(name, value):

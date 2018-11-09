@@ -3,7 +3,7 @@ import time
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Util import to_JSON
-from UI.Web.Server.Providers.RadioProvider import RadioProvider
+from Webserver.Providers.RadioProvider import RadioProvider
 
 
 class RadioController:

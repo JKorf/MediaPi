@@ -10,7 +10,6 @@ from Shared.Util import current_time, Singleton
 
 
 class Database(metaclass=Singleton):
-
     def __init__(self):
         self.path = Settings.get_string("base_folder") + "Solution/database.data"
         self.slave = Settings.get_bool("slave")
@@ -70,7 +69,7 @@ class Database(metaclass=Singleton):
         new_version = number + 1
         Logger.write(2, "Upgrading database from " + str(number) + " to " + str(new_version))
 
-        with open(str(pathlib.Path(__file__).parent) + '/Migrations/Upgrade_'+str(new_version)+'.sql', 'r') as script:
+        with open(str(pathlib.Path(__file__).parent) + '/Migrations/Upgrade_' + str(new_version) + '.sql', 'r') as script:
             data = script.read().replace('\n', '')
 
         self.connection.executescript(data)
@@ -200,7 +199,7 @@ class Database(metaclass=Singleton):
 
         with self.lock:
             self.connect()
-            self.connection.execute("DELETE FROM Favorites WHERE Id = '"+str(id)+"'")
+            self.connection.execute("DELETE FROM Favorites WHERE Id = '" + str(id) + "'")
 
             self.database.commit()
             self.disconnect()
@@ -295,8 +294,8 @@ class Database(metaclass=Singleton):
             data = self.connection.fetchall()
             if not data:
                 self.connection.execute("INSERT INTO Stats " +
-                                    "(Name, Val, LastUpdate)" +
-                                    " VALUES (?, ?, ?)", [key, value, current_time()])
+                                        "(Name, Val, LastUpdate)" +
+                                        " VALUES (?, ?, ?)", [key, value, current_time()])
             else:
                 self.connection.execute("UPDATE Stats SET Val=?, LastUpdate=? WHERE Name=?", [value, current_time(), key])
 

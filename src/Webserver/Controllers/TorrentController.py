@@ -1,13 +1,12 @@
 import time
 import urllib.parse
 
-from UI.Web.Server.Models import TorrentModel
-from UI.Web.Server.Providers.TorrentProvider import TPB, CATEGORIES, ORDERS, Torrent
-
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Util import to_JSON
-from UI.Web.Server.Controllers.MovieController import MovieController
+from Webserver.Controllers.MovieController import MovieController
+from Webserver.Models import TorrentModel
+from Webserver.Providers.TorrentProvider import TPB, Torrent, CATEGORIES, ORDERS
 
 
 class TorrentController:

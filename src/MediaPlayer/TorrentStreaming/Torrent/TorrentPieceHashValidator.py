@@ -2,16 +2,15 @@ import hashlib
 
 
 class TorrentPieceHashValidator:
-
     def __init__(self):
         self.hashes = []
         self.pieces_to_hash = []
         self.on_piece_accept = None
         self.on_piece_reject = None
 
-    def update_hashes(self, hashstring):
-        for i in range(len(hashstring) // 20):
-            self.hashes.append(hashstring[i*20: (i+1)*20])
+    def update_hashes(self, hash_string):
+        for i in range(len(hash_string) // 20):
+            self.hashes.append(hash_string[i * 20: (i + 1) * 20])
 
     def add_piece_to_hash(self, piece):
         self.pieces_to_hash.append(piece)
@@ -33,5 +32,4 @@ class TorrentPieceHashValidator:
             return False
 
         actual_hash = hashlib.sha1(data).digest()
-        return expected_hash[0] == actual_hash[0] and expected_hash[8] == actual_hash[8] and expected_hash[19] == \
-                                                                                             actual_hash[19]
+        return expected_hash[0] == actual_hash[0] and expected_hash[8] == actual_hash[8] and expected_hash[19] == actual_hash[19]

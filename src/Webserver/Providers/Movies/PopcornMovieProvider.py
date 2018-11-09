@@ -1,10 +1,10 @@
 import urllib.parse
 
+from Webserver.Providers.Movies.Movie import Movie
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Network import RequestFactory
 from Shared.Settings import Settings
-from Shared.Util import RequestFactory
-from UI.Web.Server.Providers.Movies.Movie import Movie
 
 
 class PopcornMovieProvider:
@@ -13,16 +13,16 @@ class PopcornMovieProvider:
     movies_data = None
 
     @staticmethod
-    async def get_list(page, orderby, all=False):
+    async def get_list(page, order_by, get_all=False):
         Logger.write(2, "Get movies list")
-        if all:
+        if get_all:
             data = b""
             for i in range(int(page)):
-                new_data = await RequestFactory.make_request_async(PopcornMovieProvider.movies_api_path + "movies/"+str(i + 1)+"?sort=" + urllib.parse.quote(orderby))
+                new_data = await RequestFactory.make_request_async(PopcornMovieProvider.movies_api_path + "movies/"+str(i + 1)+"?sort=" + urllib.parse.quote(order_by))
                 if new_data is not None:
                     data = PopcornMovieProvider.append_result(data, new_data)
         else:
-            data = await RequestFactory.make_request_async(PopcornMovieProvider.movies_api_path + "movies/"+page+"?sort=" + urllib.parse.quote(orderby))
+            data = await RequestFactory.make_request_async(PopcornMovieProvider.movies_api_path + "movies/"+page+"?sort=" + urllib.parse.quote(order_by))
 
         if data is not None:
             PopcornMovieProvider.movies_data = data
@@ -33,9 +33,9 @@ class PopcornMovieProvider:
         return Movie.parse_list_from_popcorn_time(PopcornMovieProvider.movies_data.decode('utf-8')).encode('utf-8')
 
     @staticmethod
-    async def search(page, orderby, keywords, all=False):
+    async def search(page, orderby, keywords, get_all=False):
         Logger.write(2, "Search movies " + keywords)
-        if all:
+        if get_all:
             data = b""
             for i in range(int(page)):
                 new_data = await RequestFactory.make_request_async(

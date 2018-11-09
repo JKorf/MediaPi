@@ -3,10 +3,10 @@ import time
 import urllib.parse
 import urllib.request
 
+from Webserver.Providers.Movies.PopcornMovieProvider import PopcornMovieProvider
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from UI.Web.Server.Providers.Movies.PopcornMovieProvider import PopcornMovieProvider
 
 
 class MovieController:

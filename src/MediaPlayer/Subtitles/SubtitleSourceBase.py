@@ -1,5 +1,3 @@
-import os
-
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 

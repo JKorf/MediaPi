@@ -2,7 +2,7 @@ import subprocess
 
 from Shared.Logger import Logger
 from Shared.Util import Singleton
-from UI.Web.Server.Models import CecDevice
+from Webserver.Models import CecDevice
 
 
 class TVManager(metaclass=Singleton):
@@ -14,7 +14,7 @@ class TVManager(metaclass=Singleton):
 
     pi_source = "1"
     tv_source = "0"
-    decoder_source = "2" #??
+    decoder_source = "2"  # ??
     debug_level = "1"
 
     key_map = {
@@ -63,10 +63,12 @@ class TVManager(metaclass=Singleton):
 
         return self.__process_devices(data)
 
-    def __construct_request(self, source, destination, command):
+    @staticmethod
+    def __construct_request(source, destination, command):
         return 'echo "tx ' + source + destination + ":" + command + '" | cec-client -s'
 
-    def __process_devices(self, data):
+    @staticmethod
+    def __process_devices(data):
         result = []
         lines = data.split('\n')
         current_device = None
@@ -90,7 +92,8 @@ class TVManager(metaclass=Singleton):
 
         return result
 
-    def __request(self, command):
+    @staticmethod
+    def __request(command):
         try:
             Logger.write(2, "TV manager sending command: " + command)
             result = subprocess.check_output(command + ' -d ' + TVManager.debug_level, shell=True).decode("utf8")

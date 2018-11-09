@@ -3,10 +3,10 @@ import urllib.parse
 from Database.Database import Database
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.TorrentManager import TorrentManager
+from Webserver.TornadoServer import TornadoServer
 from Shared.Engine import Engine
 from Shared.Settings import Settings
 from Shared.Util import current_time, Singleton
-from UI.Web.Server.TornadoServer import TornadoServer
 
 
 class UnfinishedMediaTracker(metaclass=Singleton):

@@ -1,7 +1,7 @@
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Network import RequestFactory
 from Shared.Settings import Settings
-from Shared.Util import RequestFactory
 
 
 class ShowProvider:
@@ -10,16 +10,16 @@ class ShowProvider:
     shows_data = []
 
     @staticmethod
-    async def get_list(page, orderby, all=False):
+    async def get_list(page, order_by, get_all=False):
         Logger.write(2, "Get shows list")
-        if all:
+        if get_all:
             data = b""
             for i in range(int(page)):
-                new_data = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby)
+                new_data = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + order_by)
                 if new_data is not None:
                     data = ShowProvider.append_result(data, new_data)
         else:
-            data = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby)
+            data = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + order_by)
 
         if data is not None:
             ShowProvider.shows_data = data
@@ -31,18 +31,18 @@ class ShowProvider:
         return ShowProvider.shows_data
 
     @staticmethod
-    async def search(page, orderby, keywords, all=False):
+    async def search(page, order_by, keywords, get_all=False):
         Logger.write(2, "Search shows " + keywords)
-        if all:
+        if get_all:
             data = b""
             for i in range(int(page)):
                 new_data = await RequestFactory.make_request_async(
-                    ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + orderby + "&keywords=" + keywords)
+                    ShowProvider.shows_api_path + "shows/" + str(i + 1) + "?sort=" + order_by + "&keywords=" + keywords)
                 if new_data is not None:
                     data = ShowProvider.append_result(data, new_data)
             return data
         else:
-            data = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + orderby + "&keywords="+keywords)
+            data = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + order_by + "&keywords="+keywords)
             return data
 
     @staticmethod

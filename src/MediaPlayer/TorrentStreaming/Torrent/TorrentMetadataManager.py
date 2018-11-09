@@ -51,11 +51,11 @@ class TorrentMetadataManager:
             self.metadata_blocks.append(MetadataBlock(index, min(self.current_total_size - (index * self.metadata_block_size), self.metadata_block_size)))
 
     def get_probable_size(self):
-        max = (None, 0)
+        max_size = (None, 0)
         for key, value in self.total_size_sets.items():
-            if value > max[1]:
-                max = (key, value)
-        return int(max[0])
+            if value > max_size[1]:
+                max_size = (key, value)
+        return int(max_size[0])
 
     def add_metadata_piece(self, index, data):
         with self.__lock:

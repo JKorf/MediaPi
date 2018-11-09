@@ -44,7 +44,7 @@ class TorrentDataManager:
                 first = str(unfinished[0].index)
             if unfinished_next:
                 first_next = str(unfinished_next[0].index)
-            Logger.write(3, "     Data status: first unfinished=" + first + ", first unfinished after stream pos: " + first_next + ", total unfinished=" + str(len(unfinished)) +" pieces")
+            Logger.write(3, "     Data status: first unfinished=" + first + ", first unfinished after stream pos: " + first_next + ", total unfinished=" + str(len(unfinished)) + " pieces")
 
     def unregister(self):
         EventManager.deregister_event(self.event_id_log)
@@ -144,10 +144,10 @@ class TorrentDataManager:
         return self.get_piece_by_index(piece_index).get_block_by_offset(offset_in_piece)
 
     def get_piece_by_offset(self, offset):
-        return [x for x in self._pieces.values() if x.start_byte <= offset and x.end_byte >= offset][0]
+        return [x for x in self._pieces.values() if x.start_byte <= offset <= x.end_byte][0]
 
     def get_pieces_by_index_range(self, start, end):
-        return [x for x in list(self._pieces.values()) if x.index >= start and x.index < end]
+        return [x for x in list(self._pieces.values()) if start <= x.index < end]
 
     def get_piece_by_index(self, index):
         return self._pieces.get(index)

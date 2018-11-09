@@ -13,7 +13,7 @@ from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread, ThreadManager
 from Shared.Util import to_JSON, write_size
-from UI.Web.Server.Models import MediaFile, WebSocketMessage, Status, CurrentMedia, MediaInfo
+from Webserver.Models import MediaFile, WebSocketMessage, Status, CurrentMedia, MediaInfo
 
 
 class WebsocketController:
@@ -67,7 +67,7 @@ class WebsocketController:
             WebsocketController.clients.append(client)
             if TorrentManager().torrent and TorrentManager().torrent.state == TorrentState.WaitingUserFileSelection:
                 if not Settings.get_bool("slave"):
-                    watched_files = [f[9] for f in Database.get_watched_torrent_files(TorrentManager().torrent.uri)]
+                    watched_files = [f[9] for f in Database().get_watched_torrent_files(TorrentManager().torrent.uri)]
                     files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, x.path in watched_files) for x in [y for y in TorrentManager().torrent.files if y.is_media]]
                 else:
                     files = [MediaFile(x.path, x.name, x.length, x.season, x.episode, None, None, None, False) for x in [y for y in TorrentManager().torrent.files if y.is_media]]

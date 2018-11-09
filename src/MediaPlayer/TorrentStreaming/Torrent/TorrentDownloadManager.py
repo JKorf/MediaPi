@@ -44,7 +44,7 @@ class TorrentDownloadManager:
             first = ""
             if self.queue:
                 first = str(self.queue[0].block.piece_index) + "-" + str(self.queue[0].block.block_index_in_piece)
-            Logger.write(3, "     Queue status: length: " + str(len(self.queue))+ ", init: " + str(self.init) + ", prio: " + str(self.prio))
+            Logger.write(3, "     Queue status: length: " + str(len(self.queue)) + ", init: " + str(self.init) + ", prio: " + str(self.prio))
             Logger.write(3, "     First in queue: " + first)
             Logger.write(3, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]) + " " + str(current_time() - self.last_get_time) + "ms ago")
 

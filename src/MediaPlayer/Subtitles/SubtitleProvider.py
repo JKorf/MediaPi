@@ -46,8 +46,8 @@ class SubtitleProvider:
     def search_subtitles_for_file(self, path, filename):
         # check file location for files with same name
         file_without_ext = os.path.splitext(filename)
-        dir = os.path.dirname(path)
-        subs = [join(dir, f) for f in os.listdir(dir) if isfile(join(dir, f)) and self.match_sub(f, file_without_ext[0])]
+        directory = os.path.dirname(path)
+        subs = [join(directory, f) for f in os.listdir(directory) if isfile(join(directory, f)) and self.match_sub(f, file_without_ext[0])]
         if len(subs) > 0:
             return subs
 
@@ -58,7 +58,8 @@ class SubtitleProvider:
             sub_files += source.get_subtitles(size, 0, filename, first, last)
         return sub_files
 
-    def match_sub(self, file_name, media_name):
+    @staticmethod
+    def match_sub(file_name, media_name):
         if not file_name.endswith(".srt"):
             return False
 
@@ -105,13 +106,14 @@ class SubtitleProvider:
         sub_paths = source.get_subtitles(size, file_length, file_name, first_64k, last_64k)
         with self.sub_files_lock:
             for path in sub_paths:
-                hash = self.get_sub_hash(path)
-                if len([x for x in self.sub_files if x.hash == hash]) == 0:
-                    self.sub_files.append(Subtitle(hash, path))
+                file_hash = self.get_sub_hash(path)
+                if len([x for x in self.sub_files if x.hash == file_hash]) == 0:
+                    self.sub_files.append(Subtitle(file_hash, path))
 
         EventManager.throw_event(EventType.SetSubtitleFiles, [sub_paths])
 
-    def get_sub_hash(self, path):
+    @staticmethod
+    def get_sub_hash(path):
         size = os.path.getsize(path)
         with open(path, 'rb') as f:
             data = f.read(size)
@@ -122,6 +124,6 @@ class SubtitleProvider:
 
 class Subtitle:
 
-    def __init__(self, hash, path):
-        self.hash = hash
+    def __init__(self, file_hash, path):
+        self.hash = file_hash
         self.path = path

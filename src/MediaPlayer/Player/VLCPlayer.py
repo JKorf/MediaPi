@@ -96,12 +96,12 @@ class VLCPlayer(metaclass=Singleton):
         self.__player.set_mrl(self.path, *parameters)
         return self.__player.play() != -1
 
-    def get_instance_parameters(self):
-        params = []
-        params.append("--verbose=" + str(Settings.get_int("vlc_log_level")))
-        params.append("--network-caching=" + str(Settings.get_int("network_caching")))
-        params.append("--ipv4-timeout=500")
-        params.append("--image-duration=-1")
+    @staticmethod
+    def get_instance_parameters():
+        params = ["--verbose=" + str(Settings.get_int("vlc_log_level")),
+                  "--network-caching=" + str(Settings.get_int("network_caching")),
+                  "--ipv4-timeout=500",
+                  "--image-duration=-1"]
 
         if Settings.get_bool("raspberry"):
             log_path = Settings.get_string("log_folder")
@@ -233,12 +233,6 @@ class VLCPlayer(metaclass=Singleton):
 
     def get_fps(self):
         return int(1000 // (self.__player.get_fps() or 25))
-
-    def on_state_change(self, action):
-        self.state_change_action = action
-
-    def on_player_stopped(self, action):
-        self.player_stopped_action = action
 
     def hook_events(self):
         self.__event_manager.event_attach(VLCEventType.MediaPlayerOpening, self.state_change_opening)

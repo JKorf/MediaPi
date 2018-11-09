@@ -6,7 +6,8 @@ from urllib.parse import urlencode, unquote
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
-from Shared.Util import current_time, to_JSON, RequestFactory
+from Shared.Network import RequestFactory
+from Shared.Util import current_time, to_JSON
 
 
 class YoutubeController:
@@ -24,7 +25,7 @@ class YoutubeController:
     @staticmethod
     async def search(query, type):
         Logger.write(2, "Searching youtube for " + query)
-        path = "search?part=snippet&q=" +query + "&type=video,channel&maxResults=20"
+        path = "search?part=snippet&q=" + query + "&type=video,channel&maxResults=20"
 
         data = await YoutubeController.internal_make_request(path)
         if data is None:
@@ -33,12 +34,12 @@ class YoutubeController:
         if type == "videos":
             for video in [x for x in data['items'] if x['id']['kind'] == "youtube#video"]:
                 result.append({'title': video['snippet']['title'],
-                                'id': video['id']['videoId'],
-                                'uploaded': video['snippet']['publishedAt'],
-                                'channel_id': video['snippet']['channelId'],
-                                'channel_title': video['snippet']['channelTitle'],
-                                'thumbnail': video['snippet']['thumbnails']['medium']['url'],
-                                'type': 'video'})
+                               'id': video['id']['videoId'],
+                               'uploaded': video['snippet']['publishedAt'],
+                               'channel_id': video['snippet']['channelId'],
+                               'channel_title': video['snippet']['channelTitle'],
+                               'thumbnail': video['snippet']['thumbnails']['medium']['url'],
+                               'type': 'video'})
         else:
             for channel in [x for x in data['items'] if x['id']['kind'] == "youtube#channel"]:
                 result.append({
@@ -162,21 +163,20 @@ class YoutubeController:
     async def internal_do_refresh_token():
         Logger.write(2, "Refreshing token")
 
-        fields = { "client_id": YoutubeController.client_id,
-                   "client_secret": YoutubeController.client_secret,
-                   "refresh_token": YoutubeController.refresh_token,
-                   "grant_type": "refresh_token"}
+        fields = {"client_id": YoutubeController.client_id,
+                  "client_secret": YoutubeController.client_secret,
+                  "refresh_token": YoutubeController.refresh_token,
+                  "grant_type": "refresh_token"}
 
         req = await RequestFactory.make_request_async(YoutubeController.auth_server, "POST", urlencode(fields).encode())
         if not req:
             return False
 
-        encdata = req.decode()
-        data = json.loads(encdata)
+        json_data = req.decode()
+        data = json.loads(json_data)
         YoutubeController.access_token = data["access_token"]
         YoutubeController.token_expires = int(data["expires_in"])
         YoutubeController.token_received = current_time()
         YoutubeController.headers = {"Authorization": "Bearer " + YoutubeController.access_token}
         Logger.write(2, "Token refreshed")
         return True
-

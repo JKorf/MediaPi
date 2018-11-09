@@ -10,7 +10,7 @@ from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Util import to_JSON
-from UI.Web.Server.Models import FileStructure
+from Webserver.Models import FileStructure
 
 
 class HDController:
@@ -18,11 +18,11 @@ class HDController:
     @staticmethod
     def drives():
         if 'win' in sys.platform:
-            drivelist = subprocess.Popen('wmic logicaldisk get name,description', shell=True, stdout=subprocess.PIPE)
-            drivelisto, err = drivelist.communicate()
-            driveLines = drivelisto.split(b'\n')
+            drive_list_command = subprocess.Popen('wmic logicaldisk get name,description', shell=True, stdout=subprocess.PIPE)
+            drive_list_request, err = drive_list_command.communicate()
+            drive_lines = drive_list_request.split(b'\n')
             drives = []
-            for line in driveLines:
+            for line in drive_lines:
                 line = line.decode('utf8')
                 index = line.find(':')
                 if index == -1:
@@ -35,8 +35,8 @@ class HDController:
     @staticmethod
     def directory(path):
         Logger.write(2, path)
-        dir = FileStructure(urllib.parse.unquote(path))
-        return to_JSON(dir).encode('utf8')
+        directory = FileStructure(urllib.parse.unquote(path))
+        return to_JSON(directory).encode('utf8')
 
     @staticmethod
     def play_file(filename, path, position=0):
@@ -54,22 +54,22 @@ class HDController:
             EventManager.throw_event(EventType.StartPlayer, [])
 
     @staticmethod
-    def next_image(currentPath):
-        Logger.write(2, "Next image from " + currentPath)
-        dir = os.path.dirname(currentPath)
-        filename = os.path.basename(currentPath)
-        structure = FileStructure(urllib.parse.unquote(dir))
+    def next_image(current_path):
+        Logger.write(2, "Next image from " + current_path)
+        directory = os.path.dirname(current_path)
+        filename = os.path.basename(current_path)
+        structure = FileStructure(urllib.parse.unquote(directory))
 
         index = -1
-        next = False
+        is_next = False
         for idx, file in enumerate(structure.files):
             if index == -1 and file.endswith(".jpg"):
                 index = idx
 
             if file == filename:
-                next = True
+                is_next = True
                 continue
-            if next:
+            if is_next:
                 if file.endswith(".jpg"):
                     index = idx
                     break
@@ -77,15 +77,15 @@ class HDController:
         HDController.play_file(structure.files[index], os.path.join(dir, structure.files[index]))
 
     @staticmethod
-    def prev_image(currentPath):
-        Logger.write(2, "Prev image from " + currentPath)
-        dir = os.path.dirname(currentPath)
-        filename = os.path.basename(currentPath)
-        structure = FileStructure(urllib.parse.unquote(dir))
+    def prev_image(current_path):
+        Logger.write(2, "Prev image from " + current_path)
+        directory = os.path.dirname(current_path)
+        filename = os.path.basename(current_path)
+        structure = FileStructure(urllib.parse.unquote(directory))
 
         images = [x for x in structure.files if x.endswith(".jpg")]
         if len(images) == 1:
-            HDController.play_file(filename, os.path.join(dir, filename))
+            HDController.play_file(filename, os.path.join(directory, filename))
             return
 
         current_index = 0
@@ -95,7 +95,7 @@ class HDController:
         if current_index == -1:
             current_index = len(images) - 1
 
-        HDController.play_file(images[current_index], os.path.join(dir, images[current_index]))
+        HDController.play_file(images[current_index], os.path.join(directory, images[current_index]))
 
     @staticmethod
     async def play_master_file(server, path, file, position):

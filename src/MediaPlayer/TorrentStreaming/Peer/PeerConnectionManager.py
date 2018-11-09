@@ -1,10 +1,10 @@
 from threading import Lock
 
-from MediaPlayer.TorrentStreaming.Connections import TcpClient
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import KeepAliveMessage
 from MediaPlayer.Util.Enums import ConnectionState, ReceiveState, PeerSource
 from MediaPlayer.Util.Network import *
 from Shared.Logger import *
+from Shared.Network import TcpClient
 from Shared.Stats import Stats
 from Shared.Util import current_time
 
@@ -24,7 +24,7 @@ class PeerConnectionManager:
         self.peer_timeout = Settings.get_int("peer_timeout")
         self.connection_timeout = Settings.get_int("connection_timeout") / 1000
 
-        self.connection = TcpClient(uri.hostname, uri.port)
+        self.connection = TcpClient(uri.hostname, uri.port, self.connection_timeout)
         self.buffer = bytearray()
         self.next_message_length = 68
         self.buffer_position = 0
@@ -36,7 +36,7 @@ class PeerConnectionManager:
         Logger.write(1, str(self.peer.id) + ' connecting to ' + str(self.uri.netloc))
         Stats.add('peers_connect_try', 1)
 
-        if not self.connection.connect(self.connection_timeout):
+        if not self.connection.connect():
             Stats.add('peers_connect_failed', 1)
             Logger.write(1, str(self.peer.id) + ' could not connect to ' + str(self.uri.netloc))
             self.disconnect()
@@ -49,7 +49,8 @@ class PeerConnectionManager:
         self.connection_state = ConnectionState.Connected
         self.connection.socket.setblocking(0)
 
-    def add_connected_peer_stat(self, source):
+    @staticmethod
+    def add_connected_peer_stat(source):
         if source == PeerSource.DHT:
             Stats.add('peers_source_dht_connected', 1)
         elif source == PeerSource.HttpTracker:
@@ -151,7 +152,7 @@ class PeerConnectionManager:
         return True
 
     def log(self):
-        Logger.write(3, "       Last communication: " + str(current_time() - self.last_communication) +"ms ago")
+        Logger.write(3, "       Last communication: " + str(current_time() - self.last_communication) + "ms ago")
         Logger.write(3, "       To send buffer length: " + str(len(self.to_send_bytes)))
         Logger.write(3, "       Receive buffer length: " + str(len(self.received_bytes)))
 

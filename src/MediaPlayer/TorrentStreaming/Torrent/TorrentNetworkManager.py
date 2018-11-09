@@ -63,4 +63,3 @@ class TorrentNetworkManager:
 
     def stop(self):
         self.running = False
-

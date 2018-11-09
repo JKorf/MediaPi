@@ -4,7 +4,6 @@ from Shared.Settings import Settings
 
 
 class Bitfield:
-
     def __init__(self, size):
         self.size = size
         self.field = [False] * size
@@ -30,7 +29,7 @@ class Bitfield:
     def set_has_none(self):
         for i in range(self.size):
             self.field[i] = False
-    
+
     def update(self, data):
         for i in range(self.size):
             byte_index = i // 8
@@ -63,7 +62,6 @@ class Bitfield:
 
 
 class Block:
-
     def __init__(self, index, piece_index, block_index_in_piece, start_byte_in_piece, start_byte_total, length, persistent):
         self.index = index
         self.piece_index = piece_index
@@ -84,7 +82,6 @@ class Block:
 
 
 class Piece:
-
     def __init__(self, index, block_start_index, start_byte, length, persistent):
         self.index = index
         self.block_start_index = block_start_index
@@ -106,10 +103,10 @@ class Piece:
         whole_blocks = int(math.floor(self.length / self.block_size))
         for index in range(whole_blocks):
             self.blocks[index] = Block(self.block_start_index + index, self.index, index, index * self.block_size,
-                                     self.start_byte + (index * self.block_size), self.block_size, self.persistent)
+                                       self.start_byte + (index * self.block_size), self.block_size, self.persistent)
         if partial_block != 0:
             self.blocks[len(self.blocks)] = Block(self.block_start_index + len(self.blocks), self.index, len(self.blocks),
-                                     len(self.blocks) * self.block_size, self.start_byte + (len(self.blocks) * self.block_size), partial_block, self.persistent)
+                                                  len(self.blocks) * self.block_size, self.start_byte + (len(self.blocks) * self.block_size), partial_block, self.persistent)
         self.total_blocks = len(self.blocks)
 
     def get_block_by_offset(self, offset_in_piece):

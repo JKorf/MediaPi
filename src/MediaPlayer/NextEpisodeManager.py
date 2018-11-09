@@ -7,9 +7,10 @@ from MediaPlayer.TorrentManager import TorrentManager
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Network import RequestFactory
 from Shared.Settings import Settings
-from Shared.Util import RequestFactory, Singleton
-from UI.Web.Server.Models import FileStructure
+from Shared.Util import Singleton
+from Webserver.Models import FileStructure
 
 
 class NextEpisodeManager(metaclass=Singleton):
@@ -149,7 +150,8 @@ class NextEpisodeManager(metaclass=Singleton):
         self.next_path = next_epi[0]["torrents"]["0"]["url"]
         self.next_img = VLCPlayer().img
 
-    def add_leading_zero(self, val):
+    @staticmethod
+    def add_leading_zero(val):
         i = int(val)
         if i < 10:
             return "0" + str(i)

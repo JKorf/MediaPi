@@ -6,11 +6,12 @@ from Controllers.LightController import LightManager
 from Shared.Events import EventManager
 from Shared.Events import EventType
 from Shared.Logger import Logger
+from Shared.Network import RequestFactory
 from Shared.Settings import Settings as AppSettings
 from Shared.Stats import Stats
 from Shared.Threading import ThreadManager
-from Shared.Util import to_JSON, RequestFactory, current_time, write_size
-from UI.Web.Server.Models import Info, StartUp
+from Shared.Util import to_JSON, current_time, write_size
+from Webserver.Models import Info, StartUp
 
 
 class UtilController:
@@ -20,7 +21,8 @@ class UtilController:
         info = Info(current_time() - Stats.total('start_time'), Stats.total('peers_connect_try'), Stats.total('peers_connect_failed'), Stats.total('peers_connect_success'),
                     Stats.total('peers_source_dht'), Stats.total('peers_source_udp_tracker'), Stats.total('peers_source_http_tracker'), Stats.total('peers_source_exchange'),
                     write_size(Stats.total('total_downloaded')), Stats.total('subs_downloaded'), Stats.total('vlc_played'),
-                    write_size(Stats.total('max_download_speed')), Stats.total('peers_source_dht_connected'), Stats.total('peers_source_udp_tracker_connected'), Stats.total('peers_source_http_tracker_connected'), Stats.total('peers_source_pex_connected'))
+                    write_size(Stats.total('max_download_speed')), Stats.total('peers_source_dht_connected'), Stats.total('peers_source_udp_tracker_connected'), Stats.total('peers_source_http_tracker_connected'),
+                    Stats.total('peers_source_pex_connected'))
 
         return to_JSON(info)
 

@@ -1,6 +1,6 @@
 from Controllers.LightController import LightManager
 from Shared.Util import to_JSON
-from UI.Web.Server.Models import LightControl, LightDevice
+from Webserver.Models import LightControl, LightDevice
 
 
 class LightController:

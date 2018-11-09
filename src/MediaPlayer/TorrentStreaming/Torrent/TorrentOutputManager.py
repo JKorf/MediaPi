@@ -99,8 +99,7 @@ class DiskWriter:
 
     def get_file_for_byte(self, byt):
         for file in self.torrent.files:
-            if file.start_byte <= byt and file.end_byte > byt:
+            if file.start_byte <= byt < file.end_byte:
                 return file
 
         return None
-

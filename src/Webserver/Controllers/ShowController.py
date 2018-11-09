@@ -5,7 +5,7 @@ import urllib.request
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from UI.Web.Server.Providers.ShowProvider import ShowProvider
+from Webserver.Providers.ShowProvider import ShowProvider
 
 
 class ShowController:

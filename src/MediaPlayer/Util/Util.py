@@ -47,14 +47,14 @@ def uri_from_bytes(data):
     return 'tcp://' + ip + ":" + str(port)
 
 
-def check_bytes_length(bytes, expected):
-    if bytes is None or len(bytes) is not expected:
+def check_bytes_length(byte_data, expected):
+    if byte_data is None or len(byte_data) is not expected:
         return False
     return True
 
 
-def check_minimal_bytes_length(bytes, minimal):
-    if bytes is None or len(bytes) < minimal:
+def check_minimal_bytes_length(byte_data, minimal):
+    if byte_data is None or len(byte_data) < minimal:
         return False
     return True
 
@@ -132,4 +132,3 @@ def is_media_file(path):
     ext = os.path.splitext(path)[1].lower()
     if ext == ".mp4" or ext == ".mkv" or ext == ".avi":
         return True
-

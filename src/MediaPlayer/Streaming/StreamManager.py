@@ -145,7 +145,7 @@ class StreamManager:
         old_stream_position = self.stream_position_piece_index
         self.change_stream_position(start_byte)
         index_change = int(math.floor(start_byte / self.torrent.piece_length)) - old_stream_position
-        if index_change >= 0 and index_change < 2: # If it's the same piece or only one piece forwards dont seek
+        if 0 <= index_change < 2:  # If it's the same piece or only one piece forwards dont seek
             return
         self.torrent.download_manager.seek(old_stream_position, self.stream_position_piece_index)
         self.buffer.seek(self.stream_position_piece_index)

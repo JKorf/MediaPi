@@ -2,7 +2,6 @@ import random
 import time
 from urllib.parse import urlparse
 
-from MediaPlayer.TorrentStreaming.Connections import HttpClient, UdpClient
 from MediaPlayer.TorrentStreaming.Tracker import TrackerMessages
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
@@ -10,6 +9,7 @@ from MediaPlayer.Util.Enums import PeerSource
 from MediaPlayer.Util.Util import uri_from_bytes
 from Shared.Events import EventManager, EventType
 from Shared.Logger import *
+from Shared.Network import RequestFactory, UdpClient
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
@@ -33,7 +33,6 @@ class HttpTracker:
         self.could_connect = True
         self.try_number = 0
         self.last_announce = 0
-        self.connection = HttpClient()
         self.tracker_peer_request_amount = Settings.get_int("tracker_peer_request_amount")
 
     def announce_torrent(self, torrent):
@@ -41,20 +40,20 @@ class HttpTracker:
         announce_message = TrackerMessages.TrackerAnnounceMessage.for_http(torrent.info_hash, 2, torrent.download_counter.total, torrent.left, torrent.uploaded, self.tracker_peer_request_amount)
 
         path = self.uri.path + announce_message.as_param_string()
-        response = self.connection.send_receive(self.uri.scheme + "://" + self.uri.netloc, path)
+        response = RequestFactory.make_request(path)
         if response is None:
             return False
 
         try:
-            dict = Bencode.bdecode(response)
+            response_dict = Bencode.bdecode(response)
         except BTFailure:
             Logger.write(2, 'Invalid tracker response: ' + str(response))
             return False
 
-        if b"peers" not in dict:
+        if b"peers" not in response_dict:
             return False
 
-        peers_data = dict[b"peers"]
+        peers_data = response_dict[b"peers"]
         total_peers = int(len(peers_data) / 6)
         offset = 0
         peers = []
@@ -75,7 +74,7 @@ class UdpTracker:
         self.connection_id = 0
         self.connection_id_retrieved = 0
         self.try_number = 0
-        self.connection = UdpClient(host, port)
+        self.connection = UdpClient(host, port, Settings.get_int("connection_timeout") / 1000)
         self.tracker_peer_request_amount = Settings.get_int("tracker_peer_request_amount")
 
     def connect(self):
@@ -87,8 +86,9 @@ class UdpTracker:
         self.connection_id = 0x41727101980
 
         connection_message = TrackerMessages.TrackerConnectionMessage(self.connection_id, self.transaction_id, 0)
-        data = self.connection.send_receive(connection_message.as_bytes())
-        if data is None:
+        send_okay = self.connection.send(connection_message.as_bytes())
+        data = self.connection.receive()
+        if not send_okay or data is None:
             return False
 
         response_message = TrackerMessages.TrackerConnectionMessage.for_receive(data)
@@ -109,8 +109,9 @@ class UdpTracker:
                                                                           torrent.download_counter.total, torrent.left, torrent.uploaded, self.tracker_peer_request_amount,
                                                                           6881)
 
-        response_message_bytes = self.connection.send_receive(announce_message.as_bytes())
-        if response_message_bytes is None:
+        send_okay = self.connection.send(announce_message.as_bytes())
+        response_message_bytes = self.connection.receive()
+        if not send_okay or response_message_bytes is None:
             return False
 
         response_message = TrackerMessages.TrackerResponseMessage.from_bytes(response_message_bytes)
