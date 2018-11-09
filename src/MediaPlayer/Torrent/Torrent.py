@@ -1,29 +1,28 @@
 import base64
 import hashlib
+import math
+import time
 import urllib.parse
 import urllib.request
 from threading import Lock
 
-import math
-
-import time
-from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
-from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
-from Shared.Settings import Settings
-from Shared.Util import headers
-from MediaPlayer.Engine import Engine
-from MediaPlayer.Torrent.TorrentPeerManager import TorrentPeerManager
 from MediaPlayer.Torrent.TorrentDataManager import TorrentDataManager
 from MediaPlayer.Torrent.TorrentDownloadManager import TorrentDownloadManager
 from MediaPlayer.Torrent.TorrentMetadataManager import TorrentMetadataManager
 from MediaPlayer.Torrent.TorrentNetworkManager import TorrentNetworkManager
 from MediaPlayer.Torrent.TorrentOutputManager import TorrentOutputManager
+from MediaPlayer.Torrent.TorrentPeerManager import TorrentPeerManager
 from MediaPlayer.Tracker.Tracker import TrackerManager
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 from MediaPlayer.Util.Counter import Counter
 from MediaPlayer.Util.Enums import TorrentState
+from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
+from Shared import Engine
+from Shared.Events import EventManager, EventType
+from Shared.Logger import Logger
+from Shared.Settings import Settings
+from Shared.Util import headers
 
 
 class Torrent:
@@ -220,18 +219,18 @@ class Torrent:
         else:
             self.__set_state(TorrentState.Downloading)
 
-        self.engine.queue_repeating_work_item("peer_manager_new", 1000, self.peer_manager.update_new_peers)
-        self.engine.queue_repeating_work_item("peer_manager_status", 500, self.peer_manager.update_peer_status)
-        self.engine.queue_repeating_work_item("peer_manager_bad_peers", 30000, self.peer_manager.update_bad_peers)
-        self.engine.queue_repeating_work_item("torrent_download_manager", 5000, self.download_manager.update)
-        self.engine.queue_repeating_work_item("torrent_download_manager_prio", 5000, self.download_manager.update_priority)
-        self.engine.queue_repeating_work_item("output_manager", 1000, self.output_manager.update)
-        self.engine.queue_repeating_work_item("counter", 1000, self.download_counter.update)
-        self.engine.queue_repeating_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
-        self.engine.queue_repeating_work_item("stream_manager", 1000, self.output_manager.stream_manager.update)
+        self.engine.add_work_item("peer_manager_new", 1000, self.peer_manager.update_new_peers)
+        self.engine.add_work_item("peer_manager_status", 500, self.peer_manager.update_peer_status)
+        self.engine.add_work_item("peer_manager_bad_peers", 30000, self.peer_manager.update_bad_peers)
+        self.engine.add_work_item("torrent_download_manager", 5000, self.download_manager.update)
+        self.engine.add_work_item("torrent_download_manager_prio", 5000, self.download_manager.update_priority)
+        self.engine.add_work_item("output_manager", 1000, self.output_manager.update)
+        self.engine.add_work_item("counter", 1000, self.download_counter.update)
+        self.engine.add_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
+        self.engine.add_work_item("stream_manager", 1000, self.output_manager.stream_manager.update)
 
-        self.message_engine.queue_repeating_work_item("data_manager", 200, self.data_manager.update_write_blocks)
-        self.message_engine.queue_repeating_work_item("peer_messages", 200, self.peer_manager.process_peer_messages)
+        self.message_engine.add_work_item("data_manager", 200, self.data_manager.update_write_blocks)
+        self.message_engine.add_work_item("peer_messages", 200, self.peer_manager.process_peer_messages)
 
         self.engine.start()
         self.message_engine.start()

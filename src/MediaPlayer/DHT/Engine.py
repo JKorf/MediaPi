@@ -1,6 +1,4 @@
 import os
-
-import time
 from random import Random
 from threading import Lock
 
@@ -10,8 +8,8 @@ from MediaPlayer.DHT.Socket import Socket
 from MediaPlayer.DHT.Table import Table
 from MediaPlayer.DHT.Tasks import FindNodeTask, GetPeersTask, PingTask
 from MediaPlayer.DHT.Util import TokenManager
-from MediaPlayer.Engine.Engine import Engine
 from MediaPlayer.Util.Enums import PeerSource
+from Shared.Engine import Engine
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -28,8 +26,8 @@ class DHTEngine(metaclass=Singleton):
 
         self.socket = Socket(Settings.get_int("dht_port"), self.on_node_seen, self.on_node_timeout, self.on_query)
         self.engine = Engine("DHT Engine", 5000)
-        self.engine.queue_repeating_work_item("DHT Refresh buckets", 1000 * 60, self.refresh_buckets, False)
-        self.engine.queue_repeating_work_item("DHT Save nodes", 1000 * 60 * 5, self.save_nodes, False)
+        self.engine.add_work_item("DHT Refresh buckets", 1000 * 60, self.refresh_buckets, False)
+        self.engine.add_work_item("DHT Save nodes", 1000 * 60 * 5, self.save_nodes, False)
 
         self.running_tasks = []
         self.torrent_nodes = dict()

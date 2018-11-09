@@ -119,43 +119,4 @@ class Observer(metaclass=Singleton):
 
             time.sleep(5)
 
-    def watch_wifi(self):
-        rasp = Settings.get_bool("raspberry")
-        if rasp:
-            proc = subprocess.Popen(["iwgetid"], stdout=subprocess.PIPE, universal_newlines=True)
-            out, err = proc.communicate()
-            network_ssid = out.split(":")[1]
 
-        while True:
-            if rasp:
-                proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
-                out, err = proc.communicate()
-                cells = out.split("Cell ")
-                cell_lines = [x for x in cells if network_ssid in x]
-                if len(cell_lines) != 0:
-                    network_lines = cell_lines[0]
-                    for line in network_lines.split("\n"):
-                        if "Quality" in line:
-                            fields = line.split("  ")
-                            for field in fields:
-                                field.replace(" ", "")
-                                if len(field) <= 2:
-                                    continue
-
-                                key_value = field.split("=")
-                                if len(key_value) == 1:
-                                    key_value = field.split(":")
-
-                                if key_value[0] == "Quality":
-                                    value_max = key_value[1].split("/")
-                                    EventManager.throw_event(EventType.WiFiQualityUpdate, [float(value_max[0]) / float(value_max[1]) * 100])
-            else:
-                proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
-                out, err = proc.communicate()
-                lines = out.split("\n")
-                for line in lines:
-                    if "Signal" in line:
-                        split = line.split(":")
-                        EventManager.throw_event(EventType.WiFiQualityUpdate, [float(split[1].replace("%", ""))])
-
-            time.sleep(15)

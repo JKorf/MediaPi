@@ -45,7 +45,7 @@ class Engine:
         self.thread = CustomThread(self.runner, self.name)
         self.thread.start()
 
-    def queue_repeating_work_item(self, name, interval, work_item, initial_invoke=True):
+    def add_work_item(self, name, interval, work_item, initial_invoke=True):
         self.work_items.append(EngineWorkItem(name, interval, work_item, initial_invoke))
 
     def stop(self):

@@ -69,8 +69,6 @@ class TornadoServer:
             try:
                 self.application.listen(self.port)
                 Logger.write(2, "Tornado server running on port " + str(self.port))
-                time.sleep(5)
-                self.get_actual_address()
                 break
             except OSError:
                 self.port += 1
@@ -95,22 +93,6 @@ class TornadoServer:
         reroute = str(TornadoServer.master_ip) + url
         Logger.write(2, "Sending request to master at " + reroute)
         return await RequestFactory.make_request_async(reroute, "GET")
-
-    def get_actual_address(self):
-        for i in range(3):
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(("gmail.com", 80))
-                ip = s.getsockname()[0]
-                s.close()
-                actual_address = ip + ":" + str(self.port)
-                Logger.write(3, "WebServer running on " + actual_address)
-                EventManager.throw_event(EventType.RetrievedAddress, [actual_address])
-                return
-
-            except Exception as e:
-                Logger.write(3, "Failed to connect to remote server, try " + str(i))
-                time.sleep(10)
 
 
 class StaticFileHandler(tornado.web.StaticFileHandler):

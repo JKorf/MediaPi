@@ -1,7 +1,4 @@
-from Shared.Logger import *
-
 from MediaPlayer.Data import Bitfield
-from MediaPlayer.Engine import Engine
 from MediaPlayer.Peer.PeerConnectionManager import PeerConnectionManager
 from MediaPlayer.Peer.PeerDownloadManager import PeerDownloadManager
 from MediaPlayer.Peer.PeerExtensionManager import PeerExtensionManager
@@ -9,7 +6,8 @@ from MediaPlayer.Peer.PeerMessageHandler import PeerMessageHandler
 from MediaPlayer.Peer.PeerMetaDataManager import PeerMetaDataManager
 from MediaPlayer.Util.Counter import Counter
 from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState
-from Shared.Util import write_size
+from Shared import Engine
+from Shared.Logger import *
 
 
 class Peer:
@@ -60,10 +58,10 @@ class Peer:
         self.extension_manager = PeerExtensionManager(self)
         self.counter = Counter()
 
-        self.engine.queue_repeating_work_item("connection_manager", 30000, self.connection_manager.update)
-        self.engine.queue_repeating_work_item("metadata_manager", 1000, self.metadata_manager.update)
-        self.engine.queue_repeating_work_item("download_manager", 200, self.download_manager.update)
-        self.engine.queue_repeating_work_item("peer_counter", 1000, self.counter.update)
+        self.engine.add_work_item("connection_manager", 30000, self.connection_manager.update)
+        self.engine.add_work_item("metadata_manager", 1000, self.metadata_manager.update)
+        self.engine.add_work_item("download_manager", 200, self.download_manager.update)
+        self.engine.add_work_item("peer_counter", 1000, self.counter.update)
 
         self.engine.start()
         Logger.write(1, str(self.id) + ' Peer started')

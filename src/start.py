@@ -2,6 +2,7 @@
 import os
 from datetime import datetime
 
+from Automation.WiFiController import WiFiController
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from UI.TV.GUI import GUI
 from UI.TV.VLCPlayer import VLCPlayer
@@ -52,6 +53,7 @@ class Program:
         self.version = datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S")
 
         LightManager().init()
+        WiFiController().start()
 
         if not self.is_slave:
             self.file_listener = StreamListener("MasterFileServer", 50010)
@@ -79,6 +81,7 @@ class Program:
     def init_singletons():
         VLCPlayer()
         NextEpisodeManager()
+        WiFiController()
         TorrentManager()
         Observer()
         LightManager()
