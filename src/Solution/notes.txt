@@ -19,6 +19,8 @@
 
     Tv control
 
+    add_watched e.d. niet vanuit UI initieren
+
     zram: https://eltechs.com/overclock-raspberry-pi-3/
     Try with new case:
         total_mem=1024

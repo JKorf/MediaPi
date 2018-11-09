@@ -80,8 +80,6 @@ class UdpClient:
     def receive(self):
         try:
             data = self.socket.recv(2048)
-            self.socket.close()
-            self.socket = None
             return data
         except (socket.timeout, socket.gaierror, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
             return None

@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
 import os
+import threading
 from datetime import datetime
-
-
-os.chdir(os.path.dirname(__file__))
-
-from Controllers.WiFiController import WiFiController
-from MediaPlayer.NextEpisodeManager import NextEpisodeManager
-from MediaPlayer.Player.VLCPlayer import VLCPlayer
-from UI.TV.GUI import GUI
-from Webserver.TornadoServer import TornadoServer
-from MediaPlayer.TorrentManager import TorrentManager
-from Controllers.LightController import LightManager
-from MediaPlayer.UnfinishedMediaTracker import UnfinishedMediaTracker
-
+from subprocess import call
 import sys
 import time
 import traceback
-from subprocess import call
 
+os.chdir(os.path.dirname(__file__))
+
+
+from MediaPlayer.NextEpisodeManager import NextEpisodeManager
+from MediaPlayer.Player.VLCPlayer import VLCPlayer
+from Webserver.TornadoServer import TornadoServer
+from MediaPlayer.TorrentManager import TorrentManager
+from MediaPlayer.UnfinishedMediaTracker import UnfinishedMediaTracker
 from MediaPlayer.Streaming.StreamListener import StreamListener
+
+from UI.TV.GUI import GUI
+
+from Controllers.WiFiController import WiFiController
+from Controllers.LightController import LightManager
 
 from Shared.Util import current_time
 from Shared.Stats import Stats

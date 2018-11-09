@@ -52,4 +52,4 @@ raspberry=False
 
 # DHT
 dht=True
-dht_port=50010
+dht_port=50011
