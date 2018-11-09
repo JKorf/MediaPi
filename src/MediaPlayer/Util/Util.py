@@ -1,32 +1,10 @@
 import os
 import socket
-import time
 
 import re
 
 from MediaPlayer.Util import Network
 from MediaPlayer.Util.Network import read_ushort
-
-
-def get_first(iterable, default=None):
-    if iterable:
-        for item in iterable:
-            return item
-    return default
-
-
-def get_first_x(iterable, amount, default=[]):
-    result = []
-    done = 0
-    if iterable:
-        for item in iterable:
-            result.append(item)
-            done += 1
-            if done == amount:
-                return result
-
-        return result
-    return default
 
 
 def get_file_info(filename):

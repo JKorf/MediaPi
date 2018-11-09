@@ -3,7 +3,6 @@ import time
 import urllib.request
 import urllib.parse
 
-from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from Shared.Logger import Logger
 
@@ -15,10 +14,6 @@ def current_time():
 def to_JSON(obj):
     return json.dumps(obj, default=lambda o: o.__dict__,
                       sort_keys=True, indent=4)
-
-
-def parse_bool(b):
-    return b == 'true' or b == 'True'
 
 
 def write_size(data):
