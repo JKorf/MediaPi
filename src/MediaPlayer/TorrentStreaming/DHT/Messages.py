@@ -1,9 +1,9 @@
 import abc
 
-from MediaPlayer.DHT.Util import TransactionIdManager
-from Shared.Logger import Logger
+from MediaPlayer.TorrentStreaming.DHT.Util import TransactionIdManager
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
+from Shared.Logger import Logger
 
 
 class QueryMessage:

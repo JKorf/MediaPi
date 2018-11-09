@@ -1,27 +1,16 @@
 import asyncio
 import os
-import socket
-import time
 import traceback
 import urllib.parse
 import urllib.request
 
 import tornado
-from UI.Web.Server.Controllers.HDController import HDController
-from UI.Web.Server.Controllers.LightController import LightController
-from UI.Web.Server.Controllers.MovieController import MovieController
-from UI.Web.Server.Controllers.RadioController import RadioController
-from UI.Web.Server.Controllers.ShowController import ShowController
-from UI.Web.Server.Controllers.TorrentController import TorrentController
-from UI.Web.Server.Controllers.UtilController import UtilController
-from UI.Web.Server.Controllers.WebsocketController import WebsocketController
-from UI.Web.Server.Controllers.YoutubeController import YoutubeController
 from tornado import ioloop, web, websocket
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
 from Automation.TVController import TVManager
 from Database.Database import Database
-from Managers.TorrentManager import TorrentManager
+from MediaPlayer.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState
 from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventManager, EventType
@@ -29,7 +18,16 @@ from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, RequestFactory
+from UI.Web.Server.Controllers.HDController import HDController
+from UI.Web.Server.Controllers.LightController import LightController
+from UI.Web.Server.Controllers.MovieController import MovieController
 from UI.Web.Server.Controllers.PlayerController import PlayerController
+from UI.Web.Server.Controllers.RadioController import RadioController
+from UI.Web.Server.Controllers.ShowController import ShowController
+from UI.Web.Server.Controllers.TorrentController import TorrentController
+from UI.Web.Server.Controllers.UtilController import UtilController
+from UI.Web.Server.Controllers.WebsocketController import WebsocketController
+from UI.Web.Server.Controllers.YoutubeController import YoutubeController
 
 
 class TornadoServer:

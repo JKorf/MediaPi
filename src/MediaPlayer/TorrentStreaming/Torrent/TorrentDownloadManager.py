@@ -1,11 +1,10 @@
 from threading import Lock
 
+from MediaPlayer.TorrentStreaming.Torrent.Prioritizer import StreamPrioritizer
+from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
-from Shared.Timer import Timer
 from Shared.Util import current_time
-from MediaPlayer.Torrent.Prioritizer import StreamPrioritizer
-from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 
 
 class TorrentDownloadManager:

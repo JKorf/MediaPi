@@ -1,12 +1,21 @@
 from threading import Lock
 
 from Database.Database import Database
+from Shared.Engine import Engine
+from Shared.Util import Singleton
 
 
-class Stats:
+class Stats(metaclass=Singleton):
 
     lock = Lock()
     cache = dict()
+
+    def __init__(self):
+        self.engine = Engine("Stat saver")
+        self.engine.add_work_item("Save stat", 10000, self.save_stats, False)
+
+    def start(self):
+        self.engine.start()
 
     @staticmethod
     def _get_stat(name):

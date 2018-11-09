@@ -9,7 +9,7 @@ from Shared.Util import current_time
 
 class Engine:
 
-    def __init__(self, name, tick_time):
+    def __init__(self, name, tick_time=1000):
         self.name = name
         self.tick_time = tick_time
         self.last_tick = 0

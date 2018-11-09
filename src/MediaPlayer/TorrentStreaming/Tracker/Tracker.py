@@ -2,8 +2,8 @@ import random
 import time
 from urllib.parse import urlparse
 
-from MediaPlayer.Connections import HttpClient, UdpClient
-from MediaPlayer.Tracker import TrackerMessages
+from MediaPlayer.TorrentStreaming.Connections import HttpClient, UdpClient
+from MediaPlayer.TorrentStreaming.Tracker import TrackerMessages
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 from MediaPlayer.Util.Enums import PeerSource

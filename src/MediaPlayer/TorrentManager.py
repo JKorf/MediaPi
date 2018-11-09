@@ -1,15 +1,16 @@
 import datetime
 import time
 
+from MediaPlayer.TorrentStreaming.Torrent.Torrent import Torrent
+
 from Database.Database import Database
-from MediaPlayer.DHT.Engine import DHTEngine
+from MediaPlayer.Player.VLCPlayer import PlayerState
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
-from MediaPlayer.Torrent.Torrent import Torrent
+from MediaPlayer.TorrentStreaming.DHT.Engine import DHTEngine
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import current_time, Singleton
-from UI.TV.VLCPlayer import PlayerState
 
 
 class TorrentManager(metaclass=Singleton):

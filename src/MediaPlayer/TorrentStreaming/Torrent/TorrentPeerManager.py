@@ -1,8 +1,9 @@
 from random import Random
 from urllib.parse import urlparse
 
-from MediaPlayer.Peer.Peer import Peer
-from MediaPlayer.Peer.PeerMessages import HaveMessage
+from MediaPlayer.TorrentStreaming.Peer.PeerMessages import HaveMessage
+
+from MediaPlayer.TorrentStreaming.Peer.Peer import Peer
 from MediaPlayer.Util.Enums import PeerSource, TorrentState, ConnectionState, PeerSpeed
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger

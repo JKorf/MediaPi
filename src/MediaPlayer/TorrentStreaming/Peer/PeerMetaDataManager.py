@@ -1,13 +1,13 @@
 from time import sleep
 
-from Shared.Logger import Logger
-from Shared.Settings import Settings
-from Shared.Util import current_time
-from MediaPlayer.ExtensionManager import ProtocolExtensionManager
-from MediaPlayer.Peer.PeerMessages import BitfieldMessage, InterestedMessage, HandshakeMessage, ExtensionHandshakeMessage, \
+from MediaPlayer.TorrentStreaming.ExtensionManager import ProtocolExtensionManager
+from MediaPlayer.TorrentStreaming.Peer.PeerMessages import BitfieldMessage, InterestedMessage, HandshakeMessage, ExtensionHandshakeMessage, \
     UninterestedMessage, MetadataMessage, PortMessage, HaveNoneMessage
 from MediaPlayer.Util.Enums import ConnectionState, ExtensionName, MetadataMessageType, TorrentState, PeerInterestedState, \
     PeerSpeed
+from Shared.Logger import Logger
+from Shared.Settings import Settings
+from Shared.Util import current_time
 
 
 class PeerMetaDataManager:

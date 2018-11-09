@@ -3,13 +3,13 @@ import os
 import time
 from enum import Enum
 
+from MediaPlayer.Player import vlc
+from MediaPlayer.Player.vlc import libvlc_get_version, EventType as VLCEventType
 from Shared.Events import EventManager, EventType
-from Shared.Util import Singleton
-from UI.TV import vlc
-from UI.TV.vlc import libvlc_get_version, EventType as VLCEventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
+from Shared.Util import Singleton
 
 
 class VLCPlayer(metaclass=Singleton):

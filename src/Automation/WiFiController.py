@@ -6,12 +6,13 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import Singleton
+from UI.Web.Server.TornadoServer import TornadoServer
 
 
 class WiFiController(metaclass=Singleton):
 
     def __init__(self):
-        self.engine = Engine("WiFi Manager", 5000)
+        self.engine = Engine("WiFi Manager")
         self.engine.add_work_item("WiFi watcher", 5000, self.watch_wifi, False)
         self.pi = Settings.get_bool("raspberry")
 
@@ -62,6 +63,7 @@ class WiFiController(metaclass=Singleton):
 
                     if not self.connected:
                         self.connected = self.get_actual_address()
+        return True
 
     def get_actual_address(self):
             try:
@@ -69,9 +71,8 @@ class WiFiController(metaclass=Singleton):
                 s.connect(("gmail.com", 80))
                 ip = s.getsockname()[0]
                 s.close()
-                actual_address = ip + ":" + str(self.port)
-                Logger.write(3, "WebServer running on " + actual_address)
-                EventManager.throw_event(EventType.RetrievedAddress, [actual_address])
+                Logger.write(3, "WebServer running on " + ip)
+                EventManager.throw_event(EventType.RetrievedAddress, [ip])
                 return True
 
             except Exception as e:

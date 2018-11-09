@@ -2,18 +2,19 @@
 import os
 from datetime import datetime
 
-from Automation.WiFiController import WiFiController
-from MediaPlayer.NextEpisodeManager import NextEpisodeManager
-from UI.TV.GUI import GUI
-from UI.TV.VLCPlayer import VLCPlayer
-from UI.Web.Server.TornadoServer import TornadoServer
 
 os.chdir(os.path.dirname(__file__))
 
-from Managers.Observer import Observer
-from Managers.TorrentManager import TorrentManager
+from Shared.Engine import Engine
 
+from Automation.WiFiController import WiFiController
+from MediaPlayer.NextEpisodeManager import NextEpisodeManager
+from MediaPlayer.Player.VLCPlayer import VLCPlayer
+from UI.TV.GUI import GUI
+from UI.Web.Server.TornadoServer import TornadoServer
+from MediaPlayer.TorrentManager import TorrentManager
 from Automation.LightController import LightManager
+from MediaPlayer.UnfinishedMediaTracker import UnfinishedMediaTracker
 
 import sys
 import time
@@ -54,6 +55,8 @@ class Program:
 
         LightManager().init()
         WiFiController().start()
+        Stats().start()
+        UnfinishedMediaTracker().start()
 
         if not self.is_slave:
             self.file_listener = StreamListener("MasterFileServer", 50010)
@@ -79,11 +82,12 @@ class Program:
 
     @staticmethod
     def init_singletons():
+        Stats()
         VLCPlayer()
         NextEpisodeManager()
+        UnfinishedMediaTracker()
         WiFiController()
         TorrentManager()
-        Observer()
         LightManager()
 
     @staticmethod

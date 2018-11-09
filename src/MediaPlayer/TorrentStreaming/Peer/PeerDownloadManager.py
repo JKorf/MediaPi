@@ -1,10 +1,10 @@
 from threading import Lock
 
+from MediaPlayer.TorrentStreaming.Peer.PeerMessages import RequestMessage
+from MediaPlayer.Util.Enums import ConnectionState, PeerSpeed, PeerInterestedState, PeerChokeState
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import current_time, write_size
-from MediaPlayer.Peer.PeerMessages import RequestMessage
-from MediaPlayer.Util.Enums import ConnectionState, PeerSpeed, PeerInterestedState, PeerChokeState
 
 
 class PeerDownloadManager:

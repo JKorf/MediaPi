@@ -1,14 +1,13 @@
 import math
 from threading import Lock
 
+from MediaPlayer.TorrentStreaming.Data import Bitfield, Piece
+from MediaPlayer.TorrentStreaming.Torrent.TorrentPieceHashValidator import TorrentPieceHashValidator
+from MediaPlayer.Util.Enums import TorrentState
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Stats import Stats
-from MediaPlayer.Data import Bitfield, Piece
-from MediaPlayer.Torrent.TorrentPieceHashValidator import TorrentPieceHashValidator
-
-from MediaPlayer.Util.Enums import TorrentState
 
 
 class TorrentDataManager:

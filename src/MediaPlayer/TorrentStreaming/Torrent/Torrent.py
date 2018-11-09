@@ -6,13 +6,14 @@ import urllib.parse
 import urllib.request
 from threading import Lock
 
-from MediaPlayer.Torrent.TorrentDataManager import TorrentDataManager
-from MediaPlayer.Torrent.TorrentDownloadManager import TorrentDownloadManager
-from MediaPlayer.Torrent.TorrentMetadataManager import TorrentMetadataManager
-from MediaPlayer.Torrent.TorrentNetworkManager import TorrentNetworkManager
-from MediaPlayer.Torrent.TorrentOutputManager import TorrentOutputManager
-from MediaPlayer.Torrent.TorrentPeerManager import TorrentPeerManager
-from MediaPlayer.Tracker.Tracker import TrackerManager
+from MediaPlayer.TorrentStreaming.Torrent.TorrentDataManager import TorrentDataManager
+from MediaPlayer.TorrentStreaming.Torrent.TorrentDownloadManager import TorrentDownloadManager
+from MediaPlayer.TorrentStreaming.Torrent.TorrentMetadataManager import TorrentMetadataManager
+from MediaPlayer.TorrentStreaming.Torrent.TorrentNetworkManager import TorrentNetworkManager
+from MediaPlayer.TorrentStreaming.Torrent.TorrentOutputManager import TorrentOutputManager
+from MediaPlayer.TorrentStreaming.Tracker.Tracker import TrackerManager
+
+from MediaPlayer.TorrentStreaming.Torrent.TorrentPeerManager import TorrentPeerManager
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 from MediaPlayer.Util.Counter import Counter
@@ -22,6 +23,7 @@ from Shared import Engine
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Stats import Stats
 from Shared.Util import headers
 
 
@@ -228,6 +230,7 @@ class Torrent:
         self.engine.add_work_item("counter", 1000, self.download_counter.update)
         self.engine.add_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
         self.engine.add_work_item("stream_manager", 1000, self.output_manager.stream_manager.update)
+        self.engine.add_work_item("check_download_speed", 1000, self.check_download_speed)
 
         self.message_engine.add_work_item("data_manager", 200, self.data_manager.update_write_blocks)
         self.message_engine.add_work_item("peer_messages", 200, self.peer_manager.process_peer_messages)
@@ -372,6 +375,11 @@ class Torrent:
 
     def get_data_bytes_for_hash(self, start_byte, length):
         return self.data_manager.get_data_bytes_for_hash(start_byte + self.media_file.start_byte, length)
+
+    def check_download_speed(self):
+        current = Stats.total('max_download_speed')
+        if self.download_counter.max > current:
+            Stats.set('max_download_speed', self.download_counter.max)
 
     def stop(self):
         Logger.write(2, 'Torrent stopping')

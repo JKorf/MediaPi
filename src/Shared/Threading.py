@@ -3,7 +3,6 @@ import traceback
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
-from Shared.Stats import Stats
 from Shared.Util import current_time
 
 
@@ -38,7 +37,6 @@ class CustomThread:
         self.thread_name = thread_name
         self.start_time = 0
         ThreadManager.add_thread(self)
-        Stats.add('threads_started', 1)
 
     def start(self):
         self.start_time = current_time()

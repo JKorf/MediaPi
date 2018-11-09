@@ -1,21 +1,20 @@
+import calendar
 import json
+import math
 import os
 import sys
-import calendar
+import time
 from collections import Counter
 from datetime import datetime
+from os.path import isfile, join
 from random import Random
 
-import time
-from PyQt4 import QtSvg
-
-import math
 from PyQt4 import QtCore, QtGui
+from PyQt4 import QtSvg
 from PyQt4.QtCore import *
-from os.path import isfile, join
 
-from UI.TV.VLCPlayer import PlayerState
-from Managers.TorrentManager import TorrentManager
+from MediaPlayer.Player.VLCPlayer import PlayerState
+from MediaPlayer.TorrentManager import TorrentManager
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings

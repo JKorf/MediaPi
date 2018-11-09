@@ -1,13 +1,12 @@
 import math
 from threading import Lock
 
-from UI.TV.VLCPlayer import PlayerState
+from MediaPlayer.Player.VLCPlayer import PlayerState
+from MediaPlayer.Streaming.StreamListener import StreamListener
+from MediaPlayer.Util.Enums import TorrentState, DownloadMode
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from MediaPlayer.Streaming.StreamListener import StreamListener
-from MediaPlayer.Util.Enums import TorrentState, DownloadMode
-
 from Shared.Util import write_size
 
 

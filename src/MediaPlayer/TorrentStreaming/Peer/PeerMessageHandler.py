@@ -1,13 +1,13 @@
-from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
-from Shared.Util import current_time
-from MediaPlayer.Peer.PeerMessages import ChokeMessage, BasePeerMessage, UnchokeMessage, InterestedMessage, \
+from MediaPlayer.TorrentStreaming.Peer.PeerMessages import ChokeMessage, BasePeerMessage, UnchokeMessage, InterestedMessage, \
     UninterestedMessage, HaveMessage, RequestMessage, PieceMessage, CancelMessage, PortMessage, BitfieldMessage, \
     ExtensionHandshakeMessage, PeerExchangeMessage, MetadataMessage, KeepAliveMessage, HaveAllMessage, HaveNoneMessage, \
     AllowedFastMessage, SuggestPieceMessage, RejectRequestMessage
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 from MediaPlayer.Util.Enums import ConnectionState, PeerSource, TorrentState, PeerChokeState, PeerInterestedState
+from Shared.Events import EventManager, EventType
+from Shared.Logger import Logger
+from Shared.Util import current_time
 
 
 class PeerMessageHandler:

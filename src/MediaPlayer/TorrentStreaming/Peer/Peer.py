@@ -1,9 +1,10 @@
-from MediaPlayer.Data import Bitfield
-from MediaPlayer.Peer.PeerConnectionManager import PeerConnectionManager
-from MediaPlayer.Peer.PeerDownloadManager import PeerDownloadManager
-from MediaPlayer.Peer.PeerExtensionManager import PeerExtensionManager
-from MediaPlayer.Peer.PeerMessageHandler import PeerMessageHandler
-from MediaPlayer.Peer.PeerMetaDataManager import PeerMetaDataManager
+from MediaPlayer.TorrentStreaming.Peer.PeerConnectionManager import PeerConnectionManager
+from MediaPlayer.TorrentStreaming.Peer.PeerDownloadManager import PeerDownloadManager
+from MediaPlayer.TorrentStreaming.Peer.PeerExtensionManager import PeerExtensionManager
+from MediaPlayer.TorrentStreaming.Peer.PeerMetaDataManager import PeerMetaDataManager
+
+from MediaPlayer.TorrentStreaming.Data import Bitfield
+from MediaPlayer.TorrentStreaming.Peer.PeerMessageHandler import PeerMessageHandler
 from MediaPlayer.Util.Counter import Counter
 from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState
 from Shared import Engine

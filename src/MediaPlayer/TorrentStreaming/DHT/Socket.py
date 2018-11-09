@@ -1,8 +1,7 @@
+import time
 from socket import socket, AF_INET, SOCK_DGRAM
 
-import time
-
-from MediaPlayer.DHT.Messages import NodeMessage, BaseDHTMessage, QueryMessage, ErrorDHTMessage, QueryDHTMessage, ResponseDHTMessage
+from MediaPlayer.TorrentStreaming.DHT.Messages import NodeMessage, BaseDHTMessage, QueryMessage, ErrorDHTMessage, QueryDHTMessage, ResponseDHTMessage
 from Shared.Logger import Logger
 from Shared.Threading import CustomThread
 from Shared.Util import current_time

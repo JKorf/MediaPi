@@ -1,11 +1,10 @@
 import glob
 import hashlib
 import os
+from os.path import isfile, join
 from threading import Lock
 
-from os.path import isfile, join
-
-from UI.TV.VLCPlayer import PlayerState
+from MediaPlayer.Player.VLCPlayer import PlayerState
 from MediaPlayer.Subtitles.SubtitlesOpenSubtitles import SubtitlesOpenSubtitles
 from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventManager, EventType

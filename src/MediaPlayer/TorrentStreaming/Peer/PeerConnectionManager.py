@@ -1,12 +1,12 @@
 from threading import Lock
 
+from MediaPlayer.TorrentStreaming.Connections import TcpClient
+from MediaPlayer.TorrentStreaming.Peer.PeerMessages import KeepAliveMessage
+from MediaPlayer.Util.Enums import ConnectionState, ReceiveState, PeerSource
+from MediaPlayer.Util.Network import *
 from Shared.Logger import *
 from Shared.Stats import Stats
 from Shared.Util import current_time
-from MediaPlayer.Connections import TcpClient
-from MediaPlayer.Peer.PeerMessages import KeepAliveMessage
-from MediaPlayer.Util.Enums import ConnectionState, ReceiveState, PeerSource
-from MediaPlayer.Util.Network import *
 
 
 class PeerConnectionManager:

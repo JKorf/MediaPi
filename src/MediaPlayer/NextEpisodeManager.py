@@ -2,13 +2,13 @@ import json
 import os
 import urllib.parse
 
-from Managers.TorrentManager import TorrentManager
+from MediaPlayer.Player.VLCPlayer import VLCPlayer, PlayerState
+from MediaPlayer.TorrentManager import TorrentManager
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import RequestFactory, Singleton
-from UI.TV.VLCPlayer import VLCPlayer, PlayerState
 from UI.Web.Server.Models import FileStructure
 
 

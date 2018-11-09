@@ -1,9 +1,9 @@
-from random import Random
 from threading import Lock
 
-from MediaPlayer.DHT.Node import Node
-from MediaPlayer.DHT.Messages import QueryDHTMessage
-from MediaPlayer.DHT.Util import DHTTaskState
+from MediaPlayer.TorrentStreaming.DHT.Messages import QueryDHTMessage
+from MediaPlayer.TorrentStreaming.DHT.Util import DHTTaskState
+
+from MediaPlayer.TorrentStreaming.DHT.Node import Node
 from MediaPlayer.Util.Util import ip_port_from_bytes
 from Shared.Logger import Logger
 from Shared.Util import current_time

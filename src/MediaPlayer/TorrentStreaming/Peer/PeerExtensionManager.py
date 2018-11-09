@@ -1,6 +1,6 @@
-from Shared.Logger import Logger
-from MediaPlayer.ExtensionManager import ProtocolExtensionManager
+from MediaPlayer.TorrentStreaming.ExtensionManager import ProtocolExtensionManager
 from MediaPlayer.Util.Enums import ExtensionType
+from Shared.Logger import Logger
 
 
 class PeerExtensionManager:

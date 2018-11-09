@@ -3,10 +3,10 @@ import traceback
 from threading import Lock
 
 import psutil
-from UI.TV.VLCPlayer import PlayerState, VLCPlayer
 
 from Database.Database import Database
-from Managers.TorrentManager import TorrentManager
+from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
+from MediaPlayer.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger

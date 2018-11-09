@@ -19,7 +19,7 @@ class UtilController:
     def info():
         info = Info(current_time() - Stats.total('start_time'), Stats.total('peers_connect_try'), Stats.total('peers_connect_failed'), Stats.total('peers_connect_success'),
                     Stats.total('peers_source_dht'), Stats.total('peers_source_udp_tracker'), Stats.total('peers_source_http_tracker'), Stats.total('peers_source_exchange'),
-                    write_size(Stats.total('total_downloaded')), Stats.total('threads_started'), Stats.total('subs_downloaded'), Stats.total('vlc_played'),
+                    write_size(Stats.total('total_downloaded')), Stats.total('subs_downloaded'), Stats.total('vlc_played'),
                     write_size(Stats.total('max_download_speed')), Stats.total('peers_source_dht_connected'), Stats.total('peers_source_udp_tracker_connected'), Stats.total('peers_source_http_tracker_connected'), Stats.total('peers_source_pex_connected'))
 
         return to_JSON(info)
