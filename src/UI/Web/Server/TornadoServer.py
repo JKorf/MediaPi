@@ -8,7 +8,7 @@ import tornado
 from tornado import ioloop, web, websocket
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
-from Automation.TVController import TVManager
+from Controllers.TVController import TVManager
 from Database.Database import Database
 from MediaPlayer.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState

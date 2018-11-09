@@ -6,7 +6,6 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import Singleton
-from UI.Web.Server.TornadoServer import TornadoServer
 
 
 class WiFiController(metaclass=Singleton):

@@ -2,7 +2,7 @@ import os
 import urllib.parse
 import urllib.request
 
-from Automation.LightController import LightManager
+from Controllers.LightController import LightManager
 from Shared.Events import EventManager
 from Shared.Events import EventType
 from Shared.Logger import Logger

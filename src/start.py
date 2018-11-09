@@ -5,15 +5,13 @@ from datetime import datetime
 
 os.chdir(os.path.dirname(__file__))
 
-from Shared.Engine import Engine
-
-from Automation.WiFiController import WiFiController
+from Controllers.WiFiController import WiFiController
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from UI.TV.GUI import GUI
 from UI.Web.Server.TornadoServer import TornadoServer
 from MediaPlayer.TorrentManager import TorrentManager
-from Automation.LightController import LightManager
+from Controllers.LightController import LightManager
 from MediaPlayer.UnfinishedMediaTracker import UnfinishedMediaTracker
 
 import sys

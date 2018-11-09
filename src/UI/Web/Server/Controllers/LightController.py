@@ -1,4 +1,4 @@
-from Automation.LightController import LightManager
+from Controllers.LightController import LightManager
 from Shared.Util import to_JSON
 from UI.Web.Server.Models import LightControl, LightDevice
 
