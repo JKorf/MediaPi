@@ -9,7 +9,11 @@
 
     zigbee connectie?
 
+    Out of memory
+
     Single phone ui for multiple slaves
+
+    Next episode wordt niet getoont omdat ws connectie wordt verbroken
 
     speed graph
 
