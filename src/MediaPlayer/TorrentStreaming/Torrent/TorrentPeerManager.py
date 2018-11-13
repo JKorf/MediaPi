@@ -31,6 +31,7 @@ class TorrentPeerManager:
         self.download_start = 0
         self.start_time = current_time()
         self.last_peer_request = 0
+        self.checked_no_peers = False
 
         self.event_id_log = EventManager.register_event(EventType.Log, self.log_peers)
         self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
@@ -110,13 +111,15 @@ class TorrentPeerManager:
             EventManager.throw_event(EventType.RequestPeers, [self.torrent])
             self.last_peer_request = current_time()
 
-        if len(self.potential_peers) == 0 and \
-                        len(self.connecting_peers) == 0 and \
-                        len(self.connected_peers) == 0 and \
-                                current_time() - self.start_time > 45000:
-            Logger.write(2, "No peers found for torrent")
-            EventManager.throw_event(EventType.NoPeers, [])
-            return False
+        if current_time() - self.start_time > 45000 and not self.checked_no_peers:
+            self.checked_no_peers = True
+
+            if len(self.potential_peers) == 0 and \
+                            len(self.connecting_peers) == 0 and \
+                            len(self.connected_peers) == 0:
+                Logger.write(2, "No peers found for torrent")
+                EventManager.throw_event(EventType.NoPeers, [])
+                return False
 
         peer_list = list(self.potential_peers)  # Try connecting to new peers from potential list
         if len(peer_list) == 0:
