@@ -38,7 +38,7 @@ class GUI(QtGui.QMainWindow):
         super(GUI, self).__init__()
 
         self.hide_background = False
-        self.base_background_address = self.base_image_path + "backgrounds/"
+        self.base_background_address = self.base_image_path + "Backgrounds/"
         self.black_address = GUI.base_image_path + "/black.png"
         self.background_count = len([f for f in os.listdir(self.base_background_address) if isfile(join(self.base_background_address, f))])
         self.background_index = Random().randint(1, self.background_count)

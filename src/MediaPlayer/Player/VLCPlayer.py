@@ -35,7 +35,7 @@ class VLCPlayer(metaclass=Singleton):
         self.youtube_end_counter = 0
 
         EventManager.register_event(EventType.SetSubtitleFiles, self.set_subtitle_files)
-        EventManager.register_event(EventType.SetSubtitleId, self.set_audio_track)
+        EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_track)
         EventManager.register_event(EventType.SetSubtitleOffset, self.set_subtitle_delay)
         EventManager.register_event(EventType.SubtitlesDownloaded, self.set_subtitle_files)
         EventManager.register_event(EventType.SetAudioId, self.set_audio_track)
