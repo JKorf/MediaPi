@@ -17,17 +17,21 @@
         function Init(){
 
             HistoryFactory.GetWatched().then(function(data){
+                $scope.history = [];
                 for(var i = 0 ; i < data.length; i++){
-                    if (data[i].Title == null)
+                    if (data[i].Title == null){
+                        continue;
+                    }
+
+                    if (isNaN(data[i].WatchedAt))
                         continue;
 
                     if (data[i].Image == null)
                         data[i].Image = undefined;
                     else
                         data[i].Image = decodeURIComponent(data[i].Image);
+                    $scope.history.push(data[i]);
                 }
-
-                $scope.history = data;
             });
         }
 

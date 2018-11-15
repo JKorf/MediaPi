@@ -380,6 +380,7 @@ class Torrent:
         current = Stats.total('max_download_speed')
         if self.download_counter.max > current:
             Stats.set('max_download_speed', self.download_counter.max)
+        return True
 
     def stop(self):
         Logger.write(2, 'Torrent stopping')

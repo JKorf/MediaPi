@@ -41,6 +41,7 @@ class Stats(metaclass=Singleton):
 
         for key, val in copy.items():
             Database().update_stat(key, val)
+        return True
 
     @staticmethod
     def add(name, value):

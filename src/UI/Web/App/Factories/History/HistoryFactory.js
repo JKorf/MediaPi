@@ -53,7 +53,6 @@
         {
             var promise = $q.defer();
             CacheFactory.Get("/database/get_history", 60).then(function(data){
-
                 watched = [];
                 for(var i = 0; i < data.length; i++)
                     watched.push(parse_history(data[i]));

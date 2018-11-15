@@ -63,7 +63,7 @@ class TorrentMetadataManager:
                 return
 
             if index >= len(self.metadata_blocks) or index < 0:
-                Logger.write(2, 'Invalid metadata block index: ' + index)
+                Logger.write(2, 'Invalid metadata block index: ' + str(index))
                 return
 
             if data is None or len(data) == 0:

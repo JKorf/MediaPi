@@ -115,6 +115,7 @@ class HDController:
         paths = []
         for sub in data:
             i += 1
-            sub_data = await server.request_master_async(":50010/file/" + sub)
-            paths.append(SubtitleSourceBase.save_file("master_" + str(i), sub_data))
+            sub_data = await server.request_master_async(":50010/file" + sub)
+            if sub_data is not None:
+                paths.append(SubtitleSourceBase.save_file("master_" + str(i), sub_data))
         EventManager.throw_event(EventType.SubtitlesDownloaded, [paths])

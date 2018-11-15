@@ -131,7 +131,7 @@ class MediaTracker(metaclass=Singleton):
                 notify_url += "&mediaFile=" + urllib.parse.quote(str(media_file))
                 TornadoServer.notify_master(notify_url)
             else:
-                Database().add_watching_item(watching_type, VLCPlayer().media.title, path, VLCPlayer().media.img, VLCPlayer().get_length(), current_time(), media_file)
+                Database().add_watching_item(watching_type, VLCPlayer().media.title, path, VLCPlayer().media.image, VLCPlayer().get_length(), current_time(), media_file)
 
         if not self.removed_unfinished and VLCPlayer().get_position() > 10:
             # Update unfinished
