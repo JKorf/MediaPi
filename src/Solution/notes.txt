@@ -20,17 +20,19 @@
     add_watched e.d. niet vanuit UI initieren
 
     UI
-    1 UI, voor meerdere PIs/mediaspelers
-    Betere scheiding mediaplayer en home automation (lichten ed)
-    Widgets op homepage, kunnen door klikken voor andere/uitgebreide dingen
-        Widgets
-            Licht(en)
-            Mediaplayer
-            Verwarming
+        React
+        1 UI, voor meerdere PIs/mediaspelers
+        Betere scheiding mediaplayer en home automation (lichten ed)
+        Widgets op homepage, kunnen door klikken voor andere/uitgebreide dingen
+            Widgets
+                Licht(en)
+                Mediaplayer
+                Verwarming
 
-    Updates via websocket, wanneer er iets verandert, maar max elke 0.5s oid
-        Hoe krijgen we updates van slave?
+        Updates via websocket, wanneer er iets verandert, maar max elke 0.5s oid
+            Hoe krijgen we updates van slave?
 
-    Features
-        Popup messages
-        Multiple mediaplayers
+        Features
+            Popup messages
+            Multiple mediaplayers kunnen aansturen
+
