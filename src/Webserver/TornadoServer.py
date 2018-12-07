@@ -51,7 +51,7 @@ class TornadoServer:
             (r"/tv/(.*)", TVHandler),
             (r"/realtime", RealtimeHandler),
             (r"/database/(.*)", DatabaseHandler),
-            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/Web", "default_filename": "index.html"})
+            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/WebNew", "default_filename": "index.html"})
         ]
 
         self.application = web.Application(handlers)
