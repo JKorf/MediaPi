@@ -241,15 +241,21 @@ class GUI(QtGui.QMainWindow):
 
         data = json.loads(result.decode('utf8'))
         days = data['list']
+
         current_day = datetime.fromtimestamp(days[0]['dt']).day
         update_data = []
         for i in range(3):
-            day, max, min, image = self.determine_day_weather([x for x in days if datetime.fromtimestamp(x['dt']).day == current_day + i])
+            success, day, max, min, image = self.determine_day_weather([x for x in days if datetime.fromtimestamp(x['dt']).day == current_day + i])
+            if not success:
+                Logger.write(2, "Failed to process weather data")
+                return
             Logger.write(1, str(day) + " max: " + str(max) + ", min: " + str(min) + ", image: " + str(image))
             update_data.append((day, min, max, image))
         return update_data
 
     def determine_day_weather(self, data):
+        if len(data) == 0:
+            return False, None, None, None, None
         day = calendar.day_name[datetime.fromtimestamp(data[0]['dt']).date().weekday()]
         max_temp = round(max([x['main']['temp_max'] for x in data]))
         min_temp = round(min([x['main']['temp_min'] for x in data]))
@@ -257,7 +263,7 @@ class GUI(QtGui.QMainWindow):
         today_images = [x['weather'][0]['icon'] for x in data if 6 <= datetime.fromtimestamp(x['dt']).hour]
         image_c = self.determine_image(today_images)
         image = GUI.base_image_path + "Weather/" + image_c + ".png"
-        return day, max_temp, min_temp, image
+        return True, day, max_temp, min_temp, image
 
     def determine_image(self, images):
         images = [x.replace('n', 'd') for x in images]

@@ -12,6 +12,7 @@ log_folder=/home/pi/Scripts/Logs
 serie_api=https://api-fetch.website/tv/
 movie_api=https://api-fetch.website/tv/
 base_folder=/home/pi/Scripts/
+tpb_api=https://proxytpb.info/
 master_base_folder=C:/
 
 # Connections
@@ -51,5 +52,5 @@ show_gui=False
 raspberry=False
 
 # DHT
-dht=True
+dht=False
 dht_port=50011

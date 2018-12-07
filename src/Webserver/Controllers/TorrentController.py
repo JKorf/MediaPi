@@ -3,6 +3,7 @@ import urllib.parse
 
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
+from Shared.Settings import Settings
 from Shared.Util import to_JSON
 from Webserver.Controllers.MovieController import MovieController
 from Webserver.Models import TorrentModel, Media
@@ -12,7 +13,7 @@ from Webserver.Providers.TorrentProvider import TPB, Torrent, CATEGORIES, ORDERS
 class TorrentController:
     @staticmethod
     def top():
-        t = TPB('https://proxyonetpb.pet/')
+        t = TPB(Settings.get_string("tpb_api"))
         result = []
         for torrent in t.top(200):
             result.append(TorrentModel(torrent.title, torrent.seeders, torrent.leechers, torrent.size, str(torrent.url), torrent.sub_category))
@@ -21,9 +22,9 @@ class TorrentController:
 
     @staticmethod
     def search(keywords):
-        t = TPB('https://pirataibay.in/')
+        t = TPB(Settings.get_string("tpb_api"))
         result = []
-        for torrent in t.search(urllib.parse.unquote(keywords)).category(CATEGORIES.VIDEO).order(ORDERS.SEEDERS.DES):
+        for torrent in t.search(urllib.parse.unquote(keywords)):
             result.append(TorrentModel(torrent.title, torrent.seeders, torrent.leechers, torrent.size, str(torrent.url), torrent.sub_category))
         return to_JSON(result)
 
