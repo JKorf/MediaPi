@@ -104,6 +104,9 @@ class StaticFileHandler(tornado.web.StaticFileHandler):
         # Disable cache
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
+        if path.endswith(".js"):
+            self.set_header('content-type', 'application/javascript')
+
 
 class BaseHandler(tornado.web.RequestHandler):
     def _handle_request_exception(self, e):
@@ -344,7 +347,7 @@ class DatabaseHandler(BaseHandler):
 
         if url == "add_watched_file":
             Logger.write(2, "Adding to watched files")
-            Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"), self.get_argument("mediaFile"))
+            Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"), urllib.parse.unquote(self.get_argument("mediaFile")))
 
         if url == "add_watched_youtube":
             Logger.write(2, "Adding to watched youtube")
