@@ -344,7 +344,7 @@ class DatabaseHandler(BaseHandler):
 
         if url == "add_watched_file":
             Logger.write(2, "Adding to watched files")
-            Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"), self.get_argument("mediaFile"))
+            Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"), urllib.parse.unquote(self.get_argument("mediaFile")))
 
         if url == "add_watched_youtube":
             Logger.write(2, "Adding to watched youtube")
