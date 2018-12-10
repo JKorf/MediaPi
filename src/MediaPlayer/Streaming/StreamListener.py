@@ -278,6 +278,7 @@ class StreamServer:
             Logger.write(2, "StreamServer "+self.name+" listening on port " + str(self.port))
         except (socket.error, OSError) as e:
             Logger.write(2, "Couldn't start StreamServer " + self.name + ": " + str(e))
+            return
 
         self.soc.listen(10)
 

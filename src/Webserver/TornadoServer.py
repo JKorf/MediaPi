@@ -49,7 +49,7 @@ class TornadoServer:
             (r"/torrent/(.*)", TorrentHandler),
             (r"/lighting/(.*)", LightHandler),
             (r"/tv/(.*)", TVHandler),
-            (r"/realtime", RealtimeHandler),
+            (r"/ws", RealtimeHandler),
             (r"/database/(.*)", DatabaseHandler),
             (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/homebase/build", "default_filename": "index.html"})
         ]
@@ -313,11 +313,15 @@ class TVHandler(BaseHandler):
 
 
 class RealtimeHandler(websocket.WebSocketHandler):
+
     def check_origin(self, origin):
         return True
 
     def open(self):
         WebsocketController.opening_client(self)
+
+    def on_message(self, message):
+        WebsocketController.client_message(self, message)
 
     def on_close(self):
         WebsocketController.closing_client(self)

@@ -58,7 +58,7 @@ class Program:
         MediaTracker().start()
 
         if not self.is_slave:
-            self.file_listener = StreamListener("MasterFileServer", 50010)
+            self.file_listener = StreamListener("MasterFileServer", 50015)
             self.file_listener.start_listening()
 
         Logger.write(3, "MediaPlayer build [" + self.version + "]")
