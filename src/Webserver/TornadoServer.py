@@ -51,7 +51,7 @@ class TornadoServer:
             (r"/tv/(.*)", TVHandler),
             (r"/realtime", RealtimeHandler),
             (r"/database/(.*)", DatabaseHandler),
-            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/WebNew", "default_filename": "index.html"})
+            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/homebase/build", "default_filename": "index.html"})
         ]
 
         self.application = web.Application(handlers)
@@ -106,9 +106,14 @@ class StaticFileHandler(tornado.web.StaticFileHandler):
 
         if path.endswith(".js"):
             self.set_header('content-type', 'application/javascript')
+        if path.endswith(".css"):
+            self.set_header('content-type', 'text/css')
 
 
 class BaseHandler(tornado.web.RequestHandler):
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+
     def _handle_request_exception(self, e):
         Logger.write(3, "Error in Tornado requests: " + str(e), 'error')
         stack_trace = traceback.format_exc().split('\n')
