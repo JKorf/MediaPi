@@ -26,10 +26,22 @@ class WebsocketController:
     @staticmethod
     def init():
         VLCPlayer().playerState.register_callback(WebsocketController.update_player_data)
+        MediaManager().mediaData.register_callback(WebsocketController.update_media_data)
 
     @staticmethod
     def update_player_data(data):
         WebsocketController.notify("player", data)
+
+    @staticmethod
+    def update_media_data(data):
+        WebsocketController.notify("media", data)
+
+    @staticmethod
+    def trigger_initial_data(client, topic):
+        if topic == "player":
+            WebsocketController.notify_client(client, "player", VLCPlayer().playerState)
+        if topic == "media":
+            WebsocketController.notify_client(client, "media", MediaManager().mediaData)
 
     @staticmethod
     def opening_client(client):
@@ -52,6 +64,7 @@ class WebsocketController:
         if data['event'] == 'subscribe':
             WebsocketController.clients[client].append(data['topic'])
             Logger.write(2, "Client subscribed to " + str(data['topic']))
+            WebsocketController.trigger_initial_data(client, data['topic'])
 
     @staticmethod
     def closing_client(client):
@@ -71,6 +84,18 @@ class WebsocketController:
                         client.write_message(to_JSON(WebSocketMessage("notify", subscription, parameters)))
                 except:
                     Logger.write(2, "Failed to send msg to client because client is closed: " + traceback.format_exc())
+
+    @staticmethod
+    def notify_client(client, subscription, parameters):
+        if parameters is None:
+            parameters = ""
+
+        with WebsocketController._ws_lock:
+            try:
+                client.write_message(to_JSON(WebSocketMessage("notify", subscription, parameters)))
+            except:
+                Logger.write(2, "Failed to send msg to client because client is closed: " + traceback.format_exc())
+
 
     # @staticmethod
     # def no_peers():

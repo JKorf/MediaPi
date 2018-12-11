@@ -1,14 +1,16 @@
 import datetime
+import os
 import time
 
 from MediaPlayer.TorrentStreaming.Torrent.Torrent import Torrent
 
 from Database.Database import Database
-from MediaPlayer.Player.VLCPlayer import PlayerState
+from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
 from MediaPlayer.TorrentStreaming.DHT.Engine import DHTEngine
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
+from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Util import current_time, Singleton
 
@@ -16,6 +18,7 @@ from Shared.Util import current_time, Singleton
 class MediaManager(metaclass=Singleton):
 
     def __init__(self):
+        self.mediaData = MediaData()
         self.torrent = None
         self.subtitle_provider = SubtitleProvider()
         self.last_torrent_start = 0
@@ -29,6 +32,12 @@ class MediaManager(metaclass=Singleton):
         EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
         EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
         EventManager.register_event(EventType.NoPeers, self.stop_torrent)
+
+    def start_file(self, url, time):
+        VLCPlayer().play(url, time)
+        self.mediaData.type = "File"
+        self.mediaData.title = os.path.basename(url)
+        self.mediaData.updated()
 
     def start_torrent(self, url, media_file):
         if self.torrent is not None:
@@ -58,7 +67,20 @@ class MediaManager(metaclass=Singleton):
                 Logger.write(2, "Ended " + self.torrent.media_file.name)
                 self.torrent = None
 
+        if new_state == PlayerState.Nothing:
+            self.mediaData.type = None
+            self.mediaData.title = None
+            self.mediaData.updated()
+
     def stop_torrent(self):
         if self.torrent:
             self.torrent.stop()
             self.torrent = None
+
+
+class MediaData(Observable):
+
+    def __init__(self):
+        super().__init__("MediaData", 0.5)
+        self.type = None
+        self.title = None

@@ -19,7 +19,7 @@ class ShowView extends Component {
   }
 
   btnClick() {
-    axios.post('http://localhost/hd/play_file?filename=jellies.mp4&path=C:/jellies.mp4');
+    axios.post('http://localhost/hd/play_file?path=C:/jellies.mp4');
   }
 
   render() {

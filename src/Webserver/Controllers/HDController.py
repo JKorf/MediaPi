@@ -6,6 +6,7 @@ import time
 import urllib.parse
 import urllib.request
 
+from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -39,19 +40,11 @@ class HDController:
         return to_JSON(directory).encode('utf8')
 
     @staticmethod
-    def play_file(filename, path, position=0):
+    def play_file(path, position=0):
         file = urllib.parse.unquote(path)
         Logger.write(2, "Play file: " + file)
-        EventManager.throw_event(EventType.StopTorrent, [])
-        time.sleep(0.2)
-        filename = urllib.parse.unquote(filename)
 
-        if filename.endswith(".jpg"):
-            EventManager.throw_event(EventType.PreparePlayer, [Media("Image", 0, filename, file, None, None, 0)])
-            EventManager.throw_event(EventType.StartPlayer, [])
-        else:
-            EventManager.throw_event(EventType.PreparePlayer, [Media("File", 0, filename, file, filename, None, 0)])
-            EventManager.throw_event(EventType.StartPlayer, [])
+        MediaManager().start_file(path, position)
 
     @staticmethod
     def next_image(current_path):

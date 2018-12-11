@@ -16,7 +16,6 @@ from Shared.Util import Singleton
 class VLCPlayer(metaclass=Singleton):
 
     def __init__(self):
-        self.__end_action = None
         self.__vlc_instance = None
         self.playerState = PlayerData()
 
@@ -27,9 +26,6 @@ class VLCPlayer(metaclass=Singleton):
         self.hook_events()
 
         self.set_volume(75)
-
-        self.media = None
-        self.prepared = False
 
         self.trying_subitems = False
         self.youtube_end_counter = 0
@@ -44,16 +40,10 @@ class VLCPlayer(metaclass=Singleton):
         EventManager.register_event(EventType.SetVolume, self.set_volume)
         EventManager.register_event(EventType.Seek, self.set_time)
 
-        EventManager.register_event(EventType.PreparePlayer, self.prepare_play)
         EventManager.register_event(EventType.StartPlayer, self.play)
         EventManager.register_event(EventType.StopPlayer, self.stop)
 
-        EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
-        EventManager.register_event(EventType.TorrentMediaFileSet, self.torrent_media_file_set)
         EventManager.register_event(EventType.NoPeers, self.stop)
-
-        thread = CustomThread(self.watch_time_change, "VLC State watcher")
-        thread.start()
 
     def instantiate_vlc(self):
         parameters = self.get_instance_parameters()
@@ -61,29 +51,14 @@ class VLCPlayer(metaclass=Singleton):
         self.__vlc_instance = vlc.Instance("vlc", *parameters)
         Logger.write(3, "VLC version " + libvlc_get_version().decode('utf8'))
 
-    def prepare_play(self, media):
-        self.media = media
-        self.prepared = True
+    def play(self, url, time=0):
+        parameters = self.get_play_parameters(url, time)
 
-    def play(self, time=0, filename=None):
-        if not self.prepared:
-            raise ValueError("Player not prepared")
-
-        if time != 0:
-            self.media.start_time = time
-        if filename is not None:
-            self.media.file = filename
-
-        parameters = self.get_play_parameters()
-
-        Logger.write(2, "VLC Play | Type: " + self.media.type)
-        Logger.write(2, "VLC Play | Title: " + self.media.title)
-        Logger.write(2, "VLC Play | Url: " + self.media.path)
-        Logger.write(2, "VLC Play | Time: " + str(self.media.start_time))
-        Logger.write(2, "VLC Play | Filename: " + str(self.media.file))
+        Logger.write(2, "VLC Play | Url: " + url)
+        Logger.write(2, "VLC Play | Time: " + str(time))
         Logger.write(2, "VLC Play | Parameters: " + str(parameters))
 
-        self.__player.set_mrl(self.media.path, *parameters)
+        self.__player.set_mrl(url, *parameters)
         return self.__player.play() != -1
 
     @staticmethod
@@ -103,44 +78,24 @@ class VLCPlayer(metaclass=Singleton):
 
         return params
 
-    def get_play_parameters(self):
+    def get_play_parameters(self, url, time):
         params = []
-        if self.media.type == "YouTube":
-            params.append("lua-intf=youtube")
+        if time != 0:
+            params.append("start-time=" + str(time // 1000))
 
-        if self.media.start_time != 0:
-            params.append("start-time=" + str(self.media.start_time // 1000))
-
-        if self.media.type != "File":
-            if self.media.start_time != 0 and self.media.file.endswith("mp4"):
-                params.append("demux=avformat")
-            elif self.media.file is not None and self.media.file.endswith("avi"):
+        if not url.startswith("file://"):
+            if (time != 0 and url.endswith("mp4")) or url.endswith("avi"):
                 params.append("demux=avformat")
         return params
-
-    def torrent_media_file_set(self, file_name):
-        self.play(0, file_name)
-
-    def user_file_selected(self, path):
-        self.media.title = os.path.basename(path)
 
     def pause_resume(self):
         self.__player.pause()
 
     def stop(self):
-        pos = self.get_position()
-        length = self.get_length()
         self.__player.stop()
-        self.media = None
-        self.prepared = False
         self.youtube_end_counter = 0
-        EventManager.throw_event(EventType.PlayerStopped, [pos, length])
-
-    def fullscreen_on(self):
-        self.__player.set_fullscreen(True)
-
-    def fullscreen_off(self):
-        self.__player.set_fullscreen(False)
+        self.playerState.length = 0
+        self.playerState.playing_for = 0
 
     def mute_on(self):
         self.__player.audio_set_mute(True)
@@ -218,9 +173,6 @@ class VLCPlayer(metaclass=Singleton):
     def get_selected_sub(self):
         return self.__player.video_get_spu()
 
-    def get_fps(self):
-        return int(1000 // (self.__player.get_fps() or 25))
-
     def hook_events(self):
         self.__event_manager.event_attach(VLCEventType.MediaPlayerOpening, self.state_change_opening)
         self.__event_manager.event_attach(VLCEventType.MediaPlayerPlaying, self.state_change_playing)
@@ -251,7 +203,6 @@ class VLCPlayer(metaclass=Singleton):
 
     def state_change_stopped(self, event):
         if self.playerState.state != PlayerState.Nothing:
-            self.prepared = False
             self.change_state(PlayerState.Nothing)
 
     def state_change_end_reached(self, event):
@@ -285,38 +236,13 @@ class VLCPlayer(metaclass=Singleton):
             self.__player.play()
             self.trying_subitems = False
 
-    def watch_time_change(self):
-        last_time = 0
-        while True:
-            this_time = self.__player.get_time()
-            if this_time == 0:
-                time.sleep(0.5)
-                continue
-
-            if this_time - last_time == 0:
-                if self.playerState.state == PlayerState.Playing:
-                    self.change_state(PlayerState.Buffering)
-            else:
-                if self.playerState.state == PlayerState.Buffering or self.playerState.state == PlayerState.Opening:
-                    self.change_state(PlayerState.Playing)
-            last_time = this_time
-            time.sleep(1)
-
     def change_state(self, new):
-        old = self.playerState.state
         self.playerState.state = new
         self.playerState.updated()
 
-        if old == PlayerState.Opening and new == PlayerState.Playing:
-            EventManager.throw_event(EventType.PlayerMediaLoaded, [self.get_length_ms()])
-
-        Logger.write(2, "State change from " + str(old) + " to " + str(new))
-        EventManager.throw_event(EventType.PlayerStateChange, [old, new])
-
         if new == PlayerState.Ended:
-            if self.media.type != "YouTube":
-                thread = CustomThread(self.stop, "Stopping player")
-                thread.start()
+            thread = CustomThread(self.stop, "Stopping player")
+            thread.start()
 
 
 class PlayerState(Enum):
