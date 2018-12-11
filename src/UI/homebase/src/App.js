@@ -1,24 +1,32 @@
-import React from 'react';
+import React, {Component} from 'react';
 
 import Header from './Modules/Layout/Header'
 import Footer from './Modules/Layout/Footer'
 import View from './Modules/Layout/View'
-import ShowView from './Modules/ShowView'
-import Player from './Modules/Player'
+import DashboardView from './Modules/Views/DashboardView'
+import ShowView from './Modules/Views/ShowView'
+import Socket from './Socket.js'
 
 import './Modules/base.css';
 
-const App = () => (
-  <div className="App">
-        <Header name="Jan" age="26"/>
-        <View>
-            <Player />
-            <ShowView />
+class App extends Component {
+  constructor(props) {
+    super(props);
 
-        </View>
+    Socket.init();
+  }
+
+  render() {
+    return (
+      <div className="App">
+        <Header name="Jan" age="26"/>
+        <DashboardView />
+        <ShowView />
         <Footer />
       </div>
-);
+    );
+  }
+};
 
 export default App;
 

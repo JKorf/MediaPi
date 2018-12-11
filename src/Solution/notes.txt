@@ -36,3 +36,24 @@
             Popup messages
             Multiple mediaplayers kunnen aansturen
 
+        Data:
+            Player data -> VLCPlayer
+                CurrentPosition
+                Length
+                State
+            Media data -> MediaManager
+                Title
+                Type,
+                Image,
+            Torrent data -> Torrent
+                peers (potential, connected)
+                Size
+                Downloaded,
+                Left,
+                Speed,
+                Stream buffer (ready, total, position, currentPosition)
+                State,
+                Streamed,
+            Stats -> Stats
+                x
+

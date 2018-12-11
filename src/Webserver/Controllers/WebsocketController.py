@@ -25,16 +25,11 @@ class WebsocketController:
 
     @staticmethod
     def init():
-        update_thread = CustomThread(WebsocketController.update_loop, "socket update loop")
-        update_thread.start()
-
+        VLCPlayer().playerState.register_callback(WebsocketController.update_player_data)
 
     @staticmethod
-    def update_loop():
-         while True:
-             player_data = WebsocketController.get_player_data()
-             WebsocketController.notify("player", player_data)
-             time.sleep(1)
+    def update_player_data(data):
+        WebsocketController.notify("player", data)
 
     @staticmethod
     def opening_client(client):
@@ -147,41 +142,41 @@ class WebsocketController:
     #     return Status(speed, ready, psutil.cpu_percent(), psutil.virtual_memory().percent, torrent_state, connected_peers, potential_peers)
     #
     # @staticmethod
-    def get_player_data():
-        state = VLCPlayer().state
-
-        if not VLCPlayer().prepared:
-            if state == PlayerState.Nothing or state == PlayerState.Ended:
-                return CurrentMedia(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)
-
-        if state == PlayerState.Nothing or state == PlayerState.Ended:
-            state = PlayerState.Opening
-
-        title = VLCPlayer().media.title
-        percentage = 0
-        if MediaManager().torrent is not None and MediaManager().torrent.media_file is not None:
-            buffered = MediaManager().torrent.bytes_ready_in_buffer
-            percentage = buffered / MediaManager().torrent.media_file.length * 100
-            if MediaManager().torrent.state == TorrentState.Done:
-                percentage = 100
-
-        media = CurrentMedia(state.value,
-                             VLCPlayer().media.type,
-                             title,
-                             VLCPlayer().media.path,
-                             VLCPlayer().media.image,
-                             VLCPlayer().get_position(),
-                             VLCPlayer().get_length(),
-                             VLCPlayer().get_volume(),
-                             VLCPlayer().get_length(),
-                             VLCPlayer().get_selected_sub(),
-                             VLCPlayer().get_subtitle_tracks(),
-                             VLCPlayer().get_subtitle_delay() / 1000 / 1000,
-                             True,
-                             VLCPlayer().get_audio_tracks(),
-                             VLCPlayer().get_audio_track(),
-                             percentage)
-        return media
+    # def get_player_data():
+    #     state = VLCPlayer().playerState.state
+    #
+    #     if not VLCPlayer().prepared:
+    #         if state == PlayerState.Nothing or state == PlayerState.Ended:
+    #             return CurrentMedia(0, None, None, None, None, 0, 0, 100, 0, 0, [], 0, False, [], 0, 0)
+    #
+    #     if state == PlayerState.Nothing or state == PlayerState.Ended:
+    #         state = PlayerState.Opening
+    #
+    #     title = VLCPlayer().media.title
+    #     percentage = 0
+    #     if MediaManager().torrent is not None and MediaManager().torrent.media_file is not None:
+    #         buffered = MediaManager().torrent.bytes_ready_in_buffer
+    #         percentage = buffered / MediaManager().torrent.media_file.length * 100
+    #         if MediaManager().torrent.state == TorrentState.Done:
+    #             percentage = 100
+    #
+    #     media = CurrentMedia(state.value,
+    #                          VLCPlayer().media.type,
+    #                          title,
+    #                          VLCPlayer().media.path,
+    #                          VLCPlayer().media.image,
+    #                          VLCPlayer().get_position(),
+    #                          VLCPlayer().get_length(),
+    #                          VLCPlayer().get_volume(),
+    #                          VLCPlayer().get_length(),
+    #                          VLCPlayer().get_selected_sub(),
+    #                          VLCPlayer().get_subtitle_tracks(),
+    #                          VLCPlayer().get_subtitle_delay() / 1000 / 1000,
+    #                          True,
+    #                          VLCPlayer().get_audio_tracks(),
+    #                          VLCPlayer().get_audio_track(),
+    #                          percentage)
+    #     return media
     #
     # @staticmethod
     # def get_media_data():

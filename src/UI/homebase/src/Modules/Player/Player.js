@@ -39,9 +39,10 @@ class Player extends Component {
 
   render() {
     const playerData = this.state.playerData;
+    const children = this.props.children;
     return (
-      <div className="player">
-        {playerData.playing_for} - {playerData.length}
+      <div className="player-data">
+        {children}
       </div>
     );
   }

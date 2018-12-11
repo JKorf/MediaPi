@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios'
-import MediaThumbnail from './../MediaThumbnail'
-import Button from './../Components/Button'
+import MediaThumbnail from './../../MediaThumbnail'
+import Button from './../../Components/Button'
 
 class ShowView extends Component {
   constructor(props) {

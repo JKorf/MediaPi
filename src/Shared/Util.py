@@ -1,5 +1,7 @@
 import json
 import time
+from enum import Enum
+
 from Shared.Logger import Logger
 
 
@@ -8,8 +10,18 @@ def current_time():
 
 
 def to_JSON(obj):
-    return json.dumps(obj, default=lambda o: o.__dict__,
+    return json.dumps(obj, default=default_serializer,
                       sort_keys=True, indent=4)
+
+
+def default_serializer(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, Enum):
+        serial = obj.value
+        return serial
+
+    return {x: obj.__dict__[x] for x in obj.__dict__ if not x.startswith("_")}
 
 
 def write_size(data):

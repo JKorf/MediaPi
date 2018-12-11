@@ -7,6 +7,7 @@ from MediaPlayer.Player import vlc
 from MediaPlayer.Player.vlc import libvlc_get_version, EventType as VLCEventType
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import Singleton
@@ -17,6 +18,7 @@ class VLCPlayer(metaclass=Singleton):
     def __init__(self):
         self.__end_action = None
         self.__vlc_instance = None
+        self.playerState = PlayerData()
 
         self.instantiate_vlc()
 
@@ -28,8 +30,6 @@ class VLCPlayer(metaclass=Singleton):
 
         self.media = None
         self.prepared = False
-
-        self.state = PlayerState.Nothing
 
         self.trying_subitems = False
         self.youtube_end_counter = 0
@@ -228,28 +228,34 @@ class VLCPlayer(metaclass=Singleton):
         self.__event_manager.event_attach(VLCEventType.MediaPlayerStopped, self.state_change_stopped)
         self.__event_manager.event_attach(VLCEventType.MediaPlayerEndReached, self.state_change_end_reached)
         self.__event_manager.event_attach(VLCEventType.MediaPlayerEncounteredError, self.on_error)
+        self.__event_manager.event_attach(VLCEventType.MediaPlayerTimeChanged, self.on_time_change)
+
+    def on_time_change(self, event):
+        self.playerState.playing_for = event.u.new_time
+        self.playerState.updated()
 
     def state_change_opening(self, event):
-        if self.state != PlayerState.Opening:
+        if self.playerState.state != PlayerState.Opening:
             self.change_state(PlayerState.Opening)
 
     def state_change_playing(self, event):
-        if self.state == PlayerState.Paused:
+        if self.playerState.state == PlayerState.Paused:
             self.change_state(PlayerState.Playing)
         else:
+            self.playerState.length = self.get_length()
             pass # gets handled by watching time change
 
     def state_change_paused(self, event):
-        if self.state != PlayerState.Paused:
+        if self.playerState.state != PlayerState.Paused:
             self.change_state(PlayerState.Paused)
 
     def state_change_stopped(self, event):
-        if self.state != PlayerState.Nothing:
+        if self.playerState.state != PlayerState.Nothing:
             self.prepared = False
             self.change_state(PlayerState.Nothing)
 
     def state_change_end_reached(self, event):
-        if self.state != PlayerState.Ended:
+        if self.playerState.state != PlayerState.Ended:
             if not self.trying_subitems:
                 thread = CustomThread(self.stop, "Stopping player")
                 thread.start()
@@ -288,17 +294,18 @@ class VLCPlayer(metaclass=Singleton):
                 continue
 
             if this_time - last_time == 0:
-                if self.state == PlayerState.Playing:
+                if self.playerState.state == PlayerState.Playing:
                     self.change_state(PlayerState.Buffering)
             else:
-                if self.state == PlayerState.Buffering or self.state == PlayerState.Opening:
+                if self.playerState.state == PlayerState.Buffering or self.playerState.state == PlayerState.Opening:
                     self.change_state(PlayerState.Playing)
             last_time = this_time
             time.sleep(1)
 
     def change_state(self, new):
-        old = self.state
-        self.state = new
+        old = self.playerState.state
+        self.playerState.state = new
+        self.playerState.updated()
 
         if old == PlayerState.Opening and new == PlayerState.Playing:
             EventManager.throw_event(EventType.PlayerMediaLoaded, [self.get_length_ms()])
@@ -319,4 +326,21 @@ class PlayerState(Enum):
     Playing = 3,
     Paused = 4,
     Ended = 5
+
+
+class PlayerData(Observable):
+
+    def __init__(self):
+        super().__init__("PlayerData", 0.5)
+
+        self.path = None
+        self.state = PlayerState.Nothing
+        self.playing_for = 0
+        self.length = 0
+        self.volume = 0
+        self.sub_delay = 0
+        self.sub_track = 0
+        self.sub_tracks = []
+        self.audio_track = 0
+        self.audio_tracks = []
 
