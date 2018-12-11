@@ -30,8 +30,9 @@ class MediaManager(metaclass=Singleton):
 
         EventManager.register_event(EventType.StartTorrent, self.start_torrent)
         EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
-        EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
         EventManager.register_event(EventType.NoPeers, self.stop_torrent)
+
+        VLCPlayer().playerState.register_callback(self.player_state_change)
 
     def start_file(self, url, time):
         VLCPlayer().play(url, time)
@@ -60,14 +61,14 @@ class MediaManager(metaclass=Singleton):
 
             time.sleep(1)
 
-    def player_state_change(self, old_state, new_state):
-        if new_state == PlayerState.Ended:
+    def player_state_change(self, newState):
+        if newState.state == PlayerState.Ended:
             if self.torrent is not None:
                 self.torrent.stop()
                 Logger.write(2, "Ended " + self.torrent.media_file.name)
                 self.torrent = None
 
-        if new_state == PlayerState.Nothing:
+        if newState.state == PlayerState.Nothing:
             self.mediaData.type = None
             self.mediaData.title = None
             self.mediaData.updated()
