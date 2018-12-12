@@ -38,11 +38,7 @@ class TornadoServer:
     def __init__(self):
         self.port = 80
         TornadoServer.master_ip = Settings.get_string("master_ip")
-        if Settings.get_bool("slave"):
-            handlers = [
-                (r"/slave", SlaveWebsocketHandler),
-            ]
-        else:
+        if not Settings.get_bool("slave"):
             handlers = [
                 (r"/util/(.*)", UtilHandler),
                 (r"/movies/(.*)", MovieHandler),
@@ -59,22 +55,25 @@ class TornadoServer:
                 (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/homebase/build", "default_filename": "index.html"})
             ]
 
-        self.application = web.Application(handlers)
-        self.slave_socket_controller = None
+            self.application = web.Application(handlers)
+            self.master_socket_controller = None
+        else:
+            self.slave_socket_controller = None
 
     def start(self):
         thread = CustomThread(self.internal_start, "Tornado server", [])
         thread.start()
 
     def internal_start(self):
-        asyncio.set_event_loop(asyncio.new_event_loop())
-        asyncio.set_event_loop_policy(AnyThreadEventLoopPolicy())
+        #asyncio.set_event_loop(asyncio.new_event_loop())
+        #asyncio.set_event_loop_policy(AnyThreadEventLoopPolicy())
 
         if Settings.get_bool("slave"):
             self.slave_socket_controller = SlaveWebsocketController()
             self.slave_socket_controller.start()
         else:
-            MasterWebsocketController.init()
+            self.master_socket_controller = MasterWebsocketController()
+            self.master_socket_controller.start()
 
         while True:
             try:
@@ -326,21 +325,6 @@ class TVHandler(BaseHandler):
             TVManager().channel_up()
         elif url == "channel_down":
             TVManager().channel_down()
-
-
-class SlaveWebsocketHandler(websocket.WebSocketHandler):
-
-    def check_origin(self, origin):
-        return True
-
-    def open(self):
-        SlaveWebsocketController.opening_client(self)
-
-    def on_message(self, message):
-        SlaveWebsocketController.client_message(self, message)
-
-    def on_close(self):
-        SlaveWebsocketController.closing_client(self)
 
 
 class MasterWebsocketHandler(websocket.WebSocketHandler):

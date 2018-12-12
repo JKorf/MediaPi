@@ -57,3 +57,7 @@
             Stats -> Stats
                 x
 
+        Master - slave
+            Master websocket can receive slave updates
+            Slaves init connection to master
+            Master has no need to have a list of potential slaves
