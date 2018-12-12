@@ -60,6 +60,7 @@ class TornadoServer:
             ]
 
         self.application = web.Application(handlers)
+        self.slave_socket_controller = None
 
     def start(self):
         thread = CustomThread(self.internal_start, "Tornado server", [])
@@ -70,7 +71,8 @@ class TornadoServer:
         asyncio.set_event_loop_policy(AnyThreadEventLoopPolicy())
 
         if Settings.get_bool("slave"):
-            SlaveWebsocketController.init()
+            self.slave_socket_controller = SlaveWebsocketController()
+            self.slave_socket_controller.start()
         else:
             MasterWebsocketController.init()
 
