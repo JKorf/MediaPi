@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import axios from 'axios'
-import MediaThumbnail from './../../MediaThumbnail'
-import Button from './../../Components/Button'
+
+import MediaOverview from './../../MediaList/MediaOverview'
+import View from './../View'
 
 class ShowView extends Component {
   constructor(props) {
@@ -18,19 +19,12 @@ class ShowView extends Component {
     });
   }
 
-  btnClick() {
-    axios.post('http://localhost/hd/play_file?path=C:/jellies.mp4');
-  }
-
   render() {
     const shows = this.state.shows;
     return (
-      <div className="show-view">
-        <Button text="Test" onClick={this.btnClick} />
-      {
-        shows.map((show) => <MediaThumbnail key={show._id} img={show.images.poster} title={show.title} />)
-      }
-      </div>
+      <View>
+        <MediaOverview media={shows} />
+      </View>
     );
   }
 };

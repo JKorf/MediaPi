@@ -11,8 +11,13 @@ class MediaPlayerWidget extends Component {
   }
 
   componentDidMount() {
-    Socket.subscribe("player", this.playerUpdate);
-    Socket.subscribe("media", this.mediaUpdate);
+    this.playerSub = Socket.subscribe("player", this.props.instance, this.playerUpdate);
+    this.mediaSub = Socket.subscribe("media", this.props.instance, this.mediaUpdate);
+  }
+
+  componentWillUnmount(){
+    Socket.unsubscribe(this.playerSub);
+    Socket.unsubscribe(this.mediaSub);
   }
 
   playerUpdate(data){

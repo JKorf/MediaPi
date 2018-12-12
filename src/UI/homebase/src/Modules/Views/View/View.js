@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 const View = ({children}) => (
-  <div className="View">
+  <div className="view">
     {children}
       </div>
 );

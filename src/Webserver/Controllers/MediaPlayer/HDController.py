@@ -6,7 +6,7 @@ import time
 import urllib.parse
 import urllib.request
 
-from MediaPlayer.MediaManager import MediaManager
+from MediaPlayer.MediaPlayer import MediaManager
 from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -17,7 +17,7 @@ from Webserver.Models import FileStructure, Media
 class HDController:
 
     @staticmethod
-    def drives():
+    def get_drives():
         if 'win' in sys.platform:
             drive_list_command = subprocess.Popen('wmic logicaldisk get name,description', shell=True, stdout=subprocess.PIPE)
             drive_list_request, err = drive_list_command.communicate()
@@ -34,7 +34,7 @@ class HDController:
             return json.dumps(["/"])
 
     @staticmethod
-    def directory(path):
+    def get_directory(path):
         Logger.write(2, path)
         directory = FileStructure(urllib.parse.unquote(path))
         return to_JSON(directory).encode('utf8')
@@ -90,25 +90,25 @@ class HDController:
 
         HDController.play_file(images[current_index], os.path.join(directory, images[current_index]))
 
-    @staticmethod
-    async def play_master_file(server, path, file, position):
-        # play file from master
-        file_location = server.master_ip + ":50010/file"
-        if not path.startswith("/"):
-            file_location += "/"
-        HDController.play_file(file,
-                               file_location + urllib.parse.quote_plus(path),
-                               position)
-
-        # request hash from master
-        string_data = await server.request_master_async("/util/get_subtitles?path=" + urllib.parse.quote_plus(path) + "&file=" + urllib.parse.quote_plus(file))
-        data = json.loads(string_data.decode('utf8'))
-        i = 0
-        Logger.write(2, "Master returned " + str(len(data)) + " subs")
-        paths = []
-        for sub in data:
-            i += 1
-            sub_data = await server.request_master_async(":50010/file" + sub)
-            if sub_data is not None:
-                paths.append(SubtitleSourceBase.save_file("master_" + str(i), sub_data))
-        EventManager.throw_event(EventType.SubtitlesDownloaded, [paths])
+    # @staticmethod
+    # async def play_master_file(server, path, file, position):
+    #     # play file from master
+    #     file_location = server.master_ip + ":50010/file"
+    #     if not path.startswith("/"):
+    #         file_location += "/"
+    #     HDController.play_file(file,
+    #                            file_location + urllib.parse.quote_plus(path),
+    #                            position)
+    #
+    #     # request hash from master
+    #     string_data = await server.request_master_async("/util/get_subtitles?path=" + urllib.parse.quote_plus(path) + "&file=" + urllib.parse.quote_plus(file))
+    #     data = json.loads(string_data.decode('utf8'))
+    #     i = 0
+    #     Logger.write(2, "Master returned " + str(len(data)) + " subs")
+    #     paths = []
+    #     for sub in data:
+    #         i += 1
+    #         sub_data = await server.request_master_async(":50010/file" + sub)
+    #         if sub_data is not None:
+    #             paths.append(SubtitleSourceBase.save_file("master_" + str(i), sub_data))
+    #     EventManager.throw_event(EventType.SubtitlesDownloaded, [paths])

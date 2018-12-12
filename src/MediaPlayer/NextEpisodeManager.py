@@ -3,7 +3,7 @@ import os
 import urllib.parse
 
 from MediaPlayer.Player.VLCPlayer import VLCPlayer, PlayerState
-from MediaPlayer.MediaManager import MediaManager
+from MediaPlayer.MediaPlayer import MediaManager
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -16,8 +16,8 @@ from Webserver.Models import FileStructure
 class NextEpisodeManager(metaclass=Singleton):
 
     def __init__(self,):
-        EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
-        EventManager.register_event(EventType.PlayerStopped, self.player_stopped)
+        # EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
+        # EventManager.register_event(EventType.PlayerStopped, self.player_stopped)
 
         self.next_type = None
         self.next_path = None

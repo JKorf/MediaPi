@@ -1,8 +1,7 @@
 import React, {Component} from 'react';
+import { BrowserRouter as Router, Route } from "react-router-dom";
 
-import Header from './Modules/Layout/Header'
-import Footer from './Modules/Layout/Footer'
-import View from './Modules/Layout/View'
+import Header from './Modules/Header'
 import DashboardView from './Modules/Views/DashboardView'
 import ShowView from './Modules/Views/ShowView'
 import Socket from './Socket.js'
@@ -18,12 +17,13 @@ class App extends Component {
 
   render() {
     return (
-      <div className="App">
-        <Header name="Jan" age="26"/>
-        <DashboardView />
-        <ShowView />
-        <Footer />
-      </div>
+      <Router>
+          <div className="app">
+                <Header name="Jan" age="26"/>
+                <Route path="/" exact component={DashboardView} />
+                <Route path="/shows/" component={ShowView} />
+          </div>
+      </Router>
     );
   }
 };

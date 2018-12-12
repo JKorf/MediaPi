@@ -13,7 +13,7 @@ os.chdir(os.path.dirname(__file__))
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from Webserver.TornadoServer import TornadoServer
-from MediaPlayer.MediaManager import MediaManager
+from MediaPlayer.MediaPlayer import MediaManager
 from MediaPlayer.MediaTracker import MediaTracker
 from MediaPlayer.Streaming.StreamListener import StreamListener
 

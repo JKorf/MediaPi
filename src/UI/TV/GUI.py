@@ -14,7 +14,7 @@ from PyQt4 import QtSvg
 from PyQt4.QtCore import *
 
 from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
-from MediaPlayer.MediaManager import MediaManager
+from MediaPlayer.MediaPlayer import MediaManager
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory

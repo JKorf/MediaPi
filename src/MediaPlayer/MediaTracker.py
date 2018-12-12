@@ -2,7 +2,7 @@ import urllib.parse
 
 from Database.Database import Database
 from MediaPlayer.Player.VLCPlayer import VLCPlayer, PlayerState
-from MediaPlayer.MediaManager import MediaManager
+from MediaPlayer.MediaPlayer import MediaManager
 from Shared.Events import EventManager, EventType
 from Webserver.TornadoServer import TornadoServer
 from Shared.Engine import Engine

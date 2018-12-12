@@ -5,30 +5,30 @@ import urllib.parse
 import urllib.request
 
 import tornado
-from Webserver.Controllers.HDController import HDController
-from Webserver.Controllers.LightController import LightController
-from Webserver.Controllers.MovieController import MovieController
-from Webserver.Controllers.PlayerController import PlayerController
-from Webserver.Controllers.RadioController import RadioController
-from Webserver.Controllers.TorrentController import TorrentController
-from Webserver.Controllers.UtilController import UtilController
-from Webserver.Controllers.WebsocketController import WebsocketController
-from Webserver.Controllers.YoutubeController import YoutubeController
 from tornado import ioloop, web, websocket
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
 from Controllers.TVController import TVManager
 from Database.Database import Database
-from MediaPlayer.MediaManager import MediaManager
+from MediaPlayer.MediaPlayer import MediaManager
 from MediaPlayer.Util.Enums import TorrentState
-from MediaPlayer.Util.Util import get_file_info
-from Webserver.Controllers.ShowController import ShowController
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON
+from Webserver.Controllers.LightController import LightController
+from Webserver.Controllers.MediaPlayer.HDController import HDController
+from Webserver.Controllers.MediaPlayer.MovieController import MovieController
+from Webserver.Controllers.MediaPlayer.PlayerController import PlayerController
+from Webserver.Controllers.MediaPlayer.RadioController import RadioController
+from Webserver.Controllers.MediaPlayer.ShowController import ShowController
+from Webserver.Controllers.MediaPlayer.TorrentController import TorrentController
+from Webserver.Controllers.MediaPlayer.YoutubeController import YoutubeController
+from Webserver.Controllers.UtilController import UtilController
+from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
+from Webserver.Controllers.Websocket.SlaveWebsocketController import SlaveWebsocketController
 
 
 class TornadoServer:
@@ -38,21 +38,26 @@ class TornadoServer:
     def __init__(self):
         self.port = 80
         TornadoServer.master_ip = Settings.get_string("master_ip")
-        handlers = [
-            (r"/util/(.*)", UtilHandler),
-            (r"/movies/(.*)", MovieHandler),
-            (r"/shows/(.*)", ShowHandler),
-            (r"/hd/(.*)", HDHandler),
-            (r"/player/(.*)", PlayerHandler),
-            (r"/radio/(.*)", RadioHandler),
-            (r"/youtube/(.*)", YoutubeHandler),
-            (r"/torrent/(.*)", TorrentHandler),
-            (r"/lighting/(.*)", LightHandler),
-            (r"/tv/(.*)", TVHandler),
-            (r"/ws", RealtimeHandler),
-            (r"/database/(.*)", DatabaseHandler),
-            (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/homebase/build", "default_filename": "index.html"})
-        ]
+        if Settings.get_bool("slave"):
+            handlers = [
+                (r"/slave", SlaveWebsocketHandler),
+            ]
+        else:
+            handlers = [
+                (r"/util/(.*)", UtilHandler),
+                (r"/movies/(.*)", MovieHandler),
+                (r"/shows/(.*)", ShowHandler),
+                (r"/hd/(.*)", HDHandler),
+                (r"/player/(.*)", PlayerHandler),
+                (r"/radio/(.*)", RadioHandler),
+                (r"/youtube/(.*)", YoutubeHandler),
+                (r"/torrent/(.*)", TorrentHandler),
+                (r"/lighting/(.*)", LightHandler),
+                (r"/tv/(.*)", TVHandler),
+                (r"/ws", MasterWebsocketHandler),
+                (r"/database/(.*)", DatabaseHandler),
+                (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/homebase/build", "default_filename": "index.html"})
+            ]
 
         self.application = web.Application(handlers)
 
@@ -61,9 +66,14 @@ class TornadoServer:
         thread.start()
 
     def internal_start(self):
-        WebsocketController.init()
         asyncio.set_event_loop(asyncio.new_event_loop())
         asyncio.set_event_loop_policy(AnyThreadEventLoopPolicy())
+
+        if Settings.get_bool("slave"):
+            SlaveWebsocketController.init()
+        else:
+            MasterWebsocketController.init()
+
         while True:
             try:
                 self.application.listen(self.port)
@@ -203,7 +213,7 @@ class PlayerHandler(BaseHandler):
             PlayerController.stop_player()
 
             if was_waiting_for_file_selection:
-                WebsocketController.broadcast('request', 'media_selection_close', [])
+                MasterWebsocketController.broadcast('request', 'media_selection_close', [])
 
         elif url == "pause_resume_player":
             PlayerController.pause_resume_player()
@@ -224,18 +234,23 @@ class HDHandler(BaseHandler):
         if Settings.get_bool("slave"):
             self.write(await TornadoServer.request_master_async(self.request.uri))
         elif url == "drives":
-            self.write(HDController.drives())
+            self.write(HDController.get_drives())
         elif url == "directory":
-            self.write(HDController.directory(self.get_argument("path")))
+            self.write(HDController.get_directory(self.get_argument("path")))
 
     async def post(self, url):
         if url == "play_file":
-            if Settings.get_bool("slave"):
-                Logger.write(2, self.get_argument("path"))
-                await HDController.play_master_file(TornadoServer, self.get_argument("path"), self.get_argument("filename"), 0)
-
+            # if Settings.get_bool("slave"):
+            #     Logger.write(2, self.get_argument("path"))
+            #     await HDController.play_master_file(TornadoServer, self.get_argument("path"), self.get_argument("filename"), 0)
+            #
+            # else:
+            instance = self.get_argument("instance")
+            path = urllib.parse.unquote(self.get_argument("path"))
+            if instance == Settings.get_string("name"):
+                MediaManager().start_file(self.get_argument("path"), 0)
             else:
-                HDController.play_file(self.get_argument("path"))
+                MasterWebsocketController.play_slave_file(self.get_argument("instance"), path)
                 # file = urllib.parse.unquote(self.get_argument("path"))
                 # if not filename.endswith(".jpg"):
                 #     size, first_64k, last_64k = get_file_info(file)
@@ -311,19 +326,34 @@ class TVHandler(BaseHandler):
             TVManager().channel_down()
 
 
-class RealtimeHandler(websocket.WebSocketHandler):
+class SlaveWebsocketHandler(websocket.WebSocketHandler):
 
     def check_origin(self, origin):
         return True
 
     def open(self):
-        WebsocketController.opening_client(self)
+        SlaveWebsocketController.opening_client(self)
 
     def on_message(self, message):
-        WebsocketController.client_message(self, message)
+        SlaveWebsocketController.client_message(self, message)
 
     def on_close(self):
-        WebsocketController.closing_client(self)
+        SlaveWebsocketController.closing_client(self)
+
+
+class MasterWebsocketHandler(websocket.WebSocketHandler):
+
+    def check_origin(self, origin):
+        return True
+
+    def open(self):
+        MasterWebsocketController.opening_client(self)
+
+    def on_message(self, message):
+        MasterWebsocketController.client_message(self, message)
+
+    def on_close(self):
+        MasterWebsocketController.closing_client(self)
 
 
 class DatabaseHandler(BaseHandler):

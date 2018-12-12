@@ -1,3 +1,5 @@
+import newId from './Utils/id.js'
+
 export default class WS {
   static init() {
     this.ws = new WebSocket('ws://localhost/ws');
@@ -28,11 +30,21 @@ export default class WS {
     console.log(data);
 
     if (data.type == "notify"){
-        this.subscriptions.forEach(sub =>
+        var subscription = this.subscriptions.find(el => el.subscription_id == data.id);
+        if(subscription)
+            subscription.trigger(data.data);
+    }
+    else if(data.type === "response")
+    {
+        if(data.event === "subscribed")
         {
-            if(sub.topic === data.event)
-                sub.trigger(data.data);
-        });
+            this.subscriptions.forEach(sub =>
+            {
+                if(sub.request_id === data.id){
+                    sub.subscription_id = data.data[0];
+                }
+            });
+        }
     }
   }
 
@@ -42,42 +54,104 @@ export default class WS {
      this.subscriptions.forEach(sub => { sub.subscribed = false; });
   }
 
-  static subscribe(topic, callback) {
+  static subscribe(topic, params, callback) {
     var subbed;
-    this.subscriptions.forEach(el =>{
-        if(el.topic === topic){
-            el.addCallback(callback);
+    var id;
+
+    if (!Array.isArray(params))
+        params = [params];
+
+    this.subscriptions.forEach(el => {
+        if(el.matches(topic, params)){
+            id = el.addCallback(callback);
             subbed = true;
         }
     });
 
     if(!subbed)
     {
-        this.subscriptions.push(new SocketSubscription(topic, callback));
+        var newSub = new SocketSubscription(topic, params);
+        this.subscriptions.push(newSub);
+        id = newSub.addCallback(callback);
         if(this.wsConnected)
-            this.send_subscription(topic);
+            this.send_subscription(newSub);
     }
+
+    return id;
+  }
+
+  static unsubscribe(subId)
+  {
+     this.subscriptions.forEach(sub =>{
+        if(sub.removeCallback(subId))
+        {
+            if(sub.callbacks.length == 0){
+                this.send_unsubscription(sub);
+                return;
+            }
+        }
+     });
   }
 
   static send_subscription(subscription){
       subscription.subscribed = true;
-      this.ws.send(JSON.stringify({event: "subscribe", topic: subscription.topic}));
+      subscription.request_id = newId()
+      this.ws.send(JSON.stringify({id: subscription.request_id, event: "subscribe", topic: subscription.topic, params: subscription.params}));
+  }
+
+  static send_unsubscription(subscription){
+      this.subscriptions.remove(subscription);
+      this.ws.send(JSON.stringify({id: subscription.subscription_id, event: "unsubscribe", topic: subscription.topic}));
   }
 }
 
 class SocketSubscription
 {
-    constructor(topic, callback){
+    constructor(topic, params){
+        this.request_id = 0
+        this.subscription_id = 0
+
         this.topic = topic;
-        this.callbacks = [callback];
+        this.params = params;
+        this.callbacks = [];
         this.subscribed = false;
     }
 
     addCallback(callback){
-        this.callbacks.push(callback);
+        const id = newId();
+        this.callbacks.push({id: id, callback: callback});
+        return id;
+    }
+
+    removeCallback(id){
+        for (var i = 0; i < this.callbacks.length; i++)
+        {
+            if(this.callbacks[i].id == id)
+            {
+                this.callbacks.remove(this.callbacks[i]);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    matches(topic, params){
+        if(this.topic !== topic)
+            return false;
+
+        if(this.params.length != params.length)
+            return false;
+
+        for(var i = 0 ; i < this.params.length; i++)
+        {
+            if(this.params[i] !== params[i])
+                return false;
+        }
+
+        return true;
     }
 
     trigger(data){
-        this.callbacks.forEach(cb => cb(data));
+        this.callbacks.forEach(cb => cb.callback(data));
     }
 }

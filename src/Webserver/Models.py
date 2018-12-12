@@ -113,8 +113,9 @@ class Settings:
 
 class WebSocketMessage:
 
-    def __init__(self, type, evnt, data):
+    def __init__(self, id, type, evnt, data):
         self.type = type
+        self.id = id
         self.event = evnt
         self.data = data
 
