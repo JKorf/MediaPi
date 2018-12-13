@@ -22,9 +22,9 @@ class ShowView extends Component {
   render() {
     const shows = this.state.shows;
     return (
-      <View>
+      <div>
         <MediaOverview media={shows} />
-      </View>
+      </div>
     );
   }
 };

@@ -116,6 +116,13 @@ class MasterWebsocketController:
                 else:
                     slave = [x for x in self.slaves.data if x.name == instance][0]
                     self.write_message(slave._client, WebSocketSlaveCommand("play_file", [path]))
+            elif topic == "play_stop":
+                instance = data['params'][0]
+                if instance == self.instance_name:
+                    MediaManager().stop_play()
+                else:
+                    slave = [x for x in self.slaves.data if x.name == instance][0]
+                    self.write_message(slave._client, WebSocketSlaveCommand("play_stop", []))
 
     def slave_client_message(self, client, data):
         if data['event'] == 'update':
@@ -144,10 +151,6 @@ class MasterWebsocketController:
                 client.write_message(to_JSON(websocket_message))
             except:
                 Logger.write(2, "Failed to send msg to client because client is closed: " + traceback.format_exc())
-
-    def play_slave_file(self, slave_name, path):
-        slave = [x for x in self.slaves if x.name == slave_name][0]
-        #slave.client.write_message(to_JSON(WebSocketMessage("command", "play_file", [path])))
 
 
 class Subscription:

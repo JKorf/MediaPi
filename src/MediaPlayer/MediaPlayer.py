@@ -40,6 +40,11 @@ class MediaManager(metaclass=Singleton):
         self.mediaData.title = os.path.basename(url)
         self.mediaData.updated()
 
+    def stop_play(self):
+        VLCPlayer().stop()
+        self.mediaData.type = None
+        self.mediaData.title = None
+
     def start_torrent(self, url, media_file):
         if self.torrent is not None:
             Logger.write(2, "Can't start new torrent, still torrent active")

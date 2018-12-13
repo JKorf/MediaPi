@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route } from "react-router-dom";
 
 import Header from './Modules/Header'
 import DashboardView from './Modules/Views/DashboardView'
-import ShowView from './Modules/Views/ShowView'
+import MediaPlayerView from './Modules/Views/MediaPlayerView'
 import Socket from './Socket.js'
 
 import './Modules/base.css';
@@ -19,9 +19,9 @@ class App extends Component {
     return (
       <Router>
           <div className="app">
-                <Header name="Jan" age="26"/>
+                <Header/>
                 <Route path="/" exact component={DashboardView} />
-                <Route path="/shows/" component={ShowView} />
+                <Route path="/mediaplayer/" component={MediaPlayerView} />
           </div>
       </Router>
     );

@@ -70,6 +70,8 @@ class SlaveWebsocketController:
         if data['event'] == 'command':
             if data['topic'] == 'play_file':
                 MediaManager().start_file(data['parameters'][0], 0)
+            elif data['topic'] == 'play_stop':
+                MediaManager().stop_play()
 
     def broadcast_player_data(self, data):
         if not self.server_socket:

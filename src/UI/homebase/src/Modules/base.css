@@ -18,8 +18,17 @@ body, html{
     height:50px;
 }
 
+.view-wrapper{
+    height: calc(100% - 50px);
+}
+
 .view{
     height: calc(100% - 50px);
+    overflow: auto;
+}
+
+.footer{
+    height: 50px;
 }
 
 *{
