@@ -13,12 +13,15 @@ export default class WS {
     this.ws.close = this.socketClose;
 
     this.subscriptions = [];
+    this.pending_messages = [];
     this.wsConnected = false;
   }
 
   static socketOpen(){
     console.log("Websocket opened");
     this.wsConnected = true;
+
+    this.ws.send(JSON.stringify({event: "init", type: "UI"}));
     this.subscriptions.forEach(sub => {
         if(!sub.subscribed)
             this.send_subscription(sub);
@@ -27,20 +30,23 @@ export default class WS {
 
   static socketMessage(e){
     var data = JSON.parse(e.data);
-    console.log(data);
+    console.log("Received: ", data);
 
-    if (data.type == "notify"){
-        var subscription = this.subscriptions.find(el => el.subscription_id == data.id);
+    if (data.type == "update"){
+        var subscription = this.subscriptions.find(el => el.subscription_id == data.subscription_id);
         if(subscription)
             subscription.trigger(data.data);
     }
     else if(data.type === "response")
     {
-        if(data.event === "subscribed")
-        {
+        var id = data.request_id;
+        var pending_message = this.pending_messages.find(el => el.request_id == id)
+        if(pending_message)
+            pending_message.resolve(true)
+        else{
             this.subscriptions.forEach(sub =>
             {
-                if(sub.request_id === data.id){
+                if(sub.request_id === id){
                     sub.subscription_id = data.data[0];
                 }
             });
@@ -54,15 +60,32 @@ export default class WS {
      this.subscriptions.forEach(sub => { sub.subscribed = false; });
   }
 
-  static subscribe(topic, params, callback) {
+  static request(topic, params)
+  {
+    if (!this.wsConnected)
+    {
+        return new Promise((resolve, reject) =>{
+            reject()
+         });
+    }
+
+     var msg = {request_id: newId(), event: "request", topic: topic, params: params};
+     var promise = new Promise((resolve, reject) =>{
+        msg.resolve = resolve;
+        msg.reject = reject;
+     });
+     this.pending_messages.push(msg);
+     console.log("Requested: ", msg);
+     this.ws.send(JSON.stringify(this.ignore(msg, ["resolve", "reject"])));
+     return promise;
+  }
+
+  static subscribe(topic, callback) {
     var subbed;
     var id;
 
-    if (!Array.isArray(params))
-        params = [params];
-
     this.subscriptions.forEach(el => {
-        if(el.matches(topic, params)){
+        if(el.topic == topic){
             id = el.addCallback(callback);
             subbed = true;
         }
@@ -70,7 +93,7 @@ export default class WS {
 
     if(!subbed)
     {
-        var newSub = new SocketSubscription(topic, params);
+        var newSub = new SocketSubscription(topic);
         this.subscriptions.push(newSub);
         id = newSub.addCallback(callback);
         if(this.wsConnected)
@@ -96,23 +119,37 @@ export default class WS {
   static send_subscription(subscription){
       subscription.subscribed = true;
       subscription.request_id = newId()
-      this.ws.send(JSON.stringify({id: subscription.request_id, event: "subscribe", topic: subscription.topic, params: subscription.params}));
+      var msg = {request_id: subscription.request_id, event: "subscribe", topic: subscription.topic};
+      console.log("Requested: ", msg);
+      this.ws.send(JSON.stringify(msg));
   }
 
   static send_unsubscription(subscription){
       this.subscriptions.remove(subscription);
-      this.ws.send(JSON.stringify({id: subscription.subscription_id, event: "unsubscribe", topic: subscription.topic}));
+      var msg = {request_id: subscription.subscription_id, event: "unsubscribe", topic: subscription.topic};
+      console.log("Requested: ", msg);
+      this.ws.send(JSON.stringify(msg));
   }
+
+  static ignore(obj, keys)
+    {
+        var dup = {};
+        for (var key in obj) {
+            if (keys.indexOf(key) == -1) {
+                dup[key] = obj[key];
+            }
+        }
+        return dup;
+    }
 }
 
 class SocketSubscription
 {
-    constructor(topic, params){
+    constructor(topic){
         this.request_id = 0
         this.subscription_id = 0
 
         this.topic = topic;
-        this.params = params;
         this.callbacks = [];
         this.subscribed = false;
     }
@@ -133,22 +170,6 @@ class SocketSubscription
             }
         }
         return false;
-    }
-
-    matches(topic, params){
-        if(this.topic !== topic)
-            return false;
-
-        if(this.params.length != params.length)
-            return false;
-
-        for(var i = 0 ; i < this.params.length; i++)
-        {
-            if(this.params[i] !== params[i])
-                return false;
-        }
-
-        return true;
     }
 
     trigger(data){

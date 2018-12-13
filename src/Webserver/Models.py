@@ -111,14 +111,37 @@ class Settings:
         self.max_sub_files = max_sub_files
 
 
-class WebSocketMessage:
+# class WebSocketMessage:
+#
+#     def __init__(self, evnt, topic, data):
+#         self.event = evnt
+#         self.topic = topic
+#         self.data = data
 
-    def __init__(self, id, type, evnt, data):
-        self.type = type
-        self.id = id
-        self.event = evnt
+class WebSocketUpdateMessage:
+
+    def __init__(self, sub_id, data):
+        self.type = "update"
+        self.subscription_id = sub_id
         self.data = data
 
+class WebSocketResponseMessage:
+    def __init__(self, request_id, data):
+        self.type = "response"
+        self.request_id = request_id
+        self.data = data
+
+class WebSocketInitMessage:
+    def __init__(self, name):
+        self.type = "Slave"
+        self.event = "init"
+        self.data = name
+
+class WebSocketSlaveMessage:
+    def __init__(self, topic, data):
+        self.event = "update"
+        self.topic = topic
+        self.data = data
 
 class Version:
 

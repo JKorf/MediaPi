@@ -11,8 +11,8 @@ class MediaPlayerWidget extends Component {
   }
 
   componentDidMount() {
-    this.playerSub = Socket.subscribe("player", this.props.instance, this.playerUpdate);
-    this.mediaSub = Socket.subscribe("media", this.props.instance, this.mediaUpdate);
+    this.playerSub = Socket.subscribe(this.props.instance + ".player", this.playerUpdate);
+    this.mediaSub = Socket.subscribe(this.props.instance + ".media", this.mediaUpdate);
   }
 
   componentWillUnmount(){
@@ -30,9 +30,11 @@ class MediaPlayerWidget extends Component {
   render() {
     const playerData = this.state.playerData;
     const mediaData = this.state.mediaData;
+    const instance = this.props.instance;
     return (
       <Widget>
-          {mediaData.type}: {mediaData.title}
+          {instance}<br />
+          {mediaData.type}: {mediaData.title}<br />
           {playerData.playing_for}
       </Widget>
     );

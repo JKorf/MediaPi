@@ -33,7 +33,7 @@ from Webserver.Controllers.Websocket.SlaveWebsocketController import SlaveWebsoc
 
 class TornadoServer:
     master_ip = None
-    clients = []
+    master_socket_controller = None
 
     def __init__(self):
         self.port = 80
@@ -65,15 +65,16 @@ class TornadoServer:
         thread.start()
 
     def internal_start(self):
-        #asyncio.set_event_loop(asyncio.new_event_loop())
-        #asyncio.set_event_loop_policy(AnyThreadEventLoopPolicy())
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        asyncio.set_event_loop_policy(AnyThreadEventLoopPolicy())
 
         if Settings.get_bool("slave"):
             self.slave_socket_controller = SlaveWebsocketController()
             self.slave_socket_controller.start()
-        else:
-            self.master_socket_controller = MasterWebsocketController()
-            self.master_socket_controller.start()
+            return
+
+        TornadoServer.master_socket_controller = MasterWebsocketController()
+        TornadoServer.master_socket_controller.start()
 
         while True:
             try:
@@ -333,13 +334,13 @@ class MasterWebsocketHandler(websocket.WebSocketHandler):
         return True
 
     def open(self):
-        MasterWebsocketController.opening_client(self)
+        TornadoServer.master_socket_controller.opening_client(self)
 
     def on_message(self, message):
-        MasterWebsocketController.client_message(self, message)
+        TornadoServer.master_socket_controller.client_message(self, message)
 
     def on_close(self):
-        MasterWebsocketController.closing_client(self)
+        TornadoServer.master_socket_controller.closing_client(self)
 
 
 class DatabaseHandler(BaseHandler):

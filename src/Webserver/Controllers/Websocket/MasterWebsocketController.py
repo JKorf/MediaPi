@@ -14,135 +14,149 @@ from MediaPlayer.Util.Enums import TorrentState
 from Shared.Engine import Engine
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread, ThreadManager
 from Shared.Util import to_JSON, write_size
-from Webserver.Models import MediaFile, WebSocketMessage, Status, CurrentMedia, MediaInfo
+from Webserver.Models import MediaFile, Status, CurrentMedia, MediaInfo, WebSocketResponseMessage, WebSocketUpdateMessage
 
 
 class MasterWebsocketController:
 
     def __init__(self):
         self.clients = dict()
+        self.slaves = SlaveCollection()
+
         self._ws_lock = Lock()
         self.last_id = 0
         self.last_id_lock = Lock()
-        self.slaves = []
         self.instance_name = Settings.get_string("name")
 
+        self.own_slave = SlaveClient(self.instance_name, None)
+        self.own_slave.player_state = VLCPlayer().playerState
+        self.own_slave.media_data = MediaManager().mediaData
+        self.slaves.add_slave(self.own_slave)
+
     def start(self):
-        VLCPlayer().playerState.register_callback(lambda x: self.update_player_data(self.instance_name, x))
-        MediaManager().mediaData.register_callback(lambda x: self.update_media_data(self.instance_name, x))
+        VLCPlayer().playerState.register_callback(lambda x: self.slave_update(self.own_slave, "player", x))
+        MediaManager().mediaData.register_callback(lambda x: self.slave_update(self.own_slave, "media", x))
+        self.slaves.register_callback(lambda x: self.update_slaves_data(x.data))
 
     def slave_update(self, slave, type, data):
         if type == "player":
-            slave.player_data = data
+            slave.player_state = data
             self.update_player_data(slave.name, data)
         if type == "media":
             slave.media_data = data
             self.update_media_data(slave.name, data)
 
+    def update_slaves_data(self, data):
+        self.broadcast("slaves", data)
+
     def update_player_data(self, instance, data):
-        self.notify("player", [instance], data)
+        self.broadcast(instance + ".player", data)
 
     def update_media_data(self, instance, data):
-        self.notify("media", [instance], data)
-
-    def update_data(self, topic, instance, player_data, media_data):
-        if topic == "player":
-            self.update_player_data(instance, player_data)
-        elif topic == "media":
-            self.update_media_data(instance, media_data)
+        self.broadcast(instance + ".media", data)
 
     def trigger_initial_data(self, client, subscription):
-        instance = subscription.params[0]
-        if instance == self.instance_name:
-            self.update_data(subscription.topic, self.instance_name, VLCPlayer().playerState, MediaManager().mediaData)
-        else:
-            slave = [x for x in self.slaves if x.name == instance]
-            if len(client) == 0:
-                Logger.write(2, instance + " not in slave list")
-                return
-            self.update_data(subscription.topic, slave[0].name, slave[0].player_state, slave[0].media_data)
+        if subscription.topic.endswith(".player"):
+            slave = [x for x in self.slaves.data if subscription.topic == x.name + ".player"][0]
+            self.update_player_data(slave.name, slave.player_state)
+        elif subscription.topic.endswith(".media"):
+            slave = [x for x in self.slaves.data if subscription.topic == x.name + ".media"][0]
+            self.update_media_data(slave.name, slave.media_data)
+        elif subscription.topic == "slaves":
+            self.update_slaves_data(self.slaves.data)
 
     def opening_client(self, client):
         if client not in self.clients:
             Logger.write(2, "New connection")
-            self.clients[client] = []
 
     def client_message(self, client, msg):
         data = json.loads(msg)
-        request_id = int(data['id'])
+        if data['event'] == 'init':
+            if data['type'] == 'Slave':
+                self.slaves.add_slave(SlaveClient(data['data'], client))
+                Logger.write(2, "Slave initialized: " + data['data'])
+            elif data['type'] == 'UI':
+                self.clients[client] = []
+                Logger.write(2, "UI client initialized")
 
         if data['event'] == 'subscribe':
+            request_id = int(data['request_id'])
             with self.last_id_lock:
                 self.last_id += 1
                 id = self.last_id
-            subscription = Subscription(id, data['topic'], data['params'])
+            subscription = Subscription(id, data['topic'])
             self.clients[client].append(subscription)
             Logger.write(2, "Client subscribed to " + str(data['topic']))
-            client.write_message(to_JSON(WebSocketMessage(request_id, "response", "subscribed", [subscription.id])))
+            self.write_message(client, WebSocketResponseMessage(request_id, [subscription.id]))
             self.trigger_initial_data(client, subscription)
 
         elif data['event'] == 'unsubscribe':
+            request_id = int(data['request_id'])
             self.clients[client] = [x for x in self.clients[client] if x.id == request_id]
             Logger.write(2, "Client unsubscribed from " + str(data['topic']))
 
-        elif data['event'] == 'slave_init':
-            self.slaves.append(SlaveClient(data['data'][0], client))
-            Logger.write(2, "Slave initialized: " + data['data'][0])
-
-        elif data['event'] == 'slave_data':
-            slave = [x for x in self.slaves if x.client == client][0]
-            self.slave_update(slave, data['type'], data['data'])
-            Logger.write(2, "Slave update: " + data['type'])
+        elif data['event'] == 'update':
+            slave = [x for x in self.slaves.data if x._client == client][0]
+            self.slave_update(slave, data['topic'], data['data'])
+            Logger.write(2, "Slave update: " + data['topic'])
 
     def closing_client(self, client):
         if client in self.clients:
             Logger.write(2, "Connection closed")
             del self.clients[client]
-            self.slaves = [x for x in self.slaves if x.client != client]
 
-    def notify(self, subscription, sub_params, data=None):
+        slave = [x for x in self.slaves.data if x._client == client]
+        if len(slave) > 0:
+            Logger.write(2, "Slave disconnected")
+            self.slaves.remove_slave(slave[0])
+
+    def broadcast(self, topic, data=None):
         for client, subs in self.clients.items():
-            for sub in [x for x in subs if x.matches(subscription, sub_params)]:
-                self.write_message(client, sub.id, "notify", "update", data)
+            for sub in [x for x in subs if x.topic == topic]:
+                self.write_message(client, WebSocketUpdateMessage(sub.id, data))
 
-    def notify_client(self, client, id, data):
-        self.write_message(client, id, "notify", "update", data)
-
-    def write_message(self, client, id, type, event, data):
-        if data is None:
-            data = ""
-
+    def write_message(self, client, websocket_message):
         with self._ws_lock:
             try:
-                client.write_message(to_JSON(WebSocketMessage(id, type, event, data)))
+                client.write_message(to_JSON(websocket_message))
             except:
                 Logger.write(2, "Failed to send msg to client because client is closed: " + traceback.format_exc())
 
     def play_slave_file(self, slave_name, path):
         slave = [x for x in self.slaves if x.name == slave_name][0]
-        slave.client.write_message(to_JSON(WebSocketMessage(0, "command", "play_file", [path])))
+        #slave.client.write_message(to_JSON(WebSocketMessage("command", "play_file", [path])))
 
 
 class Subscription:
 
-    def __init__(self, id, topic, params):
+    def __init__(self, id, topic):
         self.id = id
         self.topic = topic
-        self.params = params
-
-    def matches(self, topic, params):
-        return self.topic == topic and self.params == params
-
 
 class SlaveClient:
 
     def __init__(self, name, client):
         self.name = name
-        self.client = client
+        self._client = client
         self.last_seen = 0
 
         self.player_state = None
         self.media_data = None
+
+class SlaveCollection(Observable):
+
+    def __init__(self):
+        super().__init__("slaves", 1)
+        self.data = []
+
+    def add_slave(self, slave):
+        self.data.append(slave)
+        self.updated()
+
+    def remove_slave(self, slave):
+        self.data.remove(slave)
+        self.updated()
