@@ -69,6 +69,9 @@ export default class WS {
          });
     }
 
+    if (!Array.isArray(params))
+        params = [params];
+
      var msg = {request_id: newId(), event: "request", topic: topic, params: params};
      var promise = new Promise((resolve, reject) =>{
         msg.resolve = resolve;

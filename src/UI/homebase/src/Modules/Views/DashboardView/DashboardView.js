@@ -23,11 +23,11 @@ class DashboardView extends Component {
   }
 
   btnClick() {
-    axios.post('http://localhost/hd/play_file?instance=Woonkamer&path=C:/jellies.mp4');
+    Socket.request("play_file", ["Woonkamer", "C:/jellies.mp4"]);
   }
 
   btn2Click() {
-    axios.post('http://localhost/hd/play_file?instance=Slaapkamer&path=C:/jellies.mp4');
+    Socket.request("play_file", ["Slaapkamer", "C:/jellies.mp4"]);
   }
 
   render() {

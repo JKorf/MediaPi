@@ -18,7 +18,7 @@ from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread, ThreadManager
 from Shared.Util import to_JSON, write_size
-from Webserver.Models import MediaFile, Status, CurrentMedia, MediaInfo, WebSocketResponseMessage, WebSocketUpdateMessage
+from Webserver.Models import MediaFile, Status, CurrentMedia, MediaInfo, WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand
 
 
 class MasterWebsocketController:
@@ -84,6 +84,12 @@ class MasterWebsocketController:
                 self.clients[client] = []
                 Logger.write(2, "UI client initialized")
 
+        if client in self.clients:
+            self.ui_client_message(client, data)
+        else:
+            self.slave_client_message(client, data)
+
+    def ui_client_message(self, client, data):
         if data['event'] == 'subscribe':
             request_id = int(data['request_id'])
             with self.last_id_lock:
@@ -100,7 +106,19 @@ class MasterWebsocketController:
             self.clients[client] = [x for x in self.clients[client] if x.id != request_id]
             Logger.write(2, "Client unsubscribed from " + str(data['topic']))
 
-        elif data['event'] == 'update':
+        elif data['event'] == 'request':
+            topic = data['topic']
+            if topic == "play_file":
+                instance = data['params'][0]
+                path = data['params'][1]
+                if instance == self.instance_name:
+                    MediaManager().start_file(path, 0)
+                else:
+                    slave = [x for x in self.slaves.data if x.name == instance][0]
+                    self.write_message(slave._client, WebSocketSlaveCommand("play_file", [path]))
+
+    def slave_client_message(self, client, data):
+        if data['event'] == 'update':
             slave = [x for x in self.slaves.data if x._client == client][0]
             self.slave_update(slave, data['topic'], data['data'])
             Logger.write(2, "Slave update: " + data['topic'])
