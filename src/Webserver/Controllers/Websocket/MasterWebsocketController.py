@@ -51,6 +51,7 @@ class MasterWebsocketController:
             self.update_media_data(slave.name, data)
 
     def update_slaves_data(self, data):
+        Logger.write(2, "Slave update broadcast")
         self.broadcast("slaves", data)
 
     def update_player_data(self, instance, data):
@@ -96,7 +97,7 @@ class MasterWebsocketController:
 
         elif data['event'] == 'unsubscribe':
             request_id = int(data['request_id'])
-            self.clients[client] = [x for x in self.clients[client] if x.id == request_id]
+            self.clients[client] = [x for x in self.clients[client] if x.id != request_id]
             Logger.write(2, "Client unsubscribed from " + str(data['topic']))
 
         elif data['event'] == 'update':
@@ -111,7 +112,7 @@ class MasterWebsocketController:
 
         slave = [x for x in self.slaves.data if x._client == client]
         if len(slave) > 0:
-            Logger.write(2, "Slave disconnected")
+            Logger.write(2, "Slave " + slave[0].name + " disconnected")
             self.slaves.remove_slave(slave[0])
 
     def broadcast(self, topic, data=None):
