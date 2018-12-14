@@ -1,25 +1,12 @@
-import asyncio
 import json
-import time
-import traceback
-from threading import Lock
-
-import psutil
 import websocket
-from tornado.simple_httpclient import HTTPTimeoutError
-from tornado.websocket import websocket_connect
-
-from Database.Database import Database
-from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
+from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaPlayer import MediaManager
-from MediaPlayer.Util.Enums import TorrentState
 from Shared.Engine import Engine
-from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
-from Shared.Threading import CustomThread, ThreadManager
-from Shared.Util import to_JSON, write_size
-from Webserver.Models import MediaFile, Status, CurrentMedia, MediaInfo, WebSocketInitMessage, WebSocketSlaveMessage
+from Shared.Util import to_JSON
+from Webserver.Models import WebSocketInitMessage, WebSocketSlaveMessage
 
 
 class SlaveWebsocketController:
@@ -69,7 +56,7 @@ class SlaveWebsocketController:
         data = json.loads(raw_data)
         if data['event'] == 'command':
             if data['topic'] == 'play_file':
-                MediaManager().start_file(data['parameters'][0], 0)
+                MediaManager().start_file(data['parameters'][0], data['parameters'][1])
             elif data['topic'] == 'play_stop':
                 MediaManager().stop_play()
 

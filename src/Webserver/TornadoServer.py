@@ -33,7 +33,6 @@ from Webserver.Controllers.Websocket.SlaveWebsocketController import SlaveWebsoc
 
 class TornadoServer:
     master_ip = None
-    master_socket_controller = None
 
     def __init__(self):
         self.port = 80
@@ -56,7 +55,6 @@ class TornadoServer:
             ]
 
             self.application = web.Application(handlers)
-            self.master_socket_controller = None
         else:
             self.slave_socket_controller = None
 
@@ -73,8 +71,7 @@ class TornadoServer:
             self.slave_socket_controller.start()
             return
 
-        TornadoServer.master_socket_controller = MasterWebsocketController()
-        TornadoServer.master_socket_controller.start()
+        MasterWebsocketController().start()
 
         while True:
             try:
@@ -211,11 +208,11 @@ class PlayerHandler(BaseHandler):
         elif url == "set_subtitle_id":
             PlayerController.set_subtitle_id(self.get_argument("sub"))
         elif url == "stop_player":
-            was_waiting_for_file_selection = MediaManager().torrent and MediaManager().torrent.state == TorrentState.WaitingUserFileSelection
-            PlayerController.stop_player()
+            #was_waiting_for_file_selection = MediaManager().torrent and MediaManager().torrent.state == TorrentState.WaitingUserFileSelection
+            PlayerController.stop_player(self.get_argument("instance"))
 
-            if was_waiting_for_file_selection:
-                MasterWebsocketController.broadcast('request', 'media_selection_close', [])
+            # if was_waiting_for_file_selection:
+            #     MasterWebsocketController.broadcast('request', 'media_selection_close', [])
 
         elif url == "pause_resume_player":
             PlayerController.pause_resume_player()
@@ -249,10 +246,7 @@ class HDHandler(BaseHandler):
             # else:
             instance = self.get_argument("instance")
             path = urllib.parse.unquote(self.get_argument("path"))
-            if instance == Settings.get_string("name"):
-                MediaManager().start_file(self.get_argument("path"), 0)
-            else:
-                MasterWebsocketController.play_slave_file(self.get_argument("instance"), path)
+            HDController.play_file(instance, path, int(self.get_argument("position")))
                 # file = urllib.parse.unquote(self.get_argument("path"))
                 # if not filename.endswith(".jpg"):
                 #     size, first_64k, last_64k = get_file_info(file)
@@ -334,13 +328,13 @@ class MasterWebsocketHandler(websocket.WebSocketHandler):
         return True
 
     def open(self):
-        TornadoServer.master_socket_controller.opening_client(self)
+        MasterWebsocketController().opening_client(self)
 
     def on_message(self, message):
-        TornadoServer.master_socket_controller.client_message(self, message)
+        MasterWebsocketController().client_message(self, message)
 
     def on_close(self):
-        TornadoServer.master_socket_controller.closing_client(self)
+        MasterWebsocketController().closing_client(self)
 
 
 class DatabaseHandler(BaseHandler):

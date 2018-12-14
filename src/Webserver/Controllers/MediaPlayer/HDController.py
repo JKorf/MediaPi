@@ -10,7 +10,9 @@ from MediaPlayer.MediaPlayer import MediaManager
 from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Settings import Settings
 from Shared.Util import to_JSON
+from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
 from Webserver.Models import FileStructure, Media
 
 
@@ -40,11 +42,14 @@ class HDController:
         return to_JSON(directory).encode('utf8')
 
     @staticmethod
-    def play_file(path, position=0):
+    def play_file(instance, path, position=0):
         file = urllib.parse.unquote(path)
-        Logger.write(2, "Play file: " + file)
+        Logger.write(2, "Play file: " + file + " on " + instance)
 
-        MediaManager().start_file(path, position)
+        if Settings.get_string("name") == instance:
+            MediaManager().start_file(path, position)
+        else:
+            MasterWebsocketController().send_to_slave(instance, "play_file", [path, position])
 
     @staticmethod
     def next_image(current_path):

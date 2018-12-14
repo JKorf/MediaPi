@@ -1,5 +1,8 @@
+from MediaPlayer.MediaPlayer import MediaManager
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Settings import Settings
+from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
 
 
 class PlayerController:
@@ -15,10 +18,13 @@ class PlayerController:
         EventManager.throw_event(EventType.SetSubtitleId, [int(sub)])
 
     @staticmethod
-    def stop_player():
+    def stop_player(instance):
         Logger.write(2, "Stop player")
-        EventManager.throw_event(EventType.StopPlayer, [])
-        EventManager.throw_event(EventType.StopTorrent, [])
+
+        if Settings.get_string("name") == instance:
+            MediaManager().stop_play()
+        else:
+            MasterWebsocketController().send_to_slave(instance, "play_stop", [])
 
     @staticmethod
     def pause_resume_player():

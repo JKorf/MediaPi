@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Widget from './../Widget'
 import Socket from './../../../Socket.js'
 import Button from './../../Components/Button'
+import axios from 'axios'
 
 class MediaPlayerWidget extends Component {
   constructor(props) {
@@ -31,10 +32,10 @@ class MediaPlayerWidget extends Component {
   }
 
   testClick() {
-    Socket.request("play_file", [this.props.instance, "C:/jellies.mp4"]);
+    axios.post('http://localhost/hd/play_file?instance='+this.props.instance + "&path=C:/jellies.mp4&position=0");
   }
   stopClick() {
-    Socket.request("play_stop", [this.props.instance]);
+    axios.post('http://localhost/player/stop_player?instance='+this.props.instance);
   }
 
   render() {

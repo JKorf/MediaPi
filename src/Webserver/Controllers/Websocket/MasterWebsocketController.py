@@ -1,27 +1,17 @@
 import json
-import time
 import traceback
 from threading import Lock
 
-import psutil
-from tornado import websocket
-from tornado.websocket import websocket_connect
-
-from Database.Database import Database
-from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
+from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaPlayer import MediaManager
-from MediaPlayer.Util.Enums import TorrentState
-from Shared.Engine import Engine
-from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Observable import Observable
 from Shared.Settings import Settings
-from Shared.Threading import CustomThread, ThreadManager
-from Shared.Util import to_JSON, write_size
-from Webserver.Models import MediaFile, Status, CurrentMedia, MediaInfo, WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand
+from Shared.Util import to_JSON, Singleton
+from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand
 
 
-class MasterWebsocketController:
+class MasterWebsocketController(metaclass=Singleton):
 
     def __init__(self):
         self.clients = dict()
@@ -33,8 +23,8 @@ class MasterWebsocketController:
         self.instance_name = Settings.get_string("name")
 
         self.own_slave = SlaveClient(self.instance_name, None)
-        self.own_slave.player_state = VLCPlayer().playerState
-        self.own_slave.media_data = MediaManager().mediaData
+        self.own_slave.update_data("player", VLCPlayer().playerState)
+        self.own_slave.update_data("media", MediaManager().mediaData)
         self.slaves.add_slave(self.own_slave)
 
     def start(self):
@@ -43,12 +33,8 @@ class MasterWebsocketController:
         self.slaves.register_callback(lambda x: self.update_slaves_data(x.data))
 
     def slave_update(self, slave, type, data):
-        if type == "player":
-            slave.player_state = data
-            self.update_player_data(slave.name, data)
-        if type == "media":
-            slave.media_data = data
-            self.update_media_data(slave.name, data)
+        slave.update_data(type, data)
+        self.broadcast(slave.name + "." + type, data)
 
     def update_slaves_data(self, data):
         Logger.write(2, "Slave update broadcast")
@@ -60,15 +46,22 @@ class MasterWebsocketController:
     def update_media_data(self, instance, data):
         self.broadcast(instance + ".media", data)
 
-    def trigger_initial_data(self, client, subscription):
-        if subscription.topic.endswith(".player"):
-            slave = [x for x in self.slaves.data if subscription.topic == x.name + ".player"][0]
-            self.update_player_data(slave.name, slave.player_state)
-        elif subscription.topic.endswith(".media"):
-            slave = [x for x in self.slaves.data if subscription.topic == x.name + ".media"][0]
-            self.update_media_data(slave.name, slave.media_data)
-        elif subscription.topic == "slaves":
-            self.update_slaves_data(self.slaves.data)
+    def trigger_initial_data(self, client, id, subscription):
+        msg = WebSocketUpdateMessage(id, None)
+        if "." in subscription.topic:
+            instance = subscription.topic.split(".")[0]
+            topic = subscription.topic.split(".")[1]
+
+            slave = self.slaves.get_slave(instance)
+            if slave is None:
+                return
+
+            msg.data = slave.get_data(topic)
+        else:
+            if subscription.topic == "slaves":
+                msg.data = self.slaves.data
+
+        self.write_message(client, msg)
 
     def opening_client(self, client):
         if client not in self.clients:
@@ -99,30 +92,12 @@ class MasterWebsocketController:
             self.clients[client].append(subscription)
             Logger.write(2, "Client subscribed to " + str(data['topic']))
             self.write_message(client, WebSocketResponseMessage(request_id, [subscription.id]))
-            self.trigger_initial_data(client, subscription)
+            self.trigger_initial_data(client, id, subscription)
 
         elif data['event'] == 'unsubscribe':
             request_id = int(data['request_id'])
             self.clients[client] = [x for x in self.clients[client] if x.id != request_id]
             Logger.write(2, "Client unsubscribed from " + str(data['topic']))
-
-        elif data['event'] == 'request':
-            topic = data['topic']
-            if topic == "play_file":
-                instance = data['params'][0]
-                path = data['params'][1]
-                if instance == self.instance_name:
-                    MediaManager().start_file(path, 0)
-                else:
-                    slave = [x for x in self.slaves.data if x.name == instance][0]
-                    self.write_message(slave._client, WebSocketSlaveCommand("play_file", [path]))
-            elif topic == "play_stop":
-                instance = data['params'][0]
-                if instance == self.instance_name:
-                    MediaManager().stop_play()
-                else:
-                    slave = [x for x in self.slaves.data if x.name == instance][0]
-                    self.write_message(slave._client, WebSocketSlaveCommand("play_stop", []))
 
     def slave_client_message(self, client, data):
         if data['event'] == 'update':
@@ -152,6 +127,14 @@ class MasterWebsocketController:
             except:
                 Logger.write(2, "Failed to send msg to client because client is closed: " + traceback.format_exc())
 
+    def send_to_slave(self, slave_name, command, parameters):
+        slave = self.slaves.get_slave(slave_name)
+        if slave is None:
+            Logger.write(2, "Can't send to slave, slave not found")
+            return
+
+        self.write_message(slave._client, WebSocketSlaveCommand(command, parameters))
+
 
 class Subscription:
 
@@ -165,9 +148,16 @@ class SlaveClient:
         self.name = name
         self._client = client
         self.last_seen = 0
+        self._data_registrations = dict()
+        self._data_registrations["player"] = DataRegistration()
+        self._data_registrations["media"] = DataRegistration()
 
-        self.player_state = None
-        self.media_data = None
+    def update_data(self, name, data):
+        self._data_registrations[name].data = data
+
+    def get_data(self, name):
+        return self._data_registrations[name].data
+
 
 class SlaveCollection(Observable):
 
@@ -182,3 +172,15 @@ class SlaveCollection(Observable):
     def remove_slave(self, slave):
         self.data.remove(slave)
         self.updated()
+
+    def get_slave(self, name):
+        slave = [x for x in self.data if x.name == name]
+        if len(slave) > 0:
+            return slave[0]
+        return None
+
+class DataRegistration:
+
+    def __init__(self):
+        self.last_change = 0
+        self.data = None
