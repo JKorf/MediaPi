@@ -1,3 +1,3 @@
-import ShowView from './MediaPlayerView.js';
+import MediaPlayerView from './MediaPlayerView.js';
 
-export default ShowView;
+export default MediaPlayerView;

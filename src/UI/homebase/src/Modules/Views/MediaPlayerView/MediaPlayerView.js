@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import axios from 'axios'
 
 import View from './../View'
-import Footer from './../../Footer'
 
 import ShowView from './../ShowView'
 import MoviesView from './../MoviesView'
+import MediaPlayerDashboardView from './../MediaPlayerDashboardView'
 
 
 class MediaPlayerView extends Component {
@@ -19,14 +19,12 @@ class MediaPlayerView extends Component {
 
   render() {
     return (
-    <div class="view-wrapper">
+    <div className="view-wrapper">
       <View>
-         <Route path="/mediaplayer/shows" exact component={ShowView} />
-         <Route path="/mediaplayer/movies" exact component={MoviesView} />
+         <Route path="/mediaplayer/" exact component={MediaPlayerDashboardView} />
+         <Route path="/mediaplayer/shows" component={ShowView} />
+         <Route path="/mediaplayer/movies" component={MoviesView} />
        </View>
-        <Footer>
-            <Link to="/mediaplayer/shows">Shows</Link> | <Link to="/mediaplayer/movies">Movies</Link>
-        </Footer>
     </div>
     );
   }

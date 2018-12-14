@@ -1,0 +1,6 @@
+
+.mediaplayer-dashboard .dashboard-link{
+    display:inline-block;
+    width: calc(33% - 10px);
+    margin: 5px;
+}
