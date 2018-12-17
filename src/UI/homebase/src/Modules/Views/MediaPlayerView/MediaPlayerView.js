@@ -4,9 +4,11 @@ import axios from 'axios'
 
 import View from './../View'
 
+import ShowsView from './../ShowsView'
 import ShowView from './../ShowView'
 import MoviesView from './../MoviesView'
 import MediaPlayerDashboardView from './../MediaPlayerDashboardView'
+import Footer from './../../Footer'
 
 
 class MediaPlayerView extends Component {
@@ -22,9 +24,13 @@ class MediaPlayerView extends Component {
     <div className="view-wrapper">
       <View>
          <Route path="/mediaplayer/" exact component={MediaPlayerDashboardView} />
-         <Route path="/mediaplayer/shows" component={ShowView} />
-         <Route path="/mediaplayer/movies" component={MoviesView} />
+         <Route path="/mediaplayer/shows" exact component={ShowsView} />
+         <Route path='/mediaplayer/shows/:id' component={ShowView} />
+         <Route path="/mediaplayer/movies" exact component={MoviesView} />
        </View>
+       <Footer>
+        Footer
+       </Footer>
     </div>
     );
   }

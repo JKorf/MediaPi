@@ -34,3 +34,38 @@
 .media-thumbnail-info{
     padding: 5px;
 }
+
+
+.mediaplayer-dashboard .dashboard-link{
+    display:inline-block;
+    width: calc(33% - 10px);
+    margin: 5px;
+}
+
+.show-image img{
+    width: 100%;
+}
+
+.mediaplayer-widget{
+    height: 40px;
+    position: relative;
+}
+
+.mediaplayer-widget-not-playing{
+    padding: 10px 0;
+}
+
+.mediaplayer-widget-controls{
+    position: absolute;
+    width: 100px;
+    height: 40px;
+    left: 0;
+    top:0;
+}
+
+.mediaplayer-widget-info{
+    position:absolute;
+    width: calc(100% - 110px);
+    right:0;
+    top: 0;
+}

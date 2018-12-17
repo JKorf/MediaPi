@@ -42,11 +42,29 @@ class MediaPlayerWidget extends Component {
     const playerData = this.state.playerData;
     const mediaData = this.state.mediaData;
     const instance = this.props.instance;
+
+    let mediaWidget;
+    if (mediaData.title){
+        mediaWidget =
+        <div className="mediaplayer-widget">
+            <div className="mediaplayer-widget-controls">
+                <div className="mediaplayer-widget-control">Pause/play</div>
+                <div className="mediaplayer-widget-control">Stop</div>
+            </div>
+            <div className="mediaplayer-widget-info">
+                <div className="mediaplayer-widget-info-title">{mediaData.title}</div>
+                <div className="mediaplayer-widget-info-time">{playerData.playing_for}</div>
+            </div>
+        </div>;
+    }
+    else{
+        mediaWidget = <div className="mediaplayer-widget-not-playing">Nothing playing</div>;
+    }
+
     return (
-      <Widget>
-          {instance}<br />
-          {mediaData.type}: {mediaData.title}<br />
-          {playerData.playing_for}
+      <Widget title={"Mediaplayer " + instance}>
+            {mediaWidget}
+            <br/>
           <Button text="Test play" onClick={this.testClick} />
           <Button text="Test stop" onClick={this.stopClick} />
       </Widget>

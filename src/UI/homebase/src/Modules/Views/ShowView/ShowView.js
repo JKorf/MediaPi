@@ -7,23 +7,31 @@ import View from './../View'
 class ShowView extends Component {
   constructor(props) {
     super(props);
-    this.state = {shows: []};
+    this.state = {show: {images:[]}};
   }
 
   componentDidMount() {
-    axios.get('http://localhost/shows/get_shows_all?page=1&orderby=trending&keywords=').then(data => {
-        this.setState({shows: data.data})
+    axios.get('http://localhost/shows/get_show?id=' + this.props.match.params.id).then(data => {
         console.log(data.data);
+        this.setState({show: data.data});
     }, err =>{
         console.log(err);
     });
   }
 
   render() {
-    const shows = this.state.shows;
+    const show = this.state.show;
     return (
-      <div>
-        <MediaOverview media={shows} />
+      <div className="show">
+        <div className="show-image">
+            <img src={show.images.poster} />
+        </div>
+        <div className="show-synopsis">
+            {show.synopsis}
+        </div>
+        <div className="show-episodes">
+
+        </div>
       </div>
     );
   }

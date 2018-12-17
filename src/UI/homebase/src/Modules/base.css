@@ -6,7 +6,9 @@ body, html{
     position:relative;
 
     max-width: 1024px;
-    background: #b6eddc;
+    background: rgba(7, 38, 59, 1);
+    color: #eee;
+    font-family: 'Montserrat';
 }
 
 #root, .app{
@@ -36,6 +38,41 @@ body, html{
 }
 
 a {
-  color: #222;
+  color: #eee;
   text-decoration: none; /* no underline */
+}
+
+
+.dashboard-link{
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    padding: 5px;
+}
+
+.dashboard-link-icon{
+    margin: 8px 24px;
+}
+
+.dashboard-link-text{
+    text-align: center;
+    font-weight: bold;
+}
+
+.widget{
+    margin: 10px;
+    width: calc(100% - 20px);
+    min-height: 30px;
+    background: rgba(11, 48, 73, 1);
+}
+
+.widget-title{
+    background: #218791;
+    padding: 4px 8px;
+    color: #D6F5F9;
+}
+
+.widget-content{
+    padding:8px;
 }

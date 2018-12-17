@@ -6,7 +6,6 @@ import showImg from './../../../Images/show.svg'
 import movieImg from './../../../Images/movie.svg'
 import hdImg from './../../../Images/hd.svg'
 import torrentImg from './../../../Images/link.svg'
-import './MediaPlayerDashboardView.css'
 
 class MediaPlayerDashboardView extends Component {
   constructor(props) {

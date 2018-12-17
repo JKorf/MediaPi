@@ -7,6 +7,7 @@ import MediaPlayerView from './Modules/Views/MediaPlayerView'
 import Socket from './Socket.js'
 
 import './Modules/base.css';
+import './Modules/mediaplayer.css';
 
 class App extends Component {
   constructor(props) {

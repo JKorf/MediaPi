@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
-import "./DashboardLink.css";
-
 const DashboardLink = ({to, img, text}) => (
     <Link to={to}>
         <div className="dashboard-link">

@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import './../widgets.css';
 
 class Widget extends Component {
   constructor(props) {
@@ -8,9 +7,11 @@ class Widget extends Component {
 
   render() {
     const children = this.props.children;
+    const title = this.props.title;
     return (
       <div className="widget">
-       {children}
+        <div className="widget-title">{title}</div>
+        <div className="widget-content">{children}</div>
       </div>
     );
   }
