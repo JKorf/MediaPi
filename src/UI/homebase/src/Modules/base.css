@@ -9,6 +9,7 @@ body, html{
     background: rgba(7, 38, 59, 1);
     color: #eee;
     font-family: 'Montserrat';
+    font-size: 18px;
 }
 
 #root, .app{
@@ -49,13 +50,22 @@ a {
     border-radius: 8px;
     border: 1px solid #444;
     padding: 5px;
+    position: relative;
 }
 
 .dashboard-link-icon{
-    margin: 8px 24px;
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    left: calc(50% - 20px);
+    top: calc(50% - 30px);
+    fill: #eee;
 }
 
 .dashboard-link-text{
+    position: absolute;
+    bottom: 10px;
+    width: calc(100% - 10px);
     text-align: center;
     font-weight: bold;
 }

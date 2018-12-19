@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route } from "react-router-dom";
 
 import Header from './Modules/Header'
 import DashboardView from './Modules/Views/DashboardView'
-import MediaPlayerView from './Modules/Views/MediaPlayerView'
+import MediaPlayerView from './Modules/Views/MediaPlayer/MediaPlayerView'
 import Socket from './Socket.js'
 
 import './Modules/base.css';

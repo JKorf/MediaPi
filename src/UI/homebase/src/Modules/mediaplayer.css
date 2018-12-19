@@ -69,3 +69,25 @@
     right:0;
     top: 0;
 }
+
+.hd-row{
+    height: 36px;
+    width: 100%;
+    position: relative;
+}
+
+.hd-row-image{
+    fill: #eee;
+    position: absolute;
+    left: 8px;
+    top: 6px;
+    width: 24px;
+    height: 24px;
+}
+
+.hd-row-text{
+    position: absolute;
+    top: 6px;
+    left: 40px;
+    line-height: 28px;
+}

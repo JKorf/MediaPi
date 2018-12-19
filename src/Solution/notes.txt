@@ -13,11 +13,11 @@
 
     Websocket connectie niet up als messages getoont moet worden
 
-    speed graph
-
     Tv control goed toepassen
 
     add_watched e.d. niet vanuit UI initieren
+
+    omxplayer ipv vlc?
 
     UI
         React
