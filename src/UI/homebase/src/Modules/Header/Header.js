@@ -18,10 +18,10 @@ class Header extends Component {
         </div>
       );
 
-      let link;
+      let link = <div />;
       if(backConfig.to)
         link = (<Link to={backConfig.to}>{backButton}</Link>)
-      else
+      else if (backConfig.action)
         link = (<div onClick={backConfig.action}>{backButton}</div>)
 
     return (

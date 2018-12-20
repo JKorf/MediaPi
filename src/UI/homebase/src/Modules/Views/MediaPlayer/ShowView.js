@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios'
 
-import MediaOverview from './../../../MediaList/MediaOverview'
-import View from './../../View'
+import View from './../View.js'
 
 class ShowView extends Component {
   constructor(props) {

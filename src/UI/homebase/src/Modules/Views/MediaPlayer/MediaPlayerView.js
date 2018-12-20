@@ -2,14 +2,14 @@ import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import axios from 'axios'
 
-import View from './../../View'
+import View from './../View.js'
 
-import ShowsView from './../ShowsView'
-import ShowView from './../ShowView'
-import MoviesView from './../MoviesView'
-import HDView from './../HDView'
-import MediaPlayerDashboardView from './../MediaPlayerDashboardView'
-import Footer from './../../../Footer'
+import ShowsView from './ShowsView'
+import ShowView from './ShowView'
+import MoviesView from './MoviesView'
+import HDView from './HDView'
+import MediaPlayerDashboardView from './MediaPlayerDashboardView'
+import Footer from './../../Footer'
 
 
 class MediaPlayerView extends Component {

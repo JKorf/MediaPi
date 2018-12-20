@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import Widget from './../Widget'
-import Socket from './../../../Socket.js'
-import Button from './../../Components/Button'
+import Widget from './Widget.js'
+import Socket from './../../Socket.js'
+import Button from './../Components/Button'
 import axios from 'axios'
 
 class MediaPlayerWidget extends Component {

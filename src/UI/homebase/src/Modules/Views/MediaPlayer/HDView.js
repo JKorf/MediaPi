@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import View from './../../View';
-import HDRow from './../../../Components/HDRow';
-import SelectInstancePopup from './../../../Components/Popups/SelectInstancePopup.js';
+import View from './../View.js';
+import HDRow from './../../Components/HDRow';
+import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
 
-import FileImage from "./../../../../Images/image.svg";
-import DirectoryImage from "./../../../../Images/directory.svg";
+import FileImage from "./../../../Images/image.svg";
+import DirectoryImage from "./../../../Images/directory.svg";
 
 class HDView extends Component {
   constructor(props) {
@@ -18,7 +18,7 @@ class HDView extends Component {
         this.path = this.props.match.params.path;
 
     this.selectedFile = null;
-    this.props.changeBack({ action: () => this.dirUp() });
+    this.props.changeBack({ to: "/mediaplayer/" });
 
     this.instanceSelectCancel = this.instanceSelectCancel.bind(this);
     this.instanceSelect = this.instanceSelect.bind(this);
@@ -35,20 +35,27 @@ class HDView extends Component {
 
     this.path += dir + "/";
     this.loadFolder(this.path);
+    this.props.changeBack({ action: () => this.dirUp() });
   }
 
   dirUp(){
     var lastIndex = this.path.lastIndexOf("/");
 
-    if((this.path.match(/\//g) || []).length == 1){
+    if(this.isBaseFolder(this.path))
         return;
-    }
 
     if(lastIndex == this.path.length - 1)
         this.path = this.path.substring(0, this.path.length - 1);
 
     this.path = this.path.substring(0, this.path.lastIndexOf("/")+1);
     this.loadFolder(this.path);
+
+    if(this.isBaseFolder(this.path))
+        this.props.changeBack({ to: "/mediaplayer/" });
+  }
+
+  isBaseFolder(dir){
+    return (dir.match(/\//g) || []).length == 1;
   }
 
   fileClick(file)

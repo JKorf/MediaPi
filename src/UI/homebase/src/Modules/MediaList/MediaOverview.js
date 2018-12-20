@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
-import MediaThumbnail from './../MediaThumbnail'
+import MediaThumbnail from './MediaThumbnail.js'
 
 const MediaOverview = ({media, link}) => (
 

@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import axios from 'axios'
 
-import View from './../View'
-import MediaPlayerWidget from './../../Widgets/MediaPlayerWidget'
-import Socket from './../../../Socket.js'
+import View from './View.js'
+import MediaPlayerWidget from './../Widgets/MediaPlayerWidget.js'
+import Socket from './../../Socket.js'
 
 class DashboardView extends Component {
   constructor(props) {
