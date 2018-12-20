@@ -3,6 +3,7 @@ import axios from 'axios'
 
 import View from './../../View'
 import HDRow from './../../../Components/HDRow'
+import SelectPopup from './../../../Components/Popups/SelectPopup'
 
 import FileImage from "./../../../../Images/image.svg"
 import DirectoryImage from "./../../../../Images/directory.svg"
@@ -11,7 +12,7 @@ class HDView extends Component {
   constructor(props) {
     super(props);
     this.path = "C:/";
-    this.state = {structure: {files: [], dirs: []}};
+    this.state = {structure: {files: [], dirs: []}, showPopup: false};
   }
 
   componentDidMount() {
@@ -25,6 +26,13 @@ class HDView extends Component {
     this.loadFolder(dir);
   }
 
+  fileClick(file)
+  {
+    this.setState({showPopup: true});
+    console.log(file);
+    //axios.post('http://localhost/hd/play_file', {params: { instance: this.props.i } }?instance='+this.props.instance + "&path=C:/jellies.mp4&position=0");
+  }
+
   loadFolder(){
       axios.get('http://localhost/hd/directory?path=' + this.path).then(data => {
             console.log(data.data);
@@ -36,10 +44,12 @@ class HDView extends Component {
 
   render() {
     const structure = this.state.structure;
+    const showPopup = this.state.showPopup;
     return (
       <div className="hd">
-        { structure.dirs.map((dir, index) => <HDRow key={index} img={DirectoryImage} text={dir} onClick={(e) => this.dirClick(dir, e)}></HDRow>) }
-        { structure.files.map((file, index) => <HDRow key={index} img={FileImage} text={file} className="hd-file">{file}</HDRow>) }
+        { structure.dirs.map((dir, index) => <HDRow key={index} img={DirectoryImage} text={dir} clickHandler={(e) => this.dirClick(dir, e)}></HDRow>) }
+        { structure.files.map((file, index) => <HDRow key={index} img={FileImage} text={file} clickHandler={(e) => this.fileClick(file, e)}>{file}</HDRow>) }
+        <SelectPopup title="Select a mediaplayer" show={showPopup}>Test</SelectPopup>
       </div>
     );
   }
