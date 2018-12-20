@@ -1,3 +1,14 @@
+#colors() {
+  primary: #092327;
+  primary-text: #eee;
+  primary-background: #0B5351;
+
+  secondary: #00A9A5;
+  secondary-text: #eee;
+  secondary-background: #4E8098;
+}
+
+
 body, html{
     height: 100%;
     margin: 0;
@@ -6,8 +17,8 @@ body, html{
     position:relative;
 
     max-width: 1024px;
-    background: rgba(7, 38, 59, 1);
-    color: #eee;
+    background: #colors[primary];
+    color: #colors[primary-text];
     font-family: 'Montserrat';
     font-size: 18px;
 }
@@ -51,6 +62,7 @@ a {
     border: 1px solid #444;
     padding: 5px;
     position: relative;
+    background: #colors[primary-background];
 }
 
 .dashboard-link-icon{
@@ -74,13 +86,13 @@ a {
     margin: 10px;
     width: calc(100% - 20px);
     min-height: 30px;
-    background: #73BFB8;
+    background: #colors[secondary-background];
 }
 
 .widget-title{
-    background: #EA7317;
+    background: #colors[secondary];
     padding: 4px 8px;
-    color: #D6F5F9;
+    color: #colors[secondary-text];
 }
 
 .widget-content{
@@ -92,11 +104,11 @@ a {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    background:
+    background: #colors[secondary-background];
 }
 
 .popup-title{
-    background: #00A9A5C2E7;
+    background: #colors[secondary];
     padding: 4px 8px;
-    color: #D6F5F9;
+    color: #colors[secondary-text];
 }

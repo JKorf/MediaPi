@@ -6,8 +6,8 @@ import DashboardView from './Modules/Views/DashboardView'
 import MediaPlayerView from './Modules/Views/MediaPlayer/MediaPlayerView'
 import Socket from './Socket.js'
 
-import './Modules/base.css';
-import './Modules/mediaplayer.css';
+import './Styles/base.less';
+import './Styles/mediaplayer.less';
 
 class App extends Component {
   constructor(props) {
