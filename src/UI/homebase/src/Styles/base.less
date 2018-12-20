@@ -1,11 +1,15 @@
 #colors() {
   primary: #092327;
+  primary-header: #0A4C4A;
   primary-text: #eee;
   primary-background: #0B5351;
+  primary-images: #eee;
 
   secondary: #00A9A5;
   secondary-text: #eee;
   secondary-background: #4E8098;
+  secondary-background-button: #90C2E7;
+
 }
 
 
@@ -30,19 +34,37 @@ body, html{
 
 .header{
     height:50px;
+    background: #colors[primary-header];
+
+    .header-back{
+        width: 50px;
+        height: 50px;
+
+        svg{
+            width: 30px;
+            height: 30px;
+            margin: 10px;
+            fill: #colors[primary-images];
+        }
+    }
 }
 
 .view-wrapper{
-    height: calc(100% - 50px);
+    height: calc(100% - 100px);
 }
 
 .view{
-    height: calc(100% - 50px);
+    height: 100%;
     overflow: auto;
 }
 
 .footer{
     height: 50px;
+    background: #colors[primary-header];
+}
+
+.footer svg{
+    fill: #colors[primary-images];
 }
 
 *{
@@ -54,12 +76,26 @@ a {
   text-decoration: none; /* no underline */
 }
 
+.truncate{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.button{
+    padding: 4px 14px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.button.secondary{
+    background: #colors[secondary-background-button];
+}
 
 .dashboard-link{
     width: 100px;
     height: 100px;
     border-radius: 8px;
-    border: 1px solid #444;
     padding: 5px;
     position: relative;
     background: #colors[primary-background];
@@ -105,10 +141,67 @@ a {
     top: 50%;
     transform: translate(-50%, -50%);
     background: #colors[secondary-background];
+    min-width: 250px;
+    min-height: 150px;
 }
 
 .popup-title{
     background: #colors[secondary];
     padding: 4px 8px;
     color: #colors[secondary-text];
+}
+
+.popup-content{
+    padding: 10px;
+    margin-bottom: 50px;
+}
+
+.popup-buttons{
+    position: absolute;
+    padding: 10px;
+    left:0;
+    bottom: 0;
+    right: 0;
+}
+
+.popup-buttons .button:last-child{
+    position: absolute;
+    right:10px;
+    top:10px;
+}
+
+.label-row{
+    position: relative;
+}
+
+.label-field{
+    display: inline-block;
+    width: 50%;
+}
+
+.label-value{
+    display: inline-block;
+    width: 50%;
+    text-align: right;
+}
+
+.footer-link{
+    display: inline-block;
+    width: calc(100% / 3);
+    text-align: center;
+    height: 50px;
+
+    .svg-image{
+        height: 50px;
+    }
+
+    &.selected{
+        background: #colors[secondary];
+    }
+}
+
+.footer-link svg{
+    width: 30px;
+    height: 30px;
+    margin: 10px;
 }

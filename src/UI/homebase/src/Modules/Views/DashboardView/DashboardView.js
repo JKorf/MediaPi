@@ -28,11 +28,13 @@ class DashboardView extends Component {
   render() {
     const slaves = this.state.slaveData;
     return (
+    <div className="view-wrapper">
       <View>
         {
             slaves.map((slave, index) => <MediaPlayerWidget key={index} instance={slave.name} />)
         }
       </View>
+      </div>
     );
   }
 };

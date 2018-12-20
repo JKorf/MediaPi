@@ -10,6 +10,7 @@ import torrentImg from './../../../../Images/link.svg'
 class MediaPlayerDashboardView extends Component {
   constructor(props) {
     super(props);
+    this.props.changeBack({to: "/mediaplayer/"});
   }
 
   componentDidMount() {

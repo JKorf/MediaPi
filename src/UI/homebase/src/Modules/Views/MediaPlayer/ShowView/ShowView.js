@@ -8,9 +8,11 @@ class ShowView extends Component {
   constructor(props) {
     super(props);
     this.state = {show: {images:[]}};
+    this.props.changeBack({to: "/mediaplayer/shows/" });
   }
 
   componentDidMount() {
+  console.log(this.props)
     axios.get('http://localhost/shows/get_show?id=' + this.props.match.params.id).then(data => {
         console.log(data.data);
         this.setState({show: data.data});

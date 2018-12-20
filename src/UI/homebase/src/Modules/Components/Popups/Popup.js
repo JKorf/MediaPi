@@ -21,6 +21,7 @@ class Popup extends Component {
                   <div className="popup-window">
                     <div className="popup-title">{title}</div>
                     <div className="popup-content">{children}</div>
+                    <div className="popup-buttons">{this.props.buttons}</div>
                   </div>
                 );
 

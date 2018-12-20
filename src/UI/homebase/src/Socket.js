@@ -91,6 +91,7 @@ export default class WS {
         if(el.topic == topic){
             id = el.addCallback(callback);
             subbed = true;
+            callback(el.lastData); // Trigger initial update with last data since we aren't subbing on server
         }
     });
 
@@ -155,6 +156,7 @@ class SocketSubscription
         this.topic = topic;
         this.callbacks = [];
         this.subscribed = false;
+        this.lastData = null;
     }
 
     addCallback(callback){
@@ -176,6 +178,7 @@ class SocketSubscription
     }
 
     trigger(data){
+        this.lastData = data;
         this.callbacks.forEach(cb => cb.callback(data));
     }
 }

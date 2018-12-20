@@ -8,6 +8,7 @@ class ShowsView extends Component {
   constructor(props) {
     super(props);
     this.state = {shows: []};
+    this.props.changeBack({to: "/mediaplayer/" });
   }
 
   componentDidMount() {
@@ -22,9 +23,7 @@ class ShowsView extends Component {
   render() {
     const shows = this.state.shows;
     return (
-      <div>
         <MediaOverview media={shows} link="/mediaplayer/shows/" />
-      </div>
     );
   }
 };

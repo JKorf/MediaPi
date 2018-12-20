@@ -24,15 +24,12 @@ class MediaPlayerView extends Component {
     return (
     <div className="view-wrapper">
       <View>
-         <Route path="/mediaplayer/" exact component={MediaPlayerDashboardView} />
-         <Route path="/mediaplayer/shows" exact component={ShowsView} />
-         <Route path='/mediaplayer/shows/:id' component={ShowView} />
-         <Route path="/mediaplayer/movies" exact component={MoviesView} />
-         <Route path="/mediaplayer/hd" exact component={HDView} />
+         <Route path="/mediaplayer/" exact render={(props) => <MediaPlayerDashboardView {...props} changeBack={this.props.changeBack}/>} />
+         <Route path="/mediaplayer/shows" exact render={(props) => <ShowsView {...props} changeBack={this.props.changeBack}/>} />
+         <Route path='/mediaplayer/shows/:id' render={(props) => <ShowView {...props} changeBack={this.props.changeBack} />} />
+         <Route path="/mediaplayer/movies" exact render={(props) => <MoviesView {...props} changeBack={this.props.changeBack}/>} />
+         <Route path="/mediaplayer/hd" exact render={(props) => <HDView {...props} changeBack={this.props.changeBack} />} />
        </View>
-       <Footer>
-        Footer
-       </Footer>
     </div>
     );
   }

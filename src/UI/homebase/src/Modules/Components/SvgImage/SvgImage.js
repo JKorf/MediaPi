@@ -17,7 +17,7 @@ class SvgImage extends Component {
   render() {
     const svg = this.state.svg;
     return (
-        <div dangerouslySetInnerHTML={{__html: svg}}></div>
+        <div className="svg-image" dangerouslySetInnerHTML={{__html: svg}}></div>
     );
   }
 };
