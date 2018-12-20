@@ -74,15 +74,29 @@ a {
     margin: 10px;
     width: calc(100% - 20px);
     min-height: 30px;
-    background: rgba(11, 48, 73, 1);
+    background: #73BFB8;
 }
 
 .widget-title{
-    background: #218791;
+    background: #EA7317;
     padding: 4px 8px;
     color: #D6F5F9;
 }
 
 .widget-content{
     padding:8px;
+}
+
+.popup-window{
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background:
+}
+
+.popup-title{
+    background: #00A9A5C2E7;
+    padding: 4px 8px;
+    color: #D6F5F9;
 }
