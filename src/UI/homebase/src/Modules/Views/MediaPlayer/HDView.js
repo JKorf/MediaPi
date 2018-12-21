@@ -5,7 +5,10 @@ import View from './../View.js';
 import HDRow from './../../Components/HDRow';
 import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
 
-import FileImage from "./../../../Images/image.svg";
+import picImage from "./../../../Images/image.svg";
+import streamImage from "./../../../Images/stream.svg";
+import otherImage from "./../../../Images/other.svg";
+import subImage from "./../../../Images/subtitle.svg";
 import DirectoryImage from "./../../../Images/directory.svg";
 
 class HDView extends Component {
@@ -83,13 +86,28 @@ class HDView extends Component {
         });
     }
 
+  getFileIcon(file)
+  {
+    if (file.endsWith(".mkv") || file.endsWith("mp4") || file.endsWith("avi") || file.endsWith("wmv"))
+        return streamImage;
+
+    if (file.endsWith("png") || file.endsWith("jpg"))
+        return picImage;
+
+    if (file.endsWith(".srt"))
+        return subImage;
+
+    return otherImage;
+  }
+
   render() {
     const structure = this.state.structure;
     const showPopup = this.state.showPopup;
+
     return (
       <div className="hd">
         { structure.dirs.map((dir, index) => <HDRow key={index} img={DirectoryImage} text={dir} clickHandler={(e) => this.dirClick(dir, e)}></HDRow>) }
-        { structure.files.map((file, index) => <HDRow key={index} img={FileImage} text={file} clickHandler={(e) => this.fileClick(file, e)}>{file}</HDRow>) }
+        { structure.files.map((file, index) => <HDRow key={index} img={this.getFileIcon(file)} text={file} clickHandler={(e) => this.fileClick(file, e)}>{file}</HDRow>) }
         <SelectInstancePopup show={showPopup} onCancel={this.instanceSelectCancel} onSelect={this.instanceSelect} />
       </div>
     );
