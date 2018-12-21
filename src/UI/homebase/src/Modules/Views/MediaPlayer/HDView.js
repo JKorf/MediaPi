@@ -13,9 +13,7 @@ class HDView extends Component {
     super(props);
     this.state = {structure: {files: [], dirs: []}, showPopup: false};
 
-    this.path = "C:/";
-    if(this.props.match.params.path)
-        this.path = this.props.match.params.path;
+    this.path = "/";
 
     this.selectedFile = null;
     this.props.changeBack({ to: "/mediaplayer/" });
