@@ -29,6 +29,7 @@ from Webserver.Controllers.MediaPlayer.YoutubeController import YoutubeControlle
 from Webserver.Controllers.UtilController import UtilController
 from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
 from Webserver.Controllers.Websocket.SlaveWebsocketController import SlaveWebsocketController
+from Webserver.Providers.RadioProvider import RadioProvider
 
 
 class TornadoServer:
@@ -198,7 +199,13 @@ class RadioHandler(BaseHandler):
 
     def post(self, url):
         if url == "play_radio":
-            RadioController.play_radio(self.get_argument("id"))
+            instance = self.get_argument("instance")
+            radio = RadioProvider.get_by_id(int(self.get_argument("id")))
+            Logger.write(2, "Play radio: " + radio.name + " on " + instance)
+            if Settings.get_string("name") == instance:
+                MediaManager().start_radio(radio.name, radio.url)
+            else:
+                MasterWebsocketController().send_to_slave(instance, "play_radio", [radio.id])
 
 
 class PlayerHandler(BaseHandler):

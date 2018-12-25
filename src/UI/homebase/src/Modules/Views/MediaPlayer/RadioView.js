@@ -5,6 +5,8 @@ import View from './../View.js';
 import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
 import MediaThumbnail from './../../MediaList/MediaThumbnail.js';
 
+import {radio1, radio2, radio3, radio538, qmusic, veronica, veronicarockradio, top1000, arrowclassicrock, slam, skyradio} from './../../../Images/radios/'
+
 class RadioView extends Component {
   constructor(props) {
     super(props);
@@ -13,24 +15,31 @@ class RadioView extends Component {
     this.selectedRadio = null;
     this.props.changeBack({ to: "/mediaplayer/" });
 
+    this.imgSrcs = {
+        "radio1": radio1,
+        "radio2": radio2,
+        "3fm": radio3,
+        "538": radio538,
+        "qmusic": qmusic,
+        "skyradio": skyradio,
+        "veronica": veronica,
+        "veronicarockradio": veronicarockradio,
+        "top1000": top1000,
+        "arrowclassicrock": arrowclassicrock,
+        "slam": slam,
+    }
+
     this.instanceSelectCancel = this.instanceSelectCancel.bind(this);
     this.instanceSelect = this.instanceSelect.bind(this);
   }
 
   componentDidMount() {
     axios.get('http://localhost/radio/get_radios').then(data => {
-            console.log(data.data);
-            for (var i = 0; i < data.data.length; i++){
-                import("./../../../Images/radios/radio1.gif").then((r) =>{
-                    data.data[i].imgSrc = r;
-                }, function(e){
-                    console.log("Failed to load radio img: ", e);
-                });
-            }
-            this.setState({radios: data.data});
-        }, err =>{
-            console.log(err);
-        });
+        console.log(data.data);
+        this.setState({radios: data.data});
+    }, err =>{
+        console.log(err);
+    });
   }
 
   radioClick(radio){
@@ -46,8 +55,13 @@ class RadioView extends Component {
   instanceSelect(instance)
   {
     this.setState({showPopup: false});
-    axios.post('http://localhost/radio/play_radio?instance=' + instance + "&id=" + this.selectedRadio.Id);
+    axios.post('http://localhost/radio/play_radio?instance=' + instance + "&id=" + this.selectedRadio.id);
 
+  }
+
+  getImgUrl(src)
+  {
+      return this.imgSrcs[src];
   }
 
   render() {
@@ -55,8 +69,8 @@ class RadioView extends Component {
     const showPopup = this.state.showPopup;
 
     return (
-      <div className="radio">
-        { radios.map((radio, index) => <div key={radio.id} onClick={(e) => this.radioClick(radio, e)}><MediaThumbnail img={radio.imgSrc} title={radio.name}></MediaThumbnail></div>) }
+      <div className="radio media-overview">
+        { radios.map((radio, index) => <a key={radio.id} onClick={(e) => this.radioClick(radio, e)}><MediaThumbnail img={this.getImgUrl(radio.image)} title={radio.name}></MediaThumbnail></a>) }
         <SelectInstancePopup show={showPopup} onCancel={this.instanceSelectCancel} onSelect={this.instanceSelect} />
       </div>
     );

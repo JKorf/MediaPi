@@ -40,6 +40,12 @@ class MediaManager(metaclass=Singleton):
         self.mediaData.title = os.path.basename(url)
         self.mediaData.updated()
 
+    def start_radio(self, name, url):
+        VLCPlayer().play(url, 0)
+        self.mediaData.type = "Radio"
+        self.mediaData.title = name
+        self.mediaData.updated()
+
     def stop_play(self):
         VLCPlayer().stop()
         self.mediaData.type = None
