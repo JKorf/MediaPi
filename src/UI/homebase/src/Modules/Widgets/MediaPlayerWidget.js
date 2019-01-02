@@ -32,10 +32,10 @@ class MediaPlayerWidget extends Component {
   }
 
   testClick() {
-    axios.post('http://localhost/hd/play_file?instance='+this.props.instance + "&path=C:/jellies.mp4&position=0");
+    axios.post('http://localhost/hd/play_file?instance='+this.props.id + "&path=C:/jellies.mp4&position=0");
   }
   stopClick() {
-    axios.post('http://localhost/player/stop_player?instance='+this.props.instance);
+    axios.post('http://localhost/player/stop_player?instance='+this.props.id);
   }
 
   render() {

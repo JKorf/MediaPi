@@ -61,3 +61,5 @@
             Master websocket can receive slave updates
             Slaves init connection to master
             Master has no need to have a list of potential slaves
+
+        shows/movies naar common media object,

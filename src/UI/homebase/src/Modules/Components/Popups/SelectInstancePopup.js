@@ -61,7 +61,7 @@ class SelectInstancePopup extends Component {
             <div className="label-value">
                 <select value={this.state.instance} onChange={this.instanceChange}>
                 {
-                    slaves.map(slave => <option key={slave.name}>{slave.name}</option>)
+                    slaves.map(slave => <option key={slave.id} value={slave.id}>{slave.name}</option>)
                 }
                 </select>
             </div>

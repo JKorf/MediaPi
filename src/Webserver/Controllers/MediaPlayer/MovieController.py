@@ -4,7 +4,7 @@ import urllib.parse
 import urllib.request
 
 from Webserver.Models import Media
-from Webserver.Providers.Movies.PopcornMovieProvider import PopcornMovieProvider
+from Webserver.Providers.MovieProvider import PopcornMovieProvider
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings

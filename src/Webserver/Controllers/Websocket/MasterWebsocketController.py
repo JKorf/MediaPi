@@ -22,7 +22,7 @@ class MasterWebsocketController(metaclass=Singleton):
         self.last_id_lock = Lock()
         self.instance_name = Settings.get_string("name")
 
-        self.own_slave = SlaveClient(self.instance_name, None)
+        self.own_slave = SlaveClient(self.next_id(), self.instance_name, None)
         self.own_slave.update_data("player", VLCPlayer().playerState)
         self.own_slave.update_data("media", MediaManager().mediaData)
         self.slaves.add_slave(self.own_slave)
@@ -71,7 +71,7 @@ class MasterWebsocketController(metaclass=Singleton):
         data = json.loads(msg)
         if data['event'] == 'init':
             if data['type'] == 'Slave':
-                self.slaves.add_slave(SlaveClient(data['data'], client))
+                self.slaves.add_slave(SlaveClient(self.next_id(), data['data'], client))
                 Logger.write(2, "Slave initialized: " + data['data'])
             elif data['type'] == 'UI':
                 self.clients[client] = []
@@ -85,9 +85,7 @@ class MasterWebsocketController(metaclass=Singleton):
     def ui_client_message(self, client, data):
         if data['event'] == 'subscribe':
             request_id = int(data['request_id'])
-            with self.last_id_lock:
-                self.last_id += 1
-                id = self.last_id
+            id = self.next_id()
             subscription = Subscription(id, data['topic'])
             self.clients[client].append(subscription)
             Logger.write(2, "Client subscribed to " + str(data['topic']))
@@ -135,6 +133,10 @@ class MasterWebsocketController(metaclass=Singleton):
 
         self.write_message(slave._client, WebSocketSlaveCommand(command, parameters))
 
+    def next_id(self):
+        with self.last_id_lock:
+            self.last_id += 1
+            return self.last_id
 
 class Subscription:
 
@@ -144,7 +146,8 @@ class Subscription:
 
 class SlaveClient:
 
-    def __init__(self, name, client):
+    def __init__(self, id, name, client):
+        self.id = id
         self.name = name
         self._client = client
         self.last_seen = 0

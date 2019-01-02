@@ -1,7 +1,10 @@
+import json
+
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
+from Shared.Util import to_JSON
 
 
 class ShowProvider:
@@ -22,7 +25,7 @@ class ShowProvider:
             data = await RequestFactory.make_request_async(ShowProvider.shows_api_path + "shows/"+page+"?sort=" + order_by)
 
         if data is not None:
-            ShowProvider.shows_data = data
+            ShowProvider.shows_data = ShowProvider.parse_show_data(data)
         else:
             EventManager.throw_event(EventType.Error, ["get_error", "Could not get shows data"])
             Logger.write(2, "Error fetching shows")
@@ -58,3 +61,17 @@ class ShowProvider:
         else:
             data += new_data
         return data
+
+    @staticmethod
+    def parse_show_data(data):
+        json_data = json.loads(data)
+        return to_JSON([Show(x['imdb_id'], x['images']['poster'], x['title'], x['rating']['percentage']) for x in json_data]).encode()
+
+
+class Show:
+
+    def __init__(self, id, poster, title, rating):
+        self.id = id
+        self.poster = poster
+        self.title = title
+        self.rating = rating

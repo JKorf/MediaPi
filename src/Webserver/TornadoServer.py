@@ -199,13 +199,13 @@ class RadioHandler(BaseHandler):
 
     def post(self, url):
         if url == "play_radio":
-            instance = self.get_argument("instance")
+            slave = MasterWebsocketController().slaves.get_slave(self.get_argument("instance"))
             radio = RadioProvider.get_by_id(int(self.get_argument("id")))
-            Logger.write(2, "Play radio: " + radio.name + " on " + instance)
-            if Settings.get_string("name") == instance:
+            Logger.write(2, "Play radio: " + radio.name + " on " + slave.name)
+            if Settings.get_string("name") == slave.name:
                 MediaManager().start_radio(radio.name, radio.url)
             else:
-                MasterWebsocketController().send_to_slave(instance, "play_radio", [radio.id])
+                MasterWebsocketController().send_to_slave(slave.name, "play_radio", [radio.id])
 
 
 class PlayerHandler(BaseHandler):
@@ -246,6 +246,16 @@ class HDHandler(BaseHandler):
 
     async def post(self, url):
         if url == "play_file":
+
+            slave = MasterWebsocketController().slaves.get_slave(self.get_argument("instance"))
+            file = urllib.parse.unquote(self.get_argument("path"))
+            Logger.write(2, "Play file: " + file + " on " + slave.name)
+
+            if Settings.get_string("name") == slave.name:
+                MediaManager().start_file(file, int(self.get_argument("position")))
+            else:
+                MasterWebsocketController().send_to_slave(slave.name, "play_file", [file, int(self.get_argument("position"))])
+
             # if Settings.get_bool("slave"):
             #     Logger.write(2, self.get_argument("path"))
             #     await HDController.play_master_file(TornadoServer, self.get_argument("path"), self.get_argument("filename"), 0)

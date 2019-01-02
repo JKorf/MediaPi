@@ -7,7 +7,7 @@
 
   secondary: #00A9A5;
   secondary-text: #eee;
-  secondary-background: #4E8098;
+  secondary-background: #0b2f35;
   secondary-background-button: #90C2E7;
 
 }
@@ -74,6 +74,28 @@ a {
 
 .truncate{
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.truncate2{
+    display: -webkit-box;
+    max-width: 100%;
+    margin-right: auto;
+    margin-left: auto;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.truncate3{
+    display: -webkit-box;
+    max-width: 100%;
+    margin-right: auto;
+    margin-left: auto;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
 }
