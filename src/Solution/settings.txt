@@ -9,8 +9,8 @@ open_weather_map_key=ba7d7c80475db4a254c38fd0295468f1
 
 # Paths
 log_folder=/home/pi/Scripts/Logs
-serie_api=https://api-fetch.website/tv/
-movie_api=https://api-fetch.website/tv/
+serie_api=https://tv-v2.api-fetch.website/
+movie_api=https://tv-v2.api-fetch.website/
 base_folder=/home/pi/Scripts/
 tpb_api=https://proxytpb.info/
 master_base_folder=C:/

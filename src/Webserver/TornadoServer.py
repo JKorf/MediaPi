@@ -177,7 +177,14 @@ class ShowHandler(BaseHandler):
 
     def post(self, url):
         if url == "play_episode":
-            ShowController.play_episode(self.get_argument("url"), self.get_argument("id"), self.get_argument("title"), self.get_argument("img", ""), self.get_argument("season"), self.get_argument("episode"))
+            instance = int(self.get_argument("instance"))
+            title = self.get_argument("title")
+            Logger.write(2, "Play episode: " + title + " on " + str(instance))
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().start_episode(self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img"))
+            else:
+                MasterWebsocketController().send_to_slave(instance, "play_radio", [radio.id])
+            #ShowController.play_episode(self.get_argument("url"), self.get_argument("id"), self.get_argument("title"), self.get_argument("img", ""), self.get_argument("season"), self.get_argument("episode"))
 
     async def get(self, url):
         if url == "get_shows":
@@ -199,13 +206,13 @@ class RadioHandler(BaseHandler):
 
     def post(self, url):
         if url == "play_radio":
-            slave = MasterWebsocketController().slaves.get_slave(self.get_argument("instance"))
+            instance = int(self.get_argument("instance"))
             radio = RadioProvider.get_by_id(int(self.get_argument("id")))
-            Logger.write(2, "Play radio: " + radio.name + " on " + slave.name)
-            if Settings.get_string("name") == slave.name:
-                MediaManager().start_radio(radio.name, radio.url)
+            Logger.write(2, "Play radio: " + radio.title + " on " + str(instance))
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().start_radio(radio.title, radio.url)
             else:
-                MasterWebsocketController().send_to_slave(slave.name, "play_radio", [radio.id])
+                MasterWebsocketController().send_to_slave(instance, "play_radio", [radio.id])
 
 
 class PlayerHandler(BaseHandler):
@@ -216,7 +223,7 @@ class PlayerHandler(BaseHandler):
             PlayerController.set_subtitle_id(self.get_argument("sub"))
         elif url == "stop_player":
             #was_waiting_for_file_selection = MediaManager().torrent and MediaManager().torrent.state == TorrentState.WaitingUserFileSelection
-            PlayerController.stop_player(self.get_argument("instance"))
+            PlayerController.stop_player(int(self.get_argument("instance")))
 
             # if was_waiting_for_file_selection:
             #     MasterWebsocketController.broadcast('request', 'media_selection_close', [])
@@ -246,24 +253,23 @@ class HDHandler(BaseHandler):
 
     async def post(self, url):
         if url == "play_file":
-
-            slave = MasterWebsocketController().slaves.get_slave(self.get_argument("instance"))
+            instance = int(self.get_argument("instance"))
             file = urllib.parse.unquote(self.get_argument("path"))
-            Logger.write(2, "Play file: " + file + " on " + slave.name)
+            Logger.write(2, "Play file: " + file + " on " + str(instance))
 
-            if Settings.get_string("name") == slave.name:
+            if MasterWebsocketController().is_self(instance):
                 MediaManager().start_file(file, int(self.get_argument("position")))
             else:
-                MasterWebsocketController().send_to_slave(slave.name, "play_file", [file, int(self.get_argument("position"))])
+                MasterWebsocketController().send_to_slave(instance, "play_file", [file, int(self.get_argument("position"))])
 
             # if Settings.get_bool("slave"):
             #     Logger.write(2, self.get_argument("path"))
             #     await HDController.play_master_file(TornadoServer, self.get_argument("path"), self.get_argument("filename"), 0)
             #
             # else:
-            instance = self.get_argument("instance")
-            path = urllib.parse.unquote(self.get_argument("path"))
-            HDController.play_file(instance, path, int(self.get_argument("position")))
+            # instance = self.get_argument("instance")
+            # path = urllib.parse.unquote(self.get_argument("path"))
+            # HDController.play_file(instance, path, int(self.get_argument("position")))
                 # file = urllib.parse.unquote(self.get_argument("path"))
                 # if not filename.endswith(".jpg"):
                 #     size, first_64k, last_64k = get_file_info(file)

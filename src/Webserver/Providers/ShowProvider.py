@@ -5,11 +5,12 @@ from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
+from Webserver.Models import BaseMedia
 
 
 class ShowProvider:
 
-    shows_api_path = Settings.get_string("movie_api")
+    shows_api_path = Settings.get_string("serie_api")
     shows_data = []
 
     @staticmethod
@@ -65,13 +66,15 @@ class ShowProvider:
     @staticmethod
     def parse_show_data(data):
         json_data = json.loads(data)
-        return to_JSON([Show(x['imdb_id'], x['images']['poster'], x['title'], x['rating']['percentage']) for x in json_data]).encode()
+        if isinstance(json_data, list):
+            return to_JSON([Show(x['imdb_id'], x['images']['poster'], x['title'], x['rating']['percentage']) for x in json_data]).encode()
+        else:
+            return to_JSON(Show(json_data['imdb_id'], json_data['images']['poster'], json_data['title'], json_data['rating']['percentage'])).encode()
 
 
-class Show:
+
+class Show(BaseMedia):
 
     def __init__(self, id, poster, title, rating):
-        self.id = id
-        self.poster = poster
-        self.title = title
+        super().__init__(id, poster, title)
         self.rating = rating

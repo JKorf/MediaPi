@@ -4,10 +4,10 @@ import urllib.parse
 import urllib.request
 
 from Webserver.Models import Media
-from Webserver.Providers.MovieProvider import PopcornMovieProvider
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Webserver.Providers.MovieProvider import MovieProvider
 
 
 class MovieController:
@@ -20,24 +20,24 @@ class MovieController:
     @staticmethod
     async def get_movies(page, orderby, keywords):
         if len(keywords) == 0:
-            result = await PopcornMovieProvider.get_list(page, orderby)
+            result = await MovieProvider.get_list(page, orderby)
             return result
         else:
-            result = await PopcornMovieProvider.search(page, orderby, urllib.parse.quote(keywords))
+            result = await MovieProvider.search(page, orderby, urllib.parse.quote(keywords))
             return result
 
     @staticmethod
     async def get_movies_all(page, orderby, keywords):
         if len(keywords) == 0:
-            result = await PopcornMovieProvider.get_list(page, orderby, True)
+            result = await MovieProvider.get_list(page, orderby, True)
             return result
         else:
-            result = await PopcornMovieProvider.search(page, orderby, urllib.parse.quote(keywords), True)
+            result = await MovieProvider.search(page, orderby, urllib.parse.quote(keywords), True)
             return result
 
     @staticmethod
     async def get_movie(id):
-        result = await PopcornMovieProvider.get_by_id(id)
+        result = await MovieProvider.get_by_id(id)
         return result
 
     @staticmethod

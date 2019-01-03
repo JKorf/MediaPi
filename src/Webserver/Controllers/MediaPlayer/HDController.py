@@ -44,9 +44,9 @@ class HDController:
     @staticmethod
     def play_file(instance, path, position=0):
         file = urllib.parse.unquote(path)
-        Logger.write(2, "Play file: " + file + " on " + instance)
+        Logger.write(2, "Play file " + file + " on " + str(instance))
 
-        if Settings.get_string("name") == instance:
+        if MasterWebsocketController().is_self(instance):
             MediaManager().start_file(path, position)
         else:
             MasterWebsocketController().send_to_slave(instance, "play_file", [path, position])

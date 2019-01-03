@@ -19,9 +19,9 @@ class PlayerController:
 
     @staticmethod
     def stop_player(instance):
-        Logger.write(2, "Stop player")
+        Logger.write(2, "Stop playing on " + str(instance))
 
-        if Settings.get_string("name") == instance:
+        if MasterWebsocketController().is_self(instance):
             MediaManager().stop_play()
         else:
             MasterWebsocketController().send_to_slave(instance, "play_stop", [])

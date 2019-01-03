@@ -58,10 +58,6 @@
     margin: 2.5px 5px;
 }
 
-.show-image img, .movie-image img{
-    width: 100%;
-}
-
 .mediaplayer-widget{
     height: 40px;
     position: relative;
@@ -87,7 +83,7 @@
 }
 
 .hd-row{
-    height: 36px;
+    min-height: 36px;
     width: 100%;
     position: relative;
     border-bottom: 1px solid #444;
@@ -97,15 +93,100 @@
     fill: #eee;
     position: absolute;
     left: 8px;
-    top: 6px;
+    top: 2px;
     width: 24px;
     height: 24px;
 }
 
 .hd-row-text{
-    position: absolute;
-    top: 6px;
-    left: 40px;
+    margin-top: 6px;
+    margin-left: 40px;
     line-height: 28px;
     max-width: calc(100% - 50px);
+}
+
+.show-details{
+    padding: 10px;
+}
+
+.show-synopsis{
+    margin: 0 10px;
+}
+
+.show-image{
+    width: calc(40% - 8px);
+    padding-right: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+    float: left;
+}
+
+.show-title{
+    margin-bottom: 5px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.show-details .label-row{
+    font-size: 14px;
+    margin-left: 40%;
+}
+
+.show-details .label-field{
+    width: 40%;
+}
+
+.show-details .label-value{
+    width: 60%;
+}
+
+.show-image img, .movie-image img{
+    width: 100%;
+}
+
+.show-episode-selection{
+    position:relative;
+    margin: 10px;
+    width: calc(100% - 20px);
+}
+
+.show-seasons{
+    display:inline-block;
+    vertical-align: top;
+}
+
+.show-season{
+    padding: 4px 8px;
+    border: 1px solid #colors[primary-background];
+    width: 100px;
+}
+
+.show-season.selected{
+    background: #colors[primary-background];
+}
+
+.show-episodes{
+    vertical-align: top;
+    display:inline-block;
+    margin-left: -1px;
+    max-width: calc(100% - 99px);
+    width: calc(100% - 99px);
+}
+
+.show-episode{
+    padding: 4px 18px;
+    border: 1px solid #colors[primary-background];
+    border-left: 8px solid #colors[primary-background];
+}
+
+.show-episode.selected .show-episode-title{
+    font-weight: bold;
+}
+
+.show-episode-synopsis{
+    margin-top: 5px;
+}
+
+.show-episode-play{
+    margin: 5px 0;
 }

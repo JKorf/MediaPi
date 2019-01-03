@@ -46,6 +46,11 @@ class MediaManager(metaclass=Singleton):
         self.mediaData.title = name
         self.mediaData.updated()
 
+    def start_episode(self, id, season, episode, title, url, image):
+        self.mediaData.type = "Torrent"
+        self.mediaData.title = title
+        self.mediaData.updated()
+
     def stop_play(self):
         VLCPlayer().stop()
         self.mediaData.type = None

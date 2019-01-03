@@ -1,10 +1,11 @@
-class Radio:
+from Webserver.Models import BaseMedia
 
-    def __init__(self, id, name, url, image):
-        self.id = id
-        self.name = name
+
+class Radio(BaseMedia):
+
+    def __init__(self, id, title, url, poster):
+        super().__init__(id, poster, title)
         self.url = url
-        self.image = image
 
 
 class RadioProvider:

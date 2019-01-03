@@ -279,3 +279,10 @@ class Media:
         self.start_time = start_time
         self.season = season
         self.episode = episode
+
+class BaseMedia:
+
+    def __init__(self, id, poster, title):
+        self.id = id
+        self.poster = poster
+        self.title = title

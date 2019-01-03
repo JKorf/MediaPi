@@ -8,7 +8,7 @@ const MediaOverview = ({media, link}) => (
     <div className="media-overview">
       {
         media.map((media) =>
-            <Link key={media.imdb_id} to={link + media.imdb_id}>
+            <Link key={media.id} to={link + media.id}>
                 <MediaThumbnail img={media.poster ? media.poster: media.images.poster} title={media.title} rating={media.rating} />
             </Link>)
       }

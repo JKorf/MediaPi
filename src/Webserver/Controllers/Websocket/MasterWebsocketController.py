@@ -27,6 +27,9 @@ class MasterWebsocketController(metaclass=Singleton):
         self.own_slave.update_data("media", MediaManager().mediaData)
         self.slaves.add_slave(self.own_slave)
 
+    def is_self(self, id):
+        return self.own_slave.id == id
+
     def start(self):
         VLCPlayer().playerState.register_callback(lambda x: self.slave_update(self.own_slave, "player", x))
         MediaManager().mediaData.register_callback(lambda x: self.slave_update(self.own_slave, "media", x))
@@ -125,8 +128,8 @@ class MasterWebsocketController(metaclass=Singleton):
             except:
                 Logger.write(2, "Failed to send msg to client because client is closed: " + traceback.format_exc())
 
-    def send_to_slave(self, slave_name, command, parameters):
-        slave = self.slaves.get_slave(slave_name)
+    def send_to_slave(self, slave_id, command, parameters):
+        slave = self.slaves.get_slave_by_id(slave_id)
         if slave is None:
             Logger.write(2, "Can't send to slave, slave not found")
             return
@@ -178,6 +181,12 @@ class SlaveCollection(Observable):
 
     def get_slave(self, name):
         slave = [x for x in self.data if x.name == name]
+        if len(slave) > 0:
+            return slave[0]
+        return None
+
+    def get_slave_by_id(self, id):
+        slave = [x for x in self.data if x.id == id]
         if len(slave) > 0:
             return slave[0]
         return None

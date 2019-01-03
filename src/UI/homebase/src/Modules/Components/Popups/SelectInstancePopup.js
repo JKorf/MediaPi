@@ -27,7 +27,7 @@ class SelectInstancePopup extends Component {
   slaveUpdate(data){
     this.setState({slaveData: data});
     if (!this.state.instance)
-        this.setState({instance: data[0].name});
+        this.setState({instance: data[0].id});
   }
 
   instanceChange(event){
