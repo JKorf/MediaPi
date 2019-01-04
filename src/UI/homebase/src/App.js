@@ -12,6 +12,7 @@ import MoviesView from './Modules/Views/MediaPlayer/MoviesView.js'
 import MovieView from './Modules/Views/MediaPlayer/MovieView.js'
 import HDView from './Modules/Views/MediaPlayer/HDView.js'
 import RadioView from './Modules/Views/MediaPlayer/RadioView.js'
+import TorrentView from './Modules/Views/MediaPlayer/TorrentView.js'
 import Socket from './Socket.js'
 
 import './Styles/base.less';
@@ -46,6 +47,7 @@ class App extends Component {
                     <Route path="/mediaplayer/movies/:id" render={(props) => <MovieView {...props} changeBack={this.changeBack}/>} />
                     <Route path="/mediaplayer/hd" exact render={(props) => <HDView {...props} changeBack={this.changeBack} />} />
                     <Route path="/mediaplayer/radio" exact render={(props) => <RadioView {...props} changeBack={this.changeBack} />} />
+                    <Route path="/mediaplayer/torrents" exact render={(props) => <TorrentView {...props} changeBack={this.changeBack} />} />
                 </View>
                 <Footer />
           </div>

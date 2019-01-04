@@ -59,27 +59,45 @@
 }
 
 .mediaplayer-widget{
-    height: 40px;
     position: relative;
+    padding-bottom: 3px;
 }
 
 .mediaplayer-widget-not-playing{
-    padding: 10px 0;
+    padding: 4px 0;
 }
 
 .mediaplayer-widget-controls{
     position: absolute;
-    width: 100px;
-    height: 40px;
-    left: 0;
-    top:0;
+    right: 0;
+    top: 0;
 }
 
-.mediaplayer-widget-info{
-    position:absolute;
-    width: calc(100% - 110px);
-    right:0;
-    top: 0;
+.mediaplayer-widget-control{
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    margin: 0 10px;
+}
+
+.mediaplayer-widget-control svg{
+    fill: #colors[primary-images];
+}
+
+.mediaplayer-widget-info-title{
+    font-weight: bold;
+    line-height: 24px;
+    max-width: calc(100% - 80px);
+}
+
+.media-progress{
+    height: 3px;
+    background: #colors[selection];
+    position: absolute;
+    left:-8px;
+    bottom:-8px;
+    transition: width 0.2s linear;
+    min-width: 10px;
 }
 
 .hd-row{
@@ -93,15 +111,16 @@
     fill: #eee;
     position: absolute;
     left: 8px;
-    top: 2px;
+    top: 5px;
     width: 24px;
     height: 24px;
 }
 
 .hd-row-text{
-    margin-top: 6px;
+    line-height: 20px;
+    padding-top: 6px;
+    padding-bottom: 6px;
     margin-left: 40px;
-    line-height: 28px;
     max-width: calc(100% - 50px);
 }
 
@@ -146,6 +165,7 @@
 
 .show-episode-selection{
     position:relative;
+    clear: left;
     margin: 10px;
     width: calc(100% - 20px);
 }
@@ -189,4 +209,109 @@
 
 .show-episode-play{
     margin: 5px 0;
+}
+
+.movie-details{
+    padding: 10px;
+}
+
+.movie-synopsis{
+    margin: 0 10px;
+}
+
+.movie-image{
+    width: calc(40% - 8px);
+    padding-right: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+    float: left;
+}
+
+.movie-title{
+    margin-bottom: 5px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.movie-details .label-row{
+    font-size: 14px;
+    margin-left: 40%;
+}
+
+.movie-details .label-field{
+    width: 40%;
+}
+
+.movie-details .label-value{
+    width: 60%;
+}
+
+.movie-play-buttons{
+    margin: 10px 0;
+
+    .button{
+        margin-left: 10px;
+    }
+}
+
+.torrent{
+    border-bottom: 1px solid #444;
+    min-height: 36px;
+    position: relative;
+
+    .svg-image{
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        left: 8px;
+        top: 5px;
+
+        svg{
+            fill: #colors[primary-images];
+        }
+    }
+
+    .torrent-title{
+        line-height: 20px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        margin-left: 44px;
+        max-width: calc(100% - 50px);
+    }
+
+    .torrent-details{
+        margin: 8px 15px;
+        position: relative;
+
+        .torrent-details-peers{
+            height: 40px;
+            position: relative;
+            display: inline-block;
+            width: 60px;
+
+            .torrent-details-leechers, .torrent-details-seeders{
+                position: relative;
+            }
+
+            img{
+                position: absolute;
+                right:0;
+                top: 0;
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        .button{
+            position: absolute;
+            right: 0;
+            bottom: 10px;
+        }
+
+        .torrent-details-size{
+            position:absolute;
+            left: 100px;
+            top: 0;
+        }
+    }
 }

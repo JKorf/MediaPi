@@ -113,7 +113,7 @@ class VLCPlayer(metaclass=Singleton):
         return int(self.__player.get_time() / 1000)
 
     def get_length(self):
-        return int(self.__player.get_length() / 1000)
+        return int(self.__player.get_length())
 
     def get_length_ms(self):
         return int(self.__player.get_length())
@@ -191,11 +191,9 @@ class VLCPlayer(metaclass=Singleton):
             self.change_state(PlayerState.Opening)
 
     def state_change_playing(self, event):
-        if self.playerState.state == PlayerState.Paused:
-            self.change_state(PlayerState.Playing)
-        else:
+        if self.playerState.state != PlayerState.Paused:
             self.playerState.length = self.get_length()
-            pass # gets handled by watching time change
+        self.change_state(PlayerState.Playing)
 
     def state_change_paused(self, event):
         if self.playerState.state != PlayerState.Paused:
@@ -208,8 +206,6 @@ class VLCPlayer(metaclass=Singleton):
     def state_change_end_reached(self, event):
         if self.playerState.state != PlayerState.Ended:
             if not self.trying_subitems:
-                thread = CustomThread(self.stop, "Stopping player")
-                thread.start()
                 self.change_state(PlayerState.Ended)
 
     def on_error(self, event):
@@ -246,11 +242,11 @@ class VLCPlayer(metaclass=Singleton):
 
 
 class PlayerState(Enum):
-    Nothing = 0,
-    Opening = 1,
-    Buffering = 2,
-    Playing = 3,
-    Paused = 4,
+    Nothing = 0
+    Opening = 1
+    Buffering = 2
+    Playing = 3
+    Paused = 4
     Ended = 5
 
 

@@ -8,7 +8,7 @@ import Socket from "./../../../Socket.js"
 class SelectInstancePopup extends Component {
   constructor(props) {
     super(props);
-    this.state = {slaveData: [], instance: null};
+    this.state = {slaveData: [], instance: 0, loading: true};
 
     this.slaveUpdate = this.slaveUpdate.bind(this);
     this.instanceChange = this.instanceChange.bind(this);
@@ -28,10 +28,14 @@ class SelectInstancePopup extends Component {
     this.setState({slaveData: data});
     if (!this.state.instance)
         this.setState({instance: data[0].id});
+
+    if (data.length == 1)
+        this.select();
+    else
+        this.setState({loading: false});
   }
 
   instanceChange(event){
-    console.log("Selected: " + event.target.value);
     this.setState({instance: event.target.value});
   }
 
@@ -55,7 +59,7 @@ class SelectInstancePopup extends Component {
          </div>
     )
     return (
-    <Popup title="Select a media player" show={this.props.show} onCancel={(e) => this.cancel(e)} onSelect={e => this.select(e)} buttons={buttons}>
+    <Popup title="Select a media player" loading={this.state.loading} onCancel={(e) => this.cancel(e)} onSelect={e => this.select(e)} buttons={buttons}>
         <div className="label-row">
             <div className="label-field">Player</div>
             <div className="label-value">

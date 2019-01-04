@@ -27,9 +27,13 @@ class PlayerController:
             MasterWebsocketController().send_to_slave(instance, "play_stop", [])
 
     @staticmethod
-    def pause_resume_player():
-        Logger.write(2, "Pause/resume player")
-        EventManager.throw_event(EventType.PauseResumePlayer, [])
+    def pause_resume_player(instance):
+        Logger.write(2, "Pause/resume playing on " + str(instance))
+
+        if MasterWebsocketController().is_self(instance):
+            MediaManager().pause_resume()
+        else:
+            MasterWebsocketController().send_to_slave(instance, "pause_resume", [])
 
     @staticmethod
     def change_volume(vol):

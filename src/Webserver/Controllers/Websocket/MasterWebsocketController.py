@@ -2,13 +2,16 @@ import json
 import traceback
 from threading import Lock
 
+import time
+
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaPlayer import MediaManager
 from Shared.Logger import Logger
 from Shared.Observable import Observable
 from Shared.Settings import Settings
+from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, Singleton
-from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand
+from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand, WebSocketInfoMessage
 
 
 class MasterWebsocketController(metaclass=Singleton):
@@ -34,6 +37,13 @@ class MasterWebsocketController(metaclass=Singleton):
         VLCPlayer().playerState.register_callback(lambda x: self.slave_update(self.own_slave, "player", x))
         MediaManager().mediaData.register_callback(lambda x: self.slave_update(self.own_slave, "media", x))
         self.slaves.register_callback(lambda x: self.update_slaves_data(x.data))
+
+        v = CustomThread(self.test, "test")
+        v.start()
+
+    def test(self):
+        time.sleep(5)
+        self.broadcast_info("Test", "Some info")
 
     def slave_update(self, slave, type, data):
         slave.update_data(type, data)
@@ -120,6 +130,10 @@ class MasterWebsocketController(metaclass=Singleton):
         for client, subs in self.clients.items():
             for sub in [x for x in subs if x.topic == topic]:
                 self.write_message(client, WebSocketUpdateMessage(sub.id, data))
+
+    def broadcast_info(self, info_type, data=None):
+        for client, subs in self.clients.items():
+            self.write_message(client, WebSocketInfoMessage(info_type, data))
 
     def write_message(self, client, websocket_message):
         with self._ws_lock:

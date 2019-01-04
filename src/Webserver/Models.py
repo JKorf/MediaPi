@@ -118,6 +118,13 @@ class Settings:
 #         self.topic = topic
 #         self.data = data
 
+class WebSocketInfoMessage:
+
+    def __init__(self, info_type, data):
+        self.type = "info"
+        self.info_type = info_type
+        self.data = data
+
 class WebSocketUpdateMessage:
 
     def __init__(self, sub_id, data):

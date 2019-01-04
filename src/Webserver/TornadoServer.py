@@ -30,6 +30,7 @@ from Webserver.Controllers.UtilController import UtilController
 from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
 from Webserver.Controllers.Websocket.SlaveWebsocketController import SlaveWebsocketController
 from Webserver.Providers.RadioProvider import RadioProvider
+from Webserver.Providers.TorrentProvider import Torrent
 
 
 class TornadoServer:
@@ -40,6 +41,7 @@ class TornadoServer:
         TornadoServer.master_ip = Settings.get_string("master_ip")
         if not Settings.get_bool("slave"):
             handlers = [
+                (r"/play/(.*)", PlayHandler),
                 (r"/util/(.*)", UtilHandler),
                 (r"/movies/(.*)", MovieHandler),
                 (r"/shows/(.*)", ShowHandler),
@@ -131,12 +133,77 @@ class BaseHandler(tornado.web.RequestHandler):
             Logger.write(3, stack_line)
 
 
+class PlayHandler(BaseHandler):
+    async def post(self, url):
+        # ------------ Play movie --------------
+        if url == "movie":
+            instance = int(self.get_argument("instance"))
+            title = self.get_argument("title")
+            Logger.write(2, "Play movie " + title + " on " + str(instance))
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().start_movie(self.get_argument("id"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img"))
+            else:
+                MasterWebsocketController().send_to_slave(instance, "play_movie", [self.get_argument("id"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img")])
+
+        # ------------ Play episode --------------
+        elif url == "episode":
+            instance = int(self.get_argument("instance"))
+            title = self.get_argument("title")
+            Logger.write(2, "Play episode " + title + " on " + str(instance))
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().start_episode(self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img"))
+            else:
+                MasterWebsocketController().send_to_slave(instance, "play_episode", [self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img")])
+
+        # ------------ Play torrent --------------
+        elif url == "torrent":
+            instance = int(self.get_argument("instance"))
+            title = self.get_argument("title")
+            Logger.write(2, "Play torrent " + title + " on " + str(instance))
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().start_torrent(self.get_argument("title"), Torrent.get_magnet_uri(self.get_argument("url")))
+            else:
+                MasterWebsocketController().send_to_slave(instance, "play_episode",
+                                                          [self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img")])
+
+
+        # ------------ Play radio --------------
+        elif url == "radio":
+            instance = int(self.get_argument("instance"))
+            radio = RadioProvider.get_by_id(int(self.get_argument("id")))
+            Logger.write(2, "Play radio " + radio.title + " on " + str(instance))
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().start_radio(radio.title, radio.url)
+            else:
+                MasterWebsocketController().send_to_slave(instance, "play_radio", [radio.id])
+
+        # ------------ Play file --------------
+        elif url == "file":
+            instance = int(self.get_argument("instance"))
+            file = urllib.parse.unquote(self.get_argument("path"))
+            Logger.write(2, "Play file " + file + " on " + str(instance))
+
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().start_file(file, int(self.get_argument("position")))
+            else:
+                MasterWebsocketController().send_to_slave(instance, "play_file", [file, int(self.get_argument("position"))])
+
+        # ------------ Play url --------------
+        elif url == "url":
+            instance = int(self.get_argument("instance"))
+            title = urllib.parse.unquote(self.get_argument("title"))
+            url = urllib.parse.unquote(self.get_argument("url"))
+            Logger.write(2, "Play url " + title + "(" + url + ") on " + str(instance))
+
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().start_url(title, url)
+            else:
+                MasterWebsocketController().send_to_slave(instance, "play_url", [title, url])
+
+
 class UtilHandler(BaseHandler):
     async def get(self, url):
-        if url == "get_protected_img":
-            data = await UtilController.get_protected_img(self.get_argument("url"))
-            self.write(data)
-        elif url == "startup":
+        if url == "startup":
             self.write(UtilController.startup())
         elif url == "info":
             self.write(UtilController.info())
@@ -155,9 +222,7 @@ class UtilHandler(BaseHandler):
 
 class MovieHandler(BaseHandler):
     def post(self, url):
-        if url == "play_movie":
-            MovieController.play_movie(self.get_argument("url"), self.get_argument("id"), self.get_argument("title"), self.get_argument("img", ""))
-        elif url == "play_continue":
+        if url == "play_continue":
             MovieController.play_continue(TornadoServer, HDController.play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"), self.get_argument("mediaFile"))
 
     async def get(self, url):
@@ -174,17 +239,6 @@ class MovieHandler(BaseHandler):
 
 
 class ShowHandler(BaseHandler):
-
-    def post(self, url):
-        if url == "play_episode":
-            instance = int(self.get_argument("instance"))
-            title = self.get_argument("title")
-            Logger.write(2, "Play episode: " + title + " on " + str(instance))
-            if MasterWebsocketController().is_self(instance):
-                MediaManager().start_episode(self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img"))
-            else:
-                MasterWebsocketController().send_to_slave(instance, "play_radio", [radio.id])
-            #ShowController.play_episode(self.get_argument("url"), self.get_argument("id"), self.get_argument("title"), self.get_argument("img", ""), self.get_argument("season"), self.get_argument("episode"))
 
     async def get(self, url):
         if url == "get_shows":
@@ -204,16 +258,6 @@ class RadioHandler(BaseHandler):
         if url == "get_radios":
             self.write(RadioController.get_radios())
 
-    def post(self, url):
-        if url == "play_radio":
-            instance = int(self.get_argument("instance"))
-            radio = RadioProvider.get_by_id(int(self.get_argument("id")))
-            Logger.write(2, "Play radio: " + radio.title + " on " + str(instance))
-            if MasterWebsocketController().is_self(instance):
-                MediaManager().start_radio(radio.title, radio.url)
-            else:
-                MasterWebsocketController().send_to_slave(instance, "play_radio", [radio.id])
-
 
 class PlayerHandler(BaseHandler):
     def post(self, url):
@@ -222,14 +266,9 @@ class PlayerHandler(BaseHandler):
         elif url == "set_subtitle_id":
             PlayerController.set_subtitle_id(self.get_argument("sub"))
         elif url == "stop_player":
-            #was_waiting_for_file_selection = MediaManager().torrent and MediaManager().torrent.state == TorrentState.WaitingUserFileSelection
             PlayerController.stop_player(int(self.get_argument("instance")))
-
-            # if was_waiting_for_file_selection:
-            #     MasterWebsocketController.broadcast('request', 'media_selection_close', [])
-
         elif url == "pause_resume_player":
-            PlayerController.pause_resume_player()
+            PlayerController.pause_resume_player(int(self.get_argument("instance")))
         elif url == "change_volume":
             PlayerController.change_volume(self.get_argument("vol"))
         elif url == "change_subtitle_offset":
@@ -252,15 +291,7 @@ class HDHandler(BaseHandler):
             self.write(HDController.get_directory(self.get_argument("path")))
 
     async def post(self, url):
-        if url == "play_file":
-            instance = int(self.get_argument("instance"))
-            file = urllib.parse.unquote(self.get_argument("path"))
-            Logger.write(2, "Play file: " + file + " on " + str(instance))
 
-            if MasterWebsocketController().is_self(instance):
-                MediaManager().start_file(file, int(self.get_argument("position")))
-            else:
-                MasterWebsocketController().send_to_slave(instance, "play_file", [file, int(self.get_argument("position"))])
 
             # if Settings.get_bool("slave"):
             #     Logger.write(2, self.get_argument("path"))
@@ -275,7 +306,7 @@ class HDHandler(BaseHandler):
                 #     size, first_64k, last_64k = get_file_info(file)
                 #     EventManager.throw_event(EventType.HashDataKnown, [size, file, first_64k, last_64k])
 
-        elif url == "next_image":
+        if url == "next_image":
             HDController.next_image(self.get_argument("current_path"))
         elif url == "prev_image":
             HDController.prev_image(self.get_argument("current_path"))

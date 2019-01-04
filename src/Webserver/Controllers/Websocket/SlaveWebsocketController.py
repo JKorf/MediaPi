@@ -56,7 +56,15 @@ class SlaveWebsocketController:
         data = json.loads(raw_data)
         if data['event'] == 'command':
             if data['topic'] == 'play_file':
-                MediaManager().start_file(data['parameters'][0], data['parameters'][1])
+                MediaManager().start_file(*data['parameters'])
+            elif data['topic'] == "play_movie":
+                MediaManager().start_movie(*data['parameters'])
+            elif data['topic'] == "play_episode":
+                MediaManager().start_episode(*data['parameters'])
+            elif data['topic'] == "play_radio":
+                MediaManager().start_radio(*data['parameters'])
+            elif data['topic'] == "play_url":
+                MediaManager().start_url(*data['parameters'])
             elif data['topic'] == 'play_stop':
                 MediaManager().stop_play()
 

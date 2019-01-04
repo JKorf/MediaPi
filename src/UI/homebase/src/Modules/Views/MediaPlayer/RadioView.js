@@ -3,6 +3,7 @@ import axios from 'axios';
 
 import View from './../View.js';
 import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
+import Popup from './../../Components/Popups/Popup.js';
 import MediaThumbnail from './../../MediaList/MediaThumbnail.js';
 
 import {radio1, radio2, radio3, radio538, qmusic, veronica, veronicarockradio, top1000, arrowclassicrock, slam, skyradio} from './../../../Images/radios/'
@@ -10,7 +11,7 @@ import {radio1, radio2, radio3, radio538, qmusic, veronica, veronicarockradio, t
 class RadioView extends Component {
   constructor(props) {
     super(props);
-    this.state = {radios: [], showPopup: false};
+    this.state = {radios: [], showPopup: false, loading: true};
 
     this.selectedRadio = null;
     this.props.changeBack({ to: "/mediaplayer/" });
@@ -36,9 +37,10 @@ class RadioView extends Component {
   componentDidMount() {
     axios.get('http://localhost/radio/get_radios').then(data => {
         console.log(data.data);
-        this.setState({radios: data.data});
+        this.setState({radios: data.data, loading: false});
     }, err =>{
         console.log(err);
+        this.setState({loading: false});
     });
   }
 
@@ -54,9 +56,12 @@ class RadioView extends Component {
 
   instanceSelect(instance)
   {
-    this.setState({showPopup: false});
-    axios.post('http://localhost/radio/play_radio?instance=' + instance + "&id=" + this.selectedRadio.id);
-
+    this.setState({showPopup: false, loading: true});
+    axios.post('http://localhost/play/radio?instance=' + instance + "&id=" + this.selectedRadio.id)
+    .then(
+        () => this.setState({loading: false}),
+        ()=> this.setState({loading: false})
+    );
   }
 
   getImgUrl(src)
@@ -67,11 +72,17 @@ class RadioView extends Component {
   render() {
     const radios = this.state.radios;
     const showPopup = this.state.showPopup;
+    const loading = this.state.loading;
 
     return (
       <div className="radio media-overview">
         { radios.map((radio, index) => <a key={radio.id} onClick={(e) => this.radioClick(radio, e)}><MediaThumbnail img={this.getImgUrl(radio.poster)} title={radio.title}></MediaThumbnail></a>) }
-        <SelectInstancePopup show={showPopup} onCancel={this.instanceSelectCancel} onSelect={this.instanceSelect} />
+        { showPopup &&
+            <SelectInstancePopup onCancel={this.instanceSelectCancel} onSelect={this.instanceSelect} />
+        }
+        { loading &&
+            <Popup loading={loading} />
+        }
       </div>
     );
   }

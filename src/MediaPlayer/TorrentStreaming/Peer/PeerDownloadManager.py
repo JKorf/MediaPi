@@ -55,7 +55,7 @@ class PeerDownloadManager:
                 if len(to_download) == 0:
                     return True
 
-                Logger.write(2, str(self.peer.id) + " requesting " + str(len(to_download)) + " allowed fast blocks")
+                Logger.write(1, str(self.peer.id) + " requesting " + str(len(to_download)) + " allowed fast blocks")
                 self.request(to_download)
                 return True
 

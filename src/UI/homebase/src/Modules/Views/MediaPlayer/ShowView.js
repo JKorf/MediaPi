@@ -4,11 +4,12 @@ import axios from 'axios'
 import View from './../View.js'
 import Button from './../../Components/Button'
 import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup'
+import Popup from './../../Components/Popups/Popup'
 
 class ShowView extends Component {
   constructor(props) {
     super(props);
-    this.state = {show: {images:[], rating:{}, seasons:[]}, selectedSeason: -1, selectedEpisode: -1, showPopup: false};
+    this.state = {show: {images:[], rating:{}, seasons:[]}, selectedSeason: -1, selectedEpisode: -1, showPopup: false, loading: true};
     this.props.changeBack({to: "/mediaplayer/shows/" });
 
     this.instanceSelectCancel = this.instanceSelectCancel.bind(this);
@@ -25,9 +26,10 @@ class ShowView extends Component {
           return seasons;
         }, {});
         data.data.seasons = seasonEpisodes;
-        this.setState({show: data.data});
+        this.setState({show: data.data, loading: false});
     }, err =>{
         console.log(err);
+        this.setSTate({loading: false});
     });
   }
 
@@ -51,14 +53,19 @@ class ShowView extends Component {
 
   instanceSelect(instance)
   {
-    this.setState({showPopup: false});
-    axios.post('http://localhost/shows/play_episode?instance=' + instance
+    this.setState({showPopup: false, loading: true});
+    axios.post('http://localhost/play/episode?instance=' + instance
         + "&url=" + encodeURIComponent(this.selected.torrents["0"].url)
         + "&id=" + this.state.show.id
         + "&title=" + encodeURIComponent(this.state.show.title + " [S" + this.selected.season + "E" + this.selected.episode + "]")
         + "&img=" + encodeURIComponent(this.state.show.images.poster)
         + "&season=" + this.selected.season
-        + "&episode=" + this.selected.episode);
+        + "&episode=" + this.selected.episode).then(() => {
+            this.setState({loading: false});
+        }, err =>{
+            console.log(err);
+            this.setState({loading: false});
+        });
   }
 
   render() {
@@ -66,6 +73,7 @@ class ShowView extends Component {
     const selectedSeason = this.state.selectedSeason;
     const selectedEpisode = this.state.selectedEpisode;
     const showPopup = this.state.showPopup;
+    const loading = this.state.loading;
 
     return (
       <div className="show">
@@ -120,7 +128,12 @@ class ShowView extends Component {
                 </div>
             }
         </div>
-        <SelectInstancePopup show={showPopup} onCancel={this.instanceSelectCancel} onSelect={this.instanceSelect} />
+        { showPopup &&
+            <SelectInstancePopup onCancel={this.instanceSelectCancel} onSelect={this.instanceSelect} />
+        }
+        { loading &&
+            <Popup loading={loading} />
+        }
       </div>
     );
   }

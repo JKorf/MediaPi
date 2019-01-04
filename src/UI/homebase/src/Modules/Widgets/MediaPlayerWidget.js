@@ -1,16 +1,24 @@
 import React, { Component } from 'react';
-import Widget from './Widget.js'
-import Socket from './../../Socket.js'
-import Button from './../Components/Button'
-import axios from 'axios'
+import Widget from './Widget.js';
+import Socket from './../../Socket.js';
+import Button from './../Components/Button';
+import SvgImage from './../Components/SvgImage';
+import MediaProgress from './../Components/MediaProgress';
+import Popup from './../Components/Popups/Popup.js';
+import axios from 'axios';
+
+import playImage from './../../Images/play.svg';
+import pauseImage from './../../Images/pause.svg';
+import stopImage from './../../Images/stop.svg';
 
 class MediaPlayerWidget extends Component {
   constructor(props) {
     super(props);
-    this.state = {playerData: {}, mediaData: {}};
+    this.state = {playerData: {}, mediaData: {}, loading: false};
     this.playerUpdate = this.playerUpdate.bind(this);
     this.mediaUpdate = this.mediaUpdate.bind(this);
-    this.testClick = this.testClick.bind(this);
+
+    this.pausePlayClick = this.pausePlayClick.bind(this);
     this.stopClick = this.stopClick.bind(this);
   }
 
@@ -31,30 +39,56 @@ class MediaPlayerWidget extends Component {
     this.setState({mediaData: data});
   }
 
-  testClick() {
-    axios.post('http://localhost/hd/play_file?instance='+this.props.id + "&path=C:/jellies.mp4&position=0");
+  pausePlayClick(){
+    this.setState({loading: true});
+    axios.post('http://localhost/player/pause_resume_player?instance=' + this.props.id)
+    .then(
+        () => this.setState({loading: false}),
+        ()=> this.setState({loading: false})
+    );
+    const playerData = this.state.playerData;
+    playerData.state = (playerData.state == 3 ? 4: 3);
+    this.setState({playerData: playerData});
   }
-  stopClick() {
-    axios.post('http://localhost/player/stop_player?instance='+this.props.id);
+
+  stopClick(){
+    this.setState({loading: true});
+    axios.post('http://localhost/player/stop_player?instance=' + this.props.id)
+    .then(
+        () => this.setState({loading: false}),
+        ()=> this.setState({loading: false})
+    );
   }
 
   render() {
     const playerData = this.state.playerData;
     const mediaData = this.state.mediaData;
     const instance = this.props.instance;
+    const loading = this.state.loading;
 
     let mediaWidget;
     if (mediaData.title){
+        let playPauseButton = <SvgImage key={playerData.state} src={pauseImage} />
+        if (playerData.state === 4)
+            playPauseButton = <SvgImage key={playerData.state} src={playImage} />
+
         mediaWidget =
         <div className="mediaplayer-widget">
-            <div className="mediaplayer-widget-controls">
-                <div className="mediaplayer-widget-control">Pause/play</div>
-                <div className="mediaplayer-widget-control">Stop</div>
-            </div>
             <div className="mediaplayer-widget-info">
-                <div className="mediaplayer-widget-info-title">{mediaData.title}</div>
-                <div className="mediaplayer-widget-info-time">{playerData.playing_for}</div>
+                <div className="mediaplayer-widget-info-title truncate">{mediaData.title}</div>
             </div>
+            <div className="mediaplayer-widget-controls">
+                <div className="mediaplayer-widget-control" onClick={this.pausePlayClick}>
+                    {playPauseButton}
+                </div>
+                <div className="mediaplayer-widget-control" onClick={this.stopClick}>
+                     <SvgImage src={stopImage} />
+                </div>
+            </div>
+            <MediaProgress percentage={playerData.playing_for / playerData.length * 100} ></MediaProgress>
+            { loading &&
+                <Popup loading={loading} />
+            }
         </div>;
     }
     else{
@@ -63,10 +97,7 @@ class MediaPlayerWidget extends Component {
 
     return (
       <Widget title={"Mediaplayer " + instance}>
-            {mediaWidget}
-            <br/>
-          <Button text="Test play" onClick={this.testClick} />
-          <Button text="Test stop" onClick={this.stopClick} />
+          {mediaWidget}
       </Widget>
     );
   }

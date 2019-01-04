@@ -1,20 +1,24 @@
 import newId from './Utils/id.js'
 
 export default class WS {
-  static init() {
-    this.ws = new WebSocket('ws://localhost/ws');
 
+  static init() {
     this.socketOpen = this.socketOpen.bind(this);
     this.socketMessage = this.socketMessage.bind(this);
     this.socketClose = this.socketClose.bind(this);
 
+    this.subscriptions = [];
+    WS.connect();
+  }
+
+  static connect(){
+    this.wsConnected = false;
+    this.ws = new WebSocket('ws://localhost/ws');
     this.ws.onopen = this.socketOpen;
     this.ws.onmessage = this.socketMessage;
-    this.ws.close = this.socketClose;
+    this.ws.onclose = this.socketClose;
 
-    this.subscriptions = [];
     this.pending_messages = [];
-    this.wsConnected = false;
   }
 
   static socketOpen(){
@@ -52,12 +56,21 @@ export default class WS {
             });
         }
     }
+    else if(data.type == "info")
+    {
+
+    }
   }
 
   static socketClose(){
      console.log("Websocket closed");
      this.wsConnected = false;
      this.subscriptions.forEach(sub => { sub.subscribed = false; });
+
+     setTimeout(function()
+     {
+        WS.connect();
+     }, 3000);
   }
 
   static request(topic, params)

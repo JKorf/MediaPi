@@ -5,11 +5,12 @@
   primary-background: #0B5351;
   primary-images: #eee;
 
-  secondary: #00A9A5;
+  secondary: #006666;
   secondary-text: #eee;
   secondary-background: #0b2f35;
   secondary-background-button: #164951;
 
+  selection: #228899;
 }
 
 
@@ -164,6 +165,24 @@ a {
     min-height: 150px;
 }
 
+.popup-loader{
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+    .svg-image{
+        margin-left: calc(50% - 50px);
+        margin-top: 25px;
+        width: 100px;
+        height: 100px;
+
+        svg{
+            width: 100px;
+            height: 100px;
+        }
+    }
+}
+
 .popup-title{
     background: #colors[secondary];
     padding: 4px 8px;
@@ -215,7 +234,7 @@ a {
     }
 
     &.selected{
-        background: #colors[secondary];
+        background: #colors[selection];
     }
 }
 

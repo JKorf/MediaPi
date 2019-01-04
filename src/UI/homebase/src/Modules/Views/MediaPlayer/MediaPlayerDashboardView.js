@@ -8,6 +8,7 @@ import hdImg from './../../../Images/hd.svg'
 import torrentImg from './../../../Images/link.svg'
 import radioImg from './../../../Images/radio.svg'
 import youtubeImg from './../../../Images/youtube.svg'
+import playImg from './../../../Images/play.svg'
 
 class MediaPlayerDashboardView extends Component {
   constructor(props) {
@@ -27,6 +28,7 @@ class MediaPlayerDashboardView extends Component {
         <DashboardLink to="/mediaplayer/torrents" img={torrentImg} text="Torrents"></DashboardLink>
         <DashboardLink to="/mediaplayer/radio" img={radioImg} text="Radio"></DashboardLink>
         <DashboardLink to="/mediaplayer/youtube" img={youtubeImg} text="Youtube"></DashboardLink>
+        <DashboardLink to="/mediaplayer/players" img={playImg} text="Players"></DashboardLink>
     </div>
     );
   }
