@@ -142,6 +142,9 @@ class Torrent:
         self.metadata_manager = TorrentMetadataManager(self)
         self.network_manager = TorrentNetworkManager(self)
 
+    def test_callback(self, data):
+        Logger.write(2, "RECEIVED CALLBACK: " + str(data))
+
     @classmethod
     def create_torrent(cls, id, url):
         if url.startswith("magnet:"):
@@ -307,8 +310,8 @@ class Torrent:
         Logger.write(2, "Setting selected media file to " + file)
         self.selected_media_file = file
 
-    def set_media_file(self, file):
-        self.media_file = file
+    def set_media_file(self, path):
+        self.media_file = [x for x in self.files if x.path == path][0]
         Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
 
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)

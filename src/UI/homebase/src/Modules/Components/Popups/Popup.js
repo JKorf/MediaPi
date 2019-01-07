@@ -7,6 +7,9 @@ import loaderImage from "./../../../Images/loader.svg";
 class Popup extends Component {
   constructor(props) {
     super(props);
+    this.classId = this.props.classId;
+    if (!this.classId)
+        this.classId = "";
   }
 
   componentDidMount() {
@@ -19,9 +22,10 @@ class Popup extends Component {
     const loading = this.props.loading;
     const title = this.props.title;
     const children = this.props.children;
+    const classId = this.props.classId;
 
     return (
-          <div className="popup-window">
+          <div className={classId + " popup-window"}>
             { loading &&
                 <div className="popup-loader"><SvgImage src={loaderImage} /></div>
             }

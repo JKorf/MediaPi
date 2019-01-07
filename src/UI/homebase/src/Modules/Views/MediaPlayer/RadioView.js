@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 
 import View from './../View.js';
+import MediaPlayerView from './MediaPlayerView.js';
 import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
 import Popup from './../../Components/Popups/Popup.js';
 import MediaThumbnail from './../../MediaList/MediaThumbnail.js';
@@ -11,7 +12,8 @@ import {radio1, radio2, radio3, radio538, qmusic, veronica, veronicarockradio, t
 class RadioView extends Component {
   constructor(props) {
     super(props);
-    this.state = {radios: [], showPopup: false, loading: true};
+    this.viewRef = React.createRef();
+    this.state = {radios: []};
 
     this.selectedRadio = null;
     this.props.changeBack({ to: "/mediaplayer/" });
@@ -30,37 +32,31 @@ class RadioView extends Component {
         "slam": slam,
     }
 
-    this.instanceSelectCancel = this.instanceSelectCancel.bind(this);
-    this.instanceSelect = this.instanceSelect.bind(this);
+    this.radioClick = this.radioClick.bind(this);
+    this.playRadio = this.playRadio.bind(this);
   }
 
   componentDidMount() {
     axios.get('http://localhost/radio/get_radios').then(data => {
         console.log(data.data);
-        this.setState({radios: data.data, loading: false});
+        this.setState({radios: data.data});
+        this.viewRef.current.changeState(1);
     }, err =>{
         console.log(err);
-        this.setState({loading: false});
+        this.viewRef.current.changeState(1);
     });
   }
 
   radioClick(radio){
-    this.selectedRadio = radio;
-    this.setState({showPopup: true});
+     this.viewRef.current.play(radio);
   }
 
-  instanceSelectCancel()
-  {
-    this.setState({showPopup: false});
-  }
-
-  instanceSelect(instance)
-  {
-    this.setState({showPopup: false, loading: true});
-    axios.post('http://localhost/play/radio?instance=' + instance + "&id=" + this.selectedRadio.id)
+  playRadio(instance, radio){
+    this.viewRef.current.changeState(0);
+    axios.post('http://localhost/play/radio?instance=' + instance + "&id=" + radio.id)
     .then(
-        () => this.setState({loading: false}),
-        ()=> this.setState({loading: false})
+        () => this.viewRef.current.changeState(1),
+        ()=> this.viewRef.current.changeState(1)
     );
   }
 
@@ -71,19 +67,13 @@ class RadioView extends Component {
 
   render() {
     const radios = this.state.radios;
-    const showPopup = this.state.showPopup;
-    const loading = this.state.loading;
 
     return (
-      <div className="radio media-overview">
-        { radios.map((radio, index) => <a key={radio.id} onClick={(e) => this.radioClick(radio, e)}><MediaThumbnail img={this.getImgUrl(radio.poster)} title={radio.title}></MediaThumbnail></a>) }
-        { showPopup &&
-            <SelectInstancePopup onCancel={this.instanceSelectCancel} onSelect={this.instanceSelect} />
-        }
-        { loading &&
-            <Popup loading={loading} />
-        }
-      </div>
+        <MediaPlayerView ref={this.viewRef} playMedia={this.playRadio}>
+          <div className="radio media-overview">
+            { radios.map((radio, index) => <a key={radio.id} onClick={(e) => this.radioClick(radio, e)}><MediaThumbnail img={this.getImgUrl(radio.poster)} title={radio.title}></MediaThumbnail></a>) }
+          </div>
+      </MediaPlayerView>
     );
   }
 };

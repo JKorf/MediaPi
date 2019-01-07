@@ -31,7 +31,7 @@ class DashboardView extends Component {
     <div className="view-wrapper">
       <View>
         {
-            slaves.map((slave, index) => <MediaPlayerWidget key={slave.id} id={slave.id} instance={slave.name} />)
+            slaves.map((slave, index) => <MediaPlayerWidget key={slave.id} id={slave.id} instance={slave} />)
         }
       </View>
       </div>

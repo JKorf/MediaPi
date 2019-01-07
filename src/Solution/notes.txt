@@ -29,12 +29,8 @@
                 Mediaplayer
                 Verwarming
 
-        Updates via websocket, wanneer er iets verandert, maar max elke 0.5s oid
-            Hoe krijgen we updates van slave?
 
-        Features
-            Popup messages
-            Multiple mediaplayers kunnen aansturen
+        slave client requests kunnen doorsturen
 
         Data:
             Player data -> VLCPlayer
@@ -57,9 +53,4 @@
             Stats -> Stats
                 x
 
-        Master - slave
-            Master websocket can receive slave updates
-            Slaves init connection to master
-            Master has no need to have a list of potential slaves
 
-        shows/movies naar common media object,

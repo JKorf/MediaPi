@@ -14,6 +14,7 @@ import HDView from './Modules/Views/MediaPlayer/HDView.js'
 import RadioView from './Modules/Views/MediaPlayer/RadioView.js'
 import TorrentView from './Modules/Views/MediaPlayer/TorrentView.js'
 import Socket from './Socket.js'
+import PopupController from './Modules/PopupController.js'
 
 import './Styles/base.less';
 import './Styles/mediaplayer.less';
@@ -50,6 +51,7 @@ class App extends Component {
                     <Route path="/mediaplayer/torrents" exact render={(props) => <TorrentView {...props} changeBack={this.changeBack} />} />
                 </View>
                 <Footer />
+                <PopupController />
           </div>
       </Router>
     );

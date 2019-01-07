@@ -118,12 +118,20 @@ class Settings:
 #         self.topic = topic
 #         self.data = data
 
-class WebSocketInfoMessage:
+class WebSocketRequestMessage:
 
-    def __init__(self, info_type, data):
-        self.type = "info"
+    def __init__(self, id, info_type, data):
+        self.id = id
+        self.type = "request"
         self.info_type = info_type
         self.data = data
+
+class WebSocketInvalidMessage:
+
+    def __init__(self, id, info_type):
+        self.id = id
+        self.type = "invalid"
+        self.info_type = info_type
 
 class WebSocketUpdateMessage:
 

@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import axios from 'axios';
 
 import View from './../View.js';
+import MediaPlayerView from './MediaPlayerView.js'
+
 import SvgImage from './../../Components/SvgImage';
 import Button from './../../Components/Button';
 import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
@@ -17,33 +19,34 @@ import seedersImage from './../../../Images/seeders.png';
 class TorrentView extends Component {
   constructor(props) {
     super(props);
-    this.state = {showPopup: false, torrents: [], selectedTorrent: null, loading: true};
+    this.viewRef = React.createRef();
+    this.state = {torrents: [], selectedTorrent: null};
 
     this.selectedTorrent = null;
     this.props.changeBack({ to: "/mediaplayer/" });
 
-    this.instanceSelectCancel = this.instanceSelectCancel.bind(this);
-    this.instanceSelect = this.instanceSelect.bind(this);
+    this.playTorrent = this.playTorrent.bind(this);
+    this.torrentPlay = this.torrentPlay.bind(this);
   }
 
   componentDidMount() {
     axios.get('http://localhost/torrent/top').then(data => {
             console.log(data.data);
-            this.setState({torrents: data.data, loading: false});
+            this.setState({torrents: data.data});
+            this.viewRef.current.changeState(1);
         }, err =>{
             console.log(err);
-            this.setState({loading: false});
+            this.viewRef.current.changeState(1);
         });
   }
 
-  torrentClick(torrent)
+  torrentPlay(torrent)
   {
-      this.setState({selectedTorrent: torrent});
+      this.viewRef.current.play(torrent);
   }
 
-  playTorrent(torrent)
-  {
-      this.setState({showPopup: true});
+  torrentSelected(torrent){
+      this.setState({selectedTorrent: torrent});
   }
 
   getTorrentIcon(torrent){
@@ -54,54 +57,43 @@ class TorrentView extends Component {
     return otherImage;
   }
 
-  instanceSelectCancel()
+  playTorrent(instance, torrent)
   {
-    this.setState({showPopup: false});
-  }
-
-  instanceSelect(instance)
-  {
-    this.setState({showPopup: false, loading: true});
+    this.viewRef.current.changeState(0);
     axios.post('http://localhost/play/torrent?instance=' + instance
-    + "&title=" + encodeURIComponent(this.state.selectedTorrent.title)
-    + "&url=" + encodeURIComponent(this.state.selectedTorrent.url)).then(() => {
-            this.setState({loading: false});
+    + "&title=" + encodeURIComponent(torrent.title)
+    + "&url=" + encodeURIComponent(torrent.url)).then(() => {
+            this.viewRef.current.changeState(1);
         }, err =>{
             console.log(err);
-            this.setState({loading: false});
+            this.viewRef.current.changeState(1);
         });
   }
 
   render() {
     const torrents = this.state.torrents;
-    const showPopup = this.state.showPopup;
     const selectedTorrent = this.state.selectedTorrent;
-    const loading = this.state.loading;
     return (
-      <div className="torrents">
-         { torrents.map((torrent, index) => (
-            <div className="torrent" key={index} onClick={(e) => this.torrentClick(torrent, e)}>
-                <SvgImage src={this.getTorrentIcon(torrent)} />
-                <div className="torrent-title truncate2">{torrent.title}</div>
-                { selectedTorrent == torrent &&
-                    <div className="torrent-details">
-                        <div className="torrent-details-peers">
-                            <div className="torrent-details-seeders truncate">{selectedTorrent.seeders}<img src={seedersImage} /></div>
-                            <div className="torrent-details-leechers truncate">{selectedTorrent.leechers}<img src={leechersImage} /></div>
+        <MediaPlayerView ref={this.viewRef} playMedia={this.playTorrent}>
+          <div className="torrents">
+             { torrents.map((torrent, index) => (
+                <div className="torrent" key={index} onClick={(e) => this.torrentSelected(torrent, e)}>
+                    <SvgImage src={this.getTorrentIcon(torrent)} />
+                    <div className="torrent-title truncate2">{torrent.title}</div>
+                    { selectedTorrent == torrent &&
+                        <div className="torrent-details">
+                            <div className="torrent-details-peers">
+                                <div className="torrent-details-seeders truncate">{selectedTorrent.seeders}<img src={seedersImage} /></div>
+                                <div className="torrent-details-leechers truncate">{selectedTorrent.leechers}<img src={leechersImage} /></div>
+                            </div>
+                            <div className="torrent-details-size">{selectedTorrent.size}</div>
+                            <Button text="Play" onClick={(e) => this.torrentPlay(torrent)} classId="secondary"/>
                         </div>
-                        <div className="torrent-details-size">{selectedTorrent.size}</div>
-                        <Button text="Play" onClick={(e) => this.playTorrent(torrent)} classId="secondary"/>
-                    </div>
-                }
-            </div>
-            ))}
-            { showPopup &&
-                <SelectInstancePopup onCancel={this.instanceSelectCancel} onSelect={this.instanceSelect} />
-            }
-            { loading &&
-              <Popup loading={true} />
-            }
-      </div>
+                    }
+                </div>
+                ))}
+          </div>
+      </MediaPlayerView>
     );
   }
 };

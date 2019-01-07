@@ -30,44 +30,56 @@ class MediaManager(metaclass=Singleton):
         # EventManager.register_event(EventType.StartTorrent, self.start_torrent)
         # EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
         EventManager.register_event(EventType.NoPeers, self.stop_torrent)
-        EventManager.register_event(EventType.TorrentMediaFileSet, lambda file: self._start_playing_torrent())
+        EventManager.register_event(EventType.TorrentMediaSelectionRequired, lambda files: EventManager.throw_event(EventType.ClientRequest, [self.set_media_file, 1000 * 60 * 60 * 24, "SelectMediaFile", [files]]))
 
         VLCPlayer().playerState.register_callback(self.player_state_change)
+
+    def set_media_file(self, file):
+        if not file:
+            self.stop_play()
+        else:
+            self.torrent.set_media_file(file)
 
     def start_file(self, url, time):
         if Settings.get_bool("slave"):
             url = Settings.get_string("master_ip") + ":50015/file/" + url
 
+        self.stop_play()
         VLCPlayer().play(url, time)
         self.mediaData.type = "File"
         self.mediaData.title = os.path.basename(url)
         self.mediaData.updated()
 
     def start_radio(self, name, url):
+        self.stop_play()
         VLCPlayer().play(url, 0)
         self.mediaData.type = "Radio"
         self.mediaData.title = name
         self.mediaData.updated()
 
     def start_episode(self, id, season, episode, title, url, image):
+        self.stop_play()
         self._start_torrent(url, None)
         self.mediaData.type = "Torrent"
         self.mediaData.title = title
         self.mediaData.updated()
 
     def start_torrent(self, title, url):
+        self.stop_play()
         self._start_torrent(url, None)
         self.mediaData.type = "Torrent"
         self.mediaData.title = title
         self.mediaData.updated()
 
     def start_movie(self, id, title, url, image):
+        self.stop_play()
         self._start_torrent(url, None)
         self.mediaData.type = "Torrent"
         self.mediaData.title = title
         self.mediaData.updated()
 
     def start_url(self, title, url):
+        self.stop_play()
         VLCPlayer().play(url, 0)
         self.mediaData.type = "Url"
         self.mediaData.title = title

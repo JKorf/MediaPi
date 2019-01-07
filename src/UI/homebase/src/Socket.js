@@ -8,6 +8,7 @@ export default class WS {
     this.socketClose = this.socketClose.bind(this);
 
     this.subscriptions = [];
+    this.request_handlers = [];
     WS.connect();
   }
 
@@ -56,10 +57,22 @@ export default class WS {
             });
         }
     }
-    else if(data.type == "info")
+    else if(data.type == "request" || data.type == "invalid")
     {
+        var handler = this.request_handlers.find(el => el.name == data.info_type);
+        if (!handler){
+            console.log("No handler for " + data.info_type + " found");
+            return
+        }
 
+        handler.handler(data.id, data.type=="request", data.data);
     }
+  }
+
+  static response(id, data){
+    var msg = {response_id: id, event: "response", data: data};
+    console.log("Response: ", msg);
+    this.ws.send(JSON.stringify(msg));
   }
 
   static socketClose(){
@@ -71,6 +84,10 @@ export default class WS {
      {
         WS.connect();
      }, 3000);
+  }
+
+  static addRequestHandler(name, handler){
+    this.request_handlers.push({name: name, handler: handler});
   }
 
   static request(topic, params)

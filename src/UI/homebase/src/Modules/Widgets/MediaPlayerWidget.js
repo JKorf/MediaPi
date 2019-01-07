@@ -5,6 +5,7 @@ import Button from './../Components/Button';
 import SvgImage from './../Components/SvgImage';
 import MediaProgress from './../Components/MediaProgress';
 import Popup from './../Components/Popups/Popup.js';
+import StopPopup from './../Components/Popups/StopPopup.js';
 import axios from 'axios';
 
 import playImage from './../../Images/play.svg';
@@ -14,17 +15,19 @@ import stopImage from './../../Images/stop.svg';
 class MediaPlayerWidget extends Component {
   constructor(props) {
     super(props);
-    this.state = {playerData: {}, mediaData: {}, loading: false};
+    this.states = ["loading", "nothing", "confirmStop"];
+    this.state = {playerData: {}, mediaData: {}, state: this.states[1]};
     this.playerUpdate = this.playerUpdate.bind(this);
     this.mediaUpdate = this.mediaUpdate.bind(this);
 
     this.pausePlayClick = this.pausePlayClick.bind(this);
+    this.confirmStop = this.confirmStop.bind(this);
     this.stopClick = this.stopClick.bind(this);
   }
 
   componentDidMount() {
-    this.playerSub = Socket.subscribe(this.props.instance + ".player", this.playerUpdate);
-    this.mediaSub = Socket.subscribe(this.props.instance + ".media", this.mediaUpdate);
+    this.playerSub = Socket.subscribe(this.props.instance.id + ".player", this.playerUpdate);
+    this.mediaSub = Socket.subscribe(this.props.instance.id + ".media", this.mediaUpdate);
   }
 
   componentWillUnmount(){
@@ -40,11 +43,11 @@ class MediaPlayerWidget extends Component {
   }
 
   pausePlayClick(){
-    this.setState({loading: true});
+    this.setState({state: this.states[0]});
     axios.post('http://localhost/player/pause_resume_player?instance=' + this.props.id)
     .then(
-        () => this.setState({loading: false}),
-        ()=> this.setState({loading: false})
+        () => this.setState({state: this.states[1]}),
+        ()=> this.setState({state: this.states[1]})
     );
     const playerData = this.state.playerData;
     playerData.state = (playerData.state == 3 ? 4: 3);
@@ -52,11 +55,15 @@ class MediaPlayerWidget extends Component {
   }
 
   stopClick(){
-    this.setState({loading: true});
+    this.setState({state: this.states[2]});
+  }
+
+  confirmStop(){
+    this.setState({state: this.states[1]});
     axios.post('http://localhost/player/stop_player?instance=' + this.props.id)
     .then(
-        () => this.setState({loading: false}),
-        ()=> this.setState({loading: false})
+        () => this.setState({state: this.states[0]}),
+        ()=> this.setState({state: this.states[0]})
     );
   }
 
@@ -64,7 +71,11 @@ class MediaPlayerWidget extends Component {
     const playerData = this.state.playerData;
     const mediaData = this.state.mediaData;
     const instance = this.props.instance;
-    const loading = this.state.loading;
+    const state = this.state.state;
+
+    let percentagePlaying = playerData.playing_for / playerData.length * 100;
+    if (playerData.length == 0 && playerData.playing_for != 0)
+        percentagePlaying = 100;
 
     let mediaWidget;
     if (mediaData.title){
@@ -85,9 +96,12 @@ class MediaPlayerWidget extends Component {
                      <SvgImage src={stopImage} />
                 </div>
             </div>
-            <MediaProgress percentage={playerData.playing_for / playerData.length * 100} ></MediaProgress>
-            { loading &&
-                <Popup loading={loading} />
+            <MediaProgress percentage={percentagePlaying} ></MediaProgress>
+            { state == this.states[0] &&
+                <Popup loading={true} />
+            }
+            { state == this.states[2] &&
+                <StopPopup title={mediaData.title} onConfirm={this.confirmStop} onCancel={()=> this.setState({state: this.states[1]})}/>
             }
         </div>;
     }
@@ -96,7 +110,7 @@ class MediaPlayerWidget extends Component {
     }
 
     return (
-      <Widget title={"Mediaplayer " + instance}>
+      <Widget title={"Mediaplayer " + instance.name}>
           {mediaWidget}
       </Widget>
     );
