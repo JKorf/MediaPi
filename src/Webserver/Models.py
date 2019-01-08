@@ -120,8 +120,9 @@ class Settings:
 
 class WebSocketRequestMessage:
 
-    def __init__(self, id, info_type, data):
+    def __init__(self, id, instance_id, info_type, data):
         self.id = id
+        self.instance_id = instance_id
         self.type = "request"
         self.info_type = info_type
         self.data = data
@@ -151,6 +152,13 @@ class WebSocketInitMessage:
         self.type = "Slave"
         self.event = "init"
         self.data = name
+
+class WebSocketSlaveRequest:
+    def __init__(self, valid_for, type, data):
+        self.event = "slave_request"
+        self.type = type
+        self.valid_for = valid_for
+        self.data = data
 
 class WebSocketSlaveMessage:
     def __init__(self, topic, data):

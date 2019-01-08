@@ -50,7 +50,7 @@ class List(object):
         root = document.getroot()
         items = [self._build_torrent(row) for row in
                 self._get_torrent_rows(root)]
-        for item in items:
+        for item in [x for x in items if x is not None]:
             yield item
 
     def __iter__(self):
@@ -61,7 +61,8 @@ class List(object):
         Returns all 'tr' tag rows as a list of tuples. Each tuple is for
         a single torrent.
         """
-        table = page.find('.//table')  # the table with all torrent listing
+        content = page.find('.//div[@id="content"]')
+        table = content.find('.//table[@id="searchResult"]')  # the table with all torrent listing
         if table is None:  # no table means no results:
             return []
         else:
@@ -75,7 +76,12 @@ class List(object):
         cols = row.findall('.//td') # split the row into it's columns
 
         # this column contains the categories
-        [category, sub_category] = [c.text for c in cols[0].findall('.//a')]
+        cat = [c.text for c in cols[0].findall('.//a')]
+        if len(cat) < 2:
+            category = ""
+            sub_category = ""
+        else:
+            [category, sub_category] = cat
 
         # this column with all important info
         links = cols[1].findall('.//a') # get 4 a tags from this columns
@@ -100,8 +106,12 @@ class List(object):
             user = match.groups()[2]  # uploaded by user
 
         # last 2 columns for seeders and leechers
-        seeders = int(cols[2].text)
-        leechers = int(cols[3].text)
+        if cols[2].text is not None:
+            seeders = int(cols[2].text)
+            leechers = int(cols[3].text)
+        else:
+            seeders = 0
+            leechers = 0
 
         t = Torrent(title, url, category, sub_category, magnet_link,
                     torrent_link, created, size, user, seeders, leechers)

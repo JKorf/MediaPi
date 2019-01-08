@@ -65,12 +65,12 @@ export default class WS {
             return
         }
 
-        handler.handler(data.id, data.type=="request", data.data);
+        handler.handler(data.id, data.type=="request", data.instance_id, data.data);
     }
   }
 
-  static response(id, data){
-    var msg = {response_id: id, event: "response", data: data};
+  static response(id, instanceId, data){
+    var msg = {response_id: id, instance_id: instanceId, event: "response", data: data};
     console.log("Response: ", msg);
     this.ws.send(JSON.stringify(msg));
   }

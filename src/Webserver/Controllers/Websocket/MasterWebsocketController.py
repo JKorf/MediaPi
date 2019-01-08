@@ -12,6 +12,7 @@ from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, Singleton, current_time
+from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
 from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand, WebSocketRequestMessage, WebSocketInvalidMessage
 
 
@@ -20,7 +21,10 @@ class MasterWebsocketController(metaclass=Singleton):
     def __init__(self):
         self.clients = dict()
         self.slaves = SlaveCollection()
-        self.pending_messages = []
+        self.pending_message_handler = PendingMessagesHandler(
+            lambda msg: self.broadcast_info(msg.id, msg.type, msg.data),
+            self.client_message_invalid,
+            self.client_message_removed)
 
         self._ws_lock = Lock()
         self.last_id = 0
@@ -32,8 +36,6 @@ class MasterWebsocketController(metaclass=Singleton):
         self.own_slave.update_data("media", MediaManager().mediaData)
         self.slaves.add_slave(self.own_slave)
 
-        self.pending_message_thread = CustomThread(self.check_pending_messages, "Check pending messages")
-
         EventManager.register_event(EventType.ClientRequest, self.add_client_request)
 
     def is_self(self, id):
@@ -43,28 +45,19 @@ class MasterWebsocketController(metaclass=Singleton):
         VLCPlayer().playerState.register_callback(lambda x: self.slave_update(self.own_slave, "player", x))
         MediaManager().mediaData.register_callback(lambda x: self.slave_update(self.own_slave, "media", x))
         self.slaves.register_callback(lambda x: self.update_slaves_data(x.data))
-        self.pending_message_thread.start()
 
     def add_client_request(self, callback, valid_for, type, data):
-        id = self.next_id()
-        if valid_for > 0:
-            self.pending_messages.append(ClientMessage(id, callback, valid_for, type, data))
-        self.broadcast_info(id, type, data)
+        self.pending_message_handler.add_pending_message(ClientMessage(self.next_id(), callback, valid_for, type, data))
 
-    def check_pending_messages(self):
-        while True:
-            check_time = current_time()
-            invalid = [x for x in self.pending_messages if x.valid_till < check_time]
-            for msg in invalid:
-                Logger.write(2, "Timing out message " + str(msg.id))
-                self.remove_client_message(msg)
-            time.sleep(1)
-
-    def remove_client_message(self, msg, exclude_client=None):
-        self.pending_messages = [x for x in self.pending_messages if x.id != msg.id]
+    def client_message_invalid(self, msg):
         for client, subs in self.clients.items():
-            if client is exclude_client:
-                continue
+            self.write_message(client, WebSocketInvalidMessage(msg.id, msg.type))
+
+    def client_message_removed(self, msg, by_client):
+        for client, subs in self.clients.items():
+            if client is by_client:
+                return
+
             self.write_message(client, WebSocketInvalidMessage(msg.id, msg.type))
 
     def slave_update(self, slave, type, data):
@@ -98,15 +91,15 @@ class MasterWebsocketController(metaclass=Singleton):
 
     def client_message(self, client, msg):
         data = json.loads(msg)
-        if data['event'] == 'init':
+        if 'event' in data and data['event'] == 'init':
             if data['type'] == 'Slave':
                 self.slaves.add_slave(SlaveClient(self.next_id(), data['data'], client))
                 Logger.write(2, "Slave initialized: " + data['data'])
             elif data['type'] == 'UI':
                 self.clients[client] = []
                 Logger.write(2, "UI client initialized")
-                for message in self.pending_messages:
-                    self.write_message(client, WebSocketRequestMessage(message.id, message.type, message.data))
+                for message in self.pending_message_handler.get_pending_for_new_client():
+                    self.write_message(client, WebSocketRequestMessage(message.id, self.own_slave.id, message.type, message.data))
 
         if client in self.clients:
             self.ui_client_message(client, data)
@@ -130,20 +123,31 @@ class MasterWebsocketController(metaclass=Singleton):
 
         elif data['event'] == 'response':
             id = int(data['response_id'])
-            msg = [x for x in self.pending_messages if x.id == id]
-            if len(msg) == 0:
-                Logger.write(2, "Received response on request not pending")
-                return
+            instance_id = int(data['instance_id'])
+            if instance_id == self.own_slave.id:
+                msg = self.pending_message_handler.get_message_by_response_id(id)
+                if msg is None:
+                    Logger.write(2, "Received response on request not pending")
+                    return
 
-            self.remove_client_message(msg[0], client)
-            Logger.write(2, "Client message response on " + str(id) +", data: " + str(data['data']))
-            msg[0].callback(data['data'])
+                self.pending_message_handler.remove_client_message(msg, client)
+                Logger.write(2, "Client message response on " + str(id) +", data: " + str(data['data']))
+                msg.callback(data['data'])
+            else:
+                slave = self.slaves.get_slave_by_id(instance_id)
+                self.write_message(slave._client, data)
 
     def slave_client_message(self, client, data):
-        if data['event'] == 'update':
-            slave = [x for x in self.slaves.data if x._client == client][0]
+        slave = [x for x in self.slaves.data if x._client == client][0]
+        if 'event' in data and data['event'] == 'update':
             self.slave_update(slave, data['topic'], data['data'])
             Logger.write(2, "Slave update: " + data['topic'])
+
+        if 'type' in data and (data['type'] == 'request' or data['type'] == 'invalid'):
+            Logger.write(2, "Slave client request: " + data['info_type'])
+            data['instance_id'] = slave.id
+            for client, subs in self.clients.items():
+                self.write_message(client, data)
 
     def closing_client(self, client):
         if client in self.clients:
@@ -162,7 +166,7 @@ class MasterWebsocketController(metaclass=Singleton):
 
     def broadcast_info(self, id, info_type, data=None):
         for client, subs in self.clients.items():
-            self.write_message(client, WebSocketRequestMessage(id, info_type, data))
+            self.write_message(client, WebSocketRequestMessage(id, self.own_slave.id, info_type, data))
 
     def write_message(self, client, websocket_message):
         with self._ws_lock:
@@ -239,12 +243,3 @@ class DataRegistration:
     def __init__(self):
         self.last_change = 0
         self.data = None
-
-class ClientMessage:
-
-    def __init__(self, id, callback, valid_for, type, data):
-        self.id = id
-        self.callback = callback
-        self.valid_till = current_time() + valid_for
-        self.type = type
-        self.data = data

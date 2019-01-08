@@ -12,7 +12,7 @@ log_folder=/home/pi/Scripts/Logs
 serie_api=https://tv-v2.api-fetch.website/
 movie_api=https://tv-v2.api-fetch.website/
 base_folder=/home/pi/Scripts/
-tpb_api=https://proxytpb.info/
+tpb_api=https://uktpb.net/
 master_base_folder=C:/
 
 # Connections

@@ -8,24 +8,31 @@ class PopupController extends Component {
     super(props);
     this.state = { mediaSelect: {show: false, files: [], id: 0 } };
     this.showSelectMediaFile = this.showSelectMediaFile.bind(this);
+    this.test = this.test.bind(this);
     this.selectMediaFile = this.selectMediaFile.bind(this);
     this.cancelMediaSelect = this.cancelMediaSelect.bind(this);
   }
 
   componentDidMount() {
     Socket.addRequestHandler("SelectMediaFile", this.showSelectMediaFile);
+    Socket.addRequestHandler("Test", this.test);
   }
 
   componentWillUnmount(){
   }
 
-  showSelectMediaFile(id, show, files){
-    this.setState({mediaSelect: {show: show, files: files[0], id: id}});
+  test(id, show, instance_id, data)
+  {
+      Socket.response(id, instance_id, false);
+  }
+
+  showSelectMediaFile(id, show, instance_id, files){
+    this.setState({mediaSelect: {show: show, files: files[0], id: id, instanceId: instance_id}});
   }
 
   selectMediaFile(file){
     this.setState({mediaSelect: {show: false}});
-    Socket.response(this.state.mediaSelect.id, file);
+    Socket.response(this.state.mediaSelect.id, this.state.mediaSelect.instanceId, file);
   }
 
   cancelMediaSelect(){

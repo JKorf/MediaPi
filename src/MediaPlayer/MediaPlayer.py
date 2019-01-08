@@ -39,6 +39,7 @@ class MediaManager(metaclass=Singleton):
             self.stop_play()
         else:
             self.torrent.set_media_file(file)
+            self._start_playing_torrent()
 
     def start_file(self, url, time):
         if Settings.get_bool("slave"):

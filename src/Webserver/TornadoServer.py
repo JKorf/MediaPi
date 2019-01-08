@@ -7,6 +7,7 @@ import urllib.request
 import tornado
 from tornado import ioloop, web, websocket
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
+from tornado.web import HTTPError
 
 from Controllers.TVController import TVManager
 from Database.Database import Database
@@ -131,6 +132,8 @@ class BaseHandler(tornado.web.RequestHandler):
         stack_trace = traceback.format_exc().split('\n')
         for stack_line in stack_trace:
             Logger.write(3, stack_line)
+        self.set_status(503)
+        self.finish(str(e))
 
 
 class PlayHandler(BaseHandler):
@@ -163,8 +166,8 @@ class PlayHandler(BaseHandler):
             if MasterWebsocketController().is_self(instance):
                 MediaManager().start_torrent(self.get_argument("title"), Torrent.get_magnet_uri(self.get_argument("url")))
             else:
-                MasterWebsocketController().send_to_slave(instance, "play_episode",
-                                                          [self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img")])
+                MasterWebsocketController().send_to_slave(instance, "play_torrent",
+                                                          [self.get_argument("title"), Torrent.get_magnet_uri(self.get_argument("url"))])
 
 
         # ------------ Play radio --------------
