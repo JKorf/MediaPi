@@ -95,9 +95,7 @@ class MediaManager(metaclass=Singleton):
     def stop_play(self):
         VLCPlayer().stop()
         self.stop_torrent()
-        self.media_data.type = None
-        self.media_data.title = None
-        self.media_data.updated()
+        time.sleep(1)
 
     def set_media_file(self, file):
         if not file:
@@ -139,6 +137,7 @@ class MediaManager(metaclass=Singleton):
         if newState.state == PlayerState.Nothing:
             self.media_data.type = None
             self.media_data.title = None
+            self.media_data.image = None
             self.media_data.updated()
 
     def stop_torrent(self):
@@ -149,9 +148,13 @@ class MediaManager(metaclass=Singleton):
     def observe_torrent(self):
         while True:
             if self.torrent is None:
+                self.torrent_data.reset()
                 time.sleep(0.5)
                 continue
 
+            self.torrent_data.title = self.torrent.name
+            if self.torrent.media_file is not None:
+                self.torrent_data.media_file = self.torrent.media_file.name
             self.torrent_data.size = self.torrent.total_size
             self.torrent_data.downloaded = self.torrent.download_counter.total
             self.torrent_data.left = self.torrent.left
@@ -180,6 +183,31 @@ class TorrentData(Observable):
 
     def __init__(self):
         super().__init__("TorrentData", 0.5)
+        self.title = None
+        self.media_file = None
+        self.size = 0
+        self.downloaded = 0
+        self.left = 0
+        self.overhead = 0
+        self.download_speed = 0
+
+        self.buffer_position = 0
+        self.buffer_total = 0
+        self.buffer_size = 0
+        self.stream_position = 0
+        self.total_streamed = 0
+
+        self.state = 0
+
+        self.potential = 0
+        self.connecting = 0
+        self.connected = 0
+        self.disconnected = 0
+        self.cant_connect = 0
+
+    def reset(self):
+        self.title = None
+        self.media_file = None
         self.size = 0
         self.downloaded = 0
         self.left = 0

@@ -227,6 +227,7 @@ a {
 .label-field{
     display: inline-block;
     width: 50%;
+    vertical-align: top;
 }
 
 .label-value{
@@ -254,4 +255,26 @@ a {
     width: 30px;
     height: 30px;
     margin: 10px;
+}
+
+.slider{
+    width: 100%;
+    height: 10px;
+
+    .slider-background{
+        width: 100%;
+        margin-top: 1px;
+        height: 8px;
+        background: #ccc;
+    }
+
+    .slider-thumb{
+        width: 10px;
+        height: 10px;
+        corner-radius: 10px;
+        background: #fff;
+        position: absolute;
+        left: -5px;
+        top: 0;
+    }
 }

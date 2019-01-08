@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import { Link } from "react-router-dom";
+
 import Widget from './Widget.js';
 import Socket from './../../Socket.js';
 import Button from './../Components/Button';
@@ -42,8 +44,10 @@ class MediaPlayerWidget extends Component {
     this.setState({mediaData: data});
   }
 
-  pausePlayClick(){
+  pausePlayClick(e){
     this.setState({state: this.states[0]});
+    e.preventDefault();
+
     axios.post('http://localhost/play/pause_resume_player?instance=' + this.props.id)
     .then(
         () => this.setState({state: this.states[1]}),
@@ -54,11 +58,12 @@ class MediaPlayerWidget extends Component {
     this.setState({playerData: playerData});
   }
 
-  stopClick(){
+  stopClick(e){
     this.setState({state: this.states[2]});
+    e.preventDefault();
   }
 
-  confirmStop(){
+  confirmStop(e){
     this.setState({state: this.states[1]});
     axios.post('http://localhost/play/stop_player?instance=' + this.props.id)
     .then(
@@ -110,9 +115,11 @@ class MediaPlayerWidget extends Component {
     }
 
     return (
-      <Widget title={"Mediaplayer " + instance.name}>
-          {mediaWidget}
-      </Widget>
+        <Link to={"/mediaplayer/player/" + this.props.instance.id }>
+          <Widget title={"Mediaplayer " + instance.name}>
+              {mediaWidget}
+          </Widget>
+      </Link>
     );
   }
 };

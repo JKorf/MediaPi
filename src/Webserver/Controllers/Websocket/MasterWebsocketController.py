@@ -2,8 +2,6 @@ import json
 import traceback
 from threading import Lock
 
-import time
-
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaPlayer import MediaManager
 from Shared.Events import EventManager, EventType
@@ -11,8 +9,7 @@ from Shared.Logger import Logger
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.State import StateManager
-from Shared.Threading import CustomThread
-from Shared.Util import to_JSON, Singleton, current_time
+from Shared.Util import to_JSON, Singleton
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
 from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand, WebSocketRequestMessage, WebSocketInvalidMessage
 
@@ -146,7 +143,7 @@ class MasterWebsocketController(metaclass=Singleton):
         slave = [x for x in self.slaves.data if x._client == client][0]
         if 'event' in data and data['event'] == 'update':
             self.slave_update(slave, data['topic'], data['data'])
-            Logger.write(2, "Slave update: " + data['topic'])
+            Logger.write(1, "Slave update: " + data['topic'])
 
         if 'type' in data and (data['type'] == 'request' or data['type'] == 'invalid'):
             Logger.write(2, "Slave client request: " + data['info_type'])

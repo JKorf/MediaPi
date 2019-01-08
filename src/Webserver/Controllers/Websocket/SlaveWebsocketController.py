@@ -113,7 +113,7 @@ class SlaveWebsocketController:
 
     def write(self, data):
         json = to_JSON(data)
-        Logger.write(2, "Sending to master: " + json)
+        Logger.write(1, "Sending to master: " + json)
         self.server_socket.send(json)
 
 

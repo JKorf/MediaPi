@@ -25,7 +25,7 @@ class Popup extends Component {
     const classId = this.props.classId;
 
     return (
-          <div className={classId + " popup-window"}>
+          <div className={classId + " popup-window"} onClick={(e) => e.preventDefault()}>
             { loading &&
                 <div className="popup-loader"><SvgImage src={loaderImage} /></div>
             }
