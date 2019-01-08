@@ -9,6 +9,8 @@ class DashboardView extends Component {
   constructor(props) {
     super(props);
     this.state = {slaveData: []}
+    this.props.changeBack({});
+    this.props.changeTitle("Home base");
 
     this.slaveUpdate = this.slaveUpdate.bind(this);
   }

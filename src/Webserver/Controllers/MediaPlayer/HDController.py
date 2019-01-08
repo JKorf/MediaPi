@@ -1,25 +1,27 @@
 import json
-import os
 import subprocess
 import sys
-import time
 import urllib.parse
 import urllib.request
 
-from MediaPlayer.MediaPlayer import MediaManager
-from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
-from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
-from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
-from Webserver.Models import FileStructure, Media
+from Webserver.Models import FileStructure
+from Webserver.BaseHandler import BaseHandler
 
 
-class HDController:
+class HDController(BaseHandler):
 
-    @staticmethod
-    def get_drives():
+    async def get(self, url):
+        if Settings.get_bool("slave"):
+            self.write(await self.request_master_async(self.request.uri))
+        elif url == "drives":
+            self.write(self.get_drives())
+        elif url == "directory":
+            self.write(self.get_directory(self.get_argument("path")))
+
+    def get_drives(self):
         if 'win' in sys.platform:
             drive_list_command = subprocess.Popen('wmic logicaldisk get name,description', shell=True, stdout=subprocess.PIPE)
             drive_list_request, err = drive_list_command.communicate()
@@ -35,65 +37,10 @@ class HDController:
         elif 'linux' in sys.platform:
             return json.dumps(["/"])
 
-    @staticmethod
-    def get_directory(path):
+    def get_directory(self, path):
         Logger.write(2, path)
         directory = FileStructure(urllib.parse.unquote(path))
         return to_JSON(directory).encode('utf8')
-
-    @staticmethod
-    def play_file(instance, path, position=0):
-        file = urllib.parse.unquote(path)
-        Logger.write(2, "Play file " + file + " on " + str(instance))
-
-        if MasterWebsocketController().is_self(instance):
-            MediaManager().start_file(path, position)
-        else:
-            MasterWebsocketController().send_to_slave(instance, "play_file", [path, position])
-
-    @staticmethod
-    def next_image(current_path):
-        Logger.write(2, "Next image from " + current_path)
-        directory = os.path.dirname(current_path)
-        filename = os.path.basename(current_path)
-        structure = FileStructure(urllib.parse.unquote(directory))
-
-        index = -1
-        is_next = False
-        for idx, file in enumerate(structure.files):
-            if index == -1 and file.endswith(".jpg"):
-                index = idx
-
-            if file == filename:
-                is_next = True
-                continue
-            if is_next:
-                if file.endswith(".jpg"):
-                    index = idx
-                    break
-
-        HDController.play_file(structure.files[index], os.path.join(dir, structure.files[index]))
-
-    @staticmethod
-    def prev_image(current_path):
-        Logger.write(2, "Prev image from " + current_path)
-        directory = os.path.dirname(current_path)
-        filename = os.path.basename(current_path)
-        structure = FileStructure(urllib.parse.unquote(directory))
-
-        images = [x for x in structure.files if x.endswith(".jpg")]
-        if len(images) == 1:
-            HDController.play_file(filename, os.path.join(directory, filename))
-            return
-
-        current_index = 0
-        for idx, file in enumerate(images):
-            if file == filename:
-                current_index = idx - 1
-        if current_index == -1:
-            current_index = len(images) - 1
-
-        HDController.play_file(images[current_index], os.path.join(directory, images[current_index]))
 
     # @staticmethod
     # async def play_master_file(server, path, file, position):

@@ -44,7 +44,7 @@ class MediaPlayerWidget extends Component {
 
   pausePlayClick(){
     this.setState({state: this.states[0]});
-    axios.post('http://localhost/player/pause_resume_player?instance=' + this.props.id)
+    axios.post('http://localhost/play/pause_resume_player?instance=' + this.props.id)
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -60,7 +60,7 @@ class MediaPlayerWidget extends Component {
 
   confirmStop(){
     this.setState({state: this.states[1]});
-    axios.post('http://localhost/player/stop_player?instance=' + this.props.id)
+    axios.post('http://localhost/play/stop_player?instance=' + this.props.id)
     .then(
         () => this.setState({state: this.states[0]}),
         ()=> this.setState({state: this.states[0]})

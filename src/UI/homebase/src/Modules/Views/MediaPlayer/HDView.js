@@ -22,6 +22,7 @@ class HDView extends Component {
 
     this.path = "C:/";
     this.props.changeBack({ to: "/mediaplayer/" });
+    this.props.changeTitle("Hard drive");
 
     this.dirUp = this.dirUp.bind(this);
     this.dirClick = this.dirClick.bind(this);

@@ -24,6 +24,7 @@ class TorrentView extends Component {
 
     this.selectedTorrent = null;
     this.props.changeBack({ to: "/mediaplayer/" });
+    this.props.changeTitle("Torrents");
 
     this.playTorrent = this.playTorrent.bind(this);
     this.torrentPlay = this.torrentPlay.bind(this);

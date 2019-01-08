@@ -10,6 +10,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Observable import Observable
 from Shared.Settings import Settings
+from Shared.State import StateManager
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, Singleton, current_time
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
@@ -32,8 +33,10 @@ class MasterWebsocketController(metaclass=Singleton):
         self.instance_name = Settings.get_string("name")
 
         self.own_slave = SlaveClient(self.next_id(), self.instance_name, None)
-        self.own_slave.update_data("player", VLCPlayer().playerState)
-        self.own_slave.update_data("media", MediaManager().mediaData)
+        self.own_slave.update_data("player", VLCPlayer().player_state)
+        self.own_slave.update_data("media", MediaManager().media_data)
+        self.own_slave.update_data("torrent", MediaManager().torrent_data)
+        self.own_slave.update_data("state", StateManager().state_data)
         self.slaves.add_slave(self.own_slave)
 
         EventManager.register_event(EventType.ClientRequest, self.add_client_request)
@@ -42,8 +45,10 @@ class MasterWebsocketController(metaclass=Singleton):
         return self.own_slave.id == id
 
     def start(self):
-        VLCPlayer().playerState.register_callback(lambda x: self.slave_update(self.own_slave, "player", x))
-        MediaManager().mediaData.register_callback(lambda x: self.slave_update(self.own_slave, "media", x))
+        StateManager().state_data.register_callback(lambda x: self.slave_update(self.own_slave, "state", x))
+        VLCPlayer().player_state.register_callback(lambda x: self.slave_update(self.own_slave, "player", x))
+        MediaManager().media_data.register_callback(lambda x: self.slave_update(self.own_slave, "media", x))
+        MediaManager().torrent_data.register_callback(lambda x: self.slave_update(self.own_slave, "torrent", x))
         self.slaves.register_callback(lambda x: self.update_slaves_data(x.data))
 
     def add_client_request(self, callback, valid_for, type, data):
@@ -175,13 +180,13 @@ class MasterWebsocketController(metaclass=Singleton):
             except:
                 Logger.write(2, "Failed to send msg to client because client is closed: " + traceback.format_exc())
 
-    def send_to_slave(self, slave_id, command, parameters):
+    def send_to_slave(self, slave_id, topic, method, parameters):
         slave = self.slaves.get_slave_by_id(slave_id)
         if slave is None:
             Logger.write(2, "Can't send to slave, slave not found")
             return
 
-        self.write_message(slave._client, WebSocketSlaveCommand(command, parameters))
+        self.write_message(slave._client, WebSocketSlaveCommand(topic, method, parameters))
 
     def next_id(self):
         with self.last_id_lock:
@@ -204,6 +209,8 @@ class SlaveClient:
         self._data_registrations = dict()
         self._data_registrations["player"] = DataRegistration()
         self._data_registrations["media"] = DataRegistration()
+        self._data_registrations["torrent"] = DataRegistration()
+        self._data_registrations["state"] = DataRegistration()
 
     def update_data(self, name, data):
         self._data_registrations[name].data = data

@@ -142,9 +142,6 @@ class Torrent:
         self.metadata_manager = TorrentMetadataManager(self)
         self.network_manager = TorrentNetworkManager(self)
 
-    def test_callback(self, data):
-        Logger.write(2, "RECEIVED CALLBACK: " + str(data))
-
     @classmethod
     def create_torrent(cls, id, url):
         if url.startswith("magnet:"):
@@ -282,16 +279,16 @@ class Torrent:
             EventManager.throw_event(EventType.StopPlayer, [])
         elif len(media_files) == 1:
             # Single media file, just play that
-            self.set_media_file(media_files[0])
+            self.set_media_file(media_files[0].path)
         elif self.selected_media_file is not None:
-            self.set_media_file([x for x in media_files if x.name == self.selected_media_file][0])
+            self.set_media_file([x for x in media_files if x.name == self.selected_media_file][0].path)
         else:
             ordered = sorted(media_files, key=lambda x: x.length, reverse=True)
             biggest = ordered[0]
             second = ordered[1]
             if biggest.length > second.length * 8:
                 # One file is significantly bigger than the others, play that
-                self.set_media_file(biggest)
+                self.set_media_file(biggest.path)
             else:
                 # Multiple files, let user decide
                 self.__set_state(TorrentState.WaitingUserFileSelection)

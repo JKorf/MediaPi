@@ -10,6 +10,7 @@ class ShowsView extends Component {
     super(props);
     this.state = {shows: [], loading: true};
     this.props.changeBack({to: "/mediaplayer/" });
+    this.props.changeTitle("Shows");
   }
 
   componentDidMount() {

@@ -31,6 +31,7 @@ class ShowView extends Component {
         }, {});
         data.data.seasons = seasonEpisodes;
         this.setState({show: data.data});
+        this.props.changeTitle(data.data.title);
     }, err =>{
         this.viewRef.current.changeState(1);
         console.log(err);
@@ -78,7 +79,6 @@ class ShowView extends Component {
                 <img src={show.images.poster} />
             </div>
             <div className="show-details">
-                <div className="show-title">{show.title}</div>
                 <div className="label-row">
                     <div className="label-field">Airs</div>
                     <div className="label-value">{show.air_day} - {show.air_time}</div>

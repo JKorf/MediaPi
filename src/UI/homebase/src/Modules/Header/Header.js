@@ -27,6 +27,9 @@ class Header extends Component {
     return (
         <div className="header">
         {link}
+        <div className="title truncate">
+            {this.props.title}
+        </div>
       </div>
     );
   }

@@ -24,6 +24,7 @@ class MovieView extends Component {
     axios.get('http://localhost/movies/get_movie?id=' + this.props.match.params.id).then(data => {
         this.viewRef.current.changeState(1);
         console.log(data.data);
+        this.props.changeTitle(data.data.title);
         this.setState({movie: data.data});
     }, err =>{
         this.viewRef.current.changeState(1);
@@ -81,7 +82,6 @@ class MovieView extends Component {
                 <img src={movie.images.poster} />
             </div>
             <div className="movie-details">
-                <div className="show-title">{movie.title}</div>
                 <div className="label-row">
                     <div className="label-field">Released</div>
                     <div className="label-value">{releaseString}</div>

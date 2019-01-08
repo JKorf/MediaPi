@@ -13,6 +13,8 @@ import MovieView from './Modules/Views/MediaPlayer/MovieView.js'
 import HDView from './Modules/Views/MediaPlayer/HDView.js'
 import RadioView from './Modules/Views/MediaPlayer/RadioView.js'
 import TorrentView from './Modules/Views/MediaPlayer/TorrentView.js'
+import PlayersView from './Modules/Views/MediaPlayer/PlayersView.js'
+import PlayerView from './Modules/Views/MediaPlayer/PlayerView.js'
 import Socket from './Socket.js'
 import PopupController from './Modules/PopupController.js'
 
@@ -27,10 +29,15 @@ class App extends Component {
     this.state = {backConfig: {to:"/"}};
 
     this.changeBack = this.changeBack.bind(this);
+    this.changeTitle = this.changeTitle.bind(this);
   }
 
   changeBack (value){
     this.setState({backConfig: value});
+  }
+
+  changeTitle (value){
+    this.setState({title: value});
   }
 
   render() {
@@ -38,17 +45,19 @@ class App extends Component {
     return (
       <Router>
           <div className="app">
-                <Header backConfig={link} />
+                <Header backConfig={link} title={this.state.title} />
                 <View>
-                    <Route path="/" exact component={DashboardView} />
-                    <Route path="/mediaplayer/" exact render={(props) => <MediaPlayerDashboardView {...props} changeBack={this.changeBack}/>} />
-                    <Route path="/mediaplayer/shows" exact render={(props) => <ShowsView {...props} changeBack={this.changeBack}/>} />
-                    <Route path='/mediaplayer/shows/:id' render={(props) => <ShowView {...props} changeBack={this.changeBack} />} />
-                    <Route path="/mediaplayer/movies" exact render={(props) => <MoviesView {...props} changeBack={this.changeBack}/>} />
-                    <Route path="/mediaplayer/movies/:id" render={(props) => <MovieView {...props} changeBack={this.changeBack}/>} />
-                    <Route path="/mediaplayer/hd" exact render={(props) => <HDView {...props} changeBack={this.changeBack} />} />
-                    <Route path="/mediaplayer/radio" exact render={(props) => <RadioView {...props} changeBack={this.changeBack} />} />
-                    <Route path="/mediaplayer/torrents" exact render={(props) => <TorrentView {...props} changeBack={this.changeBack} />} />
+                    <Route path="/" exact render={(props) => <DashboardView {...props} changeBack={this.changeBack} changeTitle={this.changeTitle} />} />
+                    <Route path="/mediaplayer/" exact render={(props) => <MediaPlayerDashboardView {...props} changeBack={this.changeBack} changeTitle={this.changeTitle} />} />
+                    <Route path="/mediaplayer/shows" exact render={(props) => <ShowsView {...props} changeBack={this.changeBack} changeTitle={this.changeTitle} />} />
+                    <Route path='/mediaplayer/shows/:id' render={(props) => <ShowView {...props} changeBack={this.changeBack} changeTitle={this.changeTitle}  />} />
+                    <Route path="/mediaplayer/movies" exact render={(props) => <MoviesView {...props} changeBack={this.changeBack} changeTitle={this.changeTitle} />} />
+                    <Route path="/mediaplayer/movies/:id" render={(props) => <MovieView {...props} changeBack={this.changeBack} changeTitle={this.changeTitle} />} />
+                    <Route path="/mediaplayer/hd" exact render={(props) => <HDView {...props} changeBack={this.changeBack}  changeTitle={this.changeTitle} />} />
+                    <Route path="/mediaplayer/radio" exact render={(props) => <RadioView {...props} changeBack={this.changeBack} changeTitle={this.changeTitle}  />} />
+                    <Route path="/mediaplayer/torrents" exact render={(props) => <TorrentView {...props} changeBack={this.changeBack} changeTitle={this.changeTitle}  />} />
+                    <Route path="/mediaplayer/players" exact render={(props) => <PlayersView {...props} changeBack={this.changeBack}  changeTitle={this.changeTitle} />} />
+                    <Route path="/mediaplayer/player/:id" exact render={(props) => <PlayerView {...props} changeBack={this.changeBack} changeTitle={this.changeTitle}  />} />
                 </View>
                 <Footer />
                 <PopupController />

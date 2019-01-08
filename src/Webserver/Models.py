@@ -153,13 +153,6 @@ class WebSocketInitMessage:
         self.event = "init"
         self.data = name
 
-class WebSocketSlaveRequest:
-    def __init__(self, valid_for, type, data):
-        self.event = "slave_request"
-        self.type = type
-        self.valid_for = valid_for
-        self.data = data
-
 class WebSocketSlaveMessage:
     def __init__(self, topic, data):
         self.event = "update"
@@ -167,9 +160,10 @@ class WebSocketSlaveMessage:
         self.data = data
 
 class WebSocketSlaveCommand:
-    def __init__(self, topic, parameters):
+    def __init__(self, topic, method, parameters):
         self.event = "command"
         self.topic = topic
+        self.method = method
         self.parameters = parameters
 
 class Version:

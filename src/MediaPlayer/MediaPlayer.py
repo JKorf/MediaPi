@@ -12,13 +12,16 @@ from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Observable import Observable
 from Shared.Settings import Settings
+from Shared.Threading import CustomThread
 from Shared.Util import current_time, Singleton
 
 
 class MediaManager(metaclass=Singleton):
 
     def __init__(self):
-        self.mediaData = MediaData()
+        self.media_data = MediaData()
+        self.torrent_data = TorrentData()
+
         self.torrent = None
         self.subtitle_provider = SubtitleProvider()
 
@@ -27,19 +30,13 @@ class MediaManager(metaclass=Singleton):
             self.dht = DHTEngine()
             self.dht.start()
 
-        # EventManager.register_event(EventType.StartTorrent, self.start_torrent)
-        # EventManager.register_event(EventType.StopTorrent, self.stop_torrent)
         EventManager.register_event(EventType.NoPeers, self.stop_torrent)
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, lambda files: EventManager.throw_event(EventType.ClientRequest, [self.set_media_file, 1000 * 60 * 60 * 24, "SelectMediaFile", [files]]))
+        EventManager.register_event(EventType.TorrentMediaFileSet, lambda x: self._start_playing_torrent())
 
-        VLCPlayer().playerState.register_callback(self.player_state_change)
-
-    def set_media_file(self, file):
-        if not file:
-            self.stop_play()
-        else:
-            self.torrent.set_media_file(file)
-            self._start_playing_torrent()
+        VLCPlayer().player_state.register_callback(self.player_state_change)
+        self.torrent_observer = CustomThread(self.observe_torrent, "Torrent observer")
+        self.torrent_observer.start()
 
     def start_file(self, url, time):
         if Settings.get_bool("slave"):
@@ -47,44 +44,50 @@ class MediaManager(metaclass=Singleton):
 
         self.stop_play()
         VLCPlayer().play(url, time)
-        self.mediaData.type = "File"
-        self.mediaData.title = os.path.basename(url)
-        self.mediaData.updated()
+        self.media_data.type = "File"
+        self.media_data.title = os.path.basename(url)
+        self.media_data.image = None
+        self.media_data.updated()
 
     def start_radio(self, name, url):
         self.stop_play()
         VLCPlayer().play(url, 0)
-        self.mediaData.type = "Radio"
-        self.mediaData.title = name
-        self.mediaData.updated()
+        self.media_data.type = "Radio"
+        self.media_data.title = name
+        self.media_data.image = None
+        self.media_data.updated()
 
     def start_episode(self, id, season, episode, title, url, image):
         self.stop_play()
         self._start_torrent(url, None)
-        self.mediaData.type = "Torrent"
-        self.mediaData.title = title
-        self.mediaData.updated()
+        self.media_data.type = "Torrent"
+        self.media_data.title = title
+        self.media_data.image = image
+        self.media_data.updated()
 
     def start_torrent(self, title, url):
         self.stop_play()
         self._start_torrent(url, None)
-        self.mediaData.type = "Torrent"
-        self.mediaData.title = title
-        self.mediaData.updated()
+        self.media_data.type = "Torrent"
+        self.media_data.title = title
+        self.media_data.image = None
+        self.media_data.updated()
 
     def start_movie(self, id, title, url, image):
         self.stop_play()
         self._start_torrent(url, None)
-        self.mediaData.type = "Torrent"
-        self.mediaData.title = title
-        self.mediaData.updated()
+        self.media_data.type = "Torrent"
+        self.media_data.title = title
+        self.media_data.image = image
+        self.media_data.updated()
 
     def start_url(self, title, url):
         self.stop_play()
         VLCPlayer().play(url, 0)
-        self.mediaData.type = "Url"
-        self.mediaData.title = title
-        self.mediaData.updated()
+        self.media_data.type = "Url"
+        self.media_data.title = title
+        self.media_data.image = None
+        self.media_data.updated()
 
     def pause_resume(self):
         VLCPlayer().pause_resume()
@@ -92,9 +95,15 @@ class MediaManager(metaclass=Singleton):
     def stop_play(self):
         VLCPlayer().stop()
         self.stop_torrent()
-        self.mediaData.type = None
-        self.mediaData.title = None
-        self.mediaData.updated()
+        self.media_data.type = None
+        self.media_data.title = None
+        self.media_data.updated()
+
+    def set_media_file(self, file):
+        if not file:
+            self.stop_play()
+        else:
+            self.torrent.set_media_file(file)
 
     def _start_playing_torrent(self):
         VLCPlayer().play("http://localhost:50009/torrent")
@@ -128,14 +137,68 @@ class MediaManager(metaclass=Singleton):
                 self.torrent = None
 
         if newState.state == PlayerState.Nothing:
-            self.mediaData.type = None
-            self.mediaData.title = None
-            self.mediaData.updated()
+            self.media_data.type = None
+            self.media_data.title = None
+            self.media_data.updated()
 
     def stop_torrent(self):
         if self.torrent:
             self.torrent.stop()
             self.torrent = None
+
+    def observe_torrent(self):
+        while True:
+            if self.torrent is None:
+                time.sleep(0.5)
+                continue
+
+            self.torrent_data.size = self.torrent.total_size
+            self.torrent_data.downloaded = self.torrent.download_counter.total
+            self.torrent_data.left = self.torrent.left
+            self.torrent_data.overhead = self.torrent.overhead
+            self.torrent_data.download_speed = self.torrent.download_counter.value
+
+            self.torrent_data.buffer_position = self.torrent.stream_buffer_position
+            self.torrent_data.buffer_total = self.torrent.bytes_total_in_buffer
+            self.torrent_data.buffer_size = self.torrent.bytes_ready_in_buffer
+            self.torrent_data.stream_position = self.torrent.stream_position
+            self.torrent_data.total_streamed = self.torrent.bytes_streamed
+
+            self.torrent_data.state = self.torrent.state
+
+            self.torrent_data.potential = len(self.torrent.peer_manager.potential_peers)
+            self.torrent_data.connecting = len(self.torrent.peer_manager.connecting_peers)
+            self.torrent_data.connected = len(self.torrent.peer_manager.connected_peers)
+            self.torrent_data.disconnected = len(self.torrent.peer_manager.disconnected_peers)
+            self.torrent_data.cant_connect = len(self.torrent.peer_manager.cant_connect_peers)
+
+            self.torrent_data.updated()
+            time.sleep(0.5)
+
+
+class TorrentData(Observable):
+
+    def __init__(self):
+        super().__init__("TorrentData", 0.5)
+        self.size = 0
+        self.downloaded = 0
+        self.left = 0
+        self.overhead = 0
+        self.download_speed = 0
+
+        self.buffer_position = 0
+        self.buffer_total = 0
+        self.buffer_size = 0
+        self.stream_position = 0
+        self.total_streamed = 0
+
+        self.state = 0
+
+        self.potential = 0
+        self.connecting = 0
+        self.connected = 0
+        self.disconnected = 0
+        self.cant_connect = 0
 
 
 class MediaData(Observable):
@@ -144,3 +207,4 @@ class MediaData(Observable):
         super().__init__("MediaData", 0.5)
         self.type = None
         self.title = None
+        self.image = None

@@ -1,37 +1,30 @@
 import asyncio
 import os
-import traceback
 import urllib.parse
 import urllib.request
 
 import tornado
 from tornado import ioloop, web, websocket
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
-from tornado.web import HTTPError
 
-from Controllers.TVController import TVManager
 from Database.Database import Database
 from MediaPlayer.MediaPlayer import MediaManager
-from MediaPlayer.Util.Enums import TorrentState
-from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON
-from Webserver.Controllers.LightController import LightController
+from Webserver.Controllers.DataController import DataController
 from Webserver.Controllers.MediaPlayer.HDController import HDController
 from Webserver.Controllers.MediaPlayer.MovieController import MovieController
-from Webserver.Controllers.MediaPlayer.PlayerController import PlayerController
+from Webserver.Controllers.MediaPlayer.PlayController import PlayController
 from Webserver.Controllers.MediaPlayer.RadioController import RadioController
 from Webserver.Controllers.MediaPlayer.ShowController import ShowController
 from Webserver.Controllers.MediaPlayer.TorrentController import TorrentController
-from Webserver.Controllers.MediaPlayer.YoutubeController import YoutubeController
 from Webserver.Controllers.UtilController import UtilController
 from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
 from Webserver.Controllers.Websocket.SlaveWebsocketController import SlaveWebsocketController
-from Webserver.Providers.RadioProvider import RadioProvider
-from Webserver.Providers.TorrentProvider import Torrent
+from Webserver.BaseHandler import BaseHandler
 
 
 class TornadoServer:
@@ -42,19 +35,15 @@ class TornadoServer:
         TornadoServer.master_ip = Settings.get_string("master_ip")
         if not Settings.get_bool("slave"):
             handlers = [
-                (r"/play/(.*)", PlayHandler),
-                (r"/util/(.*)", UtilHandler),
-                (r"/movies/(.*)", MovieHandler),
-                (r"/shows/(.*)", ShowHandler),
-                (r"/hd/(.*)", HDHandler),
-                (r"/player/(.*)", PlayerHandler),
-                (r"/radio/(.*)", RadioHandler),
-                (r"/youtube/(.*)", YoutubeHandler),
-                (r"/torrent/(.*)", TorrentHandler),
-                (r"/lighting/(.*)", LightHandler),
-                (r"/tv/(.*)", TVHandler),
+                (r"/play/(.*)", PlayController),
+                (r"/util/(.*)", UtilController),
+                (r"/movies/(.*)", MovieController),
+                (r"/shows/(.*)", ShowController),
+                (r"/hd/(.*)", HDController),
+                (r"/radio/(.*)", RadioController),
+                (r"/torrent/(.*)", TorrentController),
                 (r"/ws", MasterWebsocketHandler),
-                (r"/database/(.*)", DatabaseHandler),
+                (r"/data/(.*)", DataController),
                 (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/homebase/build", "default_filename": "index.html"})
             ]
 
@@ -123,262 +112,6 @@ class StaticFileHandler(tornado.web.StaticFileHandler):
             self.set_header('content-type', 'text/css')
 
 
-class BaseHandler(tornado.web.RequestHandler):
-    def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", "*")
-
-    def _handle_request_exception(self, e):
-        Logger.write(3, "Error in Tornado requests: " + str(e), 'error')
-        stack_trace = traceback.format_exc().split('\n')
-        for stack_line in stack_trace:
-            Logger.write(3, stack_line)
-        self.set_status(503)
-        self.finish(str(e))
-
-
-class PlayHandler(BaseHandler):
-    async def post(self, url):
-        # ------------ Play movie --------------
-        if url == "movie":
-            instance = int(self.get_argument("instance"))
-            title = self.get_argument("title")
-            Logger.write(2, "Play movie " + title + " on " + str(instance))
-            if MasterWebsocketController().is_self(instance):
-                MediaManager().start_movie(self.get_argument("id"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img"))
-            else:
-                MasterWebsocketController().send_to_slave(instance, "play_movie", [self.get_argument("id"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img")])
-
-        # ------------ Play episode --------------
-        elif url == "episode":
-            instance = int(self.get_argument("instance"))
-            title = self.get_argument("title")
-            Logger.write(2, "Play episode " + title + " on " + str(instance))
-            if MasterWebsocketController().is_self(instance):
-                MediaManager().start_episode(self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img"))
-            else:
-                MasterWebsocketController().send_to_slave(instance, "play_episode", [self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img")])
-
-        # ------------ Play torrent --------------
-        elif url == "torrent":
-            instance = int(self.get_argument("instance"))
-            title = self.get_argument("title")
-            Logger.write(2, "Play torrent " + title + " on " + str(instance))
-            if MasterWebsocketController().is_self(instance):
-                MediaManager().start_torrent(self.get_argument("title"), Torrent.get_magnet_uri(self.get_argument("url")))
-            else:
-                MasterWebsocketController().send_to_slave(instance, "play_torrent",
-                                                          [self.get_argument("title"), Torrent.get_magnet_uri(self.get_argument("url"))])
-
-
-        # ------------ Play radio --------------
-        elif url == "radio":
-            instance = int(self.get_argument("instance"))
-            radio = RadioProvider.get_by_id(int(self.get_argument("id")))
-            Logger.write(2, "Play radio " + radio.title + " on " + str(instance))
-            if MasterWebsocketController().is_self(instance):
-                MediaManager().start_radio(radio.title, radio.url)
-            else:
-                MasterWebsocketController().send_to_slave(instance, "play_radio", [radio.id])
-
-        # ------------ Play file --------------
-        elif url == "file":
-            instance = int(self.get_argument("instance"))
-            file = urllib.parse.unquote(self.get_argument("path"))
-            Logger.write(2, "Play file " + file + " on " + str(instance))
-
-            if MasterWebsocketController().is_self(instance):
-                MediaManager().start_file(file, int(self.get_argument("position")))
-            else:
-                MasterWebsocketController().send_to_slave(instance, "play_file", [file, int(self.get_argument("position"))])
-
-        # ------------ Play url --------------
-        elif url == "url":
-            instance = int(self.get_argument("instance"))
-            title = urllib.parse.unquote(self.get_argument("title"))
-            url = urllib.parse.unquote(self.get_argument("url"))
-            Logger.write(2, "Play url " + title + "(" + url + ") on " + str(instance))
-
-            if MasterWebsocketController().is_self(instance):
-                MediaManager().start_url(title, url)
-            else:
-                MasterWebsocketController().send_to_slave(instance, "play_url", [title, url])
-
-
-class UtilHandler(BaseHandler):
-    async def get(self, url):
-        if url == "startup":
-            self.write(UtilController.startup())
-        elif url == "info":
-            self.write(UtilController.info())
-        elif url == "get_subtitles":
-            data = MediaManager().subtitle_provider.search_subtitles_for_file(self.get_argument("path"), self.get_argument("file"))
-            self.write(to_JSON(data))
-
-    def post(self, url):
-        if url == "shutdown":
-            UtilController.shutdown()
-        elif url == "restart_pi":
-            UtilController.restart_pi()
-        elif url == "test":
-            UtilController.test()
-
-
-class MovieHandler(BaseHandler):
-    def post(self, url):
-        if url == "play_continue":
-            MovieController.play_continue(TornadoServer, HDController.play_master_file, self.get_argument("type"), self.get_argument("url"), self.get_argument("title"), self.get_argument("image"), self.get_argument("position"), self.get_argument("mediaFile"))
-
-    async def get(self, url):
-        if url == "get_movies":
-            data = await MovieController.get_movies(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
-            self.write(data)
-        if url == "get_movies_all":
-            data = await MovieController.get_movies_all(self.get_argument("page"), self.get_argument("orderby"),
-                                                     self.get_argument("keywords"))
-            self.write(data)
-        elif url == "get_movie":
-            data = await MovieController.get_movie(self.get_argument("id"))
-            self.write(data)
-
-
-class ShowHandler(BaseHandler):
-
-    async def get(self, url):
-        if url == "get_shows":
-            data = await ShowController.get_shows(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
-            self.write(data)
-        if url == "get_shows_all":
-            data = await ShowController.get_shows_all(self.get_argument("page"), self.get_argument("orderby"),
-                                                   self.get_argument("keywords"))
-            self.write(data)
-        elif url == "get_show":
-            show = await ShowController.get_show(self.get_argument("id"))
-            self.write(show)
-
-
-class RadioHandler(BaseHandler):
-    def get(self, url):
-        if url == "get_radios":
-            self.write(RadioController.get_radios())
-
-
-class PlayerHandler(BaseHandler):
-    def post(self, url):
-        if url == "set_subtitle_file":
-            PlayerController.set_subtitle_file(self.get_argument("file"))
-        elif url == "set_subtitle_id":
-            PlayerController.set_subtitle_id(self.get_argument("sub"))
-        elif url == "stop_player":
-            PlayerController.stop_player(int(self.get_argument("instance")))
-        elif url == "pause_resume_player":
-            PlayerController.pause_resume_player(int(self.get_argument("instance")))
-        elif url == "change_volume":
-            PlayerController.change_volume(self.get_argument("vol"))
-        elif url == "change_subtitle_offset":
-            PlayerController.change_subtitle_offset(self.get_argument("offset"))
-        elif url == "seek":
-            PlayerController.seek(self.get_argument("pos"))
-        elif url == "set_audio_id":
-            PlayerController.set_audio_track(self.get_argument("track"))
-        elif url == "select_file":
-            EventManager.throw_event(EventType.TorrentMediaFileSelection, [urllib.parse.unquote(self.get_argument("path"))])
-
-
-class HDHandler(BaseHandler):
-    async def get(self, url):
-        if Settings.get_bool("slave"):
-            self.write(await TornadoServer.request_master_async(self.request.uri))
-        elif url == "drives":
-            self.write(HDController.get_drives())
-        elif url == "directory":
-            self.write(HDController.get_directory(self.get_argument("path")))
-
-    async def post(self, url):
-
-
-            # if Settings.get_bool("slave"):
-            #     Logger.write(2, self.get_argument("path"))
-            #     await HDController.play_master_file(TornadoServer, self.get_argument("path"), self.get_argument("filename"), 0)
-            #
-            # else:
-            # instance = self.get_argument("instance")
-            # path = urllib.parse.unquote(self.get_argument("path"))
-            # HDController.play_file(instance, path, int(self.get_argument("position")))
-                # file = urllib.parse.unquote(self.get_argument("path"))
-                # if not filename.endswith(".jpg"):
-                #     size, first_64k, last_64k = get_file_info(file)
-                #     EventManager.throw_event(EventType.HashDataKnown, [size, file, first_64k, last_64k])
-
-        if url == "next_image":
-            HDController.next_image(self.get_argument("current_path"))
-        elif url == "prev_image":
-            HDController.prev_image(self.get_argument("current_path"))
-
-
-class YoutubeHandler(BaseHandler):
-    async def get(self, url):
-        if url == "search":
-            data = await YoutubeController.search(self.get_argument("query"), self.get_argument("type"))
-            self.write(data)
-        elif url == "home":
-            data = await YoutubeController.home()
-            self.write(data)
-        elif url == "channel_info":
-            data = await YoutubeController.channel_info(self.get_argument("id"))
-            self.write(data)
-        elif url == "channel_feed":
-            data = await YoutubeController.channel_feed(self.get_argument("id"))
-            self.write(data)
-
-    def post(self, url):
-        if url == "play_youtube":
-            YoutubeController.play_youtube(self.get_argument("id"), self.get_argument("title"))
-        elif url == "play_youtube_url":
-            YoutubeController.play_youtube_url(self.get_argument("url"), self.get_argument("title"))
-
-
-class TorrentHandler(BaseHandler):
-    def get(self, url):
-        if url == "top":
-            self.write(TorrentController.top())
-        elif url == "search":
-            self.write(TorrentController.search(self.get_argument("keywords")))
-
-    def post(self, url):
-        if url == "play_torrent":
-            TorrentController.play_torrent(self.get_argument("url"), self.get_argument("title"))
-
-
-class LightHandler(BaseHandler):
-    def get(self, url):
-        if url == "get_lights":
-            self.write(LightController.get_lights())
-
-    def post(self, url):
-        if url == "switch_light":
-            LightController.switch_light(int(self.get_argument("index")), self.get_argument("state") == "on")
-        elif url == "warmth_light":
-            LightController.warmth_light(int(self.get_argument("index")), int(self.get_argument("warmth")))
-        elif url == "dimmer_light":
-            LightController.dimmer_light(int(self.get_argument("index")), int(self.get_argument("dimmer")))
-
-
-class TVHandler(BaseHandler):
-    def get(self, url):
-        if url == "get_devices":
-            self.write(to_JSON(TVManager().get_inputs()))
-
-    def post(self, url):
-        if url == "tv_on":
-            TVManager().turn_tv_on()
-        elif url == "tv_off":
-            TVManager().turn_tv_off()
-        elif url == "channel_up":
-            TVManager().channel_up()
-        elif url == "channel_down":
-            TVManager().channel_down()
-
-
 class MasterWebsocketHandler(websocket.WebSocketHandler):
 
     def check_origin(self, origin):
@@ -394,114 +127,98 @@ class MasterWebsocketHandler(websocket.WebSocketHandler):
         MasterWebsocketController().closing_client(self)
 
 
-class DatabaseHandler(BaseHandler):
-    async def get(self, url):
-        if Settings.get_bool("slave"):
-            self.write(await TornadoServer.request_master_async(self.request.uri))
-            return
-
-        if url == "get_favorites":
-            Logger.write(2, "Getting favorites")
-            self.write(to_JSON(Database().get_favorites()))
-
-        if url == "get_history":
-            Logger.write(2, "Getting history")
-            self.write(to_JSON(Database().get_history()))
-
-        if url == "get_unfinished_items":
-            Logger.write(2, "Getting unfinished items")
-            self.write(to_JSON(Database().get_watching_items()))
-
-    async def post(self, url):
-        if Settings.get_bool("slave"):
-            await TornadoServer.notify_master_async(self.request.uri)
-            return
-
-        if url == "add_watched_torrent_file":
-            Logger.write(2, "Adding to watched torrent files")
-            Database().add_watched_torrent_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("mediaFile"), self.get_argument("watchedAt"))
-
-        if url == "add_watched_file":
-            Logger.write(2, "Adding to watched files")
-            Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"), urllib.parse.unquote(self.get_argument("mediaFile")))
-
-        if url == "add_watched_youtube":
-            Logger.write(2, "Adding to watched youtube")
-            Database().add_watched_youtube(
-                self.get_argument("title"),
-                self.get_argument("watchedAt"),
-                self.get_argument("id"),
-                self.get_argument("url"))
-
-        if url == "add_watched_movie":
-            Logger.write(2, "Adding to watched movie")
-            Database().add_watched_movie(
-                self.get_argument("title"),
-                self.get_argument("movieId"),
-                self.get_argument("image"),
-                self.get_argument("watchedAt"),
-                self.get_argument("url"),
-                self.get_argument("mediaFile"))
-
-        if url == "add_watched_episode":
-            Logger.write(2, "Adding to watched episodes")
-            Database().add_watched_episode(
-                self.get_argument("title"),
-                self.get_argument("showId"),
-                self.get_argument("url"),
-                self.get_argument("mediaFile"),
-                self.get_argument("image"),
-                self.get_argument("episodeSeason"),
-                self.get_argument("episodeNumber"),
-                self.get_argument("watchedAt"))
-
-        if url == "add_watched_torrent":
-            Logger.write(2, "Adding to watched episodes")
-            Database().add_watched_torrent_file(
-                self.get_argument("title"),
-                self.get_argument("url"),
-                self.get_argument("mediaFile"),
-                self.get_argument("watchedAt"))
-
-        if url == "remove_watched":
-            Logger.write(2, "Remove watched")
-            Database().remove_watched(self.get_argument("id"))
-
-        if url == "add_favorite":
-            Logger.write(2, "Adding to favorites")
-            Database().add_favorite(self.get_argument("id"), self.get_argument("type"), self.get_argument("title"), self.get_argument("image"))
-
-        if url == "remove_favorite":
-            Logger.write(2, "Removing from favorites")
-            Database().remove_favorite(self.get_argument("id"))
-
-        if url == "remove_unfinished":
-            Logger.write(2, "Removing unfinished")
-            Database().remove_watching_item(
-                urllib.parse.unquote(self.get_argument("url")))
-
-        if url == "add_unfinished":
-            Logger.write(2, "Adding unfinished")
-
-            media_file = self.get_argument("mediaFile")
-            if media_file == "None" or media_file == "null":
-                media_file = None
-            Database().add_watching_item(
-                self.get_argument("type"),
-                self.get_argument("name"),
-                urllib.parse.unquote(self.get_argument("url")),
-                self.get_argument("image"),
-                int(self.get_argument("length")),
-                self.get_argument("time"),
-                media_file)
-
-        if url == "update_unfinished":
-            media_file = self.get_argument("mediaFile")
-            if media_file == "None" or media_file == "null":
-                media_file = None
-
-            Database().update_watching_item(
-                urllib.parse.unquote(self.get_argument("url")),
-                int(self.get_argument("position")),
-                self.get_argument("watchedAt"),
-                media_file)
+# class DatabaseHandler(BaseHandler):
+#
+#     async def post(self, url):
+#         if Settings.get_bool("slave"):
+#             await TornadoServer.notify_master_async(self.request.uri)
+#             return
+#
+#         if url == "add_watched_torrent_file":
+#             Logger.write(2, "Adding to watched torrent files")
+#             Database().add_watched_torrent_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("mediaFile"), self.get_argument("watchedAt"))
+#
+#         if url == "add_watched_file":
+#             Logger.write(2, "Adding to watched files")
+#             Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"), urllib.parse.unquote(self.get_argument("mediaFile")))
+#
+#         if url == "add_watched_youtube":
+#             Logger.write(2, "Adding to watched youtube")
+#             Database().add_watched_youtube(
+#                 self.get_argument("title"),
+#                 self.get_argument("watchedAt"),
+#                 self.get_argument("id"),
+#                 self.get_argument("url"))
+#
+#         if url == "add_watched_movie":
+#             Logger.write(2, "Adding to watched movie")
+#             Database().add_watched_movie(
+#                 self.get_argument("title"),
+#                 self.get_argument("movieId"),
+#                 self.get_argument("image"),
+#                 self.get_argument("watchedAt"),
+#                 self.get_argument("url"),
+#                 self.get_argument("mediaFile"))
+#
+#         if url == "add_watched_episode":
+#             Logger.write(2, "Adding to watched episodes")
+#             Database().add_watched_episode(
+#                 self.get_argument("title"),
+#                 self.get_argument("showId"),
+#                 self.get_argument("url"),
+#                 self.get_argument("mediaFile"),
+#                 self.get_argument("image"),
+#                 self.get_argument("episodeSeason"),
+#                 self.get_argument("episodeNumber"),
+#                 self.get_argument("watchedAt"))
+#
+#         if url == "add_watched_torrent":
+#             Logger.write(2, "Adding to watched episodes")
+#             Database().add_watched_torrent_file(
+#                 self.get_argument("title"),
+#                 self.get_argument("url"),
+#                 self.get_argument("mediaFile"),
+#                 self.get_argument("watchedAt"))
+#
+#         if url == "remove_watched":
+#             Logger.write(2, "Remove watched")
+#             Database().remove_watched(self.get_argument("id"))
+#
+#         if url == "add_favorite":
+#             Logger.write(2, "Adding to favorites")
+#             Database().add_favorite(self.get_argument("id"), self.get_argument("type"), self.get_argument("title"), self.get_argument("image"))
+#
+#         if url == "remove_favorite":
+#             Logger.write(2, "Removing from favorites")
+#             Database().remove_favorite(self.get_argument("id"))
+#
+#         if url == "remove_unfinished":
+#             Logger.write(2, "Removing unfinished")
+#             Database().remove_watching_item(
+#                 urllib.parse.unquote(self.get_argument("url")))
+#
+#         if url == "add_unfinished":
+#             Logger.write(2, "Adding unfinished")
+#
+#             media_file = self.get_argument("mediaFile")
+#             if media_file == "None" or media_file == "null":
+#                 media_file = None
+#             Database().add_watching_item(
+#                 self.get_argument("type"),
+#                 self.get_argument("name"),
+#                 urllib.parse.unquote(self.get_argument("url")),
+#                 self.get_argument("image"),
+#                 int(self.get_argument("length")),
+#                 self.get_argument("time"),
+#                 media_file)
+#
+#         if url == "update_unfinished":
+#             media_file = self.get_argument("mediaFile")
+#             if media_file == "None" or media_file == "null":
+#                 media_file = None
+#
+#             Database().update_watching_item(
+#                 urllib.parse.unquote(self.get_argument("url")),
+#                 int(self.get_argument("position")),
+#                 self.get_argument("watchedAt"),
+#                 media_file)

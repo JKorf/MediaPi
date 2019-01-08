@@ -9,6 +9,7 @@ class MoviesView extends Component {
     super(props);
     this.state = {movies: []};
     this.props.changeBack({to: "/mediaplayer/"});
+    this.props.changeTitle("Movies");
   }
 
   componentDidMount() {

@@ -1,12 +1,23 @@
 from Controllers.LightController import LightManager
 from Shared.Util import to_JSON
+from Webserver.BaseHandler import BaseHandler
 from Webserver.Models import LightControl, LightDevice
 
 
-class LightController:
+class LightController(BaseHandler):
+    def get(self, url):
+        if url == "get_lights":
+            self.write(self.get_lights())
 
-    @staticmethod
-    def get_lights():
+    def post(self, url):
+        if url == "switch_light":
+            self.switch_light(int(self.get_argument("index")), self.get_argument("state") == "on")
+        elif url == "warmth_light":
+            self.warmth_light(int(self.get_argument("index")), int(self.get_argument("warmth")))
+        elif url == "dimmer_light":
+            self.dimmer_light(int(self.get_argument("index")), int(self.get_argument("dimmer")))
+
+    def get_lights(self):
         devices = LightManager().get_lights()
         result = []
         i = 0
@@ -27,14 +38,11 @@ class LightController:
 
         return to_JSON(result)
 
-    @staticmethod
-    def switch_light(index, state):
+    def switch_light(self, index, state):
         LightManager().switch_light(index, state)
 
-    @staticmethod
-    def warmth_light(index, warmth):
+    def warmth_light(self, index, warmth):
         LightManager().warmth_light(index, warmth)
 
-    @staticmethod
-    def dimmer_light(index, amount):
+    def dimmer_light(self, index, amount):
         LightManager().dimmer_light(index, amount)

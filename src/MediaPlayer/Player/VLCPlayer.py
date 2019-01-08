@@ -17,7 +17,7 @@ class VLCPlayer(metaclass=Singleton):
 
     def __init__(self):
         self.__vlc_instance = None
-        self.playerState = PlayerData()
+        self.player_state = PlayerData()
 
         self.instantiate_vlc()
 
@@ -94,8 +94,9 @@ class VLCPlayer(metaclass=Singleton):
     def stop(self):
         self.__player.stop()
         self.youtube_end_counter = 0
-        self.playerState.length = 0
-        self.playerState.playing_for = 0
+        self.player_state.length = 0
+        self.player_state.playing_for = 0
+        self.player_state.updated()
 
     def mute_on(self):
         self.__player.audio_set_mute(True)
@@ -183,28 +184,28 @@ class VLCPlayer(metaclass=Singleton):
         self.__event_manager.event_attach(VLCEventType.MediaPlayerTimeChanged, self.on_time_change)
 
     def on_time_change(self, event):
-        self.playerState.playing_for = event.u.new_time
-        self.playerState.updated()
+        self.player_state.playing_for = event.u.new_time
+        self.player_state.updated()
 
     def state_change_opening(self, event):
-        if self.playerState.state != PlayerState.Opening:
+        if self.player_state.state != PlayerState.Opening:
             self.change_state(PlayerState.Opening)
 
     def state_change_playing(self, event):
-        if self.playerState.state != PlayerState.Paused:
-            self.playerState.length = self.get_length()
+        if self.player_state.state != PlayerState.Paused:
+            self.player_state.length = self.get_length()
         self.change_state(PlayerState.Playing)
 
     def state_change_paused(self, event):
-        if self.playerState.state != PlayerState.Paused:
+        if self.player_state.state != PlayerState.Paused:
             self.change_state(PlayerState.Paused)
 
     def state_change_stopped(self, event):
-        if self.playerState.state != PlayerState.Nothing:
+        if self.player_state.state != PlayerState.Nothing:
             self.change_state(PlayerState.Nothing)
 
     def state_change_end_reached(self, event):
-        if self.playerState.state != PlayerState.Ended:
+        if self.player_state.state != PlayerState.Ended:
             if not self.trying_subitems:
                 self.change_state(PlayerState.Ended)
 
@@ -233,8 +234,8 @@ class VLCPlayer(metaclass=Singleton):
             self.trying_subitems = False
 
     def change_state(self, new):
-        self.playerState.state = new
-        self.playerState.updated()
+        self.player_state.state = new
+        self.player_state.updated()
 
         if new == PlayerState.Ended:
             thread = CustomThread(self.stop, "Stopping player")

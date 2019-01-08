@@ -1,4 +1,5 @@
 import json
+import traceback
 from threading import Lock
 
 import websocket
@@ -8,17 +9,18 @@ from Shared.Engine import Engine
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.State import StateManager
 from Shared.Util import to_JSON
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
-from Webserver.Models import WebSocketInitMessage, WebSocketSlaveMessage, WebSocketSlaveRequest, WebSocketRequestMessage, WebSocketInvalidMessage
+from Webserver.Models import WebSocketInitMessage, WebSocketSlaveMessage, WebSocketRequestMessage, WebSocketInvalidMessage
 
 
 class SlaveWebsocketController:
 
     def __init__(self):
-        self.server_socket = websocket.WebSocketApp("ws://127.0.0.1/ws",
-                                        on_message=self.on_master_message,
-                                        on_close=self.on_close)
+        self.server_socket = websocket.WebSocketApp(Settings.get_string("master_ip").replace("http://", "ws://") + "/ws",
+                                                    on_message=self.on_master_message,
+                                                    on_close=self.on_close)
         self.server_socket.on_open = self.on_open
 
         self.server_connect_engine = Engine("Server socket connect", 10000)
@@ -33,8 +35,10 @@ class SlaveWebsocketController:
         EventManager.register_event(EventType.ClientRequest, self.add_client_request)
 
     def start(self):
-        VLCPlayer().playerState.register_callback(lambda x: self.broadcast_player_data(x))
-        MediaManager().mediaData.register_callback(lambda x: self.broadcast_media_data(x))
+        VLCPlayer().player_state.register_callback(lambda x: self.broadcast_data("player", x))
+        MediaManager().media_data.register_callback(lambda x: self.broadcast_data("media", x))
+        MediaManager().torrent_data.register_callback(lambda x: self.broadcast_data("torrent", x))
+        StateManager().state_data.register_callback(lambda x: self.broadcast_data("state", x))
 
         self.server_connect_engine.start()
 
@@ -67,55 +71,45 @@ class SlaveWebsocketController:
         Logger.write(2, "Connected master socket")
         self.connected = True
         self.write(WebSocketInitMessage(self.instance_name))
-        self.broadcast_player_data(VLCPlayer().playerState)
-        self.broadcast_media_data(MediaManager().mediaData)
+        self.broadcast_data("player", VLCPlayer().player_state)
+        self.broadcast_data("media", MediaManager().media_data)
+        self.broadcast_data("torrent", MediaManager().torrent_data)
+        self.broadcast_data("state", StateManager().state_data)
 
         pending = self.pending_message_handler.get_pending_for_new_client()
         for msg in pending:
             self.write(WebSocketRequestMessage(msg.id, 0, msg.type, msg.data))
 
     def on_master_message(self, raw_data):
-        Logger.write(2, "Received master message: " + raw_data)
-        data = json.loads(raw_data)
-        if data['event'] == 'response':
-            msg = self.pending_message_handler.get_message_by_response_id(int(data['response_id']))
-            if msg is None:
-                Logger.write(2, "Received response on request not pending")
-                return
+        try:
+            Logger.write(2, "Received master message: " + raw_data)
+            data = json.loads(raw_data)
+            if data['event'] == 'response':
+                msg = self.pending_message_handler.get_message_by_response_id(int(data['response_id']))
+                if msg is None:
+                    Logger.write(2, "Received response on request not pending")
+                    return
 
-            self.pending_message_handler.remove_client_message(msg, None)
-            Logger.write(2, "Client message response on " + str(id) + ", data: " + str(data['data']))
-            msg.callback(data['data'])
+                self.pending_message_handler.remove_client_message(msg, None)
+                Logger.write(2, "Client message response on " + str(id) + ", data: " + str(data['data']))
+                msg.callback(data['data'])
 
-        elif data['event'] == 'command':
-            if data['topic'] == 'play_file':
-                MediaManager().start_file(*data['parameters'])
-            elif data['topic'] == "play_movie":
-                MediaManager().start_movie(*data['parameters'])
-            elif data['topic'] == "play_episode":
-                MediaManager().start_episode(*data['parameters'])
-            elif data['topic'] == "play_torrent":
-                MediaManager().start_torrent(*data['parameters'])
-            elif data['topic'] == "play_radio":
-                MediaManager().start_radio(*data['parameters'])
-            elif data['topic'] == "play_url":
-                MediaManager().start_url(*data['parameters'])
-            elif data['topic'] == 'play_stop':
-                MediaManager().stop_play()
-            elif data['topic'] == 'pause_resume':
-                MediaManager().pause_resume()
+            elif data['event'] == 'command':
+                if data['topic'] == 'media':
+                    method = getattr(MediaManager(), data['method'])
+                    method(*data['parameters'])
+        except Exception as e:
+            Logger.write(3, "Error in Slave websocket controoler: " + str(e), 'error')
+            stack_trace = traceback.format_exc().split('\n')
+            for stack_line in stack_trace:
+                Logger.write(3, stack_line)
 
-    def broadcast_player_data(self, data):
+    def broadcast_data(self, type, data):
         if not self.connected:
             return
 
-        self.write(WebSocketSlaveMessage("player", data))
+        self.write(WebSocketSlaveMessage(type, data))
 
-    def broadcast_media_data(self, data):
-        if not self.connected:
-            return
-
-        self.write(WebSocketSlaveMessage("media", data))
 
     def write(self, data):
         json = to_JSON(data)

@@ -5,14 +5,20 @@ from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
+from Webserver.BaseHandler import BaseHandler
 from Webserver.Controllers.MediaPlayer.MovieController import MovieController
 from Webserver.Models import TorrentModel, Media
 from Webserver.Providers.TorrentProvider import TPB, Torrent
 
 
-class TorrentController:
-    @staticmethod
-    def top():
+class TorrentController(BaseHandler):
+    def get(self, url):
+        if url == "top":
+            self.write(self.top())
+        elif url == "search":
+            self.write(self.search(self.get_argument("keywords")))
+
+    def top(self, ):
         t = TPB(Settings.get_string("tpb_api"))
         result = []
         for torrent in t.top(200):
@@ -20,22 +26,9 @@ class TorrentController:
 
         return to_JSON(result)
 
-    @staticmethod
-    def search(keywords):
+    def search(self, keywords):
         t = TPB(Settings.get_string("tpb_api"))
         result = []
         for torrent in t.search(urllib.parse.unquote(keywords)):
             result.append(TorrentModel(torrent.title, torrent.seeders, torrent.leechers, torrent.size, str(torrent.url), torrent.sub_category))
         return to_JSON(result)
-
-    @staticmethod
-    def play_torrent(url, title):
-        Logger.write(2, "Play direct link")
-        url = urllib.parse.unquote_plus(url)
-        url = Torrent.get_magnet_uri(url)
-
-        EventManager.throw_event(EventType.StopTorrent, [])
-        time.sleep(1)
-        if url.endswith('.torrent') or url.startswith('magnet:'):
-            EventManager.throw_event(EventType.StartTorrent, [urllib.parse.unquote_plus(url), None])
-            EventManager.throw_event(EventType.PreparePlayer, [Media("Torrent", 0, urllib.parse.unquote(title), MovieController.server_uri, None, None, 0)])
