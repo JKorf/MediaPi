@@ -10,10 +10,11 @@ class StartMediaPopup extends Component {
     super(props);
     this.state = {mediaData: {}, instance: 0, loading: true};
 
+    this.confirmed = false;
+
     this.mediaUpdate = this.mediaUpdate.bind(this);
     this.cancel = this.cancel.bind(this);
     this.confirm = this.confirm.bind(this);
-
   }
 
   componentDidMount() {
@@ -27,8 +28,10 @@ class StartMediaPopup extends Component {
   mediaUpdate(data){
     this.setState({mediaData: data});
 
-    if (!data.title)
+    if (!data.title && !this.confirmed){
+        this.confirmed = true;
         this.confirm(); // Nothing playing, continue
+    }
     else
         this.setState({loading: false});
   }
@@ -36,7 +39,6 @@ class StartMediaPopup extends Component {
   cancel()
   {
     this.props.onCancel();
-    console.log("Cancel");
   }
 
   confirm()

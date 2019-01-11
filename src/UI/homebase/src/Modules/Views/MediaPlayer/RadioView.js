@@ -16,8 +16,8 @@ class RadioView extends Component {
     this.state = {radios: []};
 
     this.selectedRadio = null;
-    this.props.changeBack({ to: "/mediaplayer/" });
-    this.props.changeTitle("Radio");
+    this.props.functions.changeBack({ to: "/mediaplayer/" });
+    this.props.functions.changeTitle("Radio");
 
     this.imgSrcs = {
         "radio1": radio1,
@@ -41,10 +41,10 @@ class RadioView extends Component {
     axios.get('http://localhost/radio/get_radios').then(data => {
         console.log(data.data);
         this.setState({radios: data.data});
-        this.viewRef.current.changeState(1);
+        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
     }, err =>{
         console.log(err);
-        this.viewRef.current.changeState(1);
+        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
     });
   }
 
@@ -53,11 +53,13 @@ class RadioView extends Component {
   }
 
   playRadio(instance, radio){
-    this.viewRef.current.changeState(0);
     axios.post('http://localhost/play/radio?instance=' + instance + "&id=" + radio.id)
     .then(
-        () => this.viewRef.current.changeState(1),
-        ()=> this.viewRef.current.changeState(1)
+        () => {
+            if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+            this.props.functions.showInfo(6000, "success", "Successfully started", "Now listening to " + radio.title, "more..", "/mediaplayer/player/" + instance);
+        },
+        () => { if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
     );
   }
 

@@ -21,8 +21,9 @@ class HDView extends Component {
     this.viewRef = React.createRef();
 
     this.path = "C:/";
-    this.props.changeBack({ to: "/mediaplayer/" });
-    this.props.changeTitle("Hard drive");
+    this.props.functions.changeBack({ to: "/mediaplayer/" });
+    this.props.functions.changeTitle("Hard drive");
+    this.promise = null;
 
     this.dirUp = this.dirUp.bind(this);
     this.dirClick = this.dirClick.bind(this);
@@ -70,19 +71,23 @@ class HDView extends Component {
   playMedia(instance, file){
     axios.post('http://localhost/play/file?instance=' + instance + "&path=" + encodeURIComponent(file.url) + "&position=0")
     .then(
-        () => this.viewRef.current.changeState(1),
-        () => this.viewRef.current.changeState(1)
+        () =>
+        {
+            if(this.viewRef.current) this.viewRef.current.changeState(1);
+            this.props.functions.showInfo(6000, "success", "Successfully started", file.title + " is now playing", "more..", "/mediaplayer/player/" + instance);
+        },
+        () => { if(this.viewRef.current) this.viewRef.current.changeState(1); }
     );
   }
 
   loadFolder(){
       this.viewRef.current.changeState(0);
       axios.get('http://localhost/hd/directory?path=' + this.path).then(data => {
-            this.viewRef.current.changeState(1);
+            if(this.viewRef.current) { this.viewRef.current.changeState(1); }
             console.log(data.data);
             this.setState({structure: data.data});
         }, err =>{
-            this.viewRef.current.changeState(1);
+            if(this.viewRef.current) { this.viewRef.current.changeState(1); }
             console.log(err);
         });
     }

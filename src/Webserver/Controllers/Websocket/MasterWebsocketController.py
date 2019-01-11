@@ -52,13 +52,13 @@ class MasterWebsocketController(metaclass=Singleton):
         self.pending_message_handler.add_pending_message(ClientMessage(self.next_id(), callback, valid_for, type, data))
 
     def client_message_invalid(self, msg):
-        for client, subs in self.clients.items():
+        for client, subs in list(self.clients.items()):
             self.write_message(client, WebSocketInvalidMessage(msg.id, msg.type))
 
     def client_message_removed(self, msg, by_client):
-        for client, subs in self.clients.items():
+        for client, subs in list(self.clients.items()):
             if client is by_client:
-                return
+                continue
 
             self.write_message(client, WebSocketInvalidMessage(msg.id, msg.type))
 
@@ -148,7 +148,7 @@ class MasterWebsocketController(metaclass=Singleton):
         if 'type' in data and (data['type'] == 'request' or data['type'] == 'invalid'):
             Logger.write(2, "Slave client request: " + data['info_type'])
             data['instance_id'] = slave.id
-            for client, subs in self.clients.items():
+            for client, subs in list(self.clients.items()):
                 self.write_message(client, data)
 
     def closing_client(self, client):
@@ -162,12 +162,12 @@ class MasterWebsocketController(metaclass=Singleton):
             self.slaves.remove_slave(slave[0])
 
     def broadcast(self, topic, data=None):
-        for client, subs in self.clients.items():
+        for client, subs in list(self.clients.items()):
             for sub in [x for x in subs if x.topic == topic]:
                 self.write_message(client, WebSocketUpdateMessage(sub.id, data))
 
     def broadcast_info(self, id, info_type, data=None):
-        for client, subs in self.clients.items():
+        for client, subs in list(self.clients.items()):
             self.write_message(client, WebSocketRequestMessage(id, self.own_slave.id, info_type, data))
 
     def write_message(self, client, websocket_message):
@@ -223,12 +223,14 @@ class SlaveCollection(Observable):
         self.data = []
 
     def add_slave(self, slave):
+        self.start_update()
         self.data.append(slave)
-        self.updated()
+        self.stop_update()
 
     def remove_slave(self, slave):
+        self.start_update()
         self.data.remove(slave)
-        self.updated()
+        self.stop_update()
 
     def get_slave(self, name):
         slave = [x for x in self.data if x.name == name]

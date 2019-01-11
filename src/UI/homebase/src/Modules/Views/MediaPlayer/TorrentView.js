@@ -23,8 +23,8 @@ class TorrentView extends Component {
     this.state = {torrents: [], selectedTorrent: null};
 
     this.selectedTorrent = null;
-    this.props.changeBack({ to: "/mediaplayer/" });
-    this.props.changeTitle("Torrents");
+    this.props.functions.changeBack({ to: "/mediaplayer/" });
+    this.props.functions.changeTitle("Torrents");
 
     this.playTorrent = this.playTorrent.bind(this);
     this.torrentPlay = this.torrentPlay.bind(this);
@@ -34,10 +34,10 @@ class TorrentView extends Component {
     axios.get('http://localhost/torrent/top').then(data => {
             console.log(data.data);
             this.setState({torrents: data.data});
-            this.viewRef.current.changeState(1);
+            if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         }, err =>{
             console.log(err);
-            this.viewRef.current.changeState(1);
+            if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         });
   }
 
@@ -64,10 +64,11 @@ class TorrentView extends Component {
     axios.post('http://localhost/play/torrent?instance=' + instance
     + "&title=" + encodeURIComponent(torrent.title)
     + "&url=" + encodeURIComponent(torrent.url)).then(() => {
-            this.viewRef.current.changeState(1);
+            if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+            this.props.functions.showInfo(6000, "success", "Successfully started", torrent.title + " is now playing", "more..", "/mediaplayer/player/" + instance);
         }, err =>{
             console.log(err);
-            this.viewRef.current.changeState(1);
+            if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         });
   }
 

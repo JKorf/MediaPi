@@ -10,6 +10,11 @@
     max-height: 100%;
 }
 
+.media-list{
+    width: 100%;
+    height: 100%;
+}
+
 .media-thumbnail {
     display: inline-block;
     width: calc(100% / 3 - 10px);
@@ -381,6 +386,7 @@
     vertical-align: top;
     margin-left: 10px;
     max-width: calc(100% - 110px);
+    width: calc(100% - 110px);
 }
 
 .player-details-title{
@@ -388,10 +394,138 @@
     margin-bottom: 4px;
 }
 
+.player-details-bot{
+    height:60px;
+    margin-top: 8px;
+}
+
 .player-details-slider{
     position: absolute;
-    right:10px;
-    bottom: 15px;
-    left: 120px;
-    height: 10px;
+    right: 0;
+    left: 110px;
+    bottom: 8px;
+}
+
+.player-details-controls{
+    position: absolute;
+    right: 0;
+    left: 110px;
+    bottom: 40px;
+}
+
+.player-details-control{
+    display: inline-block;
+    margin-right: 14px;
+    width: 24px;
+    vertical-align: top;
+}
+
+.player-details-volume{
+    display: inline-block;
+    vertical-align: top;
+    margin-left: 10px;
+    width: calc(100% - 86px);
+}
+
+.player-details-control svg{
+    width: 24px;
+    height: 24px;
+    fill: #colors[primary-images];
+}
+
+.player-details-top{
+    position: relative;
+    padding-bottom: 8px;
+}
+
+.player-details-track-select{
+    margin-top: 8px;
+}
+
+.player-details-subtitle-select{
+    display: inline-block;
+    vertical-align: top;
+
+    &.both{
+        margin-right: 5px;
+        width: calc(50% - 5px);
+    }
+
+    &.single{
+        margin-right: 0;
+        width: 100%;
+    }
+}
+
+.player-details-audio-select{
+    display: inline-block;
+    vertical-align: top;
+
+    &.both{
+        margin-left: 5px;
+        width: calc(50% - 5px);
+    }
+
+    &.single{
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+.player-details-delay-slider{
+    margin-top: -10px;
+}
+
+.player-details-sub-delay-controls{
+    position: relative;
+    margin-top: 8px;
+    margin-right: 5px;
+    margin-left: 5px;
+
+    .player-details-sub-delay-plus{
+        position: absolute;
+        right:0;
+        top: 0;
+    }
+
+    .svg-image{
+        width: 14px;
+        height: 14px;
+        fill: #colors[primary-images];
+    }
+}
+
+.media-search{
+    height: 40px;
+    position: relative;
+    padding: 15px;
+
+    .media-search-input{
+        width: calc(100% - 120px);
+        height: 26px;
+        display: inline-block;
+
+        input{
+            width: 100%;
+            height: 100%;
+            padding-left: 8px;
+        }
+    }
+
+    .media-search-order{
+        display: inline-block;
+        width: 110px;
+        margin-left: 10px;
+        height: 26px;
+
+        select{
+            width: 100%;
+            height: 100%;
+        }
+    }
+}
+
+.media-view-wrapper{
+    width: 100%;
+    height: 100%;
 }

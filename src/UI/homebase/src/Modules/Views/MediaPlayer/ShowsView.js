@@ -9,12 +9,18 @@ class ShowsView extends Component {
   constructor(props) {
     super(props);
     this.state = {shows: [], loading: true};
-    this.props.changeBack({to: "/mediaplayer/" });
-    this.props.changeTitle("Shows");
+    this.props.functions.changeBack({to: "/mediaplayer/" });
+    this.props.functions.changeTitle("Shows");
+
+    this.search = this.search.bind(this);
   }
 
   componentDidMount() {
-    axios.get('http://localhost/shows/get_shows_all?page=1&orderby=trending&keywords=').then(data => {
+    this.getShows(1, "trending", "");
+  }
+
+  getShows(page, order, searchTerm){
+    axios.get('http://localhost/shows/get_shows?page='+page+'&orderby='+order+'&keywords='+encodeURIComponent(searchTerm)).then(data => {
         this.setState({shows: data.data, loading: false});
         console.log(data.data);
     }, err =>{
@@ -23,15 +29,21 @@ class ShowsView extends Component {
     });
   }
 
+  search(term){
+    console.log("Search " + term);
+    this.getShows(1, "trending", term);
+  }
+
   render() {
     const shows = this.state.shows;
     const loading = this.state.loading;
+
     return (
-        <div>
-        <MediaOverview media={shows} link="/mediaplayer/shows/" />
-        { loading &&
-            <Popup loading={loading} />
-        }
+        <div className="media-view-wrapper">
+            <MediaOverview media={shows} link="/mediaplayer/shows/" onSearch={this.search} />
+            { loading &&
+                <Popup loading={loading} />
+            }
         </div>
     );
   }

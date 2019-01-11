@@ -45,6 +45,9 @@ class VLCPlayer(metaclass=Singleton):
 
         EventManager.register_event(EventType.NoPeers, self.stop)
 
+        self.player_observer = CustomThread(self.observe_player, "Player observer")
+        self.player_observer.start()
+
     def instantiate_vlc(self):
         parameters = self.get_instance_parameters()
         Logger.write(2, "VLC parameters: " + str(parameters))
@@ -93,10 +96,11 @@ class VLCPlayer(metaclass=Singleton):
 
     def stop(self):
         self.__player.stop()
+        self.player_state.start_update()
         self.youtube_end_counter = 0
         self.player_state.length = 0
         self.player_state.playing_for = 0
-        self.player_state.updated()
+        self.player_state.stop_update()
 
     def mute_on(self):
         self.__player.audio_set_mute(True)
@@ -121,6 +125,9 @@ class VLCPlayer(metaclass=Singleton):
 
     def set_time(self, pos):
         self.__player.set_time(pos)
+        self.player_state.start_update()
+        self.player_state.playing_for = pos
+        self.player_state.stop_update()
 
     def set_position(self, pos):
         self.__player.set_position(pos)
@@ -184,8 +191,9 @@ class VLCPlayer(metaclass=Singleton):
         self.__event_manager.event_attach(VLCEventType.MediaPlayerTimeChanged, self.on_time_change)
 
     def on_time_change(self, event):
+        self.player_state.start_update()
         self.player_state.playing_for = event.u.new_time
-        self.player_state.updated()
+        self.player_state.stop_update()
 
     def state_change_opening(self, event):
         if self.player_state.state != PlayerState.Opening:
@@ -234,12 +242,30 @@ class VLCPlayer(metaclass=Singleton):
             self.trying_subitems = False
 
     def change_state(self, new):
+        self.player_state.start_update()
         self.player_state.state = new
-        self.player_state.updated()
+        self.player_state.stop_update()
 
         if new == PlayerState.Ended:
             thread = CustomThread(self.stop, "Stopping player")
             thread.start()
+
+    def observe_player(self):
+        while True:
+            if self.player_state.state == PlayerState.Nothing:
+                time.sleep(0.5)
+                continue
+
+            self.player_state.start_update()
+            self.player_state.audio_tracks = self.get_audio_tracks()
+            self.player_state.audio_track = self.get_audio_track()
+            self.player_state.sub_delay = self.get_subtitle_delay()
+            self.player_state.sub_track = self.get_selected_sub()
+            self.player_state.sub_tracks = self.get_subtitle_tracks()
+            self.player_state.volume = self.get_volume()
+            self.player_state.stop_update()
+
+            time.sleep(0.5)
 
 
 class PlayerState(Enum):

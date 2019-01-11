@@ -17,7 +17,6 @@ class SelectInstancePopup extends Component {
   }
 
   componentDidMount() {
-  console.log("h");
     this.slaveSub = Socket.subscribe("slaves", this.slaveUpdate);
   }
 
@@ -43,7 +42,6 @@ class SelectInstancePopup extends Component {
   cancel()
   {
     this.props.onCancel();
-    console.log("Cancel");
   }
 
   select()

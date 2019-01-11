@@ -13,7 +13,7 @@ class ShowView extends Component {
     this.viewRef = React.createRef();
 
     this.state = {show: {images:[], rating:{}, seasons:[]}, selectedSeason: -1, selectedEpisode: -1};
-    this.props.changeBack({to: "/mediaplayer/shows/" });
+    this.props.functions.changeBack({to: "/mediaplayer/shows/" });
 
     this.play = this.play.bind(this);
     this.playShow = this.playShow.bind(this);
@@ -21,7 +21,7 @@ class ShowView extends Component {
 
   componentDidMount() {
     axios.get('http://localhost/shows/get_show?id=' + this.props.match.params.id).then(data => {
-        this.viewRef.current.changeState(1);
+        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         console.log(data.data);
         const seasonEpisodes = data.data.episodes.reduce((seasons, epi) => {
           if (!seasons[epi.season])
@@ -31,9 +31,9 @@ class ShowView extends Component {
         }, {});
         data.data.seasons = seasonEpisodes;
         this.setState({show: data.data});
-        this.props.changeTitle(data.data.title);
-    }, err =>{
-        this.viewRef.current.changeState(1);
+        this.props.functions.changeTitle(data.data.title);
+    }, err => {
+        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         console.log(err);
     });
   }
@@ -52,19 +52,21 @@ class ShowView extends Component {
 
   playShow(instance, episode)
   {
-    this.viewRef.current.changeState(0);
     axios.post('http://localhost/play/episode?instance=' + instance
         + "&url=" + encodeURIComponent(episode.url)
         + "&id=" + this.state.show.id
         + "&title=" + encodeURIComponent(episode.title)
         + "&img=" + encodeURIComponent(this.state.show.images.poster)
         + "&season=" + episode.season
-        + "&episode=" + episode.episode).then(() => {
-            this.viewRef.current.changeState(1);
-        }, err =>{
+        + "&episode=" + episode.episode).then(() =>
+            {
+                if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+                this.props.functions.showInfo(6000, "success", "Successfully started", episode.title + " is now playing", "more..", "/mediaplayer/player/" + instance);
+            }
+        , err => {
             console.log(err);
-            this.viewRef.current.changeState(1);
-        });
+            if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
+        );
   }
 
   render() {

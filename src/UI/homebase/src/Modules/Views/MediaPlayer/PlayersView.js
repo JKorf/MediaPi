@@ -14,8 +14,8 @@ class PlayersView extends Component {
     super(props);
     this.state = {slaveData: []};
 
-    this.props.changeBack({to: "/mediaplayer/" });
-    this.props.changeTitle("Players");
+    this.props.functions.changeBack({to: "/mediaplayer/" });
+    this.props.functions.changeTitle("Players");
 
     this.slaveUpdate = this.slaveUpdate.bind(this);
   }

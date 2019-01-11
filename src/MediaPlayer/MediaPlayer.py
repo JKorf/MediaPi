@@ -44,53 +44,74 @@ class MediaManager(metaclass=Singleton):
 
         self.stop_play()
         VLCPlayer().play(url, time)
+        self.media_data.start_update()
         self.media_data.type = "File"
         self.media_data.title = os.path.basename(url)
         self.media_data.image = None
-        self.media_data.updated()
+        self.media_data.stop_update()
 
     def start_radio(self, name, url):
         self.stop_play()
         VLCPlayer().play(url, 0)
+        self.media_data.start_update()
         self.media_data.type = "Radio"
         self.media_data.title = name
         self.media_data.image = None
-        self.media_data.updated()
+        self.media_data.stop_update()
 
     def start_episode(self, id, season, episode, title, url, image):
         self.stop_play()
         self._start_torrent(url, None)
+        self.media_data.start_update()
         self.media_data.type = "Torrent"
         self.media_data.title = title
         self.media_data.image = image
-        self.media_data.updated()
+        self.media_data.stop_update()
 
     def start_torrent(self, title, url):
         self.stop_play()
         self._start_torrent(url, None)
+        self.media_data.start_update()
         self.media_data.type = "Torrent"
         self.media_data.title = title
         self.media_data.image = None
-        self.media_data.updated()
+        self.media_data.stop_update()
 
     def start_movie(self, id, title, url, image):
         self.stop_play()
         self._start_torrent(url, None)
+        self.media_data.start_update()
         self.media_data.type = "Torrent"
         self.media_data.title = title
         self.media_data.image = image
-        self.media_data.updated()
+        self.media_data.stop_update()
 
     def start_url(self, title, url):
         self.stop_play()
         VLCPlayer().play(url, 0)
+        self.media_data.start_update()
         self.media_data.type = "Url"
         self.media_data.title = title
         self.media_data.image = None
-        self.media_data.updated()
+        self.media_data.stop_update()
 
     def pause_resume(self):
         VLCPlayer().pause_resume()
+
+    def seek(self, position):
+        VLCPlayer().set_time(position)
+
+    def change_subtitle(self, track):
+        VLCPlayer().set_subtitle_track(track)
+
+    def change_audio(self, track):
+        VLCPlayer().set_audio_track(track)
+
+    def change_volume(self, change_volume):
+        VLCPlayer().set_volume(change_volume)
+
+    def change_subtitle_delay(self, delay):
+        VLCPlayer().set_subtitle_delay(delay)
 
     def stop_play(self):
         VLCPlayer().stop()
@@ -135,10 +156,11 @@ class MediaManager(metaclass=Singleton):
                 self.torrent = None
 
         if newState.state == PlayerState.Nothing:
+            self.media_data.start_update()
             self.media_data.type = None
             self.media_data.title = None
             self.media_data.image = None
-            self.media_data.updated()
+            self.media_data.stop_update()
 
     def stop_torrent(self):
         if self.torrent:
@@ -148,10 +170,13 @@ class MediaManager(metaclass=Singleton):
     def observe_torrent(self):
         while True:
             if self.torrent is None:
+                self.torrent_data.start_update()
                 self.torrent_data.reset()
+                self.torrent_data.stop_update()
                 time.sleep(0.5)
                 continue
 
+            self.torrent_data.start_update()
             self.torrent_data.title = self.torrent.name
             if self.torrent.media_file is not None:
                 self.torrent_data.media_file = self.torrent.media_file.name
@@ -175,7 +200,7 @@ class MediaManager(metaclass=Singleton):
             self.torrent_data.disconnected = len(self.torrent.peer_manager.disconnected_peers)
             self.torrent_data.cant_connect = len(self.torrent.peer_manager.cant_connect_peers)
 
-            self.torrent_data.updated()
+            self.torrent_data.stop_update()
             time.sleep(0.5)
 
 

@@ -19,6 +19,7 @@ class StopPopup extends Component {
 
   confirm()
   {
+    console.log("Confirm stop click");
     this.props.onConfirm();
   }
 

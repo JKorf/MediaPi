@@ -1,5 +1,6 @@
 from threading import Event
 
+from Shared.Logger import Logger
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
@@ -12,6 +13,7 @@ class Observable:
         self.__callbacks = []
         self.__changed = True
         self.__last_update = 0
+        self.__start_state = None
         self.__wait_event = Event()
 
         self.__update_thread = CustomThread(self.__check_update, name + " update")
@@ -20,8 +22,15 @@ class Observable:
     def register_callback(self, cb):
         self.__callbacks.append(cb)
 
-    def updated(self):
-        self.__changed = True
+    def start_update(self):
+        self.__start_state = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
+
+    def stop_update(self):
+        for k, v in self.__start_state.items():
+            if self.__dict__[k] != v:
+                self.__changed = True
+                self.__wait_event.set()
+                break
 
     def __check_update(self):
         while True:

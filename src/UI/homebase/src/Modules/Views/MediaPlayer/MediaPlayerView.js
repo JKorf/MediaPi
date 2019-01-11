@@ -42,6 +42,7 @@ class MediaPlayerView extends Component {
   }
 
   playConfirm(){
+    this.setState({state: this.states[0]});
     this.props.playMedia(this.selectedInstance, this.selectedMedia);
   }
 

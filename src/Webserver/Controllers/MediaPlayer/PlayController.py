@@ -70,12 +70,24 @@ class PlayController(BaseHandler):
             else:
                 MasterWebsocketController().send_to_slave(instance, "media", "start_url", [title, url])
 
-        elif url == "set_subtitle_file":
-            pass
-            #PlayerController.set_subtitle_file(self.get_argument("file"))
-        elif url == "set_subtitle_id":
-            pass
-            #PlayerController.set_subtitle_id(self.get_argument("sub"))
+        elif url == "change_subtitle":
+            track = int(self.get_argument("track"))
+            Logger.write(2, "Set subtitle on " + str(instance) + " to " + str(track))
+
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().change_subtitle(track)
+            else:
+                MasterWebsocketController().send_to_slave(instance, "media", "change_subtitle", [track])
+
+        elif url == "change_audio":
+            track = int(self.get_argument("track"))
+            Logger.write(2, "Set audio on " + str(instance) + " to " + str(track))
+
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().change_audio(track)
+            else:
+                MasterWebsocketController().send_to_slave(instance, "media", "change_audio", [track])
+
         elif url == "stop_player":
             Logger.write(2, "Stop playing on " + str(instance))
 
@@ -91,14 +103,29 @@ class PlayController(BaseHandler):
             else:
                 MasterWebsocketController().send_to_slave(instance, "media", "pause_resume", [])
         elif url == "change_volume":
-            pass
-            #PlayerController.change_volume(self.get_argument("vol"))
-        elif url == "change_subtitle_offset":
-            pass
-            #PlayerController.change_subtitle_offset(self.get_argument("offset"))
+            volume = int(self.get_argument("volume"))
+            Logger.write(2, "Set volume on " + str(instance) + " to " + str(volume))
+
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().change_volume(volume)
+            else:
+                MasterWebsocketController().send_to_slave(instance, "media", "change_volume", [volume])
+        elif url == "change_sub_delay":
+            delay = int(self.get_argument("delay"))
+            Logger.write(2, "Set sub delay on " + str(instance) + " to " + str(delay))
+
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().change_subtitle_delay(delay)
+            else:
+                MasterWebsocketController().send_to_slave(instance, "media", "change_subtitle_delay", [delay])
         elif url == "seek":
-            pass
-            #PlayerController.seek(self.get_argument("pos"))
+            position = int(self.get_argument("position"))
+            Logger.write(2, "Seek " + str(instance) + " to " + str(position))
+
+            if MasterWebsocketController().is_self(instance):
+                MediaManager().seek(position)
+            else:
+                MasterWebsocketController().send_to_slave(instance, "media", "seek", [position])
         elif url == "set_audio_id":
             pass
             #PlayerController.set_audio_track(self.get_argument("track"))

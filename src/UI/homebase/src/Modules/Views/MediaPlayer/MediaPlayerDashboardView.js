@@ -13,8 +13,8 @@ import playImg from './../../../Images/play.svg'
 class MediaPlayerDashboardView extends Component {
   constructor(props) {
     super(props);
-    this.props.changeBack({});
-    this.props.changeTitle("Media");
+    this.props.functions.changeBack({});
+    this.props.functions.changeTitle("Media");
   }
 
   componentDidMount() {

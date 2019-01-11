@@ -13,7 +13,7 @@ class MovieView extends Component {
     super(props);
     this.viewRef = React.createRef();
     this.state = {movie: {images:[], rating: {}, torrents: {en: {}}}};
-    this.props.changeBack({to: "/mediaplayer/movies/" });
+    this.props.functions.changeBack({to: "/mediaplayer/movies/" });
 
     this.playMedia = this.playMedia.bind(this);
     this.play_torrent = this.play_torrent.bind(this);
@@ -22,12 +22,12 @@ class MovieView extends Component {
 
   componentDidMount() {
     axios.get('http://localhost/movies/get_movie?id=' + this.props.match.params.id).then(data => {
-        this.viewRef.current.changeState(1);
+        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         console.log(data.data);
-        this.props.changeTitle(data.data.title);
+        this.props.functions.changeTitle(data.data.title);
         this.setState({movie: data.data});
     }, err =>{
-        this.viewRef.current.changeState(1);
+        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         console.log(err);
         this.setState({loading: false});
     });
@@ -43,14 +43,16 @@ class MovieView extends Component {
 
   playMedia(instance, media)
   {
-    this.viewRef.current.changeState(0);
     if(media.type == "trailer"){
         axios.post('http://localhost/play/url?instance=' + instance
             + "&url=" + encodeURIComponent(media.url)
             + "&title=" + encodeURIComponent(this.state.movie.title + " Trailer"))
             .then(
-                () => this.viewRef.current.changeState(1),
-                ()=> this.viewRef.current.changeState(1)
+                () => {
+                    if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+                    this.props.functions.showInfo(6000, "success", "Successfully started", this.state.movie.title + " trailer is now playing", "more..", "/mediaplayer/player/" + instance);
+                 },
+                () => { if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
             );
     }else{
         axios.post('http://localhost/play/movie?instance=' + instance
@@ -59,8 +61,12 @@ class MovieView extends Component {
             + "&title=" + encodeURIComponent(this.state.movie.title)
             + "&img=" + encodeURIComponent(this.state.movie.images.poster))
             .then(
-                () => this.viewRef.current.changeState(1),
-                ()=> this.viewRef.current.changeState(1)
+                () =>
+                {
+                    if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+                    this.props.functions.showInfo(6000, "success", "Successfully started", this.state.movie.title + " is now playing", "more..", "/mediaplayer/player/" + instance);
+                },
+                () => { if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
             );
     }
   }
