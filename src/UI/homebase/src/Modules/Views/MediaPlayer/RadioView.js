@@ -38,7 +38,7 @@ class RadioView extends Component {
   }
 
   componentDidMount() {
-    axios.get('http://localhost/radio/get_radios').then(data => {
+    axios.get('http://'+window.location.hostname+'/radio/get_radios').then(data => {
         console.log(data.data);
         this.setState({radios: data.data});
         if(this.viewRef.current) { this.viewRef.current.changeState(1); }
@@ -53,7 +53,7 @@ class RadioView extends Component {
   }
 
   playRadio(instance, radio){
-    axios.post('http://localhost/play/radio?instance=' + instance + "&id=" + radio.id)
+    axios.post('http://'+window.location.hostname+'/play/radio?instance=' + instance + "&id=" + radio.id)
     .then(
         () => {
             if(this.viewRef.current) { this.viewRef.current.changeState(1); }

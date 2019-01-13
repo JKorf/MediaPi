@@ -14,7 +14,7 @@ export default class WS {
 
   static connect(){
     this.wsConnected = false;
-    this.ws = new WebSocket('ws://localhost/ws');
+    this.ws = new WebSocket('ws://'+window.location.hostname+'/ws');
     this.ws.onopen = this.socketOpen;
     this.ws.onmessage = this.socketMessage;
     this.ws.onclose = this.socketClose;

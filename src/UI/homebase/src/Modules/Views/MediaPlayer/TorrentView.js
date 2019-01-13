@@ -31,7 +31,7 @@ class TorrentView extends Component {
   }
 
   componentDidMount() {
-    axios.get('http://localhost/torrent/top').then(data => {
+    axios.get('http://'+window.location.hostname+'/torrent/top').then(data => {
             console.log(data.data);
             this.setState({torrents: data.data});
             if(this.viewRef.current) { this.viewRef.current.changeState(1); }
@@ -61,7 +61,7 @@ class TorrentView extends Component {
   playTorrent(instance, torrent)
   {
     this.viewRef.current.changeState(0);
-    axios.post('http://localhost/play/torrent?instance=' + instance
+    axios.post('http://'+window.location.hostname+'/play/torrent?instance=' + instance
     + "&title=" + encodeURIComponent(torrent.title)
     + "&url=" + encodeURIComponent(torrent.url)).then(() => {
             if(this.viewRef.current) { this.viewRef.current.changeState(1); }

@@ -69,7 +69,7 @@ class HDView extends Component {
   }
 
   playMedia(instance, file){
-    axios.post('http://localhost/play/file?instance=' + instance + "&path=" + encodeURIComponent(file.url) + "&position=0")
+    axios.post('http://'+window.location.hostname+'/play/file?instance=' + instance + "&path=" + encodeURIComponent(file.url) + "&position=0")
     .then(
         () =>
         {
@@ -82,7 +82,7 @@ class HDView extends Component {
 
   loadFolder(){
       this.viewRef.current.changeState(0);
-      axios.get('http://localhost/hd/directory?path=' + this.path).then(data => {
+      axios.get('http://'+window.location.hostname+'/hd/directory?path=' + this.path).then(data => {
             if(this.viewRef.current) { this.viewRef.current.changeState(1); }
             console.log(data.data);
             this.setState({structure: data.data});

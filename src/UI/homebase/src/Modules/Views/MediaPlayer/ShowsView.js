@@ -20,7 +20,7 @@ class ShowsView extends Component {
   }
 
   getShows(page, order, searchTerm){
-    axios.get('http://localhost/shows/get_shows?page='+page+'&orderby='+order+'&keywords='+encodeURIComponent(searchTerm)).then(data => {
+    axios.get('http://'+window.location.hostname+'/shows/get_shows?page='+page+'&orderby='+order+'&keywords='+encodeURIComponent(searchTerm)).then(data => {
         this.setState({shows: data.data, loading: false});
         console.log(data.data);
     }, err =>{

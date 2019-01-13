@@ -20,7 +20,7 @@ class MoviesView extends Component {
   }
 
   getMovies(page, order, search){
-    axios.get('http://localhost/movies/get_movies?page='+page+'&orderby='+order+'&keywords=' + encodeURIComponent(search)).then(data => {
+    axios.get('http://'+window.location.hostname+'/movies/get_movies?page='+page+'&orderby='+order+'&keywords=' + encodeURIComponent(search)).then(data => {
         console.log(data.data);
         this.setState({movies: data.data, loading: false});
     }, err =>{

@@ -21,7 +21,7 @@ class MovieView extends Component {
   }
 
   componentDidMount() {
-    axios.get('http://localhost/movies/get_movie?id=' + this.props.match.params.id).then(data => {
+    axios.get('http://'+window.location.hostname+'/movies/get_movie?id=' + this.props.match.params.id).then(data => {
         if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         console.log(data.data);
         this.props.functions.changeTitle(data.data.title);

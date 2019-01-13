@@ -83,7 +83,7 @@ class PlayerView extends Component {
     this.setState({state: this.states[0]});
     e.preventDefault();
 
-    axios.post('http://localhost/play/pause_resume_player?instance=' + this.props.match.params.id)
+    axios.post('http://'+window.location.hostname+'/play/pause_resume_player?instance=' + this.props.match.params.id)
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -100,7 +100,7 @@ class PlayerView extends Component {
 
   confirmStop(e){
     this.setState({state: this.states[0]});
-    axios.post('http://localhost/play/stop_player?instance=' + this.props.match.params.id)
+    axios.post('http://'+window.location.hostname+'/play/stop_player?instance=' + this.props.match.params.id)
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -112,7 +112,7 @@ class PlayerView extends Component {
     var playerData = this.state.playerData;
     playerData.playing_for = newValue;
     this.setState({state: this.states[0], playerData: playerData});
-    axios.post('http://localhost/play/seek?instance=' + this.props.match.params.id + "&position=" + Math.round(newValue))
+    axios.post('http://'+window.location.hostname+'/play/seek?instance=' + this.props.match.params.id + "&position=" + Math.round(newValue))
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -124,7 +124,7 @@ class PlayerView extends Component {
     var playerData = this.state.playerData;
     playerData.sub_track = value;
     this.setState({state: this.states[0], playerData: playerData});
-    axios.post('http://localhost/play/change_subtitle?instance=' + this.props.match.params.id + "&track=" + value)
+    axios.post('http://'+window.location.hostname+'/play/change_subtitle?instance=' + this.props.match.params.id + "&track=" + value)
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -136,7 +136,7 @@ class PlayerView extends Component {
     var playerData = this.state.playerData;
     playerData.audio_track = value;
     this.setState({state: this.states[0], playerData: playerData});
-    axios.post('http://localhost/play/change_audio?instance=' + this.props.match.params.id + "&track=" + value)
+    axios.post('http://'+window.location.hostname+'/play/change_audio?instance=' + this.props.match.params.id + "&track=" + value)
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -148,7 +148,7 @@ class PlayerView extends Component {
     var playerData = this.state.playerData;
     playerData.volume = value;
     this.setState({state: this.states[0], playerData: playerData});
-    axios.post('http://localhost/play/change_volume?instance=' + this.props.match.params.id + "&volume=" + Math.round(value))
+    axios.post('http://'+window.location.hostname+'/play/change_volume?instance=' + this.props.match.params.id + "&volume=" + Math.round(value))
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -160,7 +160,7 @@ class PlayerView extends Component {
     var playerData = this.state.playerData;
     playerData.sub_delay = value;
     this.setState({state: this.states[0], playerData: playerData});
-    axios.post('http://localhost/play/change_sub_delay?instance=' + this.props.match.params.id + "&delay=" + Math.round(value))
+    axios.post('http://'+window.location.hostname+'/play/change_sub_delay?instance=' + this.props.match.params.id + "&delay=" + Math.round(value))
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})

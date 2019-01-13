@@ -20,7 +20,7 @@ class ShowView extends Component {
   }
 
   componentDidMount() {
-    axios.get('http://localhost/shows/get_show?id=' + this.props.match.params.id).then(data => {
+    axios.get('http://'+window.location.hostname+'/shows/get_show?id=' + this.props.match.params.id).then(data => {
         if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         console.log(data.data);
         const seasonEpisodes = data.data.episodes.reduce((seasons, epi) => {
@@ -52,7 +52,7 @@ class ShowView extends Component {
 
   playShow(instance, episode)
   {
-    axios.post('http://localhost/play/episode?instance=' + instance
+    axios.post('http://'+window.location.hostname+'/play/episode?instance=' + instance
         + "&url=" + encodeURIComponent(episode.url)
         + "&id=" + this.state.show.id
         + "&title=" + encodeURIComponent(episode.title)

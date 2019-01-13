@@ -37,7 +37,7 @@ class App extends Component {
     this.functions = {
         changeBack: this.changeBack,
         changeTitle: this.changeTitle,
-        showInfo: this.showInfo,
+        showInfo: this.showInfo
     }
   }
 
