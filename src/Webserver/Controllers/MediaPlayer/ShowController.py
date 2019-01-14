@@ -1,4 +1,5 @@
 import json
+import urllib.parse
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -24,8 +25,8 @@ class ShowController(BaseHandler):
     async def get_shows(self, page, order_by, keywords):
         search_string = ""
         if keywords:
-            search_string = "&keywords=" + keywords
-        data = await RequestFactory.make_request_async(ShowController.shows_api_path + "shows/" + page + "?sort=" + order_by + search_string)
+            search_string = "&keywords=" + urllib.parse.quote(keywords)
+        data = await RequestFactory.make_request_async(ShowController.shows_api_path + "shows/" + page + "?sort=" + urllib.parse.quote(order_by) + search_string)
 
         if data is not None:
             return self.parse_show_data(data)

@@ -1,4 +1,5 @@
 import json
+import urllib.parse
 
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -24,8 +25,8 @@ class MovieController(BaseHandler):
     async def get_movies(self, page, order_by, keywords):
         search_string = ""
         if keywords:
-            search_string = "&keywords=" + keywords
-        data = await RequestFactory.make_request_async(MovieController.movies_api_path + "movies/" + page + "?sort=" + order_by + search_string)
+            search_string = "&keywords=" + urllib.parse.quote(keywords)
+        data = await RequestFactory.make_request_async(MovieController.movies_api_path + "movies/" + page + "?sort=" + urllib.parse.quote(order_by) + search_string)
 
         if data is not None:
             return self.parse_movie_data(data)
