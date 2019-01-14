@@ -265,7 +265,7 @@ class Torrent:
         else:
             # Singlefile
             total_length = info_dict[b'length']
-            file = TorrentDownloadFile(total_length, 0, self.name, base_folder + self.name, is_media_file(self.name))
+            file = TorrentDownloadFile(total_length, 0, self.name, self.name, is_media_file(self.name))
             self.files.append(file)
             Logger.write(2, "File: " + file.path)
 

@@ -2,6 +2,7 @@ import json
 import traceback
 from threading import Lock
 
+from Database.Database import Database
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaPlayer import MediaManager
 from Shared.Events import EventManager, EventType
@@ -150,6 +151,11 @@ class MasterWebsocketController(metaclass=Singleton):
             data['instance_id'] = slave.id
             for client, subs in list(self.clients.items()):
                 self.write_message(client, data)
+
+        if 'event' in data and data['event'] == 'database':
+            method = getattr(Database(), data['method'])
+            method(*data['parameters'])
+            Logger.write(2, "Slave db update: " + str(data))
 
     def closing_client(self, client):
         if client in self.clients:

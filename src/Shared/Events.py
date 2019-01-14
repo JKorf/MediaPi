@@ -50,7 +50,8 @@ class EventType(Enum):
     RetrievedAddress = 42,
     WiFiQualityUpdate = 43,
 
-    ClientRequest = 44
+    ClientRequest = 44,
+    DatabaseUpdate = 45
 
 
 class EventManager:

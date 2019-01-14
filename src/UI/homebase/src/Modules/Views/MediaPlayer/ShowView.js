@@ -54,7 +54,7 @@ class ShowView extends Component {
   {
     axios.post('http://'+window.location.hostname+'/play/episode?instance=' + instance
         + "&url=" + encodeURIComponent(episode.url)
-        + "&id=" + this.state.show.id
+        + "&id=" + this.props.match.params.id
         + "&title=" + encodeURIComponent(episode.title)
         + "&img=" + encodeURIComponent(this.state.show.images.poster)
         + "&season=" + episode.season

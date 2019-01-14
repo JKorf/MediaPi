@@ -159,6 +159,12 @@ class WebSocketSlaveMessage:
         self.topic = topic
         self.data = data
 
+class WebSocketDatabaseMessage:
+    def __init__(self, method, parameters):
+        self.event = "database"
+        self.method = method
+        self.parameters = parameters
+
 class WebSocketSlaveCommand:
     def __init__(self, topic, method, parameters):
         self.event = "command"

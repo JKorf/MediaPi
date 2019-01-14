@@ -57,7 +57,7 @@ class MovieView extends Component {
     }else{
         axios.post('http://localhost/play/movie?instance=' + instance
             + "&url=" + encodeURIComponent(media.url)
-            + "&id=" + this.state.movie.id
+            + "&id=" + this.props.match.params.id
             + "&title=" + encodeURIComponent(this.state.movie.title)
             + "&img=" + encodeURIComponent(this.state.movie.images.poster))
             .then(

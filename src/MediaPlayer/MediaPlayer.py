@@ -44,6 +44,10 @@ class MediaManager(metaclass=Singleton):
 
         self.stop_play()
         VLCPlayer().play(url, time)
+        if Settings.get_bool("slave"):
+            EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_file", [url, current_time()]])
+        else:
+            Database().add_watched_file(url, current_time())
         self.media_data.start_update()
         self.media_data.type = "File"
         self.media_data.title = os.path.basename(url)
@@ -63,9 +67,12 @@ class MediaManager(metaclass=Singleton):
         self.stop_play()
         self._start_torrent(url, None)
         self.media_data.start_update()
-        self.media_data.type = "Torrent"
+        self.media_data.type = "Show"
         self.media_data.title = title
         self.media_data.image = image
+        self.media_data.season = season
+        self.media_data.id = id
+        self.media_data.episode = episode
         self.media_data.stop_update()
 
     def start_torrent(self, title, url):
@@ -81,18 +88,22 @@ class MediaManager(metaclass=Singleton):
         self.stop_play()
         self._start_torrent(url, None)
         self.media_data.start_update()
-        self.media_data.type = "Torrent"
+        self.media_data.type = "Movie"
         self.media_data.title = title
         self.media_data.image = image
+        self.media_data.id = id
         self.media_data.stop_update()
 
     def start_url(self, title, url):
         self.stop_play()
         VLCPlayer().play(url, 0)
+        if Settings.get_bool("slave"):
+            EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_url", [url, current_time()]])
+        else:
+            Database().add_watched_url(url, current_time())
         self.media_data.start_update()
         self.media_data.type = "Url"
         self.media_data.title = title
-        self.media_data.image = None
         self.media_data.stop_update()
 
     def pause_resume(self):
@@ -125,6 +136,10 @@ class MediaManager(metaclass=Singleton):
             self.torrent.set_media_file(file)
 
     def _start_playing_torrent(self):
+        if Settings.get_bool("slave"):
+            EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_torrent", [self.media_data.type, self.media_data.title, self.media_data.id, self.torrent.uri, self.torrent.media_file.path, self.media_data.image, self.media_data.season, self.media_data.episode, current_time()]])
+        else:
+            Database().add_watched_torrent(self.media_data.type, self.media_data.title, self.media_data.id, self.torrent.uri, self.torrent.media_file.path, self.media_data.image, self.media_data.season, self.media_data.episode, current_time())
         VLCPlayer().play("http://localhost:50009/torrent")
 
     def _start_torrent(self, url, media_file):
@@ -160,6 +175,9 @@ class MediaManager(metaclass=Singleton):
             self.media_data.type = None
             self.media_data.title = None
             self.media_data.image = None
+            self.media_data.id = 0
+            self.media_data.season = 0
+            self.media_data.episode = 0
             self.media_data.stop_update()
 
     def stop_torrent(self):
@@ -230,29 +248,6 @@ class TorrentData(Observable):
         self.disconnected = 0
         self.cant_connect = 0
 
-    def reset(self):
-        self.title = None
-        self.media_file = None
-        self.size = 0
-        self.downloaded = 0
-        self.left = 0
-        self.overhead = 0
-        self.download_speed = 0
-
-        self.buffer_position = 0
-        self.buffer_total = 0
-        self.buffer_size = 0
-        self.stream_position = 0
-        self.total_streamed = 0
-
-        self.state = 0
-
-        self.potential = 0
-        self.connecting = 0
-        self.connected = 0
-        self.disconnected = 0
-        self.cant_connect = 0
-
 
 class MediaData(Observable):
 
@@ -261,3 +256,6 @@ class MediaData(Observable):
         self.type = None
         self.title = None
         self.image = None
+        self.season = 0
+        self.episode = 0
+        self.id = 0

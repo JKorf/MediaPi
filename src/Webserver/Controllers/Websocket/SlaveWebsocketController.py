@@ -12,7 +12,7 @@ from Shared.Settings import Settings
 from Shared.State import StateManager
 from Shared.Util import to_JSON
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
-from Webserver.Models import WebSocketInitMessage, WebSocketSlaveMessage, WebSocketRequestMessage, WebSocketInvalidMessage
+from Webserver.Models import WebSocketInitMessage, WebSocketSlaveMessage, WebSocketRequestMessage, WebSocketInvalidMessage, WebSocketDatabaseMessage
 
 
 class SlaveWebsocketController:
@@ -33,6 +33,7 @@ class SlaveWebsocketController:
         self.pending_message_handler = PendingMessagesHandler(self.send_client_request, self.client_message_invalid, self.client_message_removed)
 
         EventManager.register_event(EventType.ClientRequest, self.add_client_request)
+        EventManager.register_event(EventType.DatabaseUpdate, lambda method, params: self.write(WebSocketDatabaseMessage(method, params)))
 
     def start(self):
         VLCPlayer().player_state.register_callback(lambda x: self.broadcast_data("player", x))

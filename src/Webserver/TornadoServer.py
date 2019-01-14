@@ -7,13 +7,10 @@ import tornado
 from tornado import ioloop, web, websocket
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
-from Database.Database import Database
-from MediaPlayer.MediaPlayer import MediaManager
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
-from Shared.Util import to_JSON
 from Webserver.Controllers.DataController import DataController
 from Webserver.Controllers.MediaPlayer.HDController import HDController
 from Webserver.Controllers.MediaPlayer.MovieController import MovieController
@@ -24,7 +21,7 @@ from Webserver.Controllers.MediaPlayer.TorrentController import TorrentControlle
 from Webserver.Controllers.UtilController import UtilController
 from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
 from Webserver.Controllers.Websocket.SlaveWebsocketController import SlaveWebsocketController
-from Webserver.BaseHandler import BaseHandler
+from Webserver.Models import WebSocketDatabaseMessage
 
 
 class TornadoServer:
@@ -77,6 +74,9 @@ class TornadoServer:
 
     def stop(self):
         tornado.ioloop.IOLoop.instance().stop()
+
+    def database_update(self, method, parameters):
+        self.slave_socket_controller.write(WebSocketDatabaseMessage(method, parameters))
 
     @staticmethod
     async def notify_master_async(url):

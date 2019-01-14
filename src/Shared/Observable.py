@@ -32,6 +32,13 @@ class Observable:
                 self.__wait_event.set()
                 break
 
+    def reset(self):
+        for k, v in self.__start_state.items():
+            if isinstance(v, int) or isinstance(v, float):
+                self.__dict__[k] = 0
+            else:
+                self.__dict__[k] = None
+
     def __check_update(self):
         while True:
             self.__wait_event.wait(self.__update_interval)
