@@ -21,7 +21,6 @@ from Webserver.Controllers.MediaPlayer.TorrentController import TorrentControlle
 from Webserver.Controllers.UtilController import UtilController
 from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
 from Webserver.Controllers.Websocket.SlaveWebsocketController import SlaveWebsocketController
-from Webserver.Models import WebSocketDatabaseMessage
 
 
 class TornadoServer:

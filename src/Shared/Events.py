@@ -6,7 +6,8 @@ from Shared.Logger import Logger
 
 
 class EventType(Enum):
-    HashDataKnown = 1,
+    HashDataKnown = 0,
+    SearchSubtitles = 1,
 
     Seek = 2,
     StartPlayer = 3,
@@ -52,6 +53,7 @@ class EventType(Enum):
 
     ClientRequest = 44,
     DatabaseUpdate = 45
+    RequestSubtitles = 46
 
 
 class EventManager:

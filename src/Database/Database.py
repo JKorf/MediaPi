@@ -91,7 +91,18 @@ class Database(metaclass=Singleton):
             self.connection.execute('SELECT * FROM History')
             data = self.connection.fetchall()
             self.disconnect()
-        return data
+        return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9]) for x in data]
+
+    def get_history_for_id(self, id):
+        if self.slave:
+            raise PermissionError("Cant call get_watched_file on slave")
+
+        with self.lock:
+            self.connect()
+            self.connection.execute('SELECT * FROM History WHERE ImdbId = ?', [id])
+            data = self.connection.fetchall()
+            self.disconnect()
+        return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9]) for x in data]
 
     def get_watched_torrent_files(self, uri):
         if self.slave:
@@ -310,3 +321,21 @@ class Database(metaclass=Singleton):
             self.connection.execute("DELETE FROM Stats WHERE Name=?", [key])
             self.database.commit()
             self.disconnect()
+
+class History:
+    def __init__(self, id, imdb_id, type, title, image, watched_at, season, episode, url, media_file):
+        self.id = id
+        self.imdb_id = imdb_id
+        self.type = type
+        self.title = title
+        self.image = image
+        self.watched_at = int(watched_at)
+        self.season = 0
+        self.episode = 0
+        try:
+            self.season = int(season)
+            self.episode = int(episode)
+        except:
+            pass
+        self.url = url
+        self.media_file = media_file

@@ -1,6 +1,7 @@
 import json
 import urllib.parse
 
+from Database.Database import Database
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory
@@ -22,6 +23,12 @@ class ShowController(BaseHandler):
             show = await self.get_by_id(self.get_argument("id"))
             self.write(show)
 
+    async def post(self, url):
+        if url == "add_favorite":
+            await self.add_favorite(self.get_argument("id"), self.get_argument("title"),self.get_argument("image"))
+        elif url == "remove_favorite":
+            await self.remove_favorite(self.get_argument("id"))
+
     async def get_shows(self, page, order_by, keywords):
         search_string = ""
         if keywords:
@@ -38,7 +45,20 @@ class ShowController(BaseHandler):
     async def get_by_id(self, id):
         Logger.write(2, "Get show by id " + id)
         response = await RequestFactory.make_request_async(ShowController.shows_api_path + "show/" + id)
-        return response
+        data = json.loads(response.decode('utf-8'))
+        seen_episodes = Database().get_history_for_id(id)
+        data['favorite'] = id in [x[0] for x in Database().get_favorites()]
+        for episode in data['episodes']:
+            episode['seen'] = len([x for x in seen_episodes if episode['season'] == x.season and episode['episode'] == x.episode]) != 0
+        return json.dumps(data).encode('utf-8')
+
+    async def add_favorite(self, id, title, image):
+        Logger.write(2, "Add show favorite: " + id)
+        Database().add_favorite(id, "Show", title, image)
+
+    async def remove_favorite(self, id):
+        Logger.write(2, "Remove show favorite: " + id)
+        Database().remove_favorite(id)
 
     @staticmethod
     def parse_show_data(data):

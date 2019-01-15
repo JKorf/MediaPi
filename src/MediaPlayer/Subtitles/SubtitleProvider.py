@@ -1,10 +1,10 @@
+import base64
 import glob
 import hashlib
 import os
 from os.path import isfile, join
 from threading import Lock
 
-from MediaPlayer.Player.VLCPlayer import PlayerState
 from MediaPlayer.Subtitles.SubtitlesOpenSubtitles import SubtitlesOpenSubtitles
 from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventManager, EventType
@@ -39,24 +39,30 @@ class SubtitleProvider:
         for f in file_list:
             os.remove(f)
 
-        EventManager.register_event(EventType.HashDataKnown, self.prepare_subs)
-        EventManager.register_event(EventType.PlayerMediaLoaded, self.prepare_subs_length)
-        EventManager.register_event(EventType.PlayerStateChange, self.download_subs)
+        EventManager.register_event(EventType.SearchSubtitles, self.search_subtitles)
 
-    def search_subtitles_for_file(self, path, filename):
+    def search_subtitles(self, name, size, length, first_64k, last_64k):
+        Logger.write(2, "Going to search subs: name: " + name + ", size: " + str(size) + ", length: " + str(length))
+        self.sub_files = []
+        for source in self.subtitle_sources:
+            thread = CustomThread(self.search_subtitles_thread, "Search subtitles", [source, size, length, name, first_64k, last_64k])
+            thread.start()
+
+    def search_subtitles_for_file(self, path):
         # check file location for files with same name
-        file_without_ext = os.path.splitext(filename)
+        file_name = os.path.basename(path)
+        file_without_ext = os.path.splitext(file_name)
         directory = os.path.dirname(path)
         subs = [join(directory, f) for f in os.listdir(directory) if isfile(join(directory, f)) and self.match_sub(f, file_without_ext[0])]
         if len(subs) > 0:
-            return subs
+            return [self.get_sub_data(x) for x in subs]
 
         # check
         size, first, last = get_file_info(path)
         sub_files = []
         for source in self.subtitle_sources:
-            sub_files += source.get_subtitles(size, 0, filename, first, last)
-        return sub_files
+            sub_files += source.get_subtitles(size, 0, file_name, first, last)
+        return [self.get_sub_data(x) for x in sub_files]
 
     @staticmethod
     def match_sub(file_name, media_name):
@@ -71,36 +77,6 @@ class SubtitleProvider:
             return file_name[:-7] == media_name
 
         return os.path.splitext(file_name)[0] == media_name
-
-    def prepare_subs_length(self, length):
-        Logger.write(2, "Set length to " + str(length))
-        self.file_length = length
-
-    def prepare_subs(self, size, filename, first_64k, last_64k):
-        Logger.write(2, "Hash data known, saving data")
-        self.file_size = size
-        self.file_name = filename
-        self.first_64k = first_64k
-        self.last_64k = last_64k
-
-    def download_subs(self, old_state, new_state):
-        if old_state == PlayerState.Opening and new_state == PlayerState.Playing:
-            if not self.file_name:
-                Logger.write(2, "Subs not prepared, skipping")
-                return
-
-            Logger.write(2, "Going to search subs. Size: " + str(self.file_size) + ", length: " + str(self.file_length) + ", name: " + self.file_name)
-            self.sub_files = []
-            for source in self.subtitle_sources:
-                thread = CustomThread(self.search_subtitles_thread, "Search subtitles", [source, self.file_size, self.file_length, self.file_name, self.first_64k, self.last_64k])
-                thread.start()
-
-        if new_state == PlayerState.Nothing:
-            self.file_size = 0
-            self.file_length = 0
-            self.file_name = None
-            self.first_64k = None
-            self.last_64k = None
 
     def search_subtitles_thread(self, source, size, file_length, file_name, first_64k, last_64k):
         sub_paths = source.get_subtitles(size, file_length, file_name, first_64k, last_64k)
@@ -120,6 +96,13 @@ class SubtitleProvider:
             f.seek(-size, os.SEEK_END)
             data += f.read(size)
         return hashlib.md5(data).hexdigest()
+
+    @staticmethod
+    def get_sub_data(path):
+        with open(path, 'rb') as f:
+            data = f.read()
+            encoded = base64.encodebytes(data)
+            return encoded.decode('ascii')
 
 
 class Subtitle:

@@ -68,11 +68,8 @@ class TorrentOutputManager:
 
         if start_done and end_done:
             self.broadcasted_hash_data = True
-            EventManager.throw_event(EventType.HashDataKnown,
-                                     [self.torrent.media_file.length,
-                                      os.path.basename(self.torrent.media_file.path),
-                                      self.torrent.get_data_bytes_for_hash(0, 65536),
-                                      self.torrent.get_data_bytes_for_hash(self.torrent.media_file.length - 65536, 65536)])
+            self.torrent.media_file.first_64k = self.torrent.get_data_bytes_for_hash(0, 65536)
+            self.torrent.media_file.last_64k = self.torrent.get_data_bytes_for_hash(self.torrent.media_file.length - 65536, 65536)
 
     def stop(self):
         self.stream_manager.stop()

@@ -12,7 +12,7 @@ from Shared.Settings import Settings
 from Shared.State import StateManager
 from Shared.Util import to_JSON, Singleton
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
-from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand, WebSocketRequestMessage, WebSocketInvalidMessage
+from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand, WebSocketRequestMessage, WebSocketInvalidMessage, WebSocketSlaveResponse
 
 
 class MasterWebsocketController(metaclass=Singleton):
@@ -152,10 +152,15 @@ class MasterWebsocketController(metaclass=Singleton):
             for client, subs in list(self.clients.items()):
                 self.write_message(client, data)
 
-        if 'event' in data and data['event'] == 'database':
-            method = getattr(Database(), data['method'])
-            method(*data['parameters'])
-            Logger.write(2, "Slave db update: " + str(data))
+        if 'event' in data and data['event'] == 'master_request':
+            if data['type'] == 'database':
+                method = getattr(Database(), data['method'])
+                method(*data['parameters'])
+                Logger.write(2, "Slave db update: " + str(data))
+            elif data['type'] == 'subtitles':
+                Logger.write(2, "Slave subtitle request: " + str(data))
+                sub_data = MediaManager().subtitle_provider.search_subtitles_for_file(data['parameters'][0])
+                self.write_message(client, WebSocketSlaveResponse(data['type'], data['method'], sub_data))
 
     def closing_client(self, client):
         if client in self.clients:

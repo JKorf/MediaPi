@@ -1,14 +1,10 @@
-import time
 import urllib.parse
 
-from Shared.Events import EventType, EventManager
-from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
 from Webserver.BaseHandler import BaseHandler
-from Webserver.Controllers.MediaPlayer.MovieController import MovieController
-from Webserver.Models import TorrentModel, Media
-from Webserver.Providers.TorrentProvider import TPB, Torrent
+from Webserver.Controllers.MediaPlayer.TorrentProvider import TPB
+from Webserver.Models import TorrentModel
 
 
 class TorrentController(BaseHandler):

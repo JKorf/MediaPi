@@ -1,14 +1,20 @@
 import urllib.parse
 
+from Database.Database import Database
 from MediaPlayer.MediaPlayer import MediaManager
 from Shared.Logger import Logger
+from Shared.Util import to_JSON
 from Webserver.BaseHandler import BaseHandler
+from Webserver.Controllers.MediaPlayer.RadioController import RadioController
+from Webserver.Controllers.MediaPlayer.TorrentProvider import Torrent
 from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
-from Webserver.Providers.RadioProvider import RadioProvider
-from Webserver.Providers.TorrentProvider import Torrent
 
 
 class PlayController(BaseHandler):
+    async def get(self, url):
+        if url == "history":
+            self.write(to_JSON(Database().get_history()))
+
     async def post(self, url):
         instance = int(self.get_argument("instance"))
         # ------------ Play movie --------------
@@ -42,7 +48,7 @@ class PlayController(BaseHandler):
 
         # ------------ Play radio --------------
         elif url == "radio":
-            radio = RadioProvider.get_by_id(int(self.get_argument("id")))
+            radio = RadioController.get_by_id(int(self.get_argument("id")))
             Logger.write(2, "Play radio " + radio.title + " on " + str(instance))
             if MasterWebsocketController().is_self(instance):
                 MediaManager().start_radio(radio.title, radio.url)

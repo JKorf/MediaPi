@@ -1,11 +1,17 @@
 import React, { Component } from 'react';
-import axios from 'axios'
+import axios from 'axios';
 
-import View from './../View.js'
-import MediaPlayerView from './MediaPlayerView.js'
-import Button from './../../Components/Button'
-import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup'
-import Popup from './../../Components/Popups/Popup'
+import View from './../View.js';
+import MediaPlayerView from './MediaPlayerView.js';
+import Button from './../../Components/Button';
+import SvgImage from './../../Components/SvgImage';
+import ColorIndicator from './../../Components/ColorIndicator';
+import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup';
+import Popup from './../../Components/Popups/Popup';
+
+import favoriteImage from './../../../Images/favorite.svg';
+import favoriteFullImage from './../../../Images/favorite-full.svg';
+import seenImage from './../../../Images/watched.svg';
 
 class ShowView extends Component {
   constructor(props) {
@@ -17,6 +23,7 @@ class ShowView extends Component {
 
     this.play = this.play.bind(this);
     this.playShow = this.playShow.bind(this);
+    this.toggleFavorite = this.toggleFavorite.bind(this);
   }
 
   componentDidMount() {
@@ -46,6 +53,17 @@ class ShowView extends Component {
     this.setState({selectedEpisode: episode.episode});
   }
 
+  toggleFavorite(){
+    var show = this.state.show;
+    show.favorite = !show.favorite;
+    this.setState({show: show});
+
+    if(show.favorite)
+        axios.post('http://'+window.location.hostname+'/shows/add_favorite?id=' + this.props.match.params.id + "&title=" + encodeURIComponent(show.title) + "&image=" + encodeURIComponent(show.images.poster));
+    else
+        axios.post('http://'+window.location.hostname+'/shows/remove_favorite?id=' + this.props.match.params.id);
+  }
+
   play(episode){
     this.viewRef.current.play({url: episode.torrents["0"].url, episode: episode.episode, season: episode.season, title: this.state.show.title + " [S" + episode.season + "E" + episode.episode + "]"});
   }
@@ -73,10 +91,14 @@ class ShowView extends Component {
     const show = this.state.show;
     const selectedSeason = this.state.selectedSeason;
     const selectedEpisode = this.state.selectedEpisode;
+    const favorited = this.state.show.favorite;
 
     return (
         <MediaPlayerView ref={this.viewRef} playMedia={this.playShow}>
           <div className="show">
+            <div className={"show-favorite " + (favorited ? "selected" : "") } onClick={this.toggleFavorite}>
+                <SvgImage key={favorited} src={(favorited ? favoriteFullImage : favoriteImage)} />
+            </div>
             <div className="show-image">
                 <img src={show.images.poster} />
             </div>
@@ -95,7 +117,7 @@ class ShowView extends Component {
                 </div>
                 <div className="label-row">
                     <div className="label-field">Rating</div>
-                    <div className="label-value">{show.rating.percentage}%</div>
+                    <div className="label-value"><ColorIndicator value={show.rating.percentage}>{show.rating.percentage}%</ColorIndicator></div>
                 </div>
             </div>
             <div className="show-synopsis">
@@ -104,14 +126,21 @@ class ShowView extends Component {
             <div className="show-episode-selection">
                 <div className="show-seasons">
                     { Object.entries(show.seasons).map(([season, episodes]) =>
-                        <div key={season} className={"show-season " + (this.state.selectedSeason == season ? 'selected' : '')} onClick={(e) => this.seasonSelect(e, season)}>Season {season}</div>
+                        <div key={season} className={"show-season " + (this.state.selectedSeason == season ? 'selected' : '')} onClick={(e) => this.seasonSelect(e, season)}>
+                            <div className="show-season-title">Season {season}</div>
+                            <div className="show-season-episodes">{episodes.length} episodes</div>
+                        </div>
                     )}
                 </div>
                 {selectedSeason != -1 &&
                     <div className="show-episodes">
                         { show.seasons[selectedSeason].map((episode, index) => (
                             <div key={index} className={"show-episode " + (this.state.selectedEpisode == episode.episode ? 'selected' : '')} onClick={(e) => this.episodeSelect(e, episode)}>
-                                <div className="show-episode-title truncate">{episode.episode} - {episode.title}</div>
+                                <div className="show-episode-title">
+                                    <div className={"show-episode-title-text truncate " + (episode.seen ? "seen": "")}>{episode.episode} - {episode.title}</div>
+                                    <div className="show-episode-title-date">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(1970, 0, 0).setSeconds(episode.first_aired))}</div>
+                                    { episode.seen && <div className="show-episode-title-seen"><SvgImage src={seenImage} /></div> }
+                                </div>
                                 { selectedEpisode == episode.episode &&
                                     <div className="show-episode-selected">
                                         <div className="show-episode-synopsis">

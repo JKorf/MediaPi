@@ -23,9 +23,6 @@ class UtilController(BaseHandler):
             self.write(self.startup())
         elif url == "info":
             self.write(self.info())
-        elif url == "get_subtitles":
-            data = MediaManager().subtitle_provider.search_subtitles_for_file(self.get_argument("path"), self.get_argument("file"))
-            self.write(to_JSON(data))
 
     def post(self, url):
         if url == "shutdown":

@@ -9,6 +9,7 @@ import torrentImg from './../../../Images/link.svg'
 import radioImg from './../../../Images/radio.svg'
 import youtubeImg from './../../../Images/youtube.svg'
 import playImg from './../../../Images/play.svg'
+import historyImg from './../../../Images/history.svg'
 
 class MediaPlayerDashboardView extends Component {
   constructor(props) {
@@ -23,13 +24,14 @@ class MediaPlayerDashboardView extends Component {
   render() {
     return (
     <div className="mediaplayer-dashboard">
-        <DashboardLink to="/mediaplayer/shows" img={showImg} text="Shows"></DashboardLink>
-        <DashboardLink to="/mediaplayer/movies" img={movieImg} text="Movies"></DashboardLink>
-        <DashboardLink to="/mediaplayer/hd" img={hdImg} text="Hard disk"></DashboardLink>
-        <DashboardLink to="/mediaplayer/torrents" img={torrentImg} text="Torrents"></DashboardLink>
-        <DashboardLink to="/mediaplayer/radio" img={radioImg} text="Radio"></DashboardLink>
-        <DashboardLink to="/mediaplayer/youtube" img={youtubeImg} text="Youtube"></DashboardLink>
-        <DashboardLink to="/mediaplayer/players" img={playImg} text="Players"></DashboardLink>
+        <DashboardLink to="/mediaplayer/shows" img={showImg} text="shows"></DashboardLink>
+        <DashboardLink to="/mediaplayer/movies" img={movieImg} text="movies"></DashboardLink>
+        <DashboardLink to="/mediaplayer/hd" img={hdImg} text="hard disk"></DashboardLink>
+        <DashboardLink to="/mediaplayer/torrents" img={torrentImg} text="torrents"></DashboardLink>
+        <DashboardLink to="/mediaplayer/radio" img={radioImg} text="radio"></DashboardLink>
+        <DashboardLink to="/mediaplayer/youtube" img={youtubeImg} text="youtube"></DashboardLink>
+        <DashboardLink to="/mediaplayer/players" img={playImg} text="players"></DashboardLink>
+        <DashboardLink to="/mediaplayer/history" img={historyImg} text="history"></DashboardLink>
     </div>
     );
   }

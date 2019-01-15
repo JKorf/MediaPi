@@ -11,7 +11,7 @@ open_weather_map_key=ba7d7c80475db4a254c38fd0295468f1
 log_folder=/home/pi/Scripts/Logs
 serie_api=https://tv-v2.api-fetch.website/
 movie_api=https://tv-v2.api-fetch.website/
-base_folder=/home/pi/Scripts/
+base_folder=C:/home/pi/Scripts/
 tpb_api=https://uktpb.net/
 master_base_folder=C:/
 

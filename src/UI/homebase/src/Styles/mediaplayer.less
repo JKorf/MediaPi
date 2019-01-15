@@ -217,6 +217,20 @@
     background: #colors[primary-background];
 }
 
+.show-season-episodes{
+    font-size: 12px;
+    color: #aaa;
+}
+
+.show-episode-title{
+    position: relative;
+}
+
+.show-episode-title-date{
+    font-size: 12px;
+    color: #aaa;
+}
+
 .show-episodes{
     vertical-align: top;
     display:inline-block;
@@ -226,13 +240,35 @@
 }
 
 .show-episode{
-    padding: 4px 18px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 18px;
     border: 1px solid #colors[primary-background];
     border-left: 8px solid #colors[primary-background];
 }
 
 .show-episode.selected .show-episode-title{
     font-weight: bold;
+}
+
+.show-episode-title-text{
+    max-width: calc(100% - 26px);
+
+    &.seen{
+        color: #bbb;
+    }
+}
+
+.show-episode-title-seen{
+    position: absolute;
+    right: 4px;
+    top: 0;
+    width: 18px;
+    height: 18px;
+
+    svg{
+        fill: #colors[primary-images];
+    }
 }
 
 .show-episode-synopsis{
@@ -555,4 +591,47 @@
 .media-view-wrapper{
     width: 100%;
     height: 100%;
+}
+
+.show-favorite{
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    right: 15px;
+    top: 12px;
+
+    fill: #colors[primary-images];
+
+    &.selected{
+        fill: #ffce54;
+    }
+}
+
+.history{
+    margin:15px;
+}
+
+.history-item{
+    position: relative;
+    background: #colors[secondary-background];
+    margin-bottom: 10px;
+
+    .history-item-image{
+        width: 100px;
+        img{
+            width: 100px;
+        }
+    }
+
+    .history-item-details{
+        position: absolute;
+        right:0;
+        left:100px;
+        top:0;
+        padding: 10px;
+
+        .history-item-title{
+            font-weight: bold;
+        }
+    }
 }

@@ -15,6 +15,7 @@ import RadioView from './Modules/Views/MediaPlayer/RadioView.js'
 import TorrentView from './Modules/Views/MediaPlayer/TorrentView.js'
 import PlayersView from './Modules/Views/MediaPlayer/PlayersView.js'
 import PlayerView from './Modules/Views/MediaPlayer/PlayerView.js'
+import HistoryView from './Modules/Views/MediaPlayer/HistoryView.js'
 import Socket from './Socket.js'
 import PopupController from './Modules/PopupController.js'
 import InfoMessageController from './Modules/InfoMessageController.js'
@@ -71,6 +72,7 @@ class App extends Component {
                     <Route path="/mediaplayer/torrents" exact render={(props) => <TorrentView {...props} functions={this.functions}  />} />
                     <Route path="/mediaplayer/players" exact render={(props) => <PlayersView {...props} functions={this.functions}/>} />
                     <Route path="/mediaplayer/player/:id" exact render={(props) => <PlayerView {...props} functions={this.functions}  />} />
+                    <Route path="/mediaplayer/history" exact render={(props) => <HistoryView {...props} functions={this.functions}  />} />
                 </View>
                 <Footer />
                 <PopupController />

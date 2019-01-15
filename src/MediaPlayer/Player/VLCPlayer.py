@@ -4,7 +4,7 @@ import time
 from enum import Enum
 
 from MediaPlayer.Player import vlc
-from MediaPlayer.Player.vlc import libvlc_get_version, EventType as VLCEventType
+from MediaPlayer.Player.vlc import libvlc_get_version, EventType as VLCEventType, MediaSlaveType, MediaSlave
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Observable import Observable
@@ -171,7 +171,6 @@ class VLCPlayer(metaclass=Singleton):
         tracks = self.__player.video_get_spu_description()
         result = []
         for trackid, trackname in tracks:
-
             result.append((trackid, trackname.decode('utf-8')))
         return result
 

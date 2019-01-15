@@ -1,6 +1,6 @@
-import datetime
 import os
 import time
+import urllib.parse
 
 from MediaPlayer.TorrentStreaming.Torrent.Torrent import Torrent
 
@@ -8,6 +8,7 @@ from Database.Database import Database
 from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
 from MediaPlayer.TorrentStreaming.DHT.Engine import DHTEngine
+from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
 from Shared.Observable import Observable
@@ -24,6 +25,7 @@ class MediaManager(metaclass=Singleton):
 
         self.torrent = None
         self.subtitle_provider = SubtitleProvider()
+        self.previous_player_state = PlayerState.Nothing
 
         self.dht_enabled = Settings.get_bool("dht")
         if self.dht_enabled:
@@ -39,11 +41,12 @@ class MediaManager(metaclass=Singleton):
         self.torrent_observer.start()
 
     def start_file(self, url, time):
+        actual_url = url
         if Settings.get_bool("slave"):
-            url = Settings.get_string("master_ip") + ":50015/file/" + url
+            actual_url = Settings.get_string("master_ip") + ":50015/file/" + urllib.parse.quote(url)
 
         self.stop_play()
-        VLCPlayer().play(url, time)
+        VLCPlayer().play(actual_url, time)
         if Settings.get_bool("slave"):
             EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_file", [url, current_time()]])
         else:
@@ -51,6 +54,7 @@ class MediaManager(metaclass=Singleton):
         self.media_data.start_update()
         self.media_data.type = "File"
         self.media_data.title = os.path.basename(url)
+        self.media_data.url = url
         self.media_data.image = None
         self.media_data.stop_update()
 
@@ -163,22 +167,29 @@ class MediaManager(metaclass=Singleton):
 
             time.sleep(1)
 
-    def player_state_change(self, newState):
-        if newState.state == PlayerState.Ended:
+    def player_state_change(self, new_state):
+        if self.previous_player_state != new_state.state and new_state.state == PlayerState.Ended:
             if self.torrent is not None:
                 self.torrent.stop()
                 Logger.write(2, "Ended " + self.torrent.media_file.name)
                 self.torrent = None
 
-        if newState.state == PlayerState.Nothing:
-            self.media_data.start_update()
-            self.media_data.type = None
-            self.media_data.title = None
-            self.media_data.image = None
-            self.media_data.id = 0
-            self.media_data.season = 0
-            self.media_data.episode = 0
-            self.media_data.stop_update()
+        if self.previous_player_state != new_state.state and new_state.state == PlayerState.Nothing:
+            self.media_data.reset()
+
+        if self.previous_player_state != new_state.state and new_state.state == PlayerState.Playing:
+            media_type = self.media_data.type
+            if media_type == "File":
+                if Settings.get_bool("slave"):
+                    EventManager.throw_event(EventType.RequestSubtitles, [self.media_data.url])
+                else:
+                    size, first_64k, last_64k = get_file_info(self.media_data.url)
+                    EventManager.throw_event(EventType.SearchSubtitles, [self.media_data.title, size, VLCPlayer().get_length(), first_64k, last_64k])
+            elif media_type == "Show" or media_type == "Movie" or media_type == "Torrent":
+                EventManager.throw_event(EventType.SearchSubtitles, [os.path.basename(self.torrent.media_file.name), self.torrent.media_file.length, VLCPlayer().get_length(), self.torrent.media_file.first_64k, self.torrent.media_file.last_64k])
+
+
+        self.previous_player_state = new_state.state
 
     def stop_torrent(self):
         if self.torrent:
@@ -188,9 +199,7 @@ class MediaManager(metaclass=Singleton):
     def observe_torrent(self):
         while True:
             if self.torrent is None:
-                self.torrent_data.start_update()
                 self.torrent_data.reset()
-                self.torrent_data.stop_update()
                 time.sleep(0.5)
                 continue
 
@@ -220,7 +229,6 @@ class MediaManager(metaclass=Singleton):
 
             self.torrent_data.stop_update()
             time.sleep(0.5)
-
 
 class TorrentData(Observable):
 
@@ -255,6 +263,7 @@ class MediaData(Observable):
         super().__init__("MediaData", 0.5)
         self.type = None
         self.title = None
+        self.url = None
         self.image = None
         self.season = 0
         self.episode = 0

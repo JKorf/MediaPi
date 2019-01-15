@@ -8,7 +8,6 @@ class MediaThumbnail extends Component {
   constructor(props) {
     super(props);
     this.lastScrollEvent = new Date();
-    console.log(props.media);
   }
 
   handleScroll = (e) => {

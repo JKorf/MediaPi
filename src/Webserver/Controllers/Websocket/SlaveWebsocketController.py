@@ -1,3 +1,4 @@
+import base64
 import json
 import traceback
 from threading import Lock
@@ -5,6 +6,7 @@ from threading import Lock
 import websocket
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaPlayer import MediaManager
+from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
 from Shared.Engine import Engine
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -12,7 +14,7 @@ from Shared.Settings import Settings
 from Shared.State import StateManager
 from Shared.Util import to_JSON
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
-from Webserver.Models import WebSocketInitMessage, WebSocketSlaveMessage, WebSocketRequestMessage, WebSocketInvalidMessage, WebSocketDatabaseMessage
+from Webserver.Models import WebSocketInitMessage, WebSocketSlaveMessage, WebSocketRequestMessage, WebSocketInvalidMessage, WebSocketSlaveRequest
 
 
 class SlaveWebsocketController:
@@ -33,7 +35,8 @@ class SlaveWebsocketController:
         self.pending_message_handler = PendingMessagesHandler(self.send_client_request, self.client_message_invalid, self.client_message_removed)
 
         EventManager.register_event(EventType.ClientRequest, self.add_client_request)
-        EventManager.register_event(EventType.DatabaseUpdate, lambda method, params: self.write(WebSocketDatabaseMessage(method, params)))
+        EventManager.register_event(EventType.DatabaseUpdate, lambda method, params: self.write(WebSocketSlaveRequest("database", method, params)))
+        EventManager.register_event(EventType.RequestSubtitles, lambda file: self.write(WebSocketSlaveRequest("subtitles", "get", [file])))
 
     def start(self):
         VLCPlayer().player_state.register_callback(lambda x: self.broadcast_data("player", x))
@@ -99,8 +102,19 @@ class SlaveWebsocketController:
                 if data['topic'] == 'media':
                     method = getattr(MediaManager(), data['method'])
                     method(*data['parameters'])
+
+            elif data['event'] == 'master_response':
+                if data['type'] == 'subtitles' and data['method'] == 'get':
+                    i = 0
+                    paths = []
+                    for subtitle_file in data['parameters']:
+                        sub_bytes = base64.decodebytes(subtitle_file.encode('ascii'))
+                        paths.append(SubtitleSourceBase.save_file("master_" + str(i), sub_bytes))
+                        i += 1
+                    EventManager.throw_event(EventType.SetSubtitleFiles, [paths])
+
         except Exception as e:
-            Logger.write(3, "Error in Slave websocket controoler: " + str(e), 'error')
+            Logger.write(3, "Error in Slave websocket controller: " + str(e), 'error')
             stack_trace = traceback.format_exc().split('\n')
             for stack_line in stack_trace:
                 Logger.write(3, stack_line)

@@ -447,6 +447,8 @@ class TorrentDownloadFile:
         self.stream = None
         self.done = False
         self.is_media = is_media
+        self.first_64k = None
+        self.last_64k = None
 
         self.season = 0
         self.episode = 0

@@ -33,11 +33,13 @@ class Observable:
                 break
 
     def reset(self):
+        self.start_update()
         for k, v in self.__start_state.items():
             if isinstance(v, int) or isinstance(v, float):
                 self.__dict__[k] = 0
             else:
                 self.__dict__[k] = None
+        self.stop_update()
 
     def __check_update(self):
         while True:
