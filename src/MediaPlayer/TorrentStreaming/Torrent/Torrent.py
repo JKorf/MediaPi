@@ -383,7 +383,11 @@ class Torrent:
         return True
 
     def stop(self):
+        if self.__state == TorrentState.Stopping:
+            return
+
         Logger.write(2, 'Torrent stopping')
+        self.__set_state(TorrentState.Stopping)
         EventManager.deregister_event(self.user_file_selected_id)
 
         self.engine.stop()

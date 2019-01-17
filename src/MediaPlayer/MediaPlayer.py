@@ -2,6 +2,7 @@ import os
 import time
 import urllib.parse
 
+from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.TorrentStreaming.Torrent.Torrent import Torrent
 
 from Database.Database import Database
@@ -25,7 +26,13 @@ class MediaManager(metaclass=Singleton):
 
         self.torrent = None
         self.subtitle_provider = SubtitleProvider()
+        self.next_episode_manager = NextEpisodeManager()
+        self.play_position = 0
+        self.play_length = 0
+
         self.previous_player_state = PlayerState.Nothing
+        self.history_id = 0
+        self.last_tracking_update = 0
 
         self.dht_enabled = Settings.get_bool("dht")
         if self.dht_enabled:
@@ -33,7 +40,7 @@ class MediaManager(metaclass=Singleton):
             self.dht.start()
 
         EventManager.register_event(EventType.NoPeers, self.stop_torrent)
-        EventManager.register_event(EventType.TorrentMediaSelectionRequired, lambda files: EventManager.throw_event(EventType.ClientRequest, [self.set_media_file, 1000 * 60 * 60 * 24, "SelectMediaFile", [files]]))
+        EventManager.register_event(EventType.TorrentMediaSelectionRequired, lambda files: EventManager.throw_event(EventType.ClientRequest, [self.set_media_file, self.stop_play, 1000 * 60 * 30, "SelectMediaFile", [files]]))
         EventManager.register_event(EventType.TorrentMediaFileSet, lambda x: self._start_playing_torrent())
 
         VLCPlayer().player_state.register_callback(self.player_state_change)
@@ -50,7 +57,7 @@ class MediaManager(metaclass=Singleton):
         if Settings.get_bool("slave"):
             EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_file", [url, current_time()]])
         else:
-            Database().add_watched_file(url, current_time())
+            self.history_id = Database().add_watched_file(url, current_time())
         self.media_data.start_update()
         self.media_data.type = "File"
         self.media_data.title = os.path.basename(url)
@@ -79,9 +86,9 @@ class MediaManager(metaclass=Singleton):
         self.media_data.episode = episode
         self.media_data.stop_update()
 
-    def start_torrent(self, title, url):
+    def start_torrent(self, title, url, media_file=None):
         self.stop_play()
-        self._start_torrent(url, None)
+        self._start_torrent(url, media_file)
         self.media_data.start_update()
         self.media_data.type = "Torrent"
         self.media_data.title = title
@@ -104,7 +111,7 @@ class MediaManager(metaclass=Singleton):
         if Settings.get_bool("slave"):
             EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_url", [url, current_time()]])
         else:
-            Database().add_watched_url(url, current_time())
+            self.history_id = Database().add_watched_url(url, current_time())
         self.media_data.start_update()
         self.media_data.type = "Url"
         self.media_data.title = title
@@ -129,9 +136,21 @@ class MediaManager(metaclass=Singleton):
         VLCPlayer().set_subtitle_delay(delay)
 
     def stop_play(self):
-        VLCPlayer().stop()
         self.stop_torrent()
+        VLCPlayer().stop()
         time.sleep(1)
+
+    def play_next_episode(self, should_play):
+        if should_play:
+            if self.next_episode_manager.next_type == "File":
+                self.start_file(self.next_episode_manager.next_path, 0)
+            elif self.next_episode_manager.next_type == "Show":
+                self.start_episode(self.next_episode_manager.next_id, self.next_episode_manager.next_season, self.next_episode_manager.next_episode, self.next_episode_manager.next_title, self.next_episode_manager.next_path, self.next_episode_manager.next_img)
+            else:
+                self.start_torrent(self.next_episode_manager.next_title, self.next_episode_manager.next_path, self.next_episode_manager.next_media_file)
+
+            Logger.write(2, "Play next! " + self.next_episode_manager.next_title)
+        self.next_episode_manager.reset()
 
     def set_media_file(self, file):
         if not file:
@@ -143,7 +162,7 @@ class MediaManager(metaclass=Singleton):
         if Settings.get_bool("slave"):
             EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_torrent", [self.media_data.type, self.media_data.title, self.media_data.id, self.torrent.uri, self.torrent.media_file.path, self.media_data.image, self.media_data.season, self.media_data.episode, current_time()]])
         else:
-            Database().add_watched_torrent(self.media_data.type, self.media_data.title, self.media_data.id, self.torrent.uri, self.torrent.media_file.path, self.media_data.image, self.media_data.season, self.media_data.episode, current_time())
+            self.history_id = Database().add_watched_torrent(self.media_data.type, self.media_data.title, self.media_data.id, self.torrent.uri, self.torrent.media_file.path, self.media_data.image, self.media_data.season, self.media_data.episode, current_time())
         VLCPlayer().play("http://localhost:50009/torrent")
 
     def _start_torrent(self, url, media_file):
@@ -168,28 +187,62 @@ class MediaManager(metaclass=Singleton):
             time.sleep(1)
 
     def player_state_change(self, new_state):
-        if self.previous_player_state != new_state.state and new_state.state == PlayerState.Ended:
-            if self.torrent is not None:
-                self.torrent.stop()
-                Logger.write(2, "Ended " + self.torrent.media_file.name)
-                self.torrent = None
+        if self.previous_player_state != new_state.state:
+            Logger.write(2, "Player state changed from " + str(self.previous_player_state) + " to " + str(new_state.state))
 
-        if self.previous_player_state != new_state.state and new_state.state == PlayerState.Nothing:
-            self.media_data.reset()
+        if new_state.state == PlayerState.Playing:
+            self.play_position = new_state.playing_for
+            self.play_length = new_state.length
 
         if self.previous_player_state != new_state.state and new_state.state == PlayerState.Playing:
-            media_type = self.media_data.type
-            if media_type == "File":
-                if Settings.get_bool("slave"):
-                    EventManager.throw_event(EventType.RequestSubtitles, [self.media_data.url])
-                else:
-                    size, first_64k, last_64k = get_file_info(self.media_data.url)
-                    EventManager.throw_event(EventType.SearchSubtitles, [self.media_data.title, size, VLCPlayer().get_length(), first_64k, last_64k])
-            elif media_type == "Show" or media_type == "Movie" or media_type == "Torrent":
-                EventManager.throw_event(EventType.SearchSubtitles, [os.path.basename(self.torrent.media_file.name), self.torrent.media_file.length, VLCPlayer().get_length(), self.torrent.media_file.first_64k, self.torrent.media_file.last_64k])
+            self.update_subtitles(new_state)
+            next_episode_thread = CustomThread(lambda: self.next_episode_manager.check_next_episode(self.media_data, self.torrent), "Check next episode", [])
+            next_episode_thread.start()
 
+        if self.previous_player_state != new_state.state and new_state.state == PlayerState.Nothing:
+            self.history_id = 0
+            self.media_data.reset()
+            self.stop_torrent()
+            if self.play_length != 0 and self.play_position / self.play_length > 0.9:
+                self.next_episode_manager.notify_next_episode(self.play_next_episode, self.next_episode_manager.reset)
+            else:
+                self.next_episode_manager.reset()
+            self.play_position = 0
+            self.play_length = 0
 
+        self.update_tracking(new_state)
         self.previous_player_state = new_state.state
+
+    def update_subtitles(self, new_state):
+        media_type = self.media_data.type
+        if media_type == "File":
+            if Settings.get_bool("slave"):
+                EventManager.throw_event(EventType.RequestSubtitles, [self.media_data.url])
+            else:
+                size, first_64k, last_64k = get_file_info(self.media_data.url)
+                EventManager.throw_event(EventType.SearchSubtitles, [self.media_data.title, size, VLCPlayer().get_length(), first_64k, last_64k])
+        elif media_type == "Show" or media_type == "Movie" or media_type == "Torrent":
+            EventManager.throw_event(EventType.SearchSubtitles, [os.path.basename(self.torrent.media_file.name), self.torrent.media_file.length, VLCPlayer().get_length(), self.torrent.media_file.first_64k, self.torrent.media_file.last_64k])
+
+    def update_tracking(self, state):
+            if self.media_data.type == "Radio":
+                return
+
+            if self.history_id == 0 or state.state != PlayerState.Playing or current_time() - self.last_tracking_update < 5000:
+                return
+
+            if state.playing_for > state.length - (state.length * 0.04):
+                if Settings.get_bool("slave"):
+                    EventManager.throw_event(EventType.DatabaseUpdate, ["update_watching_item", [self.history_id, state.length, state.length, current_time()]])
+                else:
+                    Database().update_watching_item(self.history_id, state.length, state.length, current_time())
+                self.last_tracking_update = current_time()
+            else:
+                if Settings.get_bool("slave"):
+                    EventManager.throw_event(EventType.DatabaseUpdate, ["update_watching_item", [self.history_id, state.playing_for, state.length, current_time()]])
+                else:
+                    Database().update_watching_item(self.history_id, state.playing_for, state.length, current_time())
+                self.last_tracking_update = current_time()
 
     def stop_torrent(self):
         if self.torrent:

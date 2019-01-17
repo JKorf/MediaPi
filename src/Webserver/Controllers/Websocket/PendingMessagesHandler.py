@@ -47,9 +47,10 @@ class PendingMessagesHandler:
 
 class ClientMessage:
 
-    def __init__(self, id, callback, valid_for, type, data):
+    def __init__(self, id, callback, callback_no_answer, valid_for, type, data):
         self.id = id
         self.callback = callback
+        self.callback_no_answer = callback_no_answer
         self.valid_till = current_time() + valid_for
         self.type = type
         self.data = data

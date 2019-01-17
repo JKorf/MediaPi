@@ -14,7 +14,6 @@ from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from Webserver.TornadoServer import TornadoServer
 from MediaPlayer.MediaPlayer import MediaManager
-from MediaPlayer.MediaTracker import MediaTracker
 from MediaPlayer.Streaming.StreamListener import StreamListener
 
 from UI.TV.GUI import GUI
@@ -55,7 +54,6 @@ class Program:
         LightManager().init()
         WiFiController().start()
         Stats().start()
-        MediaTracker().start()
 
         if not self.is_slave:
             self.file_listener = StreamListener("MasterFileServer", 50015)
@@ -84,7 +82,6 @@ class Program:
         Stats()
         VLCPlayer()
         NextEpisodeManager()
-        MediaTracker()
         WiFiController()
         MediaManager()
         LightManager()

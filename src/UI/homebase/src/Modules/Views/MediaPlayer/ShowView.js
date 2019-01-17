@@ -64,8 +64,15 @@ class ShowView extends Component {
         axios.post('http://'+window.location.hostname+'/shows/remove_favorite?id=' + this.props.match.params.id);
   }
 
+  addLeadingZero(value)
+  {
+    if (value > 10)
+        return value;
+    return "0" + value;
+  }
+
   play(episode){
-    this.viewRef.current.play({url: episode.torrents["0"].url, episode: episode.episode, season: episode.season, title: this.state.show.title + " [S" + episode.season + "E" + episode.episode + "]"});
+    this.viewRef.current.play({url: episode.torrents["0"].url, episode: episode.episode, season: episode.season, title: this.state.show.title + " [S" + this.addLeadingZero(episode.season) + "E" + this.addLeadingZero(episode.episode) + "]"});
   }
 
   playShow(instance, episode)

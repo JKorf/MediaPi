@@ -50,10 +50,10 @@ class StreamListener:
         self.thread.start()
 
     def handle_request(self, socket):
-        if len(self.requests) > 0 and self.torrent is not None:
-            Logger.write(2, self.name + " new request, closing others")
-            for request in self.requests:
-                request.active = False
+        #if len(self.requests) > 0 and self.torrent is not None:
+            #Logger.write(2, self.name + " new request, now " + str(len(self.requests)))
+            # for request in self.requests:
+            #     request.active = False
 
         self.add_socket(socket, "")
         Logger.write(2, self.name + " new request, now " + str(len(self.requests)))

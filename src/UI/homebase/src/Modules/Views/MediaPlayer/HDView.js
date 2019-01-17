@@ -40,7 +40,7 @@ class HDView extends Component {
 
     this.path += dir + "/";
     this.loadFolder(this.path);
-    this.props.changeBack({ action: () => this.dirUp() });
+    this.props.functions.changeBack({ action: () => this.dirUp() });
   }
 
   dirUp(){
@@ -56,7 +56,7 @@ class HDView extends Component {
     this.loadFolder(this.path);
 
     if(this.isBaseFolder(this.path))
-        this.props.changeBack({ to: "/mediaplayer/" });
+        this.props.functions.changeBack({ to: "/mediaplayer/" });
   }
 
   isBaseFolder(dir){

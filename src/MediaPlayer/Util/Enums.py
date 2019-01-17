@@ -5,6 +5,7 @@ class TorrentState:
     Downloading = 3
     Paused = 4
     Done = 5
+    Stopping = 7
 
     @staticmethod
     def get_str(val):
@@ -14,6 +15,7 @@ class TorrentState:
         if val == TorrentState.Paused: return "Paused"
         if val == TorrentState.Done: return "Done"
         if val == TorrentState.WaitingUserFileSelection: return "WaitingUserFileSelection"
+        if val == TorrentState.Stopping: return "Stopping"
 
 
 class PeerMessageType:

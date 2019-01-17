@@ -13,42 +13,39 @@ class Database(metaclass=Singleton):
     def __init__(self):
         self.path = Settings.get_string("base_folder") + "Solution/database.data"
         self.slave = Settings.get_bool("slave")
-        self.database = None
-        self.connection = None
-        self.current_version = 7
+        self.current_version = 9
         self.lock = Lock()
-        self.last_history_add = 0
 
     def init_database(self):
         with self.lock:
             database_exists = os.path.isfile(self.path)
 
             if not database_exists:
-                self.connect()
-                self.create_structure()
-                self.database.commit()
-                self.disconnect()
+                database, cursor = self.connect()
+                with open(str(pathlib.Path(__file__).parent) + '/Migrations/Create.sql', 'r') as script:
+                    data = script.read().replace('\n', '')
+
+                cursor.executescript(data)
+                database.commit()
+                database.close()
 
             self.check_migration()
 
     def connect(self):
-        self.database = sqlite3.connect(self.path)
-        self.connection = self.database.cursor()
-
-    def disconnect(self):
-        self.database.close()
+        database = sqlite3.connect(self.path)
+        return database, database.cursor()
 
     def check_migration(self):
-        self.connect()
-        self.connection.execute("CREATE TABLE IF NOT EXISTS Version (version_number INTEGER)")
-        self.connection.execute("SELECT version_number FROM Version")
-        db_version_rows = self.connection.fetchall()
+        database, cursor = self.connect()
+        cursor.execute("CREATE TABLE IF NOT EXISTS Version (version_number INTEGER)")
+        cursor.execute("SELECT version_number FROM Version")
+        db_version_rows = cursor.fetchall()
         db_version = 0
         if len(db_version_rows) != 0:
             db_version = db_version_rows[0][0]
         else:
-            self.connection.execute("INSERT INTO Version (version_number) VALUES(0)")
-            self.database.commit()
+            cursor.execute("INSERT INTO Version (version_number) VALUES(0)")
+            database.commit()
 
         if db_version > self.current_version:
             Logger.write(2, "DB version higher than software, can't process")
@@ -57,40 +54,34 @@ class Database(metaclass=Singleton):
         changed = False
         while db_version != self.current_version:
             Logger.write(2, "Database version " + str(db_version) + ", latest is " + str(self.current_version) + ". Upgrading")
-            self.upgrade(db_version)
+            self.upgrade(database, cursor, db_version)
             db_version += 1
             changed = True
 
-        self.disconnect()
+        database.close()
         if changed:
             Logger.write(2, "Database upgrade completed")
 
-    def upgrade(self, number):
+    def upgrade(self, database, cursor, number):
         new_version = number + 1
         Logger.write(2, "Upgrading database from " + str(number) + " to " + str(new_version))
 
         with open(str(pathlib.Path(__file__).parent) + '/Migrations/Upgrade_' + str(new_version) + '.sql', 'r') as script:
             data = script.read().replace('\n', '')
 
-        self.connection.executescript(data)
-        self.connection.execute("UPDATE Version SET version_number=" + str(new_version))
-        self.database.commit()
-
-    def create_structure(self):
-        with open(str(pathlib.Path(__file__).parent) + '/Migrations/Create.sql', 'r') as script:
-            data = script.read().replace('\n', '')
-
-        self.connection.executescript(data)
+        cursor.executescript(data)
+        cursor.execute("UPDATE Version SET version_number=" + str(new_version))
+        database.commit()
 
     def get_history(self):
         if self.slave:
             raise PermissionError("Cant call get_watched_file on slave")
 
         with self.lock:
-            self.connect()
-            self.connection.execute('SELECT * FROM History')
-            data = self.connection.fetchall()
-            self.disconnect()
+            database, cursor = self.connect()
+            cursor.execute('SELECT * FROM History')
+            data = cursor.fetchall()
+            database.close()
         return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9]) for x in data]
 
     def get_history_for_id(self, id):
@@ -98,10 +89,10 @@ class Database(metaclass=Singleton):
             raise PermissionError("Cant call get_watched_file on slave")
 
         with self.lock:
-            self.connect()
-            self.connection.execute('SELECT * FROM History WHERE ImdbId = ?', [id])
-            data = self.connection.fetchall()
-            self.disconnect()
+            database, cursor = self.connect()
+            cursor.execute('SELECT * FROM History WHERE ImdbId = ?', [id])
+            data = cursor.fetchall()
+            database.close()
         return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9]) for x in data]
 
     def get_watched_torrent_files(self, uri):
@@ -109,10 +100,10 @@ class Database(metaclass=Singleton):
             raise PermissionError("Cant call get_watched_file on slave")
 
         with self.lock:
-            self.connect()
-            self.connection.execute('SELECT * FROM History WHERE URL = ?', [uri])
-            data = self.connection.fetchall()
-            self.disconnect()
+            database, cursor = self.connect()
+            cursor.execute('SELECT * FROM History WHERE URL = ?', [uri])
+            data = cursor.fetchall()
+            database.close()
         return data
 
     def add_watched_file(self, url, watched_at):
@@ -123,12 +114,11 @@ class Database(metaclass=Singleton):
         parameters = ["File", url, url, watched_at]
 
         with self.lock:
-            self.connect()
-
-            self.connection.execute(sql, parameters)
-            self.last_history_add = current_time()
-            self.database.commit()
-            self.disconnect()
+            database, cursor = self.connect()
+            cursor.execute(sql, parameters)
+            database.commit()
+            database.close()
+            return cursor.lastrowid
 
     def add_watched_url(self, url, watched_at):
         if self.slave:
@@ -138,96 +128,79 @@ class Database(metaclass=Singleton):
         parameters = ["Url", url, url, watched_at]
 
         with self.lock:
-            self.connect()
-
-            self.connection.execute(sql, parameters)
-            self.last_history_add = current_time()
-            self.database.commit()
-            self.disconnect()
+            database, cursor = self.connect()
+            cursor.execute(sql, parameters)
+            database.commit()
+            database.close()
+            return cursor.lastrowid
 
     def add_watched_torrent(self, type, title, show_id, url, media_file, image, season, episode, watched_at):
         if self.slave:
             raise PermissionError("Cant call add_watched_torrent on slave")
 
         with self.lock:
-            self.connect()
-            self.connection.execute("INSERT INTO History " +
+            database, cursor = self.connect()
+            cursor.execute("INSERT INTO History " +
                                     "(Type, ImdbId, Title, Image, URL, MediaFile, Season, Episode, WatchedAt)" +
-                                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [type, str(show_id), title, str(image), str(url), str(media_file), str(season), str(episode), str(watched_at)])
-            self.last_history_add = current_time()
-            self.database.commit()
-            self.disconnect()
+                                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [type, show_id, title, image, url, media_file, season, episode, watched_at])
+            database.commit()
+            database.close()
+            return cursor.lastrowid
 
     def remove_watched(self, id):
         if self.slave:
             raise PermissionError("Cant call add_watched_torrent_file on slave")
 
         with self.lock:
-            self.connect()
-            self.connection.execute("DELETE FROM History WHERE Id=?", [id])
+            database, cursor = self.connect()
+            cursor.execute("DELETE FROM History WHERE Id=?", [id])
 
-            self.database.commit()
-            self.disconnect()
+            database.commit()
+            database.close()
 
     def add_favorite(self, id, type, title, image):
         if self.slave:
             raise PermissionError("Cant call add_favorite on slave")
 
         with self.lock:
-            self.connect()
-            self.connection.execute("INSERT INTO Favorites (Id, Type, Title, Image) VALUES (?, ?, ?, ?)", [str(id), type, title, image])
+            database, cursor = self.connect()
+            cursor.execute("INSERT INTO Favorites (Id, Type, Title, Image) VALUES (?, ?, ?, ?)", [id, type, title, image])
 
-            self.database.commit()
-            self.disconnect()
+            database.commit()
+            database.close()
 
     def remove_favorite(self, id):
         if self.slave:
             raise PermissionError("Cant call remove_favorite on slave")
 
         with self.lock:
-            self.connect()
-            self.connection.execute("DELETE FROM Favorites WHERE Id = '" + str(id) + "'")
+            database, cursor = self.connect()
+            cursor.execute("DELETE FROM Favorites WHERE Id = ?", [id])
 
-            self.database.commit()
-            self.disconnect()
+            database.commit()
+            database.close()
 
     def get_favorites(self):
         if self.slave:
             raise PermissionError("Cant call get_favorites on slave")
 
         with self.lock:
-            self.connect()
-            self.connection.execute('SELECT * FROM Favorites')
-            data = self.connection.fetchall()
-            self.disconnect()
+            database, cursor = self.connect()
+            cursor.execute('SELECT * FROM Favorites')
+            data = cursor.fetchall()
+            database.close()
             return data
-
-    def add_watching_item(self, type, name, url, image, length, time, media_file):
-        if self.slave:
-            raise PermissionError("Cant call add_watching_item on slave")
-
-        if self.get_watching_item(url) is not None:
-            return
-
-        with self.lock:
-            self.connect()
-            self.connection.execute("INSERT INTO UnfinishedItems (Type, Url, Name, Image, Time, Length, WatchedAt, MediaFile) " +
-                                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [type, url, name, image, 0, str(length), str(time), media_file])
-
-            self.database.commit()
-            self.disconnect()
 
     def get_watching_item(self, url):
         if self.slave:
             raise PermissionError("Cant call get_watching_item on slave")
 
         with self.lock:
-            self.connect()
-
-            self.connection.execute("SELECT * FROM UnfinishedItems WHERE Url=?", [url])
-            data = self.connection.fetchall()
-            self.database.commit()
-            self.disconnect()
+            database, cursor = self.connect()
+            cursor.execute("SELECT * FROM UnfinishedItems WHERE Url=?", [url])
+            data = cursor.fetchall()
+            database.commit()
+            database.close()
             if len(data) == 0:
                 return None
             return data[0]
@@ -237,66 +210,58 @@ class Database(metaclass=Singleton):
             raise PermissionError("Cant call get_watching_items on slave")
 
         with self.lock:
-            self.connect()
-
-            self.connection.execute("SELECT * FROM UnfinishedItems")
-            data = self.connection.fetchall()
-            self.database.commit()
-            self.disconnect()
+            database, cursor = self.connect()
+            cursor.execute("SELECT * FROM UnfinishedItems")
+            data = cursor.fetchall()
+            database.commit()
+            database.close()
         return data
 
-    def update_watching_item(self, url, time, update_time, media_file=None):
+    def update_watching_item(self, history_id, playing_for, length, time):
         if self.slave:
             raise PermissionError("Cant call update_watching_item on slave")
 
         with self.lock:
-            self.connect()
-            if media_file is None:
-                self.connection.execute(
-                    "UPDATE UnfinishedItems SET Time=?, WatchedAt=? WHERE Url=?", [time, update_time, url])
-            else:
-                self.connection.execute(
-                    "UPDATE UnfinishedItems SET Time=?, WatchedAt=? WHERE Url=? AND MediaFile=?", [time, update_time, url, media_file])
-            self.database.commit()
-            self.disconnect()
+            database, cursor = self.connect()
+            cursor.execute("UPDATE History SET PlayedFor=?, Length=?, WatchedAt=? WHERE Id=?", [playing_for, length, time, history_id])
+            database.commit()
+            database.close()
 
     def remove_watching_item(self, url):
         if self.slave:
             raise PermissionError("Cant call remove_watching_item on slave")
 
         with self.lock:
-            self.connect()
-
-            self.connection.execute(
+            database, cursor = self.connect()
+            cursor.execute(
                 "DELETE FROM UnfinishedItems WHERE Url=?", [url])
 
-            self.database.commit()
-            self.disconnect()
+            database.commit()
+            database.close()
 
     def update_stat(self, key, value):
         with self.lock:
-            self.connect()
-
-            self.connection.execute("SELECT * FROM Stats WHERE Name=?", [key])
-            data = self.connection.fetchall()
+            database, cursor = self.connect()
+            cursor.execute("SELECT * FROM Stats WHERE Name=?", [key])
+            data = cursor.fetchall()
             if not data:
-                self.connection.execute("INSERT INTO Stats " +
+                cursor.execute("INSERT INTO Stats " +
                                         "(Name, Val, LastUpdate)" +
                                         " VALUES (?, ?, ?)", [key, value, current_time()])
             else:
-                self.connection.execute("UPDATE Stats SET Val=?, LastUpdate=? WHERE Name=?", [value, current_time(), key])
+                cursor.execute("UPDATE Stats SET Val=?, LastUpdate=? WHERE Name=?", [value, current_time(), key])
 
-            self.database.commit()
-            self.disconnect()
+            database.commit()
+            database.close()
 
     def get_stat(self, key):
         with self.lock:
-            self.connect()
-            self.connection.execute("SELECT * FROM Stats WHERE Name=?", [key])
-            data = self.connection.fetchall()
+            database, cursor = self.connect()
+            cursor.execute("SELECT * FROM Stats WHERE Name=?", [key])
+            data = cursor.fetchall()
 
-            self.database.commit()
-            self.disconnect()
+            database.commit()
+            database.close()
         if not data:
             return 0
 
@@ -304,12 +269,12 @@ class Database(metaclass=Singleton):
 
     def get_stat_string(self, key):
         with self.lock:
-            self.connect()
-            self.connection.execute("SELECT * FROM Stats WHERE Name=?", [key])
-            data = self.connection.fetchall()
+            database, cursor = self.connect()
+            cursor.execute("SELECT * FROM Stats WHERE Name=?", [key])
+            data = cursor.fetchall()
 
-            self.database.commit()
-            self.disconnect()
+            database.commit()
+            database.close()
         if not data:
             return None
 
@@ -317,10 +282,10 @@ class Database(metaclass=Singleton):
 
     def remove_stat(self, key):
         with self.lock:
-            self.connect()
-            self.connection.execute("DELETE FROM Stats WHERE Name=?", [key])
-            self.database.commit()
-            self.disconnect()
+            database, cursor = self.connect()
+            cursor.execute("DELETE FROM Stats WHERE Name=?", [key])
+            database.commit()
+            database.close()
 
 class History:
     def __init__(self, id, imdb_id, type, title, image, watched_at, season, episode, url, media_file):

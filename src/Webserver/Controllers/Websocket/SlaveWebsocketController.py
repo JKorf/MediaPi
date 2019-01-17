@@ -12,6 +12,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.State import StateManager
+from Shared.Threading import CustomThread
 from Shared.Util import to_JSON
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
 from Webserver.Models import WebSocketInitMessage, WebSocketSlaveMessage, WebSocketRequestMessage, WebSocketInvalidMessage, WebSocketSlaveRequest
@@ -46,8 +47,8 @@ class SlaveWebsocketController:
 
         self.server_connect_engine.start()
 
-    def add_client_request(self, callback, valid_for, type, data):
-        self.pending_message_handler.add_pending_message(ClientMessage(self.next_id(), callback, valid_for, type, data))
+    def add_client_request(self, callback, callback_no_answer, valid_for, type, data):
+        self.pending_message_handler.add_pending_message(ClientMessage(self.next_id(), callback, callback_no_answer, valid_for, type, data))
 
     def send_client_request(self, msg):
         if self.connected:
@@ -56,6 +57,7 @@ class SlaveWebsocketController:
     def client_message_invalid(self, msg):
         if self.connected:
             self.write(WebSocketInvalidMessage(msg.id, msg.type))
+        msg.callback_no_answer()
 
     def client_message_removed(self, msg, by_client):
         pass
@@ -96,12 +98,17 @@ class SlaveWebsocketController:
 
                 self.pending_message_handler.remove_client_message(msg, None)
                 Logger.write(2, "Client message response on " + str(id) + ", data: " + str(data['data']))
-                msg.callback(data['data'])
+                cb_thread = CustomThread(lambda: msg.callback(data['data']), "Message response handler", [])
+                cb_thread.start()
 
             elif data['event'] == 'command':
+                method = None
                 if data['topic'] == 'media':
                     method = getattr(MediaManager(), data['method'])
-                    method(*data['parameters'])
+
+                if method is not None:
+                    cb_thread = CustomThread(method, "Master command", data['parameters'])
+                    cb_thread.start()
 
             elif data['event'] == 'master_response':
                 if data['type'] == 'subtitles' and data['method'] == 'get':
@@ -112,6 +119,9 @@ class SlaveWebsocketController:
                         paths.append(SubtitleSourceBase.save_file("master_" + str(i), sub_bytes))
                         i += 1
                     EventManager.throw_event(EventType.SetSubtitleFiles, [paths])
+                if data['type'] == 'database' and (data['method'] == 'add_watched_url' or data['method'] == 'add_watched_torrent' or data['method'] == 'add_watched_file'):
+                    MediaManager().history_id = data['parameters'][0]
+
 
         except Exception as e:
             Logger.write(3, "Error in Slave websocket controller: " + str(e), 'error')

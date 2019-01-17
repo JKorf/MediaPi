@@ -10,6 +10,7 @@ from Shared.Logger import Logger
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.State import StateManager
+from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, Singleton
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
 from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand, WebSocketRequestMessage, WebSocketInvalidMessage, WebSocketSlaveResponse
@@ -49,12 +50,13 @@ class MasterWebsocketController(metaclass=Singleton):
         MediaManager().torrent_data.register_callback(lambda x: self.slave_update(self.own_slave, "torrent", x))
         self.slaves.register_callback(lambda x: self.update_slaves_data(x.data))
 
-    def add_client_request(self, callback, valid_for, type, data):
-        self.pending_message_handler.add_pending_message(ClientMessage(self.next_id(), callback, valid_for, type, data))
+    def add_client_request(self, callback, callback_no_answer, valid_for, type, data):
+        self.pending_message_handler.add_pending_message(ClientMessage(self.next_id(), callback, callback_no_answer, valid_for, type, data))
 
     def client_message_invalid(self, msg):
         for client, subs in list(self.clients.items()):
             self.write_message(client, WebSocketInvalidMessage(msg.id, msg.type))
+        msg.callback_no_answer()
 
     def client_message_removed(self, msg, by_client):
         for client, subs in list(self.clients.items()):
@@ -110,6 +112,7 @@ class MasterWebsocketController(metaclass=Singleton):
             self.slave_client_message(client, data)
 
     def ui_client_message(self, client, data):
+        Logger.write(2, "UI client message " + str(data))
         if data['event'] == 'subscribe':
             request_id = int(data['request_id'])
             id = self.next_id()
@@ -135,7 +138,8 @@ class MasterWebsocketController(metaclass=Singleton):
 
                 self.pending_message_handler.remove_client_message(msg, client)
                 Logger.write(2, "Client message response on " + str(id) +", data: " + str(data['data']))
-                msg.callback(data['data'])
+                cb_thread = CustomThread(lambda: msg.callback(data['data']), "Message response handler", [])
+                cb_thread.start()
             else:
                 slave = self.slaves.get_slave_by_id(instance_id)
                 self.write_message(slave._client, data)
@@ -154,9 +158,11 @@ class MasterWebsocketController(metaclass=Singleton):
 
         if 'event' in data and data['event'] == 'master_request':
             if data['type'] == 'database':
-                method = getattr(Database(), data['method'])
-                method(*data['parameters'])
                 Logger.write(2, "Slave db update: " + str(data))
+                method = getattr(Database(), data['method'])
+                result = method(*data['parameters'])
+                if result is not None:
+                    self.write_message(client, WebSocketSlaveResponse(data['type'], data['method'], [result]))
             elif data['type'] == 'subtitles':
                 Logger.write(2, "Slave subtitle request: " + str(data))
                 sub_data = MediaManager().subtitle_provider.search_subtitles_for_file(data['parameters'][0])
