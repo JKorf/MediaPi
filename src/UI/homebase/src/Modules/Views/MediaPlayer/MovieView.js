@@ -14,6 +14,7 @@ class MovieView extends Component {
     this.viewRef = React.createRef();
     this.state = {movie: {images:[], rating: {}, torrents: {en: {}}}};
     this.props.functions.changeBack({to: "/mediaplayer/movies/" });
+    this.props.functions.changeRightImage(null);
 
     this.playMedia = this.playMedia.bind(this);
     this.play_torrent = this.play_torrent.bind(this);

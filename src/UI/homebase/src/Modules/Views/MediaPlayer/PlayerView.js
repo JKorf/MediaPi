@@ -26,6 +26,7 @@ class PlayerView extends Component {
   constructor(props) {
     super(props);
     this.props.functions.changeBack({to: "/mediaplayer/players/" });
+    this.props.functions.changeRightImage(null);
     this.states = ["loading", "nothing", "confirmStop"];
 
     this.changedTitle = false;

@@ -240,14 +240,12 @@ class SlaveCollection(Observable):
         self.data = []
 
     def add_slave(self, slave):
-        self.start_update()
         self.data.append(slave)
-        self.stop_update()
+        self.changed()
 
     def remove_slave(self, slave):
-        self.start_update()
         self.data.remove(slave)
-        self.stop_update()
+        self.changed()
 
     def get_slave(self, name):
         slave = [x for x in self.data if x.name == name]

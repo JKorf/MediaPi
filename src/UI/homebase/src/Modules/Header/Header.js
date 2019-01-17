@@ -30,6 +30,11 @@ class Header extends Component {
         <div className="title truncate">
             {this.props.title}
         </div>
+        <div className="right-image">
+            { this.props.rightImage &&
+                <div onClick={this.props.rightImage.click}><SvgImage key={this.props.rightImage.image} src={this.props.rightImage.image}  /></div>
+            }
+        </div>
       </div>
     );
   }

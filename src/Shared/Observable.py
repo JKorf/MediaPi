@@ -32,6 +32,10 @@ class Observable:
                 self.__wait_event.set()
                 break
 
+    def changed(self):
+        self.__changed = True
+        self.__wait_event.set()
+
     def reset(self):
         self.start_update()
         for k, v in self.__start_state.items():

@@ -19,6 +19,7 @@ class ShowsView extends Component {
 
     this.props.functions.changeBack({to: "/mediaplayer/" });
     this.props.functions.changeTitle("Shows");
+    this.props.functions.changeRightImage(null);
 
     this.getShows = this.getShows.bind(this);
     this.changeSearchTerm = this.changeSearchTerm.bind(this);

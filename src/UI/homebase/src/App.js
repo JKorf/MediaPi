@@ -33,17 +33,23 @@ class App extends Component {
 
     this.changeBack = this.changeBack.bind(this);
     this.changeTitle = this.changeTitle.bind(this);
+    this.changeRightImage = this.changeRightImage.bind(this);
     this.showInfo = this.showInfo.bind(this);
 
     this.functions = {
         changeBack: this.changeBack,
         changeTitle: this.changeTitle,
+        changeRightImage: this.changeRightImage,
         showInfo: this.showInfo
     }
   }
 
   changeBack (value){
     this.setState({backConfig: value});
+  }
+
+  changeRightImage (value){
+    this.setState({rightImage: value});
   }
 
   changeTitle (value){
@@ -59,7 +65,7 @@ class App extends Component {
     return (
       <Router>
           <div className="app">
-                <Header backConfig={link} title={this.state.title} />
+                <Header backConfig={link} title={this.state.title} rightImage={this.state.rightImage} />
                 <View>
                     <Route path="/" exact render={(props) => <DashboardView {...props} functions={this.functions} />} />
                     <Route path="/mediaplayer/" exact render={(props) => <MediaPlayerDashboardView {...props} functions={this.functions} />} />

@@ -16,6 +16,7 @@ class MediaPlayerDashboardView extends Component {
     super(props);
     this.props.functions.changeBack({});
     this.props.functions.changeTitle("Media");
+    this.props.functions.changeRightImage(null);
   }
 
   componentDidMount() {

@@ -6,6 +6,7 @@ import MediaPlayerView from './MediaPlayerView.js'
 
 import SvgImage from './../../Components/SvgImage';
 import Button from './../../Components/Button';
+import SearchBox from './../../Components/SearchBox';
 import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
 import Popup from './../../Components/Popups/Popup.js';
 
@@ -20,14 +21,16 @@ class TorrentView extends Component {
   constructor(props) {
     super(props);
     this.viewRef = React.createRef();
-    this.state = {torrents: [], selectedTorrent: null};
+    this.state = {torrents: [], selectedTorrent: null, searchTerm: ""};
 
     this.selectedTorrent = null;
     this.props.functions.changeBack({ to: "/mediaplayer/" });
     this.props.functions.changeTitle("Torrents");
+    this.props.functions.changeRightImage(null);
 
     this.playTorrent = this.playTorrent.bind(this);
     this.torrentPlay = this.torrentPlay.bind(this);
+    this.searchTermChange = this.searchTermChange.bind(this);
   }
 
   componentDidMount() {
@@ -41,6 +44,11 @@ class TorrentView extends Component {
         });
   }
 
+  componentWillUnmount(){
+    if (this.timer)
+        clearTimeout(this.timer);
+  }
+
   torrentPlay(torrent)
   {
       this.viewRef.current.play(torrent);
@@ -48,6 +56,24 @@ class TorrentView extends Component {
 
   torrentSelected(torrent){
       this.setState({selectedTorrent: torrent});
+  }
+
+  searchTermChange(value){
+    this.setState({searchTerm: value});
+    if (this.timer)
+        clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+        this.setState({torrents: []});
+        this.viewRef.current.changeState(0);
+        axios.get('http://'+window.location.hostname+'/torrent/search?keywords=' + encodeURIComponent(value)).then(data => {
+                console.log(data.data);
+                this.setState({torrents: data.data});
+                if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+            }, err =>{
+                console.log(err);
+                if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+            });
+    }, 750);
   }
 
   getTorrentIcon(torrent){
@@ -77,9 +103,12 @@ class TorrentView extends Component {
     const selectedTorrent = this.state.selectedTorrent;
     return (
         <MediaPlayerView ref={this.viewRef} playMedia={this.playTorrent}>
+          <div className="torrent-search">
+                <div className="torrent-search-input"><SearchBox searchTerm={this.state.searchTerm} onChange={this.searchTermChange}/></div>
+            </div>
           <div className="torrents">
              { torrents.map((torrent, index) => (
-                <div className="torrent" key={index} onClick={(e) => this.torrentSelected(torrent, e)}>
+                <div className={"torrent " + (selectedTorrent == torrent ? "selected" : "")} key={index} onClick={(e) => this.torrentSelected(torrent, e)}>
                     <SvgImage src={this.getTorrentIcon(torrent)} />
                     <div className="torrent-title truncate2">{torrent.title}</div>
                     { selectedTorrent == torrent &&

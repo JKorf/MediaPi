@@ -8,6 +8,7 @@ import time
 from urllib.request import urlopen
 from urllib.request import Request
 
+from Shared.Logger import Logger
 from Shared.Util import headers
 
 unicode = str
@@ -42,7 +43,7 @@ class List(object):
         Request URL and parse response. Yield a ``Torrent`` for every torrent
         on page.
         """
-
+        Logger.write(2, "TPB requesting " + str(self.url))
         request = Request(str(self.url), data=None, headers=headers)
         request = urlopen(request)
 
@@ -188,14 +189,15 @@ class Search(Paginated):
     """
     Paginated search featuring query, category and order management.
     """
-    base_path = '/search'
+    base_path = 's/'
 
     def __init__(self, base_url, query, page='0', order='7', category='0'):
         super(Search, self).__init__()
-        self.url = URL(base_url, self.base_path,
-                        segments=['query', 'page', 'order', 'category'],
-                        defaults=[query, str(page), str(order), str(category)],
-                        )
+        self.url = URL(base_url, self.base_path + "?q=" + query + "&page=0&orderby=99")
+        # self.url = URL(base_url, self.base_path,
+        #                 segments=['query', 'page', 'order', 'category'],
+        #                 defaults=[query, str(page), str(order), str(category)],
+        #                 )
 
     @self_if_parameters
     def query(self, query=None):

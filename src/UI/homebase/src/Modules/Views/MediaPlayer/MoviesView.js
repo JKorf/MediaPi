@@ -20,6 +20,7 @@ class MoviesView extends Component {
 
     this.props.functions.changeBack({to: "/mediaplayer/"});
     this.props.functions.changeTitle("Movies");
+    this.props.functions.changeRightImage(null);
 
     this.getMovies = this.getMovies.bind(this);
     this.changeSearchTerm = this.changeSearchTerm.bind(this);

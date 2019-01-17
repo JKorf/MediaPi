@@ -18,6 +18,7 @@ class RadioView extends Component {
     this.selectedRadio = null;
     this.props.functions.changeBack({ to: "/mediaplayer/" });
     this.props.functions.changeTitle("Radio");
+    this.props.functions.changeRightImage(null);
 
     this.imgSrcs = {
         "radio1": radio1,

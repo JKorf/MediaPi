@@ -20,6 +20,7 @@ class ShowView extends Component {
 
     this.state = {show: {images:[], rating:{}, seasons:[]}, selectedSeason: -1, selectedEpisode: -1};
     this.props.functions.changeBack({to: "/mediaplayer/shows/" });
+    this.props.functions.changeRightImage({image: favoriteImage, click: this.toggleFavorite});
 
     this.play = this.play.bind(this);
     this.playShow = this.playShow.bind(this);
@@ -39,6 +40,7 @@ class ShowView extends Component {
         data.data.seasons = seasonEpisodes;
         this.setState({show: data.data});
         this.props.functions.changeTitle(data.data.title);
+        this.props.functions.changeRightImage({image: (data.data.favorite? favoriteFullImage: favoriteImage), click: this.toggleFavorite});
     }, err => {
         if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         console.log(err);
@@ -57,6 +59,7 @@ class ShowView extends Component {
     var show = this.state.show;
     show.favorite = !show.favorite;
     this.setState({show: show});
+    this.props.functions.changeRightImage({image: (show.favorite? favoriteFullImage: favoriteImage), click: this.toggleFavorite});
 
     if(show.favorite)
         axios.post('http://'+window.location.hostname+'/shows/add_favorite?id=' + this.props.match.params.id + "&title=" + encodeURIComponent(show.title) + "&image=" + encodeURIComponent(show.images.poster));
@@ -103,9 +106,6 @@ class ShowView extends Component {
     return (
         <MediaPlayerView ref={this.viewRef} playMedia={this.playShow}>
           <div className="show">
-            <div className={"show-favorite " + (favorited ? "selected" : "") } onClick={this.toggleFavorite}>
-                <SvgImage key={favorited} src={(favorited ? favoriteFullImage : favoriteImage)} />
-            </div>
             <div className="show-image">
                 <img src={show.images.poster} />
             </div>

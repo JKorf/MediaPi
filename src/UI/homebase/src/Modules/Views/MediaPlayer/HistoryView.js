@@ -7,6 +7,8 @@ class HistoryView extends Component {
     super(props);
     this.props.functions.changeBack({to: "/mediaplayer/" });
     this.props.functions.changeTitle("History");
+    this.props.functions.changeRightImage(null);
+
     this.states = ["loading", "nothing"];
     this.state = {history: []};
   }
