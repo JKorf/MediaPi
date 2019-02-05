@@ -21,6 +21,7 @@ class MediaPlayerWidget extends Component {
     this.state = {playerData: {}, mediaData: {}, slaveData: [], state: this.states[1]};
 
     this.slaveUpdate = this.slaveUpdate.bind(this);
+    this.getSize = this.getSize.bind(this);
   }
 
   componentDidMount() {
@@ -31,8 +32,13 @@ class MediaPlayerWidget extends Component {
     Socket.unsubscribe(this.slaveSub);
   }
 
+  getSize(){
+    return {width: 120, heigth: this.state.slaveData.length * 40};
+  }
+
   slaveUpdate(data){
     this.setState({slaveData: data});
+    this.props.updateFunc();
   }
 
   render() {
