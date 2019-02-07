@@ -15,42 +15,12 @@
 
     Tv control goed toepassen
 
-    add_watched e.d. niet vanuit UI initieren
-
-    omxplayer ipv vlc?
+    check if people are home
 
     UI
-        React
-        1 UI, voor meerdere PIs/mediaspelers
-        Betere scheiding mediaplayer en home automation (lichten ed)
-        Widgets op homepage, kunnen door klikken voor andere/uitgebreide dingen
-            Widgets
-                Licht(en)
-                Mediaplayer
-                Verwarming
-
-
-        slave client requests kunnen doorsturen
-
-        Data:
-            Player data -> VLCPlayer
-                CurrentPosition
-                Length
-                State
-            Media data -> MediaManager
-                Title
-                Type,
-                Image,
-            Torrent data -> Torrent
-                peers (potential, connected)
-                Size
-                Downloaded,
-                Left,
-                Speed,
-                Stream buffer (ready, total, position, currentPosition)
-                State,
-                Streamed,
-            Stats -> Stats
-                x
+        statistics?
+        Continue with
+        lighting
+        heating
 
 

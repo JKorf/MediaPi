@@ -12,6 +12,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.State import StateManager
+from Shared.Stats import Stats
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
@@ -44,6 +45,7 @@ class SlaveWebsocketController:
         MediaManager().media_data.register_callback(lambda x: self.broadcast_data("media", x))
         MediaManager().torrent_data.register_callback(lambda x: self.broadcast_data("torrent", x))
         StateManager().state_data.register_callback(lambda x: self.broadcast_data("state", x))
+        Stats().cache.register_callback(lambda x: self.broadcast_data("stats", x))
 
         self.server_connect_engine.start()
 
@@ -81,6 +83,7 @@ class SlaveWebsocketController:
         self.broadcast_data("media", MediaManager().media_data)
         self.broadcast_data("torrent", MediaManager().torrent_data)
         self.broadcast_data("state", StateManager().state_data)
+        self.broadcast_data("stats", Stats().cache)
 
         pending = self.pending_message_handler.get_pending_for_new_client()
         for msg in pending:

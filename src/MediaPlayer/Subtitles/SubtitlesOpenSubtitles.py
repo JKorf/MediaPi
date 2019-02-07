@@ -14,6 +14,10 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
     def get_subtitles(self, size, file_length, file_name, first_64k, last_64k):
         result_raw = RequestFactory.make_request("https://rest.opensubtitles.org/search/moviebytesize-" + str(size) + "/moviehash-" + str(self.get_hash(size, first_64k, last_64k))
                                                  + "/sublanguageid-eng", "GET", "mediaplayerjk")
+        if not result_raw:
+            Logger.write(2, "Failed to get subtitles")
+            return
+
         result = json.loads(result_raw.decode('utf8'))
         paths = []
 

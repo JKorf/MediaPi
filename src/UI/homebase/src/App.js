@@ -5,6 +5,7 @@ import Header from './Modules/Header'
 import Footer from './Modules/Footer'
 import View from './Modules/Views/View.js'
 import DashboardView from './Modules/Views/DashboardView.js'
+
 import MediaPlayerDashboardView from './Modules/Views/MediaPlayer/MediaPlayerDashboardView.js'
 import ShowsView from './Modules/Views/MediaPlayer/ShowsView.js'
 import ShowView from './Modules/Views/MediaPlayer/ShowView.js'
@@ -16,6 +17,9 @@ import TorrentView from './Modules/Views/MediaPlayer/TorrentView.js'
 import PlayersView from './Modules/Views/MediaPlayer/PlayersView.js'
 import PlayerView from './Modules/Views/MediaPlayer/PlayerView.js'
 import HistoryView from './Modules/Views/MediaPlayer/HistoryView.js'
+
+import SettingsView from './Modules/Views/SettingsView.js'
+
 import Socket from './Socket.js'
 import PopupController from './Modules/PopupController.js'
 import InfoMessageController from './Modules/InfoMessageController.js'
@@ -83,6 +87,8 @@ class App extends Component {
                     <Route path="/mediaplayer/players" exact render={(props) => <PlayersView {...props} functions={this.functions}/>} />
                     <Route path="/mediaplayer/player/:id" exact render={(props) => <PlayerView {...props} functions={this.functions}  />} />
                     <Route path="/mediaplayer/history" exact render={(props) => <HistoryView {...props} functions={this.functions}  />} />
+
+                    <Route path="/settings" exact render={(props) => <SettingsView {...props} functions={this.functions}  />} />
                 </View>
                 <Footer />
                 <PopupController ref={this.popupControllerRef} />

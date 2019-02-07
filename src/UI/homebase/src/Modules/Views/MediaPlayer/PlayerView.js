@@ -30,11 +30,12 @@ class PlayerView extends Component {
     this.states = ["loading", "nothing", "confirmStop"];
 
     this.changedTitle = false;
-    this.state = {playerData: { sub_tracks: [], audio_tracks: []}, mediaData: {}, torrentData: {}, stateData: {}, state: this.states[1]};
+    this.state = {playerData: { sub_tracks: [], audio_tracks: []}, mediaData: {}, torrentData: {}, stateData: {}, statData: {}, state: this.states[1]};
 
     this.playerUpdate = this.playerUpdate.bind(this);
     this.mediaUpdate = this.mediaUpdate.bind(this);
     this.torrentUpdate = this.torrentUpdate.bind(this);
+    this.statUpdate = this.statUpdate.bind(this);
     this.stateUpdate = this.stateUpdate.bind(this);
     this.pausePlayClick = this.pausePlayClick.bind(this);
     this.stopClick = this.stopClick.bind(this);
@@ -53,6 +54,7 @@ class PlayerView extends Component {
     this.playerSub = Socket.subscribe(this.props.match.params.id + ".player", this.playerUpdate);
     this.mediaSub = Socket.subscribe(this.props.match.params.id + ".media", this.mediaUpdate);
     this.torrentSub = Socket.subscribe(this.props.match.params.id + ".torrent", this.torrentUpdate);
+    this.statSub = Socket.subscribe(this.props.match.params.id + ".stats", this.statUpdate);
   }
 
   componentWillUnmount(){
@@ -60,6 +62,7 @@ class PlayerView extends Component {
     Socket.unsubscribe(this.playerSub);
     Socket.unsubscribe(this.mediaSub);
     Socket.unsubscribe(this.torrentSub);
+    Socket.unsubscribe(this.statSub);
   }
 
   stateUpdate(data){
@@ -78,6 +81,9 @@ class PlayerView extends Component {
   }
   torrentUpdate(data){
     this.setState({torrentData: data});
+  }
+  statUpdate(data){
+    this.setState({statData: data.statistics});
   }
 
   pausePlayClick(e){
@@ -320,6 +326,10 @@ class PlayerView extends Component {
              {streamingComponent}
 
              {torrentComponent}
+
+             <InfoGroup title="System state">
+             { Object.keys(this.state.statData).map(s => <InfoRow key={s} name={s} value={this.state.statData[s]}></InfoRow>)}
+             </InfoGroup>
 
             <InfoGroup title="System state">
                 <InfoRow name="CPU" value={this.state.stateData.cpu + "%"} />

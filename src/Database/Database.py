@@ -254,6 +254,19 @@ class Database(metaclass=Singleton):
             database.commit()
             database.close()
 
+    def get_stats(self):
+        with self.lock:
+            database, cursor = self.connect()
+            cursor.execute("SELECT * FROM Stats")
+            data = cursor.fetchall()
+
+            database.commit()
+            database.close()
+        if not data:
+            return 0
+
+        return data
+
     def get_stat(self, key):
         with self.lock:
             database, cursor = self.connect()

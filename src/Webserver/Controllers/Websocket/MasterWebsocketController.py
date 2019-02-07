@@ -10,6 +10,7 @@ from Shared.Logger import Logger
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.State import StateManager
+from Shared.Stats import Stats
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, Singleton
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
@@ -36,6 +37,7 @@ class MasterWebsocketController(metaclass=Singleton):
         self.own_slave.update_data("media", MediaManager().media_data)
         self.own_slave.update_data("torrent", MediaManager().torrent_data)
         self.own_slave.update_data("state", StateManager().state_data)
+        self.own_slave.update_data("stats", Stats().cache)
         self.slaves.add_slave(self.own_slave)
 
         EventManager.register_event(EventType.ClientRequest, self.add_client_request)
@@ -48,6 +50,7 @@ class MasterWebsocketController(metaclass=Singleton):
         VLCPlayer().player_state.register_callback(lambda x: self.slave_update(self.own_slave, "player", x))
         MediaManager().media_data.register_callback(lambda x: self.slave_update(self.own_slave, "media", x))
         MediaManager().torrent_data.register_callback(lambda x: self.slave_update(self.own_slave, "torrent", x))
+        Stats().cache.register_callback(lambda x: self.slave_update(self.own_slave, "stats", x))
         self.slaves.register_callback(lambda x: self.update_slaves_data(x.data))
 
     def add_client_request(self, callback, callback_no_answer, valid_for, type, data):
@@ -225,6 +228,7 @@ class SlaveClient:
         self._data_registrations["media"] = DataRegistration()
         self._data_registrations["torrent"] = DataRegistration()
         self._data_registrations["state"] = DataRegistration()
+        self._data_registrations["stats"] = DataRegistration()
 
     def update_data(self, name, data):
         self._data_registrations[name].data = data

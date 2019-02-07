@@ -29,6 +29,7 @@ class HDView extends Component {
     this.dirUp = this.dirUp.bind(this);
     this.dirClick = this.dirClick.bind(this);
     this.playMedia = this.playMedia.bind(this);
+    this.filterFiles = this.filterFiles.bind(this);
   }
 
   componentDidMount() {
@@ -87,11 +88,23 @@ class HDView extends Component {
             if(this.viewRef.current) { this.viewRef.current.changeState(1); }
             console.log(data.data);
             this.setState({structure: data.data});
+            this.filterFiles();
         }, err =>{
             if(this.viewRef.current) { this.viewRef.current.changeState(1); }
             console.log(err);
         });
     }
+
+  filterFiles(){
+    var extensions = [".mkv", ".avi", ".mp4", ".mpg"]
+    var structure = this.state.structure;
+    structure.files = structure.files.filter(f => {
+        for(var i = 0; i < extensions.length; i++)
+            if(f.endsWith(extensions[i]))
+                return true;
+    });
+    this.setState({structure: structure});
+  }
 
   getFileIcon(file)
   {
@@ -112,8 +125,8 @@ class HDView extends Component {
 
     return (
       <MediaPlayerView ref={this.viewRef} playMedia={this.playMedia}>
-        { structure.dirs.map((dir, index) => <HDRow key={index} img={DirectoryImage} text={dir} clickHandler={(e) => this.dirClick(dir, e)}></HDRow>) }
-        { structure.files.map((file, index) => <HDRow key={index} img={this.getFileIcon(file)} text={file} clickHandler={(e) => this.fileClick(file, e)}>{file}</HDRow>) }
+        { structure.dirs.map((dir, index) => <HDRow key={dir} img={DirectoryImage} text={dir} clickHandler={(e) => this.dirClick(dir, e)}></HDRow>) }
+        { structure.files.map((file, index) => <HDRow key={file} img={this.getFileIcon(file)} text={file} clickHandler={(e) => this.fileClick(file, e)}>{file}</HDRow>) }
       </MediaPlayerView>
     );
   }
