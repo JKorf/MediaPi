@@ -7,7 +7,7 @@ import Socket from './../Socket.js';
 class PopupController extends Component {
   constructor(props) {
     super(props);
-    this.state = { mediaSelect: {show: false, files: [], id: 0 }, continueNextEpisode:{show: false} };
+    this.state = { mediaSelect: {show: false, files: [], id: 0 }, continueNextEpisode:{show: false}, currentPopup: null, popups: [] };
     this.showSelectMediaFile = this.showSelectMediaFile.bind(this);
     this.showContinueNextEpisode = this.showContinueNextEpisode.bind(this);
 
@@ -55,14 +55,52 @@ class PopupController extends Component {
   {
     this.setState({continueNextEpisode: {show: false}});
     Socket.response(this.state.continueNextEpisode.id, this.state.continueNextEpisode.instanceId, true)
-    console.log("Continue");
   }
 
   cancelNextEpisode()
   {
       this.setState({continueNextEpisode: {show: false}});
       Socket.response(this.state.continueNextEpisode.id, this.state.continueNextEpisode.instanceId, false)
-      console.log("Dont continue");
+  }
+
+  showPopup(popup)
+  {
+    if(this.state.currentPopup){
+        var list = this.state.popups;
+        list.push(popup);
+        this.setState({popups:list });
+    }
+    else
+    {
+        this.setState({currentPopup: popup});
+    }
+  }
+
+  closePopup(popup)
+  {
+    if(this.state.currentPopup == popup)
+    {
+        if(this.state.popups.length > 0)
+        {
+            var list = this.state.popups;
+            var newPopup = list.splice(0, 1);
+            this.setState({currentPopup: newPopup, popups: list});
+        }
+        else
+        {
+            this.setState({currentPopup: null});
+        }
+    }
+    else
+    {
+        var index = this.state.popups.indexOf(popup);
+        if(index == -1)
+            return;
+
+        var list = this.state.popups;
+        list.splice(index, 1);
+        this.setState({popups:list});
+    }
   }
 
   render()
@@ -75,6 +113,9 @@ class PopupController extends Component {
 
         { this.state.continueNextEpisode.show == true &&
             <ContinueNextEpisodePopup title={this.state.continueNextEpisode.title} onSelect={this.continueNextEpisode} onCancel={this.cancelNextEpisode} />
+        }
+        {  this.state.currentPopup &&
+            this.state.currentPopup
         }
         </div>
     )

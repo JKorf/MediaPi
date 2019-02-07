@@ -8,6 +8,7 @@
   secondary: #006666;
   secondary-text: #eee;
   secondary-background: #0d3a42;
+  secondary-background-list: #113e47;
   secondary-background-button: #164951;
 
   selection: #228899;
@@ -36,6 +37,11 @@ body, html{
 }
 
 .header{
+    a{
+        height: 0px;
+        width: 0px;
+    }
+
     height:50px;
     background: #colors[primary-header];
 
@@ -162,7 +168,8 @@ a {
     bottom: 10px;
     width: calc(100% - 10px);
     text-align: center;
-    font-weight: bold;
+    font-size: 12px;
+    color: #aaa;
 }
 
 .widget-wrap{
@@ -182,7 +189,6 @@ a {
 }
 
 .widget-content{
-    padding: 10px;
     position: relative;
     overflow-y: auto;
     height: 100%;
@@ -199,6 +205,7 @@ a {
     top:0;
     bottom: 0;
     background: rgba(0,0,0,0.5);
+    z-index: 10;
 }
 
 .popup-window{
@@ -210,6 +217,7 @@ a {
     min-width: 250px;
     min-height: 150px;
     max-width: 100%;
+    z-index: 11;
 }
 
 .popup-loader{

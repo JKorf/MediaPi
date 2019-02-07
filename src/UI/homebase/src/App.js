@@ -36,11 +36,15 @@ class App extends Component {
     this.changeRightImage = this.changeRightImage.bind(this);
     this.showInfo = this.showInfo.bind(this);
 
+    this.popupControllerRef = React.createRef();
+
     this.functions = {
         changeBack: this.changeBack,
         changeTitle: this.changeTitle,
         changeRightImage: this.changeRightImage,
-        showInfo: this.showInfo
+        showInfo: this.showInfo,
+        showPopup: (popup) => this.popupControllerRef.current.showPopup(popup),
+        closePopup: (popup) => this.popupControllerRef.current.closePopup(popup),
     }
   }
 
@@ -81,7 +85,7 @@ class App extends Component {
                     <Route path="/mediaplayer/history" exact render={(props) => <HistoryView {...props} functions={this.functions}  />} />
                 </View>
                 <Footer />
-                <PopupController />
+                <PopupController ref={this.popupControllerRef} />
                 <InfoMessageController ref={this.infoMessageRef} />
           </div>
       </Router>

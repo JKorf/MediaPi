@@ -189,7 +189,7 @@ class Database(metaclass=Singleton):
             cursor.execute('SELECT * FROM Favorites')
             data = cursor.fetchall()
             database.close()
-            return data
+            return [Favorite(x[0], x[1], x[2], x[3]) for x in data]
 
     def get_watching_item(self, url):
         if self.slave:
@@ -286,6 +286,13 @@ class Database(metaclass=Singleton):
             cursor.execute("DELETE FROM Stats WHERE Name=?", [key])
             database.commit()
             database.close()
+
+class Favorite:
+    def __init__(self, id, image, type, title):
+        self.id = id
+        self.image = image
+        self.type = type
+        self.title = title
 
 class History:
     def __init__(self, id, imdb_id, type, title, image, watched_at, season, episode, url, media_file):

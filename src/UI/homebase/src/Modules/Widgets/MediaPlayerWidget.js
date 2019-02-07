@@ -32,8 +32,9 @@ class MediaPlayerWidget extends Component {
     Socket.unsubscribe(this.slaveSub);
   }
 
-  getSize(){
-    return {width: 120, heigth: this.state.slaveData.length * 40};
+  getSize()
+  {
+    return {width: 200,  height: 34 + this.state.slaveData.length * 59};
   }
 
   slaveUpdate(data){
@@ -43,12 +44,15 @@ class MediaPlayerWidget extends Component {
 
   render() {
     const slaves = this.state.slaveData;
+    const style = {
+        height: "calc(100% / " + slaves.length + ")"
+    };
 
     return (
         <Widget {...this.props}>
             <div className="mediaplayer-widget-holder">
             {
-                slaves.map((slave, index) => <div className="mediaplayer-widget-item" key={slave.id}><MediaPlayerWidgetInstance instance={slave} /></div>)
+                slaves.map((slave, index) => <div style={style} className="mediaplayer-widget-item" key={slave.id}><MediaPlayerWidgetInstance showPopup={this.props.showPopup} closePopup={this.props.closePopup} instance={slave} /></div>)
             }
             </div>
       </Widget>
@@ -102,15 +106,17 @@ class MediaPlayerWidgetInstance extends Component {
   }
 
   stopClick(e){
-    this.setState({state: this.states[2]});
+    this.stopPopup = <StopPopup title={this.state.mediaData.title} onCancel={this.cancelStop} onConfirm={this.confirmStop} />;
+    this.props.showPopup(this.stopPopup);
     e.preventDefault();
   }
 
   cancelStop(){
-    this.setState({state: this.states[1]});
+    this.props.closePopup(this.stopPopup);
   }
 
   confirmStop(e){
+    this.props.closePopup(this.stopPopup);
     this.setState({state: this.states[1]});
     axios.post('http://localhost/play/stop_player?instance=' + this.props.instance.id )
     .then(
@@ -150,18 +156,18 @@ class MediaPlayerWidgetInstance extends Component {
                 </div>
             </div>
             <MediaProgress percentage={percentagePlaying} ></MediaProgress>
-            { state == this.states[2] &&
-                <StopPopup title={mediaData.title} onCancel={this.cancelStop} onConfirm={this.confirmStop} />
-            }
+
         </div>
 
     }
 
     return (<div className={"mediaplayer-widget " + (mediaData.title ? "": "not-playing")} >
-            <div className="mediaplayer-name">{instance.name}</div>
-            <div className="mediaplayer-playing ">
-                {mediaWidget}
-            </div>
+            <Link to={"/mediaplayer/player/" + instance.id} key={instance.id}>
+                <div className="mediaplayer-name">{instance.name}</div>
+                <div className="mediaplayer-playing ">
+                    {mediaWidget}
+                </div>
+            </Link>
         </div>);
   }
 };

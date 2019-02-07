@@ -12,7 +12,7 @@ class TestWidget extends Component {
 
 
   getSize(){
-    return {width: 120, heigth: 50};
+    return {width: 120, height: 50};
   }
 
   componentDidMount() {

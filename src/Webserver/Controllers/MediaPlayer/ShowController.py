@@ -47,7 +47,7 @@ class ShowController(BaseHandler):
         response = await RequestFactory.make_request_async(ShowController.shows_api_path + "show/" + id)
         data = json.loads(response.decode('utf-8'))
         seen_episodes = Database().get_history_for_id(id)
-        data['favorite'] = id in [x[0] for x in Database().get_favorites()]
+        data['favorite'] = id in [x.id for x in Database().get_favorites()]
         for episode in data['episodes']:
             episode['seen'] = len([x for x in seen_episodes if episode['season'] == x.season and episode['episode'] == x.episode]) != 0
         return json.dumps(data).encode('utf-8')

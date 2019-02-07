@@ -86,8 +86,20 @@
 
 .mediaplayer-dashboard .dashboard-link{
     display:inline-block;
-    width: calc(33% - 10px);
+    width: calc(25% - 10px);
     margin: 2.5px 5px;
+}
+
+@media only screen and (max-device-width: 400px){
+    .mediaplayer-dashboard .dashboard-link{
+        width: calc(33.33% - 10px);
+    }
+}
+
+@media only screen and (min-device-width: 768px){
+    .mediaplayer-dashboard .dashboard-link{
+        width: calc(20% - 10px);
+    }
 }
 
 .mediaplayer-widget{
@@ -99,8 +111,24 @@
     }
 }
 
-.mediaplayer-widget-holder{
+.mediaplayer-widget-item{
+    padding: 4px 10px;
+    position: relative;
+}
 
+.mediaplayer-widget-item:nth-child(even){
+    background: #colors[secondary-background-list];
+}
+
+.mediaplayer-widget-holder{
+    height: 100%;
+
+    .mediaplayer-widget{
+        position: absolute;
+        top: 50%;
+        width: calc(100% - 20px);
+        transform: translate(0, -50%);
+    }
 }
 
 .mediaplayer-name{
@@ -702,3 +730,25 @@
         }
     }
 }
+
+.favorites-widget{
+    width: 100%;
+    height: 100%;
+    white-space: nowrap;
+}
+
+.favorite-item{
+    display: inline-block;
+    vertical-align: top;
+    overflow-y: hidden;
+
+    height: 100%;
+    .favorite-item-image{
+        height: 100%;
+    }
+
+    .favorite-item-image img{
+        height: 100%;
+    }
+}
+
