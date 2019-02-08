@@ -2,10 +2,6 @@ import React, { Component } from 'react';
 
 
 class ColorIndicator extends Component {
-  constructor(props) {
-    super(props);
-  }
-
   componentDidMount(){
   }
 
@@ -17,7 +13,7 @@ class ColorIndicator extends Component {
             return;
 
         var a = this.props.value/100;
-        if(type == 'grade')
+        if(type === 'grade')
             a = this.props.value / 10;
 
 

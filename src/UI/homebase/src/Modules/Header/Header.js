@@ -6,10 +6,6 @@ import SvgImage from "./../Components/SvgImage";
 import backImage from "./../../Images/left.svg";
 
 class Header extends Component {
-  constructor(props) {
-    super(props);
-  }
-
   render() {
     const backConfig = this.props.backConfig;
     const backButton = (

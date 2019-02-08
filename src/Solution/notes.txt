@@ -20,7 +20,6 @@
     Continue automatically next epi?
 
     UI
-        Add continue with button to mediafile selection
         lighting
         heating
 

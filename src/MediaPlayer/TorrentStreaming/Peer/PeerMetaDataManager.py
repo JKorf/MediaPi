@@ -85,6 +85,9 @@ class PeerMetaDataManager:
                 Logger.write(1, str(self.peer.id) + ' sending port message')
                 self.peer.connection_manager.send(PortMessage(Settings.get_int("dht_port")).to_bytes())
 
+        if not self.peer.torrent.data_manager.bitfield:
+            return False
+
         if not self.bitfield_done:
             Logger.write(1, str(self.peer.id) + ' Sending initial bitfield')
             self.bitfield_done = True

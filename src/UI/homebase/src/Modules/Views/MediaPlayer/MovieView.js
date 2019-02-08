@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import View from './../View.js';
 import MediaPlayerView from './MediaPlayerView.js'
 
 import Button from './../../Components/Button';
@@ -45,8 +44,7 @@ class MovieView extends Component {
   writeTimespan(duration)
   {
      duration = Math.round(duration);
-     var milliseconds = parseInt((duration % 1000) / 100),
-      seconds = parseInt((duration / 1000) % 60),
+     var seconds = parseInt((duration / 1000) % 60),
       minutes = parseInt((duration / (1000 * 60)) % 60),
       hours = parseInt((duration / (1000 * 60 * 60)) % 24);
 
@@ -61,7 +59,7 @@ class MovieView extends Component {
 
   playMedia(instance, media)
   {
-    if(media.type == "trailer"){
+    if(media.type === "trailer"){
         axios.post('http://localhost/play/url?instance=' + instance
             + "&url=" + encodeURIComponent(media.url)
             + "&title=" + encodeURIComponent(this.state.movie.title + " Trailer"))
@@ -107,7 +105,7 @@ class MovieView extends Component {
         <MediaPlayerView ref={this.viewRef} playMedia={this.playMedia}>
           <div className="movie">
             <div className="movie-image">
-                <img src={movie.images.poster} />
+                <img alt="movie-poster" src={movie.images.poster} />
             </div>
             <div className="movie-details">
                 <div className="label-row">

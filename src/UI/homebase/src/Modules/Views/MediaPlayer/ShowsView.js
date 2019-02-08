@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import axios from 'axios'
 
 import MediaOverview from './../../MediaList/MediaOverview.js'
-import View from './../View.js'
 import Popup from './../../Components/Popups/Popup.js'
 
 class ShowsView extends Component {
@@ -45,7 +44,7 @@ class ShowsView extends Component {
                 continue;
             newShows.push(data.data[i]);
         }
-        this.setState({shows: newShows, loading: false, maxPageReached: data.data.length != 50});
+        this.setState({shows: newShows, loading: false, maxPageReached: data.data.length !== 50});
         console.log(data.data);
     }, err =>{
         this.setState({loading: false});

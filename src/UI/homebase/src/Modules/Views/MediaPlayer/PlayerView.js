@@ -1,15 +1,10 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import View from './../View.js';
-import MediaPlayerView from './MediaPlayerView.js'
 import Socket from './../../../Socket.js';
 
-import Button from './../../Components/Button';
-import SelectionBox from './../../Components/SelectionBox';
 import SvgImage from './../../Components/SvgImage';
 import Slider from './../../Components/Slider';
-import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup'
 import StopPopup from './../../Components/Popups/StopPopup'
 import Popup from './../../Components/Popups/Popup'
 import { InfoGroup, InfoRow } from './../../Components/InfoGroup'
@@ -96,7 +91,7 @@ class PlayerView extends Component {
         ()=> this.setState({state: this.states[1]})
     );
     const playerData = this.state.playerData;
-    playerData.state = (playerData.state == 3 ? 4: 3);
+    playerData.state = (playerData.state === 3 ? 4: 3);
     this.setState({playerData: playerData});
   }
 
@@ -202,8 +197,7 @@ class PlayerView extends Component {
   writeTimespan(duration)
   {
      duration = Math.round(duration);
-     var milliseconds = parseInt((duration % 1000) / 100),
-      seconds = parseInt((duration / 1000) % 60),
+     var seconds = parseInt((duration / 1000) % 60),
       minutes = parseInt((duration / (1000 * 60)) % 60),
       hours = parseInt((duration / (1000 * 60 * 60)) % 24);
 
@@ -260,7 +254,7 @@ class PlayerView extends Component {
         playPauseButton = <SvgImage key={this.state.playerData.state} src={playImage} />
 
     let subtitleClass= "both";
-    if(this.state.playerData.sub_tracks.length == 0 || this.state.playerData.audio_tracks.length <= 2)
+    if(this.state.playerData.sub_tracks.length === 0 || this.state.playerData.audio_tracks.length <= 2)
         subtitleClass = "single";
 
     return (

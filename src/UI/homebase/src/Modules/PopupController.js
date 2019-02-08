@@ -37,14 +37,14 @@ class PopupController extends Component {
     this.setState({mediaSelect: {show: show, files: files[0], id: id, instanceId: instance_id}});
   }
 
-  selectMediaFile(file){
+  selectMediaFile(file, start_from){
     this.setState({mediaSelect: {show: false}});
-    Socket.response(this.state.mediaSelect.id, this.state.mediaSelect.instanceId, [file.path, file.played_for]);
+    Socket.response(this.state.mediaSelect.id, this.state.mediaSelect.instanceId, [file.path, start_from]);
   }
 
   cancelMediaSelect(){
     this.setState({mediaSelect: {show: false}});
-    Socket.response(this.state.mediaSelect.id, this.state.mediaSelect.instanceId, null)
+    Socket.response(this.state.mediaSelect.id, this.state.mediaSelect.instanceId, [null, 0])
   }
 
   showContinueNextEpisode(id, show, instance_id, title){
@@ -78,7 +78,7 @@ class PopupController extends Component {
 
   closePopup(popup)
   {
-    if(this.state.currentPopup == popup)
+    if(this.state.currentPopup === popup)
     {
         if(this.state.popups.length > 0)
         {
@@ -94,7 +94,7 @@ class PopupController extends Component {
     else
     {
         var index = this.state.popups.indexOf(popup);
-        if(index == -1)
+        if(index === -1)
             return;
 
         var list = this.state.popups;

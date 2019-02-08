@@ -1,10 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import View from './../View.js';
 import MediaPlayerView from './MediaPlayerView.js';
-import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
-import Popup from './../../Components/Popups/Popup.js';
 import MediaThumbnail from './../../MediaList/MediaThumbnail.js';
 
 import {radio1, radio2, radio3, radio538, qmusic, veronica, veronicarockradio, top1000, arrowclassicrock, slam, skyradio} from './../../../Images/radios/'
@@ -75,7 +72,7 @@ class RadioView extends Component {
     return (
         <MediaPlayerView ref={this.viewRef} playMedia={this.playRadio}>
           <div className="radio media-overview">
-            { radios.map((radio, index) => <a key={radio.id} onClick={(e) => this.radioClick(radio, e)}><MediaThumbnail img={this.getImgUrl(radio.poster)} title={radio.title}></MediaThumbnail></a>) }
+            { radios.map((radio, index) => <span key={radio.id} onClick={(e) => this.radioClick(radio, e)}><MediaThumbnail img={this.getImgUrl(radio.poster)} title={radio.title}></MediaThumbnail></span>) }
           </div>
       </MediaPlayerView>
     );

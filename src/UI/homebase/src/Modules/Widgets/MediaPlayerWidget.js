@@ -3,10 +3,8 @@ import { Link } from "react-router-dom";
 
 import Widget from './Widget.js';
 import Socket from './../../Socket.js';
-import Button from './../Components/Button';
 import SvgImage from './../Components/SvgImage';
 import MediaProgress from './../Components/MediaProgress';
-import Popup from './../Components/Popups/Popup.js';
 import StopPopup from './../Components/Popups/StopPopup.js';
 import axios from 'axios';
 
@@ -101,7 +99,7 @@ class MediaPlayerWidgetInstance extends Component {
         ()=> this.setState({state: this.states[1]})
     );
     const playerData = this.state.playerData;
-    playerData.state = (playerData.state == 3 ? 4: 3);
+    playerData.state = (playerData.state === 3 ? 4: 3);
     this.setState({playerData: playerData});
   }
 
@@ -132,7 +130,7 @@ class MediaPlayerWidgetInstance extends Component {
     const state = this.state.state;
 
     let percentagePlaying = playerData.playing_for / playerData.length * 100;
-    if (playerData.length == 0 && playerData.playing_for != 0)
+    if (playerData.length === 0 && playerData.playing_for != 0)
         percentagePlaying = 100;
 
     let mediaWidget = "Nothing playing";

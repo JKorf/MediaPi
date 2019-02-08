@@ -1,12 +1,8 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import View from './../View.js';
 import MediaPlayerView from './../MediaPlayer/MediaPlayerView.js';
 import HDRow from './../../Components/HDRow';
-import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
-import Popup from './../../Components/Popups/Popup.js';
-import StartMediaPopup from './../../Components/Popups/StartMediaPopup.js';
 
 import picImage from "./../../../Images/image.svg";
 import streamImage from "./../../../Images/stream.svg";
@@ -51,7 +47,7 @@ class HDView extends Component {
     if(this.isBaseFolder(this.path))
         return;
 
-    if(lastIndex == this.path.length - 1)
+    if(lastIndex === this.path.length - 1)
         this.path = this.path.substring(0, this.path.length - 1);
 
     this.path = this.path.substring(0, this.path.lastIndexOf("/")+1);
@@ -62,7 +58,7 @@ class HDView extends Component {
   }
 
   isBaseFolder(dir){
-    return (dir.match(/\//g) || []).length == 1;
+    return (dir.match(/\//g) || []).length === 1;
   }
 
   fileClick(file)
@@ -106,6 +102,7 @@ class HDView extends Component {
         for(var i = 0; i < extensions.length; i++)
             if(f.name.endsWith(extensions[i]))
                 return true;
+        return false;
     });
     this.setState({structure: structure});
   }

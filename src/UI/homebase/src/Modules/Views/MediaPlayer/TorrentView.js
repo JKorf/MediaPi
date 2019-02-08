@@ -1,14 +1,11 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import View from './../View.js';
 import MediaPlayerView from './MediaPlayerView.js'
 
 import SvgImage from './../../Components/SvgImage';
 import Button from './../../Components/Button';
 import SearchBox from './../../Components/SearchBox';
-import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
-import Popup from './../../Components/Popups/Popup.js';
 
 import movieImage from './../../../Images/movie.svg';
 import showImage from './../../../Images/show.svg';
@@ -77,9 +74,9 @@ class TorrentView extends Component {
   }
 
   getTorrentIcon(torrent){
-    if(torrent.category == "movie")
+    if(torrent.category === "movie")
         return movieImage;
-    if(torrent.category == "show")
+    if(torrent.category === "show")
         return showImage;
     return otherImage;
   }
@@ -108,10 +105,10 @@ class TorrentView extends Component {
             </div>
           <div className="torrents">
              { torrents.map((torrent, index) => (
-                <div className={"torrent " + (selectedTorrent == torrent ? "selected" : "")} key={index} onClick={(e) => this.torrentSelected(torrent, e)}>
+                <div className={"torrent " + (selectedTorrent === torrent ? "selected" : "")} key={index} onClick={(e) => this.torrentSelected(torrent, e)}>
                     <SvgImage src={this.getTorrentIcon(torrent)} />
                     <div className="torrent-title truncate2">{torrent.title}</div>
-                    { selectedTorrent == torrent &&
+                    { selectedTorrent === torrent &&
                         <div className="torrent-details">
                             <div className="torrent-details-peers">
                                 <div className="torrent-details-seeders truncate">{selectedTorrent.seeders}<img src={seedersImage} /></div>

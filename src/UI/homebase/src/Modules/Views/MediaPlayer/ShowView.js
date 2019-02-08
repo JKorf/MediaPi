@@ -1,13 +1,10 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import View from './../View.js';
 import MediaPlayerView from './MediaPlayerView.js';
 import Button from './../../Components/Button';
 import SvgImage from './../../Components/SvgImage';
 import ColorIndicator from './../../Components/ColorIndicator';
-import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup';
-import Popup from './../../Components/Popups/Popup';
 
 import favoriteImage from './../../../Images/favorite.svg';
 import favoriteFullImage from './../../../Images/favorite-full.svg';
@@ -86,7 +83,7 @@ class ShowView extends Component {
 
   playShow(instance, episode)
   {
-    if(episode.played_for != 0)
+    if(episode.played_for !== 0)
         console.log("Continue from " + episode.played_for);
 
     axios.post('http://'+window.location.hostname+'/play/episode?instance=' + instance
@@ -160,16 +157,16 @@ class ShowView extends Component {
             <div className="show-episode-selection">
                 <div className="show-seasons">
                     { Object.entries(show.seasons).map(([season, episodes]) =>
-                        <div key={season} className={"show-season " + (this.state.selectedSeason == season ? 'selected' : '')} onClick={(e) => this.seasonSelect(e, season)}>
+                        <div key={season} className={"show-season " + (this.state.selectedSeason === season ? 'selected' : '')} onClick={(e) => this.seasonSelect(e, season)}>
                             <div className="show-season-title">Season {season}</div>
                             <div className="show-season-episodes">{episodes.length} episodes</div>
                         </div>
                     )}
                 </div>
-                {selectedSeason != -1 &&
+                {selectedSeason !== -1 &&
                     <div className="show-episodes">
                         { show.seasons[selectedSeason].map((episode, index) => (
-                            <div key={index} className={"show-episode " + (this.state.selectedEpisode == episode.episode ? 'selected' : '')} onClick={(e) => this.episodeSelect(e, episode)}>
+                            <div key={index} className={"show-episode " + (this.state.selectedEpisode === episode.episode ? 'selected' : '')} onClick={(e) => this.episodeSelect(e, episode)}>
                                 <div className="show-episode-title">
                                     <div className={"show-episode-title-text truncate " + (episode.seen ? "seen": "")}>{episode.episode} - {episode.title}</div>
                                     <div className="show-episode-title-date">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(1970, 0, 0).setSeconds(episode.first_aired))}</div>
