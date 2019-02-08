@@ -46,10 +46,18 @@ class ShowController(BaseHandler):
         Logger.write(2, "Get show by id " + id)
         response = await RequestFactory.make_request_async(ShowController.shows_api_path + "show/" + id)
         data = json.loads(response.decode('utf-8'))
+
         seen_episodes = Database().get_history_for_id(id)
         data['favorite'] = id in [x.id for x in Database().get_favorites()]
         for episode in data['episodes']:
-            episode['seen'] = len([x for x in seen_episodes if episode['season'] == x.season and episode['episode'] == x.episode]) != 0
+            seen = [x for x in seen_episodes if episode['season'] == x.season and episode['episode'] == x.episode]
+            episode['seen'] = len(seen) != 0
+            if len(seen) == 0:
+                continue
+            seen = seen[-1]
+            episode['seen'] = True
+            episode['played_for'] = seen.played_for
+            episode['length'] = seen.length
         return json.dumps(data).encode('utf-8')
 
     async def add_favorite(self, id, title, image):

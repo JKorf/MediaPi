@@ -30,15 +30,16 @@ class FileStructure:
 
     def __init__(self, path, just_files=False):
         self.dirs = []
+        self.file_names = []
         self.files = []
         self.path = path
 
         if just_files:
-            self.files = [f for f in os.listdir(path) if isfile(join(path, f)) and f.endswith(('.jpg', '.gif', 'png', 'mp4', 'avi'))]
+            self.file_names = [f for f in os.listdir(path) if isfile(join(path, f)) and f.endswith(('.jpg', '.gif', 'png', 'mp4', 'avi'))]
         else:
             for(dirpath, dirnames, filenames) in os.walk(path):
                 self.dirs.extend(dirnames)
-                self.files.extend(filenames)
+                self.file_names.extend(filenames)
                 break
 
 

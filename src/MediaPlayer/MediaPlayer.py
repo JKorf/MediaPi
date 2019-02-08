@@ -1,3 +1,5 @@
+import asyncio
+import json
 import os
 import time
 import urllib.parse
@@ -5,13 +7,14 @@ import urllib.parse
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.TorrentStreaming.Torrent.Torrent import Torrent
 
-from Database.Database import Database
+from Database.Database import Database, History
 from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
 from MediaPlayer.TorrentStreaming.DHT.Engine import DHTEngine
 from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger
+from Shared.Network import RequestFactory
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
@@ -40,7 +43,7 @@ class MediaManager(metaclass=Singleton):
             self.dht.start()
 
         EventManager.register_event(EventType.NoPeers, self.stop_torrent)
-        EventManager.register_event(EventType.TorrentMediaSelectionRequired, lambda files: EventManager.throw_event(EventType.ClientRequest, [self.set_media_file, self.stop_play, 1000 * 60 * 30, "SelectMediaFile", [files]]))
+        EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.media_selection_required)
         EventManager.register_event(EventType.TorrentMediaFileSet, lambda x: self._start_playing_torrent())
 
         VLCPlayer().player_state.register_callback(self.player_state_change)
@@ -74,7 +77,7 @@ class MediaManager(metaclass=Singleton):
         self.media_data.image = None
         self.media_data.stop_update()
 
-    def start_episode(self, id, season, episode, title, url, image):
+    def start_episode(self, id, season, episode, title, url, image, position):
         self.stop_play()
         self._start_torrent(url, None)
         self.media_data.start_update()
@@ -84,6 +87,7 @@ class MediaManager(metaclass=Singleton):
         self.media_data.season = season
         self.media_data.id = id
         self.media_data.episode = episode
+        self.media_data.start_from = position
         self.media_data.stop_update()
 
     def start_torrent(self, title, url, media_file=None):
@@ -95,7 +99,7 @@ class MediaManager(metaclass=Singleton):
         self.media_data.image = None
         self.media_data.stop_update()
 
-    def start_movie(self, id, title, url, image):
+    def start_movie(self, id, title, url, image, position):
         self.stop_play()
         self._start_torrent(url, None)
         self.media_data.start_update()
@@ -103,6 +107,7 @@ class MediaManager(metaclass=Singleton):
         self.media_data.title = title
         self.media_data.image = image
         self.media_data.id = id
+        self.media_data.start_from = position
         self.media_data.stop_update()
 
     def start_url(self, title, url):
@@ -139,6 +144,7 @@ class MediaManager(metaclass=Singleton):
         self.stop_torrent()
         VLCPlayer().stop()
         time.sleep(1)
+        self.media_data.reset()
 
     def play_next_episode(self, should_play):
         if should_play:
@@ -152,10 +158,31 @@ class MediaManager(metaclass=Singleton):
             Logger.write(2, "Play next! " + self.next_episode_manager.next_title)
         self.next_episode_manager.reset()
 
-    def set_media_file(self, file):
+    def media_selection_required(self, files):
+        if Settings.get_bool("slave"):
+            data = self.request_master("/data/get_history_for_url?url=" + urllib.parse.quote(self.torrent.uri))
+            if data:
+                history = [History(x['id'], x['imdb_id'], x['type'], x['title'], x['image'], x['watched_at'], x['season'], x['episode'], x['url'], x['media_file'], x['played_for'], x['length']) for x in json.loads(data)]
+            else:
+                history = []
+        else:
+            history = Database().get_history_for_url(self.torrent.uri)
+
+        for file in files:
+            seen = [x for x in history if x.media_file == file.path]
+            file.seen = len(seen) > 0
+            if file.seen:
+                seen = seen[-1]
+                file.played_for = seen.played_for
+                file.play_length = seen.length
+
+        EventManager.throw_event(EventType.ClientRequest, [self.set_media_file, self.stop_play, 1000 * 60 * 30, "SelectMediaFile", [files]])
+
+    def set_media_file(self, file, position):
         if not file:
             self.stop_play()
         else:
+            self.media_data.start_from = position
             self.torrent.set_media_file(file)
 
     def _start_playing_torrent(self):
@@ -163,7 +190,7 @@ class MediaManager(metaclass=Singleton):
             EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_torrent", [self.media_data.type, self.media_data.title, self.media_data.id, self.torrent.uri, self.torrent.media_file.path, self.media_data.image, self.media_data.season, self.media_data.episode, current_time()]])
         else:
             self.history_id = Database().add_watched_torrent(self.media_data.type, self.media_data.title, self.media_data.id, self.torrent.uri, self.torrent.media_file.path, self.media_data.image, self.media_data.season, self.media_data.episode, current_time())
-        VLCPlayer().play("http://localhost:50009/torrent")
+        VLCPlayer().play("http://localhost:50009/torrent", self.media_data.start_from)
 
     def _start_torrent(self, url, media_file):
         if self.torrent is not None:
@@ -249,6 +276,15 @@ class MediaManager(metaclass=Singleton):
             self.torrent.stop()
             self.torrent = None
 
+    def request_master(self, url):
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self.request_master_async(url))
+
+    async def request_master_async(self, url):
+        reroute = str(Settings.get_string("master_ip")) + url
+        Logger.write(2, "Sending request to master at " + reroute)
+        return await RequestFactory.make_request_async(reroute, "GET")
+
     def observe_torrent(self):
         while True:
             if self.torrent is None:
@@ -321,3 +357,4 @@ class MediaData(Observable):
         self.season = 0
         self.episode = 0
         self.id = 0
+        self.start_from = 0

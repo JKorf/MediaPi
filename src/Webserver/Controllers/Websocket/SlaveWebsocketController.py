@@ -101,7 +101,7 @@ class SlaveWebsocketController:
 
                 self.pending_message_handler.remove_client_message(msg, None)
                 Logger.write(2, "Client message response on " + str(id) + ", data: " + str(data['data']))
-                cb_thread = CustomThread(lambda: msg.callback(data['data']), "Message response handler", [])
+                cb_thread = CustomThread(lambda: msg.callback(*data['data']), "Message response handler", [])
                 cb_thread.start()
 
             elif data['event'] == 'command':

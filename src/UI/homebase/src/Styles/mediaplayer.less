@@ -202,6 +202,22 @@
     padding-bottom: 6px;
     margin-left: 40px;
     max-width: calc(100% - 50px);
+
+    &.seen{
+        color: #bbb;
+    }
+}
+
+.hd-row-seen{
+    position: absolute;
+    right: 8px;
+    top: 4px;
+    width: 18px;
+    height: 18px;
+
+    svg{
+        fill: #colors[primary-images];
+    }
 }
 
 .show-details{
@@ -323,8 +339,8 @@
     margin-top: 5px;
 }
 
-.show-episode-play{
-    margin: 5px 0;
+.show-episode-play .button{
+    margin: 5px;
 }
 
 .movie-details{
@@ -363,10 +379,10 @@
 }
 
 .movie-play-buttons{
-    margin: 10px 0;
+    margin: 5px;
 
     .button{
-        margin-left: 10px;
+        margin: 5px;
     }
 }
 
@@ -480,6 +496,22 @@
     display: inline-block;
     word-break: break-all;
     width: calc(100% - 38px);
+}
+
+.media-file-select-text.seen{
+    color: #aaa;
+}
+
+.media-file-seen{
+    position: absolute;
+    right: -4px;
+    top: 2px;
+    width: 18px;
+    height: 18px;
+
+    svg{
+        fill: #colors[primary-images];
+    }
 }
 
 .select-media-popup{

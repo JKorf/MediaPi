@@ -82,7 +82,7 @@ class Database(metaclass=Singleton):
             cursor.execute('SELECT * FROM History')
             data = cursor.fetchall()
             database.close()
-        return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9]) for x in data]
+        return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]) for x in data]
 
     def get_history_for_id(self, id):
         if self.slave:
@@ -93,7 +93,18 @@ class Database(metaclass=Singleton):
             cursor.execute('SELECT * FROM History WHERE ImdbId = ?', [id])
             data = cursor.fetchall()
             database.close()
-        return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9]) for x in data]
+        return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]) for x in data]
+
+    def get_history_for_url(self, url):
+        if self.slave:
+            raise PermissionError("Cant call get_watched_file on slave")
+
+        with self.lock:
+            database, cursor = self.connect()
+            cursor.execute('SELECT * FROM History WHERE URL = ?', [url])
+            data = cursor.fetchall()
+            database.close()
+        return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]) for x in data]
 
     def get_watched_torrent_files(self, uri):
         if self.slave:
@@ -308,7 +319,7 @@ class Favorite:
         self.title = title
 
 class History:
-    def __init__(self, id, imdb_id, type, title, image, watched_at, season, episode, url, media_file):
+    def __init__(self, id, imdb_id, type, title, image, watched_at, season, episode, url, media_file, played_for, length):
         self.id = id
         self.imdb_id = imdb_id
         self.type = type
@@ -324,3 +335,5 @@ class History:
             pass
         self.url = url
         self.media_file = media_file
+        self.played_for = played_for
+        self.length = length

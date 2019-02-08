@@ -67,11 +67,15 @@ class HDView extends Component {
 
   fileClick(file)
   {
-    this.viewRef.current.play({url: this.path + file, title: file});
+    this.viewRef.current.play({url: this.path + file.name, title: file.name, position: file.continue_time, length: file.total_time});
   }
 
   playMedia(instance, file){
-    axios.post('http://'+window.location.hostname+'/play/file?instance=' + instance + "&path=" + encodeURIComponent(file.url) + "&position=0")
+    var toSee = file.length - file.position;
+    var shouldContinue = file.position > 1000 * 60 && toSee > 1000 * 60;
+    console.log("Continue from " + file.position);
+
+    axios.post('http://'+window.location.hostname+'/play/file?instance=' + instance + "&path=" + encodeURIComponent(file.url) + "&position=" + (shouldContinue ? file.position + "": "0"))
     .then(
         () =>
         {
@@ -96,11 +100,11 @@ class HDView extends Component {
     }
 
   filterFiles(){
-    var extensions = [".mkv", ".avi", ".mp4", ".mpg"]
+    var extensions = [".mkv", ".avi", ".mp4", ".mpg", "wmv"]
     var structure = this.state.structure;
     structure.files = structure.files.filter(f => {
         for(var i = 0; i < extensions.length; i++)
-            if(f.endsWith(extensions[i]))
+            if(f.name.endsWith(extensions[i]))
                 return true;
     });
     this.setState({structure: structure});
@@ -126,7 +130,7 @@ class HDView extends Component {
     return (
       <MediaPlayerView ref={this.viewRef} playMedia={this.playMedia}>
         { structure.dirs.map((dir, index) => <HDRow key={dir} img={DirectoryImage} text={dir} clickHandler={(e) => this.dirClick(dir, e)}></HDRow>) }
-        { structure.files.map((file, index) => <HDRow key={file} img={this.getFileIcon(file)} text={file} clickHandler={(e) => this.fileClick(file, e)}>{file}</HDRow>) }
+        { structure.files.map((file, index) => <HDRow key={file.name} img={this.getFileIcon(file.name)} text={file.name} seen={file.seen} clickHandler={(e) => this.fileClick(file, e)}></HDRow>) }
       </MediaPlayerView>
     );
   }

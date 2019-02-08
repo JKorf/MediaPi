@@ -453,6 +453,8 @@ class TorrentDownloadFile:
         self.is_media = is_media
         self.first_64k = None
         self.last_64k = None
+        self.played_for = 0
+        self.play_length = 0
 
         self.season = 0
         self.episode = 0

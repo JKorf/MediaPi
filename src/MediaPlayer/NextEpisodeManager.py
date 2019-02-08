@@ -107,7 +107,7 @@ class NextEpisodeManager(metaclass=Singleton):
             result = json.loads(data.decode("utf8"))
             file_list = result["files"]
         else:
-            file_list = FileStructure(dir_name).files
+            file_list = FileStructure(dir_name).file_names
 
         for potential in file_list:
             if not is_media_file(potential):

@@ -143,8 +143,7 @@ class StreamListener:
             range_start = header.range_start
 
         if self.is_open(socket):
-            EventManager.throw_event(EventType.NewRequest, [range_start])
-            if header.range is None:
+            if header.range is None or (range_start == 0 and header.range_end == self.torrent.media_file.length - 1):
                 Logger.write(2, self.name + ' request without range')
                 self.update_socket(socket, "Without range: 0 - " + str(header.range_end))
                 self.write_header(socket, "200 OK", 0, header.range_end, self.torrent.media_file.length,

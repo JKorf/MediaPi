@@ -74,19 +74,29 @@ class ShowView extends Component {
     return "0" + value;
   }
 
-  play(episode){
-    this.viewRef.current.play({url: episode.torrents["0"].url, episode: episode.episode, season: episode.season, title: this.state.show.title + " [S" + this.addLeadingZero(episode.season) + "E" + this.addLeadingZero(episode.episode) + "]"});
+  play(episode, played_for){
+    this.viewRef.current.play({
+        url: episode.torrents["0"].url,
+        episode: episode.episode,
+        season: episode.season,
+        played_for: played_for,
+        length: episode.length,
+        title: this.state.show.title + " [S" + this.addLeadingZero(episode.season) + "E" + this.addLeadingZero(episode.episode) + "]"});
   }
 
   playShow(instance, episode)
   {
+    if(episode.played_for != 0)
+        console.log("Continue from " + episode.played_for);
+
     axios.post('http://'+window.location.hostname+'/play/episode?instance=' + instance
         + "&url=" + encodeURIComponent(episode.url)
         + "&id=" + this.props.match.params.id
         + "&title=" + encodeURIComponent(episode.title)
         + "&img=" + encodeURIComponent(this.state.show.images.poster)
         + "&season=" + episode.season
-        + "&episode=" + episode.episode).then(() =>
+        + "&episode=" + episode.episode
+        + "&position=" + episode.played_for).then(() =>
             {
                 if(this.viewRef.current) { this.viewRef.current.changeState(1); }
                 this.props.functions.showInfo(6000, "success", "Successfully started", episode.title + " is now playing", "more..", "/mediaplayer/player/" + instance);
@@ -95,6 +105,23 @@ class ShowView extends Component {
             console.log(err);
             if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
         );
+  }
+
+  writeTimespan(duration)
+  {
+     duration = Math.round(duration);
+     var milliseconds = parseInt((duration % 1000) / 100),
+      seconds = parseInt((duration / 1000) % 60),
+      minutes = parseInt((duration / (1000 * 60)) % 60),
+      hours = parseInt((duration / (1000 * 60 * 60)) % 24);
+
+      hours = (hours < 10) ? "0" + hours : hours;
+      minutes = (minutes < 10) ? "0" + minutes : minutes;
+      seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+      if (hours > 0)
+        return hours + ":" + minutes + ":" + seconds;
+      return minutes + ":" + seconds;
   }
 
   render() {
@@ -154,7 +181,8 @@ class ShowView extends Component {
                                             {episode.overview}
                                         </div>
                                         <div className="show-episode-play">
-                                             <Button text="Play" onClick={(e) => this.play(episode)} classId="secondary"></Button>
+                                             <Button text="Play" onClick={(e) => this.play(episode, 0)} classId="secondary"></Button>
+                                             { episode.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(episode.played_for)} onClick={(e) => this.play(episode, episode.played_for)} classId="secondary"></Button> }
                                         </div>
                                     </div>
                                 }

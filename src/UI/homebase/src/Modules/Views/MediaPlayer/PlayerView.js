@@ -216,6 +216,13 @@ class PlayerView extends Component {
       return minutes + ":" + seconds;
   }
 
+  writeNumber(value){
+    var f = Math.round(parseFloat(value));
+    if(f > 1000)
+        f = (Math.round(f / 100) / 10) + "k";
+    return f;
+  }
+
   capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
@@ -327,8 +334,17 @@ class PlayerView extends Component {
 
              {torrentComponent}
 
-             <InfoGroup title="System state">
-             { Object.keys(this.state.statData).map(s => <InfoRow key={s} name={s} value={this.state.statData[s]}></InfoRow>)}
+             <InfoGroup title="System statistics">
+                 <InfoRow name="Max download speed" value={this.writeSpeed(this.state.statData["max_download_speed"])}></InfoRow>
+                 <InfoRow name="Total downloaded" value={this.writeSize(this.state.statData["total_downloaded"])}></InfoRow>
+
+                 <InfoRow name="Peers connected" value={this.writeNumber(this.state.statData["peers_connect_success"])}></InfoRow>
+                 <InfoRow name="Peers unreachable" value={this.writeNumber(this.state.statData["peers_connect_failed"])}></InfoRow>
+                 <InfoRow name="DHT peers" value={this.writeNumber(this.state.statData["peers_source_dht"])}></InfoRow>
+                 <InfoRow name="Exchange peers" value={this.writeNumber(this.state.statData["peers_source_exchange"])}></InfoRow>
+                 <InfoRow name="UDP tracker peers" value={this.writeNumber(this.state.statData["peers_source_udp_tracker"])}></InfoRow>
+                 <InfoRow name="Subtitles downloaded" value={this.writeNumber(this.state.statData["subs_downloaded"])}></InfoRow>
+                 <InfoRow name="Threads started" value={this.writeNumber(this.state.statData["threads_started"])}></InfoRow>
              </InfoGroup>
 
             <InfoGroup title="System state">

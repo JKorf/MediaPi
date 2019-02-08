@@ -1,6 +1,7 @@
 import json
 import urllib.parse
 
+from Database.Database import Database
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory
@@ -38,7 +39,16 @@ class MovieController(BaseHandler):
     async def get_by_id(self, id):
         Logger.write(2, "Get movie by id " + id)
         response = await RequestFactory.make_request_async(MovieController.movies_api_path + "movie/" + id)
-        return response
+        data = json.loads(response.decode('utf-8'))
+
+        seen = Database().get_history_for_id(id)
+        data['seen'] = len(seen) > 0
+        if len(seen) > 0:
+            seen = seen[-1]
+            data['played_for'] = seen.played_for
+            data['length'] = seen.length
+
+        return json.dumps(data).encode('utf-8')
 
     @staticmethod
     def parse_movie_data(data):

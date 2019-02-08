@@ -141,7 +141,7 @@ class MasterWebsocketController(metaclass=Singleton):
 
                 self.pending_message_handler.remove_client_message(msg, client)
                 Logger.write(2, "Client message response on " + str(id) +", data: " + str(data['data']))
-                cb_thread = CustomThread(lambda: msg.callback(data['data']), "Message response handler", [])
+                cb_thread = CustomThread(lambda: msg.callback(*data['data']), "Message response handler", [])
                 cb_thread.start()
             else:
                 slave = self.slaves.get_slave_by_id(instance_id)

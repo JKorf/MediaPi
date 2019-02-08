@@ -34,12 +34,29 @@ class MovieView extends Component {
     });
   }
 
-  play_torrent(torrent){
-    this.viewRef.current.play({type: "torrent", url: torrent.url, title: this.state.movie.title});
+  play_torrent(torrent, start_from){
+    this.viewRef.current.play({type: "torrent", url: torrent.url, title: this.state.movie.title, played_for: start_from, length: this.state.movie.length});
   }
 
   play_trailer(url){
       this.viewRef.current.play({type: "trailer", url: url, title: this.state.movie.title + " Trailer"});
+  }
+
+  writeTimespan(duration)
+  {
+     duration = Math.round(duration);
+     var milliseconds = parseInt((duration % 1000) / 100),
+      seconds = parseInt((duration / 1000) % 60),
+      minutes = parseInt((duration / (1000 * 60)) % 60),
+      hours = parseInt((duration / (1000 * 60 * 60)) % 24);
+
+      hours = (hours < 10) ? "0" + hours : hours;
+      minutes = (minutes < 10) ? "0" + minutes : minutes;
+      seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+      if (hours > 0)
+        return hours + ":" + minutes + ":" + seconds;
+      return minutes + ":" + seconds;
   }
 
   playMedia(instance, media)
@@ -56,11 +73,15 @@ class MovieView extends Component {
                 () => { if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
             );
     }else{
+        if(media.played_for > 0)
+            console.log("Continue from " + media.played_for);
+
         axios.post('http://localhost/play/movie?instance=' + instance
             + "&url=" + encodeURIComponent(media.url)
             + "&id=" + this.props.match.params.id
             + "&title=" + encodeURIComponent(this.state.movie.title)
-            + "&img=" + encodeURIComponent(this.state.movie.images.poster))
+            + "&img=" + encodeURIComponent(this.state.movie.images.poster)
+            + "&position=" + media.played_for)
             .then(
                 () =>
                 {
@@ -107,7 +128,8 @@ class MovieView extends Component {
             </div>
             <div className="movie-play-buttons">
                 <Button text="Play trailer" onClick={(e) => this.play_trailer(movie.trailer)} classId="secondary"/>
-                { torrents.map(([res, torrent]) => <Button key={res} text={"Play " + res } onClick={(e) => this.play_torrent(torrent)} classId="secondary" />)}
+                 { movie.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(movie.played_for)} onClick={(e) => this.play_torrent(torrents[0][1], movie.played_for)} classId="secondary"></Button> }
+                { torrents.map(([res, torrent]) => <Button key={res} text={"Play " + res } onClick={(e) => this.play_torrent(torrent, 0)} classId="secondary" />)}
             </div>
 
             { showPopup &&

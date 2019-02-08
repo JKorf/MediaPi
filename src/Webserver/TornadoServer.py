@@ -74,9 +74,6 @@ class TornadoServer:
     def stop(self):
         tornado.ioloop.IOLoop.instance().stop()
 
-    def database_update(self, method, parameters):
-        self.slave_socket_controller.write(WebSocketDatabaseMessage(method, parameters))
-
     @staticmethod
     async def notify_master_async(url):
         reroute = str(TornadoServer.master_ip) + url

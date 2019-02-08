@@ -4,6 +4,7 @@ import sys
 import urllib.parse
 import urllib.request
 
+from Database.Database import Database
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
@@ -40,7 +41,23 @@ class HDController(BaseHandler):
     def get_directory(self, path):
         Logger.write(2, path)
         directory = FileStructure(urllib.parse.unquote(path))
+        history = Database().get_history()
+        for file in directory.file_names:
+            hist = [x for x in history if x.url == path+file]
+            if len(hist) > 0:
+                directory.files.append(File(file, True, hist[-1].played_for, hist[-1].length))
+            else:
+                directory.files.append(File(file, False, 0, 0))
+
         return to_JSON(directory).encode('utf8')
+
+class File:
+
+    def __init__(self, name, seen, continue_time, total_time):
+        self.name = name
+        self.seen = seen
+        self.continue_time = continue_time
+        self.total_time = total_time
 
     # @staticmethod
     # async def play_master_file(server, path, file, position):

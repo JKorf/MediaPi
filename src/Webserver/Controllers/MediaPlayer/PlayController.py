@@ -22,29 +22,28 @@ class PlayController(BaseHandler):
             title = self.get_argument("title")
             Logger.write(2, "Play movie " + title + " on " + str(instance))
             if MasterWebsocketController().is_self(instance):
-                MediaManager().start_movie(self.get_argument("id"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img"))
+                MediaManager().start_movie(self.get_argument("id"), urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), urllib.parse.unquote(self.get_argument("img")), int(self.get_argument("position")))
             else:
-                MasterWebsocketController().send_to_slave(instance, "media", "start_movie", [self.get_argument("id"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img")])
+                MasterWebsocketController().send_to_slave(instance, "media", "start_movie", [self.get_argument("id"), urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), urllib.parse.unquote(self.get_argument("img")), int(self.get_argument("position"))])
 
         # ------------ Play episode --------------
         elif url == "episode":
             title = self.get_argument("title")
             Logger.write(2, "Play episode " + title + " on " + str(instance))
             if MasterWebsocketController().is_self(instance):
-                MediaManager().start_episode(self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img"))
+                MediaManager().start_episode(self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), urllib.parse.unquote(self.get_argument("img")), int(self.get_argument("position")))
             else:
-                MasterWebsocketController().send_to_slave(instance, "media", "start_episode", [self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), self.get_argument("title"), self.get_argument("url"), self.get_argument("img")])
+                MasterWebsocketController().send_to_slave(instance, "media", "start_episode", [self.get_argument("id"), self.get_argument("season"), self.get_argument("episode"), urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), urllib.parse.unquote(self.get_argument("img")), int(self.get_argument("position"))])
 
         # ------------ Play torrent --------------
         elif url == "torrent":
             title = self.get_argument("title")
             Logger.write(2, "Play torrent " + title + " on " + str(instance))
             if MasterWebsocketController().is_self(instance):
-                MediaManager().start_torrent(self.get_argument("title"), Torrent.get_magnet_uri(self.get_argument("url")))
+                MediaManager().start_torrent(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(Torrent.get_magnet_uri(self.get_argument("url"))))
             else:
                 MasterWebsocketController().send_to_slave(instance, "media", "start_torrent",
-                                                          [self.get_argument("title"), Torrent.get_magnet_uri(self.get_argument("url"))])
-
+                                                          [urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(Torrent.get_magnet_uri(self.get_argument("url")))])
 
         # ------------ Play radio --------------
         elif url == "radio":

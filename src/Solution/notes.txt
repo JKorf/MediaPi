@@ -17,9 +17,10 @@
 
     check if people are home
 
+    Continue automatically next epi?
+
     UI
-        statistics?
-        Continue with
+        Add continue with button to mediafile selection
         lighting
         heating
 
