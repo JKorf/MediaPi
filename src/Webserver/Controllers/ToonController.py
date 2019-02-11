@@ -1,4 +1,5 @@
 from Controllers.ToonManager import ToonManager
+from Shared.Logger import Logger
 from Shared.Util import to_JSON
 from Webserver.BaseHandler import BaseHandler
 
@@ -10,7 +11,7 @@ class ToonController(BaseHandler):
 
     def post(self, url):
         if url == "set_temperature":
-            self.set_temperature(float(self.get_argument("temperature")))
+            self.set_temperature(int(self.get_argument("temperature")))
 
     def get_toon_status(self):
         status = ToonManager().get_status()
@@ -29,6 +30,8 @@ class ToonController(BaseHandler):
         return to_JSON(result)
 
     def set_temperature(self, temp):
+        temp = temp / 100
+        Logger.write(2, "Setting temperature to " + str(temp))
         ToonManager().set_temperature(temp)
 
 class ThermostatInfo:

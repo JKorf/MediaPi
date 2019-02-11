@@ -23,7 +23,7 @@ class DashboardView extends Component {
 
     this.widgetRefs = [
         {
-            component: <TempWidget ref={React.createRef()} />,
+            component: <TempWidget title="Temperature" ref={React.createRef()} />,
             style: {},
             width: 0,
             height: 0,

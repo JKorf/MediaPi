@@ -817,23 +817,50 @@
 }
 
 .temp-widget-current-temp{
-    width: 100%;
-    font-size: 22px;
     text-align: center;
+    font-size: 24px;
+    height: 40px;
+    line-height: 40px;
 }
 
 .temp-widget-set-temp{
+    position: relative;
+    margin-top: 5px;
+}
+
+.temp-widget-current-setpoint{
+    height: 20px;
     width: 100%;
-    font-size: 12px;
     text-align: center;
 }
 
-.temp-widget-content{
-    margin: 0;
-    position: absolute;
-    top: 50%;
+.temp-widget-decrease-temp{
+    display:inline-block;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    font-size:20px;
+}
+
+.temp-widget-increase-temp{
+    display:inline-block;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    font-size:20px;
+}
+
+.temp-widget-controls{
+    width: 65px;
+    position: relative;
     left: 50%;
-    transform: translate(-50%, -50%);
-    height: 44px;
-    margin: auto;
+    transform: translateX(-50%);
+}
+
+.temp-widget-content{
+    position:relative;
+    top: 50%;
+    transform: translateY(-50%);
 }
