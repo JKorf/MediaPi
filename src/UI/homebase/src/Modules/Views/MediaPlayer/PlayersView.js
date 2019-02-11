@@ -30,7 +30,7 @@ class PlayersView extends Component {
     Socket.unsubscribe(this.slaveSub);
   }
 
-  slaveUpdate(data){
+  slaveUpdate(subId, data){
     this.setState({slaveData: data});
   }
 
@@ -63,10 +63,10 @@ class PlayerInstance extends Component {
     Socket.unsubscribe(this.mediaSub);
   }
 
-  playerUpdate(data){
+  playerUpdate(subId, data){
     this.setState({playerData: data});
   }
-  mediaUpdate(data){
+  mediaUpdate(subId, data){
     this.setState({mediaData: data});
   }
 

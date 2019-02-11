@@ -25,7 +25,7 @@ class StartMediaPopup extends Component {
     Socket.unsubscribe(this.mediaSub);
   }
 
-  mediaUpdate(data){
+  mediaUpdate(subId, data){
     this.setState({mediaData: data});
 
     if (!data.title && !this.confirmed){

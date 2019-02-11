@@ -65,6 +65,7 @@ class App extends Component {
   }
 
   showInfo(time, type, header, text, linkText, linkTo){
+  return;
     this.infoMessageRef.current.addMessage(time, type, header, text, linkText, linkTo);
   }
 
@@ -90,9 +91,9 @@ class App extends Component {
 
                     <Route path="/settings" exact render={(props) => <SettingsView {...props} functions={this.functions}  />} />
                 </View>
-                <Footer />
+                <Footer functions={this.functions} />
                 <PopupController ref={this.popupControllerRef} />
-                <InfoMessageController ref={this.infoMessageRef} />
+                {/*<InfoMessageController ref={this.infoMessageRef} />*/}
           </div>
       </Router>
     );

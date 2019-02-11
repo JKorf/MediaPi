@@ -24,13 +24,13 @@ class SelectInstancePopup extends Component {
     Socket.unsubscribe(this.slaveSub);
   }
 
-  slaveUpdate(data){
+  slaveUpdate(subId, data){
     this.setState({slaveData: data});
     if (!this.state.instance)
         this.setState({instance: data[0].id});
 
     if (data.length == 1)
-        this.select();
+        this.select(data[0].id);
     else
         this.setState({loading: false});
   }
@@ -44,9 +44,9 @@ class SelectInstancePopup extends Component {
     this.props.onCancel();
   }
 
-  select()
+  select(id)
   {
-    this.props.onSelect(this.state.instance);
+    this.props.onSelect(id);
   }
 
   render() {
@@ -54,11 +54,11 @@ class SelectInstancePopup extends Component {
     const buttons = (
         <div>
          <Button classId="secondary" text="Cancel" onClick={this.cancel} />
-         <Button classId="secondary" text="Select"  onClick={this.select} />
+         <Button classId="secondary" text="Select"  onClick={e => this.select(this.state.instance)} />
          </div>
     )
     return (
-    <Popup title="Select a media player" loading={this.state.loading} onCancel={(e) => this.cancel(e)} onSelect={e => this.select(e)} buttons={buttons}>
+    <Popup title="Select a media player" loading={this.state.loading} buttons={buttons}>
         <div className="label-row">
             <div className="label-field">Player</div>
             <div className="label-value">

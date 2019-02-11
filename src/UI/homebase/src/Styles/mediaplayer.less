@@ -22,7 +22,7 @@
     position:relative;
     margin: 5px;
     vertical-align:top;
-    background: #colors[secondary-background];
+    background: #colors[item-background];
     font-size: 14px;
 }
 
@@ -77,7 +77,7 @@
     top: 0;
     width: 20px;
     height: 20px;
-    fill: #colors[primary-images];
+    fill: #colors[images];
 }
 
 .mediaplayer-dashboard{
@@ -105,6 +105,7 @@
 .mediaplayer-widget{
     position: relative;
     padding-bottom: 12px;
+    margin: 6px 10px;
 
     &.not-playing{
         padding-bottom: 0;
@@ -117,7 +118,7 @@
 }
 
 .mediaplayer-widget-item:nth-child(even){
-    background: #colors[secondary-background-list];
+    background: #colors[list-background-alternate];
 }
 
 .mediaplayer-widget-holder{
@@ -133,7 +134,7 @@
 
 .mediaplayer-name{
     font-size: 12px;
-    color: #aaa;
+    color: #colors[text-faded];
 }
 
 .mediaplayer-widget-not-playing{
@@ -154,7 +155,7 @@
 }
 
 .mediaplayer-widget-control svg{
-    fill: #colors[primary-images];
+    fill: #colors[images];
 }
 
 .mediaplayer-widget-info-title{
@@ -174,7 +175,7 @@
 
 .media-progress{
     height: 3px;
-    background: #colors[selection];
+    background: #colors[highlight];
     position: absolute;
     transition: width 0.2s linear;
     min-width: 10px;
@@ -184,11 +185,16 @@
     min-height: 36px;
     width: 100%;
     position: relative;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #colors[borders];
+    background: #colors[list-background];
+
+    &:nth-child(even){
+        background: #colors[list-background-alternate];
+    }
 }
 
 .hd-row-image{
-    fill: #eee;
+    fill: #colors[images];
     position: absolute;
     left: 8px;
     top: 5px;
@@ -204,7 +210,7 @@
     max-width: calc(100% - 50px);
 
     &.seen{
-        color: #bbb;
+        color: #colors[text-faded];
     }
 }
 
@@ -216,7 +222,7 @@
     height: 18px;
 
     svg{
-        fill: #colors[primary-images];
+        fill: #colors[images];
     }
 }
 
@@ -273,17 +279,17 @@
 
 .show-season{
     padding: 4px 8px;
-    border: 1px solid #colors[primary-background];
+    border: 1px solid #colors[primary-header];
     width: 100px;
 }
 
 .show-season.selected{
-    background: #colors[primary-background];
+    background: #colors[primary-header];
 }
 
 .show-season-episodes{
     font-size: 12px;
-    color: #aaa;
+    color: #colors[text-faded];
 }
 
 .show-episode-title{
@@ -292,7 +298,7 @@
 
 .show-episode-title-date{
     font-size: 12px;
-    color: #aaa;
+    color: #colors[text-faded];
 }
 
 .show-episodes{
@@ -307,8 +313,8 @@
     padding-top: 4px;
     padding-bottom: 4px;
     padding-left: 18px;
-    border: 1px solid #colors[primary-background];
-    border-left: 8px solid #colors[primary-background];
+    border: 1px solid #colors[primary-header];
+    border-left: 8px solid #colors[primary-header];
 }
 
 .show-episode.selected .show-episode-title{
@@ -319,7 +325,7 @@
     max-width: calc(100% - 26px);
 
     &.seen{
-        color: #bbb;
+        color: #colors[text-faded];
     }
 }
 
@@ -331,7 +337,7 @@
     height: 18px;
 
     svg{
-        fill: #colors[primary-images];
+        fill: #colors[images];
     }
 }
 
@@ -409,12 +415,17 @@
 }
 
 .torrent{
-    border-top: 1px solid #444;
+    border-top: 1px solid #colors[borders];
     min-height: 36px;
     position: relative;
+    background: #colors[list-background];
+
+    &:nth-child(even){
+        background: #colors[list-background-alternate];
+    }
 
     &.selected{
-        background: #colors[secondary-background];
+        background: #colors[highlight];
 
         .torrent-title{
             font-weight:bold;
@@ -429,7 +440,7 @@
         top: 5px;
 
         svg{
-            fill: #colors[primary-images];
+            fill: #colors[images];
         }
     }
 
@@ -442,7 +453,7 @@
     }
 
     .torrent-details{
-        margin: 8px 44px;
+        padding: 8px 44px;
         position: relative;
 
         .torrent-details-peers{
@@ -466,14 +477,14 @@
 
         .button{
             position: absolute;
-            right: 0;
+            right: 10px;
             bottom: 10px;
         }
 
         .torrent-details-size{
             position:absolute;
-            left: 100px;
-            top: 0;
+            right: 10px;
+            bottom: 40px;
         }
     }
 }
@@ -482,7 +493,7 @@
     width: 100%;
     padding: 0 10px;
     position: relative;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #colors[borders];
     min-height: 30px;
     font-size: 13px;
 
@@ -491,7 +502,7 @@
     }
 
     &.selected{
-        background: #colors[selection] !important;
+        background: #colors[highlight] !important;
     }
 }
 
@@ -500,7 +511,7 @@
 }
 
 .media-file-select:nth-child(even){
-    background: #colors[secondary-background-list];
+    background: #colors[list-background-alternate];
 }
 
 .media-file-select-details .button{
@@ -519,7 +530,7 @@
 
 
 .media-file-select-text.seen{
-    color: #aaa;
+    color: #colors[text-faded];
 }
 
 .media-file-seen{
@@ -530,7 +541,7 @@
     height: 18px;
 
     svg{
-        fill: #colors[primary-images];
+        fill: #colors[images];
     }
 }
 
@@ -542,13 +553,12 @@
     margin: 10px;
     width: calc(100% - 20px);
     min-height: 30px;
-    background: #colors[secondary-background];
+    background: #colors[item-background];
 }
 
 .player-instance-title{
-    background: #colors[secondary];
+    background: #colors[secondary-header];
     padding: 4px 8px;
-    color: #colors[secondary-text];
 }
 
 .player-instance-content{
@@ -560,7 +570,7 @@
     line-height: 30px;
     padding: 0 10px;
 
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #colors[borders];
 }
 
 .player-details{
@@ -568,13 +578,13 @@
 }
 
 .player-details-group{
-    background: #colors[secondary-background];
+    background: #colors[item-background];
 }
 
 .player-details-group-title{
     font-weight: bold;
     padding: 4px 8px;
-    background: #colors[secondary];
+    background: #colors[secondary-header];
 }
 
 .player-details-group-content{
@@ -640,7 +650,7 @@
 .player-details-control svg{
     width: 24px;
     height: 24px;
-    fill: #colors[primary-images];
+    fill: #colors[images];
 }
 
 .player-details-top{
@@ -701,7 +711,7 @@
     .svg-image{
         width: 14px;
         height: 14px;
-        fill: #colors[primary-images];
+        fill: #colors[images];
     }
 }
 
@@ -747,7 +757,7 @@
     right: 15px;
     top: 12px;
 
-    fill: #colors[primary-images];
+    fill: #colors[images];
 
     &.selected{
         fill: #ffce54;
@@ -755,13 +765,15 @@
 }
 
 .history{
-    margin:15px;
 }
 
 .history-item{
     position: relative;
-    background: #colors[secondary-background];
-    margin-bottom: 10px;
+    background: #colors[list-background];
+
+    &:nth-child(even){
+        background: #colors[list-background-alternate];
+    }
 
     .history-item-image{
         width: 100px;

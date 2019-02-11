@@ -11,15 +11,12 @@
 
     Out of memory als een torrent lang aan staat?
 
-    Websocket connectie niet up als messages getoont moet worden
-
     Tv control goed toepassen
 
     check if people are home
 
-    Continue automatically next epi?
-
     UI
+        Remember searches
         lighting
         heating
 

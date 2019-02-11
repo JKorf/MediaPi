@@ -60,7 +60,7 @@ class PlayerView extends Component {
     Socket.unsubscribe(this.statSub);
   }
 
-  stateUpdate(data){
+  stateUpdate(subId, data){
     if(!this.changedTitle)
     {
         this.changedTitle = true;
@@ -68,16 +68,16 @@ class PlayerView extends Component {
     }
     this.setState({stateData: data});
   }
-  playerUpdate(data){
+  playerUpdate(subId, data){
     this.setState({playerData: data});
   }
-  mediaUpdate(data){
+  mediaUpdate(subId, data){
     this.setState({mediaData: data});
   }
-  torrentUpdate(data){
+  torrentUpdate(subId, data){
     this.setState({torrentData: data});
   }
-  statUpdate(data){
+  statUpdate(subId, data){
     this.setState({statData: data.statistics});
   }
 

@@ -35,7 +35,7 @@ class MediaPlayerWidget extends Component {
     return {width: 200,  height: 34 + this.state.slaveData.length * 59};
   }
 
-  slaveUpdate(data){
+  slaveUpdate(subId, data){
     this.setState({slaveData: data});
     this.props.updateFunc();
   }
@@ -82,10 +82,10 @@ class MediaPlayerWidgetInstance extends Component {
     Socket.unsubscribe(this.mediaSub);
   }
 
-  playerUpdate(data){
+  playerUpdate(subId, data){
     this.setState({playerData: data});
   }
-  mediaUpdate(data){
+  mediaUpdate(subId, data){
     this.setState({mediaData: data});
   }
 

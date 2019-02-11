@@ -21,15 +21,15 @@ class DashboardView extends Component {
 
 
     this.widgetRefs = [
-        {
-            component: <MediaPlayerWidget ref={React.createRef()} closePopup={(popup) => this.props.functions.closePopup(popup)} showPopup={(popup) => this.props.functions.showPopup(popup)} title="players" updateFunc={() => this.resizeUpdate()}/>,
-            style: {},
-            width: 0,
-            height: 0,
-            x: -1,
-            y: -1,
-            index: 1
-        },
+//        {
+//            component: <MediaPlayerWidget ref={React.createRef()} closePopup={(popup) => this.props.functions.closePopup(popup)} showPopup={(popup) => this.props.functions.showPopup(popup)} title="players" updateFunc={() => this.resizeUpdate()}/>,
+//            style: {},
+//            width: 0,
+//            height: 0,
+//            x: -1,
+//            y: -1,
+//            index: 1
+//        },
         {
             component: <FavoriteSeriesWidget title="favorites" ref={React.createRef()} />,
             style: {},

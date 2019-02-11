@@ -1,17 +1,19 @@
 #colors() {
-  primary: #092327;
-  primary-header: #0A4C4A;
-  primary-text: #eee;
-  primary-background: #0B5351;
-  primary-images: #eee;
+  text: #eee;
+  text-faded: #aaa;
+  images: #eee;
 
-  secondary: #006666;
-  secondary-text: #eee;
-  secondary-background: #0d3a42;
-  secondary-background-list: #113e47;
-  secondary-background-button: #164951;
+  page-background: #222;
+  item-background: #30393d;
 
-  selection: #0e7082;
+  list-background: #222;
+  list-background-alternate: #242a2d;
+
+  primary-header: #364951;
+  secondary-header: #4c5c63;
+
+  highlight: #52879e;
+  borders: #5c686d;
 }
 
 
@@ -24,8 +26,8 @@ body, html{
     position:relative;
 
     max-width: 1024px;
-    background: #colors[primary];
-    color: #colors[primary-text];
+    background: #colors[page-background];
+    color: #colors[text];
     font-family: 'Montserrat';
     font-size: 14px;
 }
@@ -36,36 +38,45 @@ body, html{
     width: 100%;
 }
 
+.app{
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
 .header{
     a{
         height: 0px;
         width: 0px;
     }
 
-    height:50px;
+    height:40px;
     background: #colors[primary-header];
+    border-bottom: 2px solid #colors[borders];
+    flex-grow:0;
+    flex-shrink: 0;
 
     .header-back{
-        width: 50px;
-        height: 50px;
+        width: 40px;
+        height: 40px;
 
         svg{
-            width: 30px;
-            height: 30px;
-            margin: 10px;
-            fill: #colors[primary-images];
+            width: 26px;
+            height: 26px;
+            margin: 7px;
+            fill: #colors[images];
         }
     }
 
     .title{
         position: absolute;
         top:0;
-        left:50px;
-        right:50px;
-        height: 50px;
+        left:40px;
+        right:40px;
+        height: 40px;
         text-align: center;
         font-size: 22px;
-        line-height:50px;
+        line-height:40px;
     }
 
     .right-image{
@@ -75,23 +86,39 @@ body, html{
         right: 16px;
         top: 13px;
 
-        fill: #colors[primary-images];
+        fill: #colors[images];
     }
 }
 
 .view{
-    height: calc(100% - 100px);
     overflow: auto;
     width: 100%;
+    flex-grow: 1;
 }
 
 .footer{
-    height: 50px;
     background: #colors[primary-header];
 }
 
+.footer-links{
+    height: 50px;
+    border-top: 1px solid #colors[borders];
+}
+
+.footer-players{
+    position:relative;
+    overflow:hidden;
+    background: #colors[secondary-header];
+    border-top: 2px solid #colors[borders];
+    max-height: 122px;
+    overflow-y: auto;
+    height: 0;
+    transition: height 0.5s ease;
+
+}
+
 .footer svg{
-    fill: #colors[primary-images];
+    fill: #colors[images];
 }
 
 *{
@@ -134,7 +161,7 @@ a {
 }
 
 .button.secondary{
-    background: #colors[secondary-background-button];
+    background: #colors[secondary-header];
 }
 
 .dashboard{
@@ -150,7 +177,7 @@ a {
     border-radius: 8px;
     padding: 5px;
     position: relative;
-    background: #colors[primary-background];
+    background: #colors[primary-header];
     font-size: 16px;
 }
 
@@ -160,7 +187,7 @@ a {
     position: absolute;
     left: calc(50% - 20px);
     top: calc(50% - 30px);
-    fill: #eee;
+    fill: #colors[images];
 }
 
 .dashboard-link-text{
@@ -169,7 +196,7 @@ a {
     width: calc(100% - 10px);
     text-align: center;
     font-size: 12px;
-    color: #aaa;
+    color: #colors[text];
 }
 
 .widget-wrap{
@@ -178,14 +205,14 @@ a {
 
 .widget{
     margin: 10px;
-    background: #colors[secondary-background];
+    background: #colors[item-background];
     height: calc(100% - 20px);
     width: calc(100% - 20px);
 }
 
 .widget-title{
     padding: 8px;
-    background: #0f454f;
+    background: #colors[secondary-header];
 }
 
 .widget-content{
@@ -213,7 +240,7 @@ a {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    background: #colors[secondary-background];
+    background: #colors[item-background];
     min-width: 250px;
     min-height: 150px;
     max-width: 100%;
@@ -239,9 +266,8 @@ a {
 }
 
 .popup-title{
-    background: #colors[secondary];
+    background: #colors[secondary-header];
     padding: 4px 8px;
-    color: #colors[secondary-text];
 }
 
 .popup-content{
@@ -291,7 +317,7 @@ a {
     }
 
     &.selected{
-        background: #colors[selection];
+        background: #colors[highlight];
     }
 }
 
@@ -341,7 +367,7 @@ a {
     .svg-image{
         height: 18px;
         width: 18px;
-        fill: #colors[primary-images];
+        fill: #colors[images];
     }
 
     .slider-tooltip{
@@ -352,7 +378,7 @@ a {
         border-radius: 4px;
         padding: 4px 8px;
         top: -40px;
-        background: #colors[selection];
+        background: #colors[highlight];
         z-index: 10;
     }
 
@@ -451,7 +477,7 @@ a {
     height: 20px;
     z-index: 10;
     svg{
-        fill: #colors[primary-images];
+        fill: #colors[images];
     }
 }
 
