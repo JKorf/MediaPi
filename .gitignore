@@ -104,3 +104,4 @@ test.txt
 .idea/
 *.srt
 trackers.txt
+credentials.txt

@@ -8,6 +8,7 @@ import SvgImage from './../Components/SvgImage'
 import TestWidget from './../Widgets/TestWidget.js'
 import MediaPlayerWidget from './../Widgets/MediaPlayerWidget.js'
 import FavoriteSeriesWidget from './../Widgets/FavoriteSeriesWidget.js'
+import TempWidget from './../Widgets/TempWidget.js'
 import Socket from './../../Socket.js'
 
 import settingsImage from './../../Images/settings.svg';
@@ -21,15 +22,15 @@ class DashboardView extends Component {
 
 
     this.widgetRefs = [
-//        {
-//            component: <MediaPlayerWidget ref={React.createRef()} closePopup={(popup) => this.props.functions.closePopup(popup)} showPopup={(popup) => this.props.functions.showPopup(popup)} title="players" updateFunc={() => this.resizeUpdate()}/>,
-//            style: {},
-//            width: 0,
-//            height: 0,
-//            x: -1,
-//            y: -1,
-//            index: 1
-//        },
+        {
+            component: <TempWidget ref={React.createRef()} />,
+            style: {},
+            width: 0,
+            height: 0,
+            x: -1,
+            y: -1,
+            index: 1
+        },
         {
             component: <FavoriteSeriesWidget title="favorites" ref={React.createRef()} />,
             style: {},

@@ -9,8 +9,9 @@
 4.  Disable screensaver: sudo apt-get install xscreensaver -> menu preferences -> screensaver -> disable
 
 5.  Install VLC with hardware acceleration: https://www.raspberrypi.org/forums/viewtopic.php?f=66&t=195221
+    (Can now just do: sudo apt-get install vlc)
 
-6.  auto script start on startup   
+6.  auto start script on startup   
     sudo nano /home/pi/.config/lxsession/LXDE-pi/autostart, add before screensaver:
     sudo python3 /home/pi/Scripts/start.py &
 
@@ -18,7 +19,7 @@
 
 8.  Install dependencies:
 sudo apt-get install python3-pyqt4 libxml2-dev libxslt-dev cec-utils
-sudo pip3 install tornado psutil lxml purl pytradfri
+sudo pip3 install tornado psutil lxml purl pytradfri toonapilib
 (for unit tests: pytest)
 
 9.  Make coap client for lighting controll:

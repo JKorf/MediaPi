@@ -51,3 +51,10 @@ class Settings:
                 continue
             keyvalue = l.split('=')
             Settings.content[keyvalue[0]] = keyvalue[1]
+
+        for line in open(os.getcwd() + '/Solution/credentials.txt', 'rt'):
+            l = line.replace('\r', '').replace('\n', '')
+            if len(l) == 0 or l.startswith("#") or '=' not in l:
+                continue
+            keyvalue = l.split('=')
+            Settings.content[keyvalue[0]] = keyvalue[1]

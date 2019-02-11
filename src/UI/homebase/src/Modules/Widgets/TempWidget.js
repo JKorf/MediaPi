@@ -8,6 +8,7 @@ class TestWidget extends Component {
   constructor(props) {
     super(props);
 
+    this.state = {thermostatData: {}};
     this.getSize = this.getSize.bind(this);
   }
 
@@ -17,6 +18,13 @@ class TestWidget extends Component {
   }
 
   componentDidMount() {
+    axios.get('http://'+window.location.hostname+'/toon/get_status').then(
+        (data) => {
+            this.setState({thermostatData: data.data});
+            console.log(data);
+         },
+        (error) => { console.log(error) }
+    )
   }
 
   componentWillUnmount(){
@@ -25,7 +33,8 @@ class TestWidget extends Component {
   render() {
     return (
       <Widget {...this.props}>
-        TestWidget!
+        <div className="temp-widget-current-temp">current: {this.state.thermostatData.current_display_temp}</div>
+        <div className="temp-widget-set-temp">setpoint: {this.state.thermostatData.current_setpoint}</div>
       </Widget>
     );
   }

@@ -18,6 +18,7 @@ from Webserver.Controllers.MediaPlayer.PlayController import PlayController
 from Webserver.Controllers.MediaPlayer.RadioController import RadioController
 from Webserver.Controllers.MediaPlayer.ShowController import ShowController
 from Webserver.Controllers.MediaPlayer.TorrentController import TorrentController
+from Webserver.Controllers.ToonController import ToonController
 from Webserver.Controllers.UtilController import UtilController
 from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
 from Webserver.Controllers.Websocket.SlaveWebsocketController import SlaveWebsocketController
@@ -38,8 +39,9 @@ class TornadoServer:
                 (r"/hd/(.*)", HDController),
                 (r"/radio/(.*)", RadioController),
                 (r"/torrent/(.*)", TorrentController),
-                (r"/ws", MasterWebsocketHandler),
                 (r"/data/(.*)", DataController),
+                (r"/toon/(.*)", ToonController),
+                (r"/ws", MasterWebsocketHandler),
                 (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/homebase/build", "default_filename": "index.html"})
             ]
 

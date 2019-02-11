@@ -2,10 +2,7 @@
 name=Woonkamer
 slave=False
 master_ip=http://127.0.0.1
-
 tradfri_hub_ip=192.168.2.73
-tradfri_hub_code=zwhwlZr85gcfAtxr
-open_weather_map_key=ba7d7c80475db4a254c38fd0295468f1
 
 # Paths
 log_folder=/home/pi/Scripts/Logs
