@@ -14,7 +14,7 @@ class TestWidget extends Component {
 
 
   getSize(){
-    return {width: 120, height: 50};
+    return {width: 80, height: 80};
   }
 
   componentDidMount() {
@@ -30,11 +30,21 @@ class TestWidget extends Component {
   componentWillUnmount(){
   }
 
+  formatTemperature(value){
+     return (Math.round(value / 10) / 10) + "°C";
+  }
+
   render() {
     return (
       <Widget {...this.props}>
-        <div className="temp-widget-current-temp">current: {this.state.thermostatData.current_display_temp}</div>
-        <div className="temp-widget-set-temp">setpoint: {this.state.thermostatData.current_setpoint}</div>
+        <div className="temp-widget-content">
+            <div className="temp-widget-current-temp">{this.formatTemperature(this.state.thermostatData.current_display_temp)}</div>
+            <div className="temp-widget-set-temp">
+                <div className="temp-widget-decrease-temp">-</div>
+                <div className="temp-widget-current-setpoint">{this.formatTemperature(this.state.thermostatData.current_setpoint)}</div>
+                <div className="temp-widget-increase-temp">+</div>
+            </div>
+        </div>
       </Widget>
     );
   }
