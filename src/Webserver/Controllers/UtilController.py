@@ -2,7 +2,7 @@ import os
 import urllib.parse
 import urllib.request
 
-from Controllers.LightController import LightManager
+from Controllers.LightManager import LightManager
 from MediaPlayer.MediaPlayer import MediaManager
 from Shared.Events import EventManager
 from Shared.Events import EventType

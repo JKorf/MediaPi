@@ -8,21 +8,21 @@ class TestWidget extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {thermostatData: {}};
+    this.state = {};
     this.getSize = this.getSize.bind(this);
     this.changeTemp = this.changeTemp.bind(this);
   }
 
 
   getSize(){
-    return {width: 100, height: 140};
+    return {width: 120, height: 135};
   }
 
   componentDidMount() {
     axios.get('http://'+window.location.hostname+'/toon/get_status').then(
         (data) => {
             this.setState({thermostatData: data.data});
-            console.log(data);
+            console.log(data.data);
          },
         (error) => { console.log(error) }
     )
@@ -51,17 +51,21 @@ class TestWidget extends Component {
 
   render() {
     return (
-      <Widget {...this.props}>
-        <div className="temp-widget-content">
-            <div className="temp-widget-current-temp">{this.formatTemperature(this.state.thermostatData.current_display_temp)}</div>
-            <div className="temp-widget-set-temp">
-                <div className="temp-widget-current-setpoint">{this.formatTemperature(this.state.thermostatData.current_setpoint)}</div>
-                <div className="temp-widget-controls">
+      <Widget {...this.props} loading={!this.state.thermostatData}>
+      { this.state.thermostatData &&
+            <div className="temp-widget-content">
+                <div className="temp-widget-current-temp">
+                    <div className="temp-widget-current-header">current</div>
+                    <div className="temp-widget-current-value">{this.formatTemperature(this.state.thermostatData.current_display_temp)}</div>
+                </div>
+                <div className="temp-widget-set-temp">
+                    <div className="temp-widget-current-setpoint-header">target</div>
                     <div className="temp-widget-decrease-temp" onClick={() => this.changeTemp(-50)}>-</div>
+                    <div className="temp-widget-current-setpoint">{this.formatTemperature(this.state.thermostatData.current_setpoint)}</div>
                     <div className="temp-widget-increase-temp" onClick={() => this.changeTemp(50)}>+</div>
                 </div>
             </div>
-        </div>
+         }
       </Widget>
     );
   }

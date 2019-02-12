@@ -19,7 +19,7 @@ from MediaPlayer.Streaming.StreamListener import StreamListener
 from UI.TV.GUI import GUI
 
 from Controllers.WiFiController import WiFiController
-from Controllers.LightController import LightManager
+from Controllers.LightManager import LightManager
 
 from Shared.Util import current_time
 from Shared.Stats import Stats

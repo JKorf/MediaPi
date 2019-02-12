@@ -8,9 +8,7 @@ class FavoriteSeriesWidget extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {favorites:[]};
-    this.widgetRef = React.createRef();
-
+    this.state = {};
     this.getSize = this.getSize.bind(this);
   }
 
@@ -35,16 +33,18 @@ class FavoriteSeriesWidget extends Component {
     var shows = this.state.favorites;
 
     return (
-      <Widget {...this.props}>
-        <div ref={this.widgetRef} className="favorites-widget">
-        { shows.map((fav) =>
-            <Link to={"/mediaplayer/shows/" + fav.id} key={fav.id}>
-                <div className="favorite-item">
-                    <div className="favorite-item-image"><img src={fav.image} /></div>
-                </div>
-            </Link>
-        )}
-        </div>
+      <Widget {...this.props} loading={!this.state.favorites}>
+        { this.state.favorites &&
+            <div className="favorites-widget">
+            { shows.map((fav) =>
+                <Link to={"/mediaplayer/shows/" + fav.id} key={fav.id}>
+                    <div className="favorite-item">
+                        <div className="favorite-item-image"><img src={fav.image} /></div>
+                    </div>
+                </Link>
+            )}
+            </div>
+        }
       </Widget>
     );
   }

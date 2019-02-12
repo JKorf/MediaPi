@@ -19,7 +19,7 @@ class SettingsView extends Component {
 
     this.props.functions.changeBack({});
     this.props.functions.changeTitle("Settings");
-    this.props.functions.changeRightImage({});
+    this.props.functions.changeRightImage(null);
   }
 
   componentDidMount() {

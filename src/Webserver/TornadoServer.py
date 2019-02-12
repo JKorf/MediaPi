@@ -12,6 +12,7 @@ from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Webserver.Controllers.DataController import DataController
+from Webserver.Controllers.LightController import LightController
 from Webserver.Controllers.MediaPlayer.HDController import HDController
 from Webserver.Controllers.MediaPlayer.MovieController import MovieController
 from Webserver.Controllers.MediaPlayer.PlayController import PlayController
@@ -41,6 +42,7 @@ class TornadoServer:
                 (r"/torrent/(.*)", TorrentController),
                 (r"/data/(.*)", DataController),
                 (r"/toon/(.*)", ToonController),
+                (r"/lighting/(.*)", LightController),
                 (r"/ws", MasterWebsocketHandler),
                 (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/homebase/build", "default_filename": "index.html"})
             ]

@@ -1,4 +1,4 @@
-from Controllers.LightController import LightManager
+from Controllers.LightManager import LightManager
 from Shared.Util import to_JSON
 from Webserver.BaseHandler import BaseHandler
 from Webserver.Models import LightControl, LightDevice
@@ -25,15 +25,19 @@ class LightController(BaseHandler):
             lights = []
             for light in control_device.light_control.lights:
                 lights.append(LightDevice(
-                    control_device.light_control.can_set_dimmer,
-                    control_device.light_control.can_set_temp,
-                    control_device.light_control.can_set_color,
                     light.state,
                     light.dimmer,
                     light.color_temp,
                     light.hex_color))
 
-            result.append(LightControl(i, control_device.application_type, control_device.last_seen.timestamp(), control_device.reachable, lights))
+            result.append(LightControl(i,
+                                       control_device.application_type,
+                                       control_device.last_seen.timestamp(),
+                                       control_device.reachable,
+                                       control_device.light_control.can_set_dimmer,
+                                       control_device.light_control.can_set_temp,
+                                       control_device.light_control.can_set_color,
+                                       lights))
             i += 1
 
         return to_JSON(result)

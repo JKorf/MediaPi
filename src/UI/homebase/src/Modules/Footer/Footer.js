@@ -13,9 +13,9 @@ import playImage from './../../Images/play.svg';
 import pauseImage from './../../Images/pause.svg';
 import stopImage from './../../Images/stop.svg';
 
+import dashboardImage from "./../../Images/dashboard.svg";
 import homeImage from "./../../Images/home.svg";
 import entertainmentImage from "./../../Images/entertainment.svg";
-import lightImage from "./../../Images/bulb.svg";
 import settingsImage from "./../../Images/settings.svg";
 
 class Footer extends Component
@@ -28,7 +28,7 @@ class Footer extends Component
         this.mediaUpdate = this.mediaUpdate.bind(this);
         this.playerUpdate = this.playerUpdate.bind(this);
 
-         this.pausePlayClick = this.pausePlayClick.bind(this);
+        this.pausePlayClick = this.pausePlayClick.bind(this);
         this.confirmStop = this.confirmStop.bind(this);
         this.cancelStop = this.cancelStop.bind(this);
         this.stopClick = this.stopClick.bind(this);
@@ -52,46 +52,50 @@ class Footer extends Component
             {
                 // New slave
                 var sd = new SlaveData(data[i]);
-                sd.mediaSubscription = Socket.subscribe(sd.id + ".media", this.mediaUpdate);
-                sd.playerSubscription = Socket.subscribe(sd.id + ".player", this.playerUpdate);
-
                 this.setState(state => {
                   const slaveData = state.slaveData.concat(sd);
                   return {
                     slaveData
                   };
                 });
+
+                sd.mediaSubscription = Socket.subscribe(sd.id + ".media", this.mediaUpdate);
+                sd.playerSubscription = Socket.subscribe(sd.id + ".player", this.playerUpdate);
             }
         }
     }
 
     mediaUpdate(subId, data){
-        console.log(subId + ": ", data);
-        this.setState(state => {
-          const slaveData = state.slaveData.map(s => {
-            if(s.mediaSubscription === subId)
-                s.mediaData = data;
-            return s;
-          });
+        setTimeout(() => {
+            this.setState(state => {
+              const slaveData = state.slaveData.map(s => {
+                if(s.mediaSubscription === subId){
+                    s.mediaData = data;
+                }
+                return s;
+              });
 
-          return {
-            slaveData,
-          };
-        });
+              return {
+                slaveData,
+              };
+            });
+        }, 10);
     }
 
     playerUpdate(subId, data){
-        this.setState(state => {
-          const slaveData = state.slaveData.map(s => {
-            if(s.playerSubscription === subId)
-                s.playerData = data;
-            return s;
-          });
+        setTimeout(() => {
+            this.setState(state => {
+              const slaveData = state.slaveData.map(s => {
+                if(s.playerSubscription === subId)
+                    s.playerData = data;
+                return s;
+              });
 
-          return {
-            slaveData,
-          };
-        });
+              return {
+                slaveData,
+              };
+            });
+        }, 10);
     }
 
     pausePlayClick(instance, e){
@@ -115,7 +119,6 @@ class Footer extends Component
       }
 
     render () {
-
       var playing = this.state.slaveData.filter(x => x.mediaData && x.mediaData.title && x.playerData);
       var style = {
         height: (playing.length * 66) + "px"
@@ -157,9 +160,9 @@ class Footer extends Component
             } ) }
         </div>
         <div className="footer-links">
-            <FooterLink to="/" exact={true} img={homeImage} />
+            <FooterLink to="/" exact={true} img={dashboardImage} />
             <FooterLink to="/mediaplayer" img={entertainmentImage} />
-            <FooterLink to="/light" img={lightImage} />
+            <FooterLink to="/home" img={homeImage} />
             <FooterLink to="/settings" img={settingsImage} />
         </div>
       </div>

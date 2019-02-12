@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
-import axios from 'axios'
-
 import View from './View.js'
 import SvgImage from './../Components/SvgImage'
 import TestWidget from './../Widgets/TestWidget.js'
@@ -18,12 +16,12 @@ class DashboardView extends Component {
     super(props);
     this.props.functions.changeBack({});
     this.props.functions.changeTitle("Home base");
-    this.props.functions.changeRightImage({});
+    this.props.functions.changeRightImage(null);
 
 
     this.widgetRefs = [
         {
-            component: <TempWidget title="Temperature" ref={React.createRef()} />,
+            component: <TempWidget title="Temperature" titleLink={"/home/heating"} ref={React.createRef()} />,
             style: {},
             width: 0,
             height: 0,
@@ -61,6 +59,7 @@ class DashboardView extends Component {
 
     this.dashboardRef = React.createRef();
     this.maxColumns = 4;
+    this.rowHeight = 50;
   }
 
   componentDidMount() {
@@ -133,14 +132,12 @@ class DashboardView extends Component {
     {
         const dashboardWidth = this.dashboardRef.current.clientWidth;
         const columnWidth = dashboardWidth / this.maxColumns;
-        console.log("dash:" + dashboardWidth + ", col: " + columnWidth);
 
         for(var i = 0; i < this.widgetRefs.length; i++){
             var widget = this.widgetRefs[i];
             var minSize = widget.ref.current.getSize();
-            console.log(minSize);
             const columns =  Math.min(Math.ceil((minSize.width + 20) / columnWidth), this.maxColumns);
-            const rows = Math.ceil((minSize.height + 20) / columnWidth);
+            const rows = Math.ceil((minSize.height + 20) / this.rowHeight);
 
             if(columns == this.maxColumns - 1)
                 columns = this.maxColumns;
@@ -149,7 +146,6 @@ class DashboardView extends Component {
             widget.y = -1;
             widget.width = columns;
             widget.height = rows;
-            console.log("Widget w/h: " + widget.width + "/" + widget.height);
             widget.style = {
                 width: 0,
                 height: 0,
@@ -160,7 +156,6 @@ class DashboardView extends Component {
 
         for(var i = 0; i < this.widgetRefs.length; i++){
             var widget = this.widgetRefs[i];
-            console.log(widget);
             var pos = this.findFreeSpot(widget.width, widget.height);
             widget.x = pos.x;
             widget.y = pos.y;
@@ -170,8 +165,8 @@ class DashboardView extends Component {
             var widget = this.widgetRefs[i];
             widget.style.left = (widget.x * columnWidth) + "px";
             widget.style.width = (widget.width * columnWidth) + "px";
-            widget.style.top = (widget.y * columnWidth) + "px";
-            widget.style.height = (widget.height * columnWidth) + "px";
+            widget.style.top = (widget.y * this.rowHeight) + "px";
+            widget.style.height = (widget.height * this.rowHeight) + "px";
         }
         this.forceUpdate();
      }

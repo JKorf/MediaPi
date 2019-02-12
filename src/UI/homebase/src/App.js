@@ -18,6 +18,10 @@ import PlayersView from './Modules/Views/MediaPlayer/PlayersView.js'
 import PlayerView from './Modules/Views/MediaPlayer/PlayerView.js'
 import HistoryView from './Modules/Views/MediaPlayer/HistoryView.js'
 
+import HomeDashboardView from './Modules/Views/Home/HomeDashboardView.js'
+import HeatingView from './Modules/Views/Home/HeatingView.js'
+import LightingView from './Modules/Views/Home/LightingView.js'
+
 import SettingsView from './Modules/Views/SettingsView.js'
 
 import Socket from './Socket.js'
@@ -88,6 +92,10 @@ class App extends Component {
                     <Route path="/mediaplayer/players" exact render={(props) => <PlayersView {...props} functions={this.functions}/>} />
                     <Route path="/mediaplayer/player/:id" exact render={(props) => <PlayerView {...props} functions={this.functions}  />} />
                     <Route path="/mediaplayer/history" exact render={(props) => <HistoryView {...props} functions={this.functions}  />} />
+
+                    <Route path="/home/" exact render={(props) => <HomeDashboardView {...props} functions={this.functions}  />} />
+                    <Route path="/home/heating" exact render={(props) => <HeatingView {...props} functions={this.functions}  />} />
+                    <Route path="/home/lighting" exact render={(props) => <LightingView {...props} functions={this.functions}  />} />
 
                     <Route path="/settings" exact render={(props) => <SettingsView {...props} functions={this.functions}  />} />
                 </View>

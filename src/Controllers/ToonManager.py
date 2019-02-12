@@ -12,5 +12,11 @@ class ToonManager(metaclass=Singleton):
     def get_status(self):
         return self.api.thermostat_info
 
+    def get_states(self):
+        return self.api.thermostat_states
+
     def set_temperature(self, temp):
         self.api.thermostat = temp
+
+    def set_state(self, state):
+        self.api.thermostat_state  = state

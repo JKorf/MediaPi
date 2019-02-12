@@ -10,6 +10,7 @@ class SvgImage extends Component {
 
   componentDidMount() {
     this.unmounted = false;
+
     axios.get(this.props.src).then((data) => {
         if(!this.unmounted)
             this.setState({svg: data.data});
