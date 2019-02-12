@@ -101,7 +101,6 @@ class App extends Component {
                 </View>
                 <Footer functions={this.functions} />
                 <PopupController ref={this.popupControllerRef} />
-                {/*<InfoMessageController ref={this.infoMessageRef} />*/}
           </div>
       </Router>
     );
