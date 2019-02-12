@@ -88,7 +88,6 @@ class TorrentView extends Component {
     + "&title=" + encodeURIComponent(torrent.title)
     + "&url=" + encodeURIComponent(torrent.url)).then(() => {
             if(this.viewRef.current) { this.viewRef.current.changeState(1); }
-            this.props.functions.showInfo(6000, "success", "Successfully started", torrent.title + " is now playing", "more..", "/mediaplayer/player/" + instance);
         }, err =>{
             console.log(err);
             if(this.viewRef.current) { this.viewRef.current.changeState(1); }

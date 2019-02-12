@@ -66,7 +66,6 @@ class MovieView extends Component {
             .then(
                 () => {
                     if(this.viewRef.current) { this.viewRef.current.changeState(1); }
-                    this.props.functions.showInfo(6000, "success", "Successfully started", this.state.movie.title + " trailer is now playing", "more..", "/mediaplayer/player/" + instance);
                  },
                 () => { if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
             );
@@ -84,7 +83,6 @@ class MovieView extends Component {
                 () =>
                 {
                     if(this.viewRef.current) { this.viewRef.current.changeState(1); }
-                    this.props.functions.showInfo(6000, "success", "Successfully started", this.state.movie.title + " is now playing", "more..", "/mediaplayer/player/" + instance);
                 },
                 () => { if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
             );

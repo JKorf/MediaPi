@@ -96,7 +96,6 @@ class ShowView extends Component {
         + "&position=" + episode.played_for).then(() =>
             {
                 if(this.viewRef.current) { this.viewRef.current.changeState(1); }
-                this.props.functions.showInfo(6000, "success", "Successfully started", episode.title + " is now playing", "more..", "/mediaplayer/player/" + instance);
             }
         , err => {
             console.log(err);

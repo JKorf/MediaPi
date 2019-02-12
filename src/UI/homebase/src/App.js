@@ -26,7 +26,6 @@ import SettingsView from './Modules/Views/SettingsView.js'
 
 import Socket from './Socket.js'
 import PopupController from './Modules/PopupController.js'
-import InfoMessageController from './Modules/InfoMessageController.js'
 
 import './Styles/base.less';
 import './Styles/mediaplayer.less';
@@ -42,7 +41,6 @@ class App extends Component {
     this.changeBack = this.changeBack.bind(this);
     this.changeTitle = this.changeTitle.bind(this);
     this.changeRightImage = this.changeRightImage.bind(this);
-    this.showInfo = this.showInfo.bind(this);
 
     this.popupControllerRef = React.createRef();
 
@@ -50,7 +48,6 @@ class App extends Component {
         changeBack: this.changeBack,
         changeTitle: this.changeTitle,
         changeRightImage: this.changeRightImage,
-        showInfo: this.showInfo,
         showPopup: (popup) => this.popupControllerRef.current.showPopup(popup),
         closePopup: (popup) => this.popupControllerRef.current.closePopup(popup),
     }
@@ -66,11 +63,6 @@ class App extends Component {
 
   changeTitle (value){
     this.setState({title: value});
-  }
-
-  showInfo(time, type, header, text, linkText, linkTo){
-  return;
-    this.infoMessageRef.current.addMessage(time, type, header, text, linkText, linkTo);
   }
 
   render() {

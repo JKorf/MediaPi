@@ -76,7 +76,6 @@ class HDView extends Component {
         () =>
         {
             if(this.viewRef.current) this.viewRef.current.changeState(1);
-            this.props.functions.showInfo(6000, "success", "Successfully started", file.title + " is now playing", "more..", "/mediaplayer/player/" + instance);
         },
         () => { if(this.viewRef.current) this.viewRef.current.changeState(1); }
     );

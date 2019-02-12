@@ -55,7 +55,6 @@ class RadioView extends Component {
     .then(
         () => {
             if(this.viewRef.current) { this.viewRef.current.changeState(1); }
-            this.props.functions.showInfo(6000, "success", "Successfully started", "Now listening to " + radio.title, "more..", "/mediaplayer/player/" + instance);
         },
         () => { if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
     );
