@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import axios from 'axios'
 
 import MediaOverview from './../../MediaList/MediaOverview.js'
-import Popup from './../../Components/Popups/Popup.js'
+import ViewLoader from './../../Components/ViewLoader';
+
+import {updateMoviesSearch, getMoviesSearch} from './../../../Utils/SearchHistory.js'
 
 class MoviesView extends Component {
   constructor(props) {
@@ -14,8 +16,8 @@ class MoviesView extends Component {
         "Title",
         "Year",
     ];
-    this.state = {movies: [], loading: true, order: this.orderOptions[0], searchTerm: "", page: 1, maxPageReached: false};
-
+    var prevSearch = getMoviesSearch();
+    this.state = {movies: [], loading: true, order: prevSearch.order, searchTerm: prevSearch.term, page: prevSearch.page, maxPageReached: false};
 
     this.props.functions.changeBack({to: "/mediaplayer/"});
     this.props.functions.changeTitle("Movies");
@@ -28,17 +30,18 @@ class MoviesView extends Component {
   }
 
   componentDidMount() {
-    this.getMovies(1, this.state.order, "");
+    this.getMovies(this.state.page, this.state.order, this.state.searchTerm, true);
   }
 
   componentWillUnmount(){
     if (this.timer)
         clearTimeout(this.timer);
+    updateMoviesSearch(this.state.searchTerm, this.state.page, this.state.order);
   }
 
-  getMovies(page, order, search){
+  getMovies(page, order, search, include_previous_pages){
     this.setState({loading: true});
-    axios.get('http://'+window.location.hostname+'/movies/get_movies?page='+page+'&orderby='+encodeURIComponent(order)+'&keywords=' + encodeURIComponent(search)).then(data => {
+    axios.get('http://'+window.location.hostname+'/movies/get_movies?page='+page+'&orderby='+encodeURIComponent(order)+'&keywords=' + encodeURIComponent(search)+ "&include_previous="+include_previous_pages).then(data => {
         var newMovies = this.state.movies;
         for(var i = 0; i < data.data.length; i++){
             if(newMovies.some(e => e.id === data.data[i].id))
@@ -59,13 +62,13 @@ class MoviesView extends Component {
         clearTimeout(this.timer);
     this.timer = setTimeout(() => {
         this.setState({movies: []});
-        this.getMovies(this.state.page, this.state.order, this.state.searchTerm);
+        this.getMovies(this.state.page, this.state.order, this.state.searchTerm, false);
     }, 750);
   }
 
   changeOrder(order){
     this.setState({order: order, movies: [], page: 1});
-    this.getMovies(1, order, this.state.searchTerm);
+    this.getMovies(1, order, this.state.searchTerm, false);
   }
 
    changePage(){
@@ -74,24 +77,22 @@ class MoviesView extends Component {
 
     var newPage = this.state.page + 1;
     this.setState({page: newPage});
-    this.getMovies(newPage, this.state.order, this.state.searchTerm);
+    this.getMovies(newPage, this.state.order, this.state.searchTerm, false);
   }
 
   render() {
-    const movies = this.state.movies;
-    const loading = this.state.loading;
     return (
        <div className="media-view-wrapper">
-            <MediaOverview media={movies}
-                link="/mediaplayer/movies/"
-                searchTerm={this.state.searchTerm}
-                order={this.state.order}
-                onSearchTermChange={this.changeSearchTerm}
-                onChangeOrder={this.changeOrder}
-                onScrollBottom={this.changePage}
-                orderOptions={this.orderOptions}/>
-            { loading &&
-                <Popup loading={loading} />
+           <ViewLoader loading={this.state.loading}/>
+            { this.state.movies &&
+                <MediaOverview media={this.state.movies}
+                    link="/mediaplayer/movies/"
+                    searchTerm={this.state.searchTerm}
+                    order={this.state.order}
+                    onSearchTermChange={this.changeSearchTerm}
+                    onChangeOrder={this.changeOrder}
+                    onScrollBottom={this.changePage}
+                    orderOptions={this.orderOptions}/>
             }
         </div>
     );

@@ -4,9 +4,9 @@ import ReactDOM from 'react-dom';
 import View from './View.js'
 import SvgImage from './../Components/SvgImage'
 import TestWidget from './../Widgets/TestWidget.js'
-import MediaPlayerWidget from './../Widgets/MediaPlayerWidget.js'
 import FavoriteSeriesWidget from './../Widgets/FavoriteSeriesWidget.js'
 import TempWidget from './../Widgets/TempWidget.js'
+import LightWidget from './../Widgets/LightWidget.js'
 import Socket from './../../Socket.js'
 
 import settingsImage from './../../Images/settings.svg';
@@ -21,7 +21,16 @@ class DashboardView extends Component {
 
     this.widgetRefs = [
         {
-            component: <TempWidget title="Temperature" titleLink={"/home/heating"} ref={React.createRef()} />,
+            component: <LightWidget title="Lights" titleLink={"/home/heating"} ref={React.createRef()} />,
+            style: {},
+            width: 0,
+            height: 0,
+            x: -1,
+            y: -1,
+            index: 0
+        },
+        {
+            component: <TempWidget title="Temperature" titleLink={"/home/lighting"} ref={React.createRef()} />,
             style: {},
             width: 0,
             height: 0,

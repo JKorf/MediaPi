@@ -76,6 +76,13 @@ class LightManager(metaclass=Singleton):
         devices_commands = self.api(self.gateway.get_devices())
         return self.api(devices_commands)
 
+    def get_light_groups(self):
+        if not self.check_state():
+            return []
+
+        groups_commands = self.api(self.gateway.get_groups())
+        return self.api(groups_commands)
+
     def switch_light(self, index, state):
         if not self.check_state():
             return
@@ -83,6 +90,14 @@ class LightManager(metaclass=Singleton):
         Logger.write(2, "Switching light with index " + str(index) + " to state " + str(state))
         light = self.get_device_by_index(index)
         self.api(light.light_control.set_state(state))
+
+    def switch_group(self, group, state):
+        if not self.check_state():
+            return
+
+        group_commands = self.api(self.gateway.get_group(group))
+        group = self.api(group_commands)
+        self.api(group.set_state(state))
 
     def warmth_light(self, index, warmth):
         if not self.check_state():
@@ -99,6 +114,14 @@ class LightManager(metaclass=Singleton):
         Logger.write(2, "Setting dimmer of light with index " + str(index) + " to " + str(amount))
         light = self.get_device_by_index(index)
         self.api(light.light_control.set_dimmer(amount))
+
+    def dimmer_group(self, group, dimmer):
+        if not self.check_state():
+            return
+
+        group_commands = self.api(self.gateway.get_group(group))
+        group = self.api(group_commands)
+        self.api(group.set_dimmer(dimmer))
 
     def get_device_by_index(self, index):
         i = 0

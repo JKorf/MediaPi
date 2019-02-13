@@ -35,17 +35,17 @@ export default class WS {
 
   static socketMessage(e){
     var data = JSON.parse(e.data);
-    console.log("Received: ", data);
+    //console.log("Received: ", data);
 
     if (data.type == "update"){
-        var subscription = this.subscriptions.find(el => el.subscription_id == data.subscription_id);
+        var subscription = this.subscriptions.find(el => el.subscription_id === data.subscription_id);
         if(subscription)
             subscription.trigger(data.data);
     }
     else if(data.type === "response")
     {
         var id = data.request_id;
-        var pending_message = this.pending_messages.find(el => el.request_id == id)
+        var pending_message = this.pending_messages.find(el => el.request_id === id)
         if(pending_message)
             pending_message.resolve(true)
         else{
@@ -59,19 +59,19 @@ export default class WS {
     }
     else if(data.type == "request" || data.type == "invalid")
     {
-        var handler = this.request_handlers.find(el => el.name == data.info_type);
+        var handler = this.request_handlers.find(el => el.name === data.info_type);
         if (!handler){
             console.log("No handler for " + data.info_type + " found");
             return
         }
 
-        handler.handler(data.id, data.type=="request", data.instance_id, data.data);
+        handler.handler(data.id, data.type==="request", data.instance_id, data.data);
     }
   }
 
   static response(id, instanceId, data){
     var msg = {response_id: id, instance_id: instanceId, event: "response", data: data};
-    console.log("Response: ", msg);
+    //console.log("Response: ", msg);
     this.ws.send(JSON.stringify(msg));
   }
 
@@ -108,7 +108,7 @@ export default class WS {
         msg.reject = reject;
      });
      this.pending_messages.push(msg);
-     console.log("Requested: ", msg);
+     //console.log("Requested: ", msg);
      this.ws.send(JSON.stringify(this.ignore(msg, ["resolve", "reject"])));
      return promise;
   }
@@ -143,7 +143,7 @@ export default class WS {
      this.subscriptions.forEach(sub =>{
         if(sub.removeCallback(subId))
         {
-            if(sub.callbacks.length == 0){
+            if(sub.callbacks.length === 0){
                 this.send_unsubscription(sub);
                 return;
             }
@@ -155,14 +155,14 @@ export default class WS {
       subscription.subscribed = true;
       subscription.request_id = newId()
       var msg = {request_id: subscription.request_id, event: "subscribe", topic: subscription.topic};
-      console.log("Requested: ", msg);
+      //console.log("Requested: ", msg);
       this.ws.send(JSON.stringify(msg));
   }
 
   static send_unsubscription(subscription){
       this.subscriptions.remove(subscription);
       var msg = {request_id: subscription.subscription_id, event: "unsubscribe", topic: subscription.topic};
-      console.log("Requested: ", msg);
+      //console.log("Requested: ", msg);
       this.ws.send(JSON.stringify(msg));
   }
 
@@ -170,7 +170,7 @@ export default class WS {
     {
         var dup = {};
         for (var key in obj) {
-            if (keys.indexOf(key) == -1) {
+            if (keys.indexOf(key) === -1) {
                 dup[key] = obj[key];
             }
         }
@@ -199,7 +199,7 @@ class SocketSubscription
     removeCallback(id){
         for (var i = 0; i < this.callbacks.length; i++)
         {
-            if(this.callbacks[i].id == id)
+            if(this.callbacks[i].id === id)
             {
                 this.callbacks.remove(this.callbacks[i]);
                 return true;

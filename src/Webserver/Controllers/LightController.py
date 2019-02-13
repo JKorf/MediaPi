@@ -1,13 +1,16 @@
 from Controllers.LightManager import LightManager
+from Shared.Logger import Logger
 from Shared.Util import to_JSON
 from Webserver.BaseHandler import BaseHandler
-from Webserver.Models import LightControl, LightDevice
+from Webserver.Models import LightControl, LightDevice, LightGroup
 
 
 class LightController(BaseHandler):
     def get(self, url):
         if url == "get_lights":
             self.write(self.get_lights())
+        elif url == "get_groups":
+            self.write(self.get_groups())
 
     def post(self, url):
         if url == "switch_light":
@@ -16,6 +19,11 @@ class LightController(BaseHandler):
             self.warmth_light(int(self.get_argument("index")), int(self.get_argument("warmth")))
         elif url == "dimmer_light":
             self.dimmer_light(int(self.get_argument("index")), int(self.get_argument("dimmer")))
+
+        elif url == "set_group_state":
+            self.set_group_state(int(self.get_argument("group")), self.get_argument("state") == "true")
+        elif url == "set_group_dimmer":
+            self.set_group_dimmer(int(self.get_argument("group")), int(self.get_argument("dimmer")))
 
     def get_lights(self):
         devices = LightManager().get_lights()
@@ -40,6 +48,17 @@ class LightController(BaseHandler):
                                        lights))
             i += 1
 
+        if len(result) == 0:
+            result = self.create_test_data()
+
+        return to_JSON(result)
+
+    def get_groups(self):
+        groups = LightManager().get_light_groups()
+        result = [LightGroup(group.id, group.name, group.state, group.dimmer) for group in groups]
+
+        if len(result) == 0:
+            result = self.create_test_groups()
         return to_JSON(result)
 
     def switch_light(self, index, state):
@@ -50,3 +69,49 @@ class LightController(BaseHandler):
 
     def dimmer_light(self, index, amount):
         LightManager().dimmer_light(index, amount)
+
+    def set_group_state(self, group, state):
+        Logger.write(2, "Set " + str(group) + " to " + str(state))
+        LightManager().switch_group(group, state)
+
+    def set_group_dimmer(self, group, dimmer):
+        Logger.write(2, "Set " + str(group) + " to " + str(dimmer))
+        LightManager().switch_group(group, dimmer)
+
+    def create_test_groups(self):
+        return [LightGroup(1, "Woonkamer 1", True, 254), LightGroup(2, "Woonkamer 2", True, 128), LightGroup(3, "Keuken", False, 254)]
+
+    def create_test_data(self):
+        result = []
+
+        result.append(LightControl(1,
+                     "Type",
+                     123,
+                     True,
+                     True,
+                     True,
+                     True,
+                     [
+                         LightDevice(
+                             True,
+                             200,
+                             260,
+                             "4a418a")
+                     ]))
+
+        result.append(LightControl(2,
+                                   "Type",
+                                   123,
+                                   True,
+                                   True,
+                                   False,
+                                   False,
+                                   [
+                                       LightDevice(
+                                           False,
+                                           200,
+                                           0,
+                                           "")
+                                   ]))
+
+        return result

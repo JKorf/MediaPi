@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import axios from 'axios'
 
 import MediaOverview from './../../MediaList/MediaOverview.js'
-import Popup from './../../Components/Popups/Popup.js'
+import ViewLoader from './../../Components/ViewLoader';
+
+import {updateShowsSearch, getShowsSearch} from './../../../Utils/SearchHistory.js'
 
 class ShowsView extends Component {
   constructor(props) {
@@ -14,7 +16,9 @@ class ShowsView extends Component {
         "Updated",
         "Year",
     ];
-    this.state = {shows: [], loading: true, order: this.orderOptions[0], searchTerm: "", page: 1, maxPageReached: false};
+
+    var prevSearch = getShowsSearch();
+    this.state = {shows: [], loading: true, order: prevSearch.order, searchTerm: prevSearch.term, page: prevSearch.page, maxPageReached: false};
 
     this.props.functions.changeBack({to: "/mediaplayer/" });
     this.props.functions.changeTitle("Shows");
@@ -27,17 +31,18 @@ class ShowsView extends Component {
   }
 
   componentDidMount() {
-    this.getShows(1, this.state.order, "");
+    this.getShows(this.state.page, this.state.order, this.state.searchTerm, true);
   }
 
   componentWillUnmount(){
     if (this.timer)
         clearTimeout(this.timer);
+    updateShowsSearch(this.state.searchTerm, this.state.page, this.state.order);
   }
 
-  getShows(page, order, searchTerm){
+  getShows(page, order, searchTerm, include_previous_pages){
     this.setState({loading: true});
-    axios.get('http://'+window.location.hostname+'/shows/get_shows?page='+page+'&orderby='+encodeURIComponent(order)+'&keywords='+encodeURIComponent(searchTerm)).then(data => {
+    axios.get('http://'+window.location.hostname+'/shows/get_shows?page='+page+'&orderby='+encodeURIComponent(order)+'&keywords='+encodeURIComponent(searchTerm)+ "&include_previous="+include_previous_pages).then(data => {
         var newShows = this.state.shows;
         for(var i = 0; i < data.data.length; i++){
             if(newShows.some(e => e.id === data.data[i].id))
@@ -77,21 +82,18 @@ class ShowsView extends Component {
   }
 
   render() {
-    const shows = this.state.shows;
-    const loading = this.state.loading;
-
     return (
         <div className="media-view-wrapper">
-            <MediaOverview media={shows}
-                link="/mediaplayer/shows/"
-                searchTerm={this.state.searchTerm}
-                order={this.state.order}
-                onSearchTermChange={this.changeSearchTerm}
-                onChangeOrder={this.changeOrder}
-                onScrollBottom={this.changePage}
-                orderOptions={this.orderOptions}/>
-            { loading &&
-                <Popup loading={loading} />
+            <ViewLoader loading={this.state.loading}/>
+            { this.state.shows &&
+                <MediaOverview media={this.state.shows}
+                    link="/mediaplayer/shows/"
+                    searchTerm={this.state.searchTerm}
+                    order={this.state.order}
+                    onSearchTermChange={this.changeSearchTerm}
+                    onChangeOrder={this.changeOrder}
+                    onScrollBottom={this.changePage}
+                    orderOptions={this.orderOptions}/>
             }
         </div>
     );

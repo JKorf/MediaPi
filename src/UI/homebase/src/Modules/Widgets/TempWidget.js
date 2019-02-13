@@ -4,7 +4,7 @@ import axios from 'axios';
 
 import Widget from './Widget.js';
 
-class TestWidget extends Component {
+class TempWidget extends Component {
   constructor(props) {
     super(props);
 
@@ -71,4 +71,4 @@ class TestWidget extends Component {
   }
 };
 
-export default TestWidget;
+export default TempWidget;

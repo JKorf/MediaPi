@@ -10,6 +10,7 @@ from Shared.Util import to_JSON
 from Webserver.Models import BaseMedia
 from Webserver.BaseHandler import BaseHandler
 
+
 class MovieController(BaseHandler):
 
     movies_api_path = Settings.get_string("movie_api")
@@ -17,24 +18,41 @@ class MovieController(BaseHandler):
 
     async def get(self, url):
         if url == "get_movies":
-            data = await self.get_movies(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
+            data = await self.get_movies(int(self.get_argument("page")), self.get_argument("orderby"), self.get_argument("keywords"), self.get_argument("include_previous") == "true")
             self.write(data)
         elif url == "get_movie":
             show = await self.get_by_id(self.get_argument("id"))
             self.write(show)
 
-    async def get_movies(self, page, order_by, keywords):
+    async def get_movies(self, page, order_by, keywords, include_previous_pages):
         search_string = ""
         if keywords:
             search_string = "&keywords=" + urllib.parse.quote(keywords)
-        data = await RequestFactory.make_request_async(MovieController.movies_api_path + "movies/" + page + "?sort=" + urllib.parse.quote(order_by) + search_string)
+
+
+        if include_previous_pages:
+            data = []
+            current_page = 0
+            while current_page != page:
+                current_page+= 1
+                data += await self.request_movies(
+                    MovieController.movies_api_path + "movies/" + str(current_page) + "?sort=" + urllib.parse.quote(
+                        order_by) + search_string)
+
+        else:
+            data = await self.request_movies(MovieController.movies_api_path + "movies/" + str(page) + "?sort=" + urllib.parse.quote(order_by) + search_string)
+
+        return to_JSON(data).encode()
+
+    async def request_movies(self, url):
+        data = await RequestFactory.make_request_async(url)
 
         if data is not None:
             return self.parse_movie_data(data)
         else:
-            EventManager.throw_event(EventType.Error, ["get_error", "Could not get shows data"])
-            Logger.write(2, "Error fetching shows")
-            return ""
+            EventManager.throw_event(EventType.Error, ["get_error", "Could not get movie data"])
+            Logger.write(2, "Error fetching movies")
+            return []
 
     async def get_by_id(self, id):
         Logger.write(2, "Get movie by id " + id)
@@ -54,9 +72,9 @@ class MovieController(BaseHandler):
     def parse_movie_data(data):
         json_data = json.loads(data)
         if isinstance(json_data, list):
-            return to_JSON([Movie.parse_movie(x) for x in json_data]).encode()
+            return [Movie.parse_movie(x) for x in json_data]
         else:
-            return to_JSON(Movie.parse_movie(json_data)).encode()
+            return Movie.parse_movie(json_data)
 
 
 class Torrent:

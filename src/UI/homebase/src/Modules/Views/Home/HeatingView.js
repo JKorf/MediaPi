@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 
 import { InfoGroup } from './../../Components/InfoGroup';
+import ViewLoader from './../../Components/ViewLoader';
 
 class HeatingView extends Component {
   constructor(props) {
@@ -74,6 +75,7 @@ class HeatingView extends Component {
     }
     return (
       <div className="heating-view">
+        <ViewLoader loading={!this.state.thermostatData}/>
         { this.state.thermostatData &&
             <div className="heating-view-content">
             <InfoGroup title="Temperature">

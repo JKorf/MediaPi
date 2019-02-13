@@ -9,7 +9,7 @@ import StartMediaPopup from './../../Components/Popups/StartMediaPopup.js';
 class MediaPlayerView extends Component {
   constructor(props) {
     super(props);
-    this.states = ["loading", "nothing", "selectInstance", "confirmPlay"];
+    this.states = ["nothing", "selectInstance", "confirmPlay"];
     this.state = {state: this.states[0]};
 
     this.cancel = this.cancel.bind(this);
@@ -26,19 +26,19 @@ class MediaPlayerView extends Component {
   {
     console.log(item);
     this.selectedMedia = item;
-    this.setState({state: this.states[2]});
+    this.setState({state: this.states[1]});
   }
 
   cancel()
   {
-    this.setState({state: this.states[1]});
+    this.setState({state: this.states[0]});
   }
 
   instanceSelect(instance)
   {
     console.log(instance);
     this.selectedInstance = instance;
-    this.setState({state: this.states[3]});
+    this.setState({state: this.states[2]});
   }
 
   playConfirm(){
@@ -51,9 +51,6 @@ class MediaPlayerView extends Component {
     return (
       <div className="media-view">
         { this.props.children }
-        { state == this.states[0] &&
-            <Popup loading={true} />
-        }
         { state == this.states[2] &&
             <SelectInstancePopup onCancel={this.cancel} onSelect={this.instanceSelect} />
         }

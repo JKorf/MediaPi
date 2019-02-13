@@ -181,6 +181,12 @@
     min-width: 10px;
 }
 
+.hd-content{
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+}
+
 .hd-row{
     min-height: 36px;
     width: 100%;
@@ -394,6 +400,14 @@
 
 .torrents{
     margin-top: 15px;
+    overflow-y: auto;
+    width: 100%;
+    height: calc(100% - 55px);
+}
+
+.torrents-wrapper{
+    width: 100%;
+    height: 100%;
 }
 
 .torrent-search{
@@ -745,9 +759,16 @@
     }
 }
 
+.media-view{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
 .media-view-wrapper{
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
 .show-favorite{
@@ -765,6 +786,15 @@
 }
 
 .history{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.history-list{
+    overflow-y: auto;
+    width: 100%;
+    height: 100%;
 }
 
 .history-item{
@@ -1009,4 +1039,59 @@
     vertical-align: top;
     display:inline-block;
     margin-top: 4px;
+}
+
+.lighting-view{
+    margin: 10px;
+}
+
+.light-group{
+    margin-top: 10px;
+    &:first-child{
+        margin-top: 0;
+    }
+
+    .light-group-dimmer{
+        display:inline-block;
+        width: calc(100% - 100px);
+        vertical-align:top;
+    }
+
+    .light-group-state{
+        display:inline-block;
+        width: 100px;
+        vertical-align:top;
+        text-align:right;
+
+        .switch{
+            display:inline-block;
+            vertical-align: top;
+            margin-top: 4px;
+        }
+    }
+}
+
+.light-widget-content{
+    margin-top: 10px;
+}
+
+.light-widget-group{
+    padding: 0 10px;
+    height: 30px;
+    line-height: 30px;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #colors[borders];
+
+    .light-widget-group-name{
+        display: inline-block;
+        vertical-align: top;
+        width: calc(100% - 60px);
+    }
+
+    .light-widget-group-state{
+        display: inline-block;
+        vertical-align: top;
+        width: 60px;
+    }
 }

@@ -15,6 +15,9 @@
   highlight: #52879e;
   borders: #5c686d;
   buttons: #394347;
+
+  input-outer: #212a2d;
+  input-inner: #425359;
 }
 
 
@@ -81,12 +84,12 @@ body, html{
     }
 
     .right-image{
-        width: 28px;
-        height: 28px;
+        width: 40px;
+        height: 40px;
         position: absolute;
-        right: 16px;
-        top: 13px;
-
+        right: 0px;
+        top: 0px;
+        padding: 7px;
         fill: #colors[images];
     }
 }
@@ -94,7 +97,9 @@ body, html{
 .view{
     overflow: auto;
     width: 100%;
+    height: 100%;
     flex-grow: 1;
+    position: relative;
 }
 
 .footer{
@@ -482,4 +487,64 @@ a {
 
 .settings-view{
     margin: 10px;
+}
+
+.switch{
+    border-radius: 6px;
+    border: 1px solid #colors[borders];
+    height: 26px;
+    position: relative;
+    width: 60px;
+    background: #colors[input-outer];
+
+    .switch-inner{
+        border-radius: 4px;
+        height: 20px;
+        left: 2px;
+        top: 2px;
+        position: absolute;
+        width: 30px;
+        background: #colors[input-inner];
+        transition: left 0.15s ease;
+    }
+
+    &.on{
+        background: #colors[input-inner];
+
+        .switch-inner{
+            background: #colors[input-outer];
+
+            left: 26px;
+        }
+    }
+}
+
+.view-loader-wrapper{
+    left: 0;
+    right:0;
+    top: 0;
+    bottom:0;
+    background: rgba(32, 32, 32, 0.8);
+    position:absolute;
+    z-index: 11;
+}
+
+.view-loader{
+    width: 100%;
+    height: 100%;
+
+    .svg-image{
+
+        width: 100px;
+        height: 100px;
+        transform: translate(-50%, -50%);
+        top: 50%;
+        left: 50%;
+        position: absolute;
+
+        svg{
+            width: 100px;
+            height: 100px;
+        }
+    }
 }

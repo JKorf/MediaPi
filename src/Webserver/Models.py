@@ -289,6 +289,13 @@ class LightDevice:
         self.color_temp = color_temp
         self.hex_color = hex_color
 
+class LightGroup:
+
+    def __init__(self, id, name, state, dimmer):
+        self.id = id
+        self.name = name
+        self.state = state
+        self.dimmer = dimmer
 
 class CecDevice:
 

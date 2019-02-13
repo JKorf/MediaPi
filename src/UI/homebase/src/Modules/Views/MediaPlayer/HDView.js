@@ -3,6 +3,7 @@ import axios from 'axios';
 
 import MediaPlayerView from './../MediaPlayer/MediaPlayerView.js';
 import HDRow from './../../Components/HDRow';
+import ViewLoader from './../../Components/ViewLoader';
 
 import picImage from "./../../../Images/image.svg";
 import streamImage from "./../../../Images/stream.svg";
@@ -13,7 +14,7 @@ import DirectoryImage from "./../../../Images/directory.svg";
 class HDView extends Component {
   constructor(props) {
     super(props);
-    this.state = {structure: {files: [], dirs: []}, selectedFile: null};
+    this.state = {selectedFile: null, loading: true};
     this.viewRef = React.createRef();
 
     this.path = "C:/";
@@ -71,25 +72,23 @@ class HDView extends Component {
     var shouldContinue = file.position > 1000 * 60 && toSee > 1000 * 60;
     console.log("Continue from " + file.position);
 
+    this.setState({loading: true});
     axios.post('http://'+window.location.hostname+'/play/file?instance=' + instance + "&path=" + encodeURIComponent(file.url) + "&position=" + (shouldContinue ? file.position + "": "0"))
     .then(
-        () =>
-        {
-            if(this.viewRef.current) this.viewRef.current.changeState(1);
-        },
-        () => { if(this.viewRef.current) this.viewRef.current.changeState(1); }
+        () => this.setState({loading: false}),
+        () => this.setState({loading: false})
     );
   }
 
   loadFolder(){
-      this.viewRef.current.changeState(0);
+      this.setState({loading: true});
       axios.get('http://'+window.location.hostname+'/hd/directory?path=' + this.path).then(data => {
-            if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+            this.setState({loading: false});
             console.log(data.data);
             this.setState({structure: data.data});
             this.filterFiles();
         }, err =>{
-            if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+            this.setState({loading: false});
             console.log(err);
         });
     }
@@ -125,8 +124,13 @@ class HDView extends Component {
 
     return (
       <MediaPlayerView ref={this.viewRef} playMedia={this.playMedia}>
-        { structure.dirs.map((dir, index) => <HDRow key={dir} img={DirectoryImage} text={dir} clickHandler={(e) => this.dirClick(dir, e)}></HDRow>) }
-        { structure.files.map((file, index) => <HDRow key={file.name} img={this.getFileIcon(file.name)} text={file.name} seen={file.seen} clickHandler={(e) => this.fileClick(file, e)}></HDRow>) }
+         <ViewLoader loading={this.state.loading}/>
+         { this.state.structure &&
+            <div className="hd-content">
+                { structure.dirs.map((dir, index) => <HDRow key={dir} img={DirectoryImage} text={dir} clickHandler={(e) => this.dirClick(dir, e)}></HDRow>) }
+                { structure.files.map((file, index) => <HDRow key={file.name} img={this.getFileIcon(file.name)} text={file.name} seen={file.seen} clickHandler={(e) => this.fileClick(file, e)}></HDRow>) }
+            </div>
+        }
       </MediaPlayerView>
     );
   }

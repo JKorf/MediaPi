@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import videoFile from './../../../Images/video_file.png';
+import ViewLoader from './../../Components/ViewLoader';
 
 class HistoryView extends Component {
   constructor(props) {
@@ -9,8 +10,7 @@ class HistoryView extends Component {
     this.props.functions.changeTitle("History");
     this.props.functions.changeRightImage(null);
 
-    this.states = ["loading", "nothing"];
-    this.state = {history: []};
+    this.state = {};
   }
 
   componentDidMount() {
@@ -29,18 +29,21 @@ class HistoryView extends Component {
   render() {
     return (
         <div className='history'>
-
-            { this.state.history.map((history, index) => { return (
-                <div className="history-item" key={history.id}>
-                    <div className="history-item-image"><img src={(history.image ? history.image: videoFile)} /></div>
-                    <div className="history-item-details">
-                        <div className="history-item-title truncate2">{history.title}</div>
-                        <div className="history-item-type">{history.type}</div>
-                        <div className="history-item-time">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(history.watched_at))}</div>
+           <ViewLoader loading={!this.state.history}/>
+            { this.state.history &&
+                <div className="history-list">
+                    { this.state.history.map((history, index) => { return (
+                        <div className="history-item" key={history.id}>
+                            <div className="history-item-image"><img src={(history.image ? history.image: videoFile)} /></div>
+                            <div className="history-item-details">
+                                <div className="history-item-title truncate2">{history.title}</div>
+                                <div className="history-item-type">{history.type}</div>
+                                <div className="history-item-time">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(history.watched_at))}</div>
+                            </div>
+                        </div>)}) }
                     </div>
-                </div>)
-            }) }
-
+                }
+            }
         </div>
     );
   }

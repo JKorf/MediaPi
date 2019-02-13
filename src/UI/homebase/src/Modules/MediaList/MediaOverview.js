@@ -8,7 +8,6 @@ class MediaOverview extends Component {
   constructor(props) {
     super(props);
     this.lastScrollEvent = new Date();
-    console.log(props.media);
   }
 
   handleScroll = (e) => {
@@ -24,7 +23,7 @@ class MediaOverview extends Component {
 
    render() {
         return (
-        <div className="media-list"  onScroll={this.handleScroll}>
+        <div className="media-list" onScroll={this.handleScroll}>
             <div className="media-search">
                 <div className="media-search-input"><SearchBox searchTerm={this.props.searchTerm} onChange={this.props.onSearchTermChange}/></div>
                 <div className="media-search-order">
