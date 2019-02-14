@@ -46,12 +46,14 @@ class App(tk.Frame):
         self.parent.title("TV UI")
         self.pack(fill="both", expand=True, side="top")
         self.configure(background='black')
-        self.parent.wm_state("zoomed")
-        self.parent.bind("<Escape>", self.fullscreen_cancel)
-        self.fullscreen_toggle()
 
         w = self.parent.winfo_screenwidth()
         h = self.parent.winfo_screenheight()
+
+        self.master.geometry("{0}x{1}+0+0".format(w, h))
+        self.parent.bind("<Escape>", self.fullscreen_cancel)
+        self.fullscreen_toggle()
+
 
         self.background_canvas = tk.Canvas(self.parent, width=w, height=h, highlightthickness=0)
         self.background_canvas.pack(side='top', fill='both', expand='yes')
