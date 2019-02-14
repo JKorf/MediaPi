@@ -4,7 +4,7 @@ from threading import Lock
 
 from Database.Database import Database
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
-from MediaPlayer.MediaPlayer import MediaManager
+from MediaPlayer.MediaManager import MediaManager
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Observable import Observable

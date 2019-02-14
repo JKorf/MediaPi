@@ -13,10 +13,10 @@ os.chdir(os.path.dirname(__file__))
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from Webserver.TornadoServer import TornadoServer
-from MediaPlayer.MediaPlayer import MediaManager
+from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Streaming.StreamListener import StreamListener
 
-from UI.TV.GUI import GUI
+from UI.TV.GUI import App
 
 from Controllers.WiFiController import WiFiController
 from Controllers.LightManager import LightManager
@@ -67,11 +67,7 @@ class Program:
 
         Logger.write(2, "Started")
         if Settings.get_bool("show_gui"):
-            self.app, self.gui = GUI.new_gui()
-
-            if self.gui is not None:
-                self.gui.showFullScreen()
-                sys.exit(self.app.exec_())
+            self.gui = App.initialize()
 
         else:
             while self.running:

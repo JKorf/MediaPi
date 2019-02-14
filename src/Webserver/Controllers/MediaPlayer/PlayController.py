@@ -1,7 +1,7 @@
 import urllib.parse
 
 from Database.Database import Database
-from MediaPlayer.MediaPlayer import MediaManager
+from MediaPlayer.MediaManager import MediaManager
 from Shared.Logger import Logger
 from Shared.Util import to_JSON
 from Webserver.BaseHandler import BaseHandler

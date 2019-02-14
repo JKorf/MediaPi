@@ -3,7 +3,7 @@ import urllib.parse
 import urllib.request
 
 from Controllers.LightManager import LightManager
-from MediaPlayer.MediaPlayer import MediaManager
+from MediaPlayer.MediaManager import MediaManager
 from Shared.Events import EventManager
 from Shared.Events import EventType
 from Shared.Logger import Logger

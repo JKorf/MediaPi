@@ -4,8 +4,6 @@ import sys
 import urllib.parse
 import urllib.request
 
-import time
-
 from Database.Database import Database
 from Shared.Logger import Logger
 from Shared.Settings import Settings
@@ -60,26 +58,3 @@ class File:
         self.seen = seen
         self.continue_time = continue_time
         self.total_time = total_time
-
-    # @staticmethod
-    # async def play_master_file(server, path, file, position):
-    #     # play file from master
-    #     file_location = server.master_ip + ":50010/file"
-    #     if not path.startswith("/"):
-    #         file_location += "/"
-    #     HDController.play_file(file,
-    #                            file_location + urllib.parse.quote_plus(path),
-    #                            position)
-    #
-    #     # request hash from master
-    #     string_data = await server.request_master_async("/util/get_subtitles?path=" + urllib.parse.quote_plus(path) + "&file=" + urllib.parse.quote_plus(file))
-    #     data = json.loads(string_data.decode('utf8'))
-    #     i = 0
-    #     Logger.write(2, "Master returned " + str(len(data)) + " subs")
-    #     paths = []
-    #     for sub in data:
-    #         i += 1
-    #         sub_data = await server.request_master_async(":50010/file" + sub)
-    #         if sub_data is not None:
-    #             paths.append(SubtitleSourceBase.save_file("master_" + str(i), sub_data))
-    #     EventManager.throw_event(EventType.SubtitlesDownloaded, [paths])

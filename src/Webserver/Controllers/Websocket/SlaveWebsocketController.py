@@ -5,7 +5,7 @@ from threading import Lock
 
 import websocket
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
-from MediaPlayer.MediaPlayer import MediaManager
+from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
 from Shared.Engine import Engine
 from Shared.Events import EventManager, EventType

@@ -1,6 +1,4 @@
 --- ON HOLD ---
-    Update to VLC 3.0
-
     spotify
         https://eltechs.com/run-spotify-on-raspberry-pi/
         
@@ -15,9 +13,10 @@
 
     check if people are home
 
-    UI
-        Remember searches
-        lighting
-        heating
+    https://www.raspberrypi.org/documentation/remote-access/web-server/nginx.md
+    https://readwrite.com/2014/06/27/raspberry-pi-web-server-website-hosting/
 
-
+    config.txt
+        hdmi_ignore_cec_init=1
+        cec_osd_name=PiPlayer
+        hdmi_drive=2
