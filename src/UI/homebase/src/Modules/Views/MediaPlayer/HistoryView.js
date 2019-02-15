@@ -14,7 +14,7 @@ class HistoryView extends Component {
   }
 
   componentDidMount() {
-    axios.get('http://'+window.location.hostname+'/play/history').then(
+    axios.get(window.vars.apiBase + 'play/history').then(
         (data) => {
             this.setState({history: data.data.sort((a, b) =>  b.watched_at - a.watched_at)});
             console.log(data);

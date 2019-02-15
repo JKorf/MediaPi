@@ -41,7 +41,7 @@ class MoviesView extends Component {
 
   getMovies(page, order, search, include_previous_pages){
     this.setState({loading: true});
-    axios.get('http://'+window.location.hostname+'/movies/get_movies?page='+page+'&orderby='+encodeURIComponent(order)+'&keywords=' + encodeURIComponent(search)+ "&include_previous="+include_previous_pages).then(data => {
+    axios.get(window.vars.apiBase + 'movies/get_movies?page='+page+'&orderby='+encodeURIComponent(order)+'&keywords=' + encodeURIComponent(search)+ "&include_previous="+include_previous_pages).then(data => {
         var newMovies = this.state.movies;
         for(var i = 0; i < data.data.length; i++){
             if(newMovies.some(e => e.id === data.data[i].id))

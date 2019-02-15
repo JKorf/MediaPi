@@ -41,16 +41,6 @@ class UtilController(BaseHandler):
 
         return to_JSON(info)
 
-    async def get_protected_img(self, url):
-        try:
-            result = await RequestFactory.make_request_async(url)
-            if not result:
-                Logger.write(2, "Couldnt get image: " + urllib.parse.unquote(url))
-                result = open(os.getcwd() + "/Interface/Mobile/Images/unknown.png", "rb").read()
-        except Exception:
-            result = open(os.getcwd() + "/Interface/Mobile/Images/noimage.png", "rb").read()
-        return result
-
     def test(self):
         Logger.write(2, "============== Test ===============")
         EventManager.throw_event(EventType.Log, [])

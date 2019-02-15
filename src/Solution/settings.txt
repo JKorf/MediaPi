@@ -2,6 +2,7 @@
 name=Woonkamer
 slave=False
 master_ip=http://127.0.0.1
+api_port=50021
 tradfri_hub_ip=192.168.2.73
 
 # Paths

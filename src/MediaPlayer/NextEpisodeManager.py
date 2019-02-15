@@ -58,7 +58,15 @@ class NextEpisodeManager(metaclass=Singleton):
             Logger.write(2, "No next episode of show, season/epi not parsed")
             return
 
-        show = json.loads(RequestFactory.make_request("http://127.0.0.1/shows/get_show?id=" + media_data.id)) # + urllib.parse.quote(results[0]["_id"])).decode('utf8'))
+        if Settings.get_bool("slave"):
+            raw_data = RequestFactory.make_request(Settings.get_string("master_ip") + ":" + str(Settings.get_int("api_port")) + "/shows/get_show?id=" + media_data.id)
+        else:
+            raw_data = RequestFactory.make_request("http://127.0.0.1/shows/get_show?id=" + media_data.id)
+        if raw_data is None:
+            Logger.write(2, "No next episode of show, request failed")
+            return
+
+        show = json.loads(raw_data.decode("utf-8"))
         next_epi = [x for x in show["episodes"] if x["season"] == season and x["episode"] == epi + 1]
         if len(next_epi) == 0:
             Logger.write(2, "No next episode of show, request returned no results for next epi")

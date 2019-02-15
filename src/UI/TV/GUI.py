@@ -82,7 +82,8 @@ class App(tk.Frame):
                 time.sleep(30)
                 continue
 
-            json_data = json.loads(result)
+            json_data = json.loads(result.decode('utf-8'))
+
             urls = [x['urls']['raw'] + "&w=" + str(self.parent.winfo_screenwidth()) + "&h=" + str(self.parent.winfo_screenheight()) + "&fit=scale" for x in json_data]
 
             for url in urls:

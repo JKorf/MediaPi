@@ -25,7 +25,7 @@ class ShowView extends Component {
   }
 
   componentDidMount() {
-    axios.get('http://'+window.location.hostname+'/shows/get_show?id=' + this.props.match.params.id).then(data => {
+    axios.get(window.vars.apiBase + 'shows/get_show?id=' + this.props.match.params.id).then(data => {
         if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         console.log(data.data);
         const seasonEpisodes = data.data.episodes.reduce((seasons, epi) => {
@@ -59,9 +59,9 @@ class ShowView extends Component {
     this.props.functions.changeRightImage({image: (show.favorite? favoriteFullImage: favoriteImage), click: this.toggleFavorite});
 
     if(show.favorite)
-        axios.post('http://'+window.location.hostname+'/shows/add_favorite?id=' + this.props.match.params.id + "&title=" + encodeURIComponent(show.title) + "&image=" + encodeURIComponent(show.images.poster));
+        axios.post(window.vars.apiBase + 'shows/add_favorite?id=' + this.props.match.params.id + "&title=" + encodeURIComponent(show.title) + "&image=" + encodeURIComponent(show.images.poster));
     else
-        axios.post('http://'+window.location.hostname+'/shows/remove_favorite?id=' + this.props.match.params.id);
+        axios.post(window.vars.apiBase + 'shows/remove_favorite?id=' + this.props.match.params.id);
   }
 
   addLeadingZero(value)
@@ -86,7 +86,7 @@ class ShowView extends Component {
     if(episode.played_for !== 0)
         console.log("Continue from " + episode.played_for);
 
-    axios.post('http://'+window.location.hostname+'/play/episode?instance=' + instance
+    axios.post(window.vars.apiBase + 'play/episode?instance=' + instance
         + "&url=" + encodeURIComponent(episode.url)
         + "&id=" + this.props.match.params.id
         + "&title=" + encodeURIComponent(episode.title)

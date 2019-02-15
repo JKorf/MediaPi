@@ -21,7 +21,7 @@ class MovieView extends Component {
   }
 
   componentDidMount() {
-    axios.get('http://'+window.location.hostname+'/movies/get_movie?id=' + this.props.match.params.id).then(data => {
+    axios.get(window.vars.apiBase + '/movies/get_movie?id=' + this.props.match.params.id).then(data => {
         if(this.viewRef.current) { this.viewRef.current.changeState(1); }
         console.log(data.data);
         this.props.functions.changeTitle(data.data.title);
@@ -60,7 +60,7 @@ class MovieView extends Component {
   playMedia(instance, media)
   {
     if(media.type === "trailer"){
-        axios.post('http://localhost/play/url?instance=' + instance
+        axios.post(window.vars.apiBase + 'play/url?instance=' + instance
             + "&url=" + encodeURIComponent(media.url)
             + "&title=" + encodeURIComponent(this.state.movie.title + " Trailer"))
             .then(
@@ -73,7 +73,7 @@ class MovieView extends Component {
         if(media.played_for > 0)
             console.log("Continue from " + media.played_for);
 
-        axios.post('http://localhost/play/movie?instance=' + instance
+        axios.post(window.vars.apiBase + 'play/movie?instance=' + instance
             + "&url=" + encodeURIComponent(media.url)
             + "&id=" + this.props.match.params.id
             + "&title=" + encodeURIComponent(this.state.movie.title)

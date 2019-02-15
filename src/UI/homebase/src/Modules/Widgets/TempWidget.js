@@ -19,7 +19,7 @@ class TempWidget extends Component {
   }
 
   componentDidMount() {
-    axios.get('http://'+window.location.hostname+'/toon/get_status').then(
+    axios.get(window.vars.apiBase + 'toon/get_status').then(
         (data) => {
             this.setState({thermostatData: data.data});
             console.log(data.data);
@@ -41,7 +41,7 @@ class TempWidget extends Component {
     old.current_setpoint = newTemp;
     this.setState({thermostatData: old});
 
-    axios.post('http://'+window.location.hostname+'/toon/set_temperature?temperature=' + newTemp).then(
+    axios.post(window.vars.apiBase + 'toon/set_temperature?temperature=' + newTemp).then(
         (data) => {
             console.log(data);
          },

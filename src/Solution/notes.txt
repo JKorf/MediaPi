@@ -15,36 +15,3 @@
 
     https://www.raspberrypi.org/documentation/remote-access/web-server/nginx.md
     https://readwrite.com/2014/06/27/raspberry-pi-web-server-website-hosting/
-
-    UI
-	hard disk zoekt naar C:/
-	requests returnen byte dat ipv string:
-		Error in Tornado requests: the JSON object must be str, not 'bytes'
-22:08:57.096   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    | Traceback (most recent call last):
-22:08:57.101   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |   File "/usr/local/lib/python3.5/dist-packages/tornado/web.py", line 1592, in _execute
-22:08:57.106   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |     result = yield result
-22:08:57.110   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |   File "/usr/local/lib/python3.5/dist-packages/tornado/gen.py", line 1133, in run
-22:08:57.115   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |     value = future.result()
-22:08:57.120   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |   File "/usr/lib/python3.5/asyncio/futures.py", line 293, in result
-22:08:57.124   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |     raise self._exception
-22:08:57.129   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |   File "/usr/lib/python3.5/asyncio/tasks.py", line 239, in _step
-22:08:57.134   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |     result = coro.send(None)
-22:08:57.138   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |   File "/home/pi/Scripts/Webserver/Controllers/MediaPlayer/ShowController.py", line 22, in get
-22:08:57.143   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |     data = await self.get_shows(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
-22:08:57.147   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |   File "/home/pi/Scripts/Webserver/Controllers/MediaPlayer/ShowController.py", line 41, in get_shows
-22:08:57.152   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |     return self.parse_show_data(data)
-22:08:57.157   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |   File "/home/pi/Scripts/Webserver/Controllers/MediaPlayer/ShowController.py", line 75, in parse_show_data
-22:08:57.162   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |     json_data = json.loads(data)
-22:08:57.166   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |   File "/usr/lib/python3.5/json/__init__.py", line 312, in loads
-22:08:57.171   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    |     s.__class__.__name__))
-22:08:57.176   | Tornado server                 | BaseHandler.py            | _handle_request_exception      | #18    | info    | TypeError: the JSON object must be str, not 'bytes'
----
-Unhandled exception in thread Background downloader
-22:03:06.501   | Background downloader          | Threading.py              | __run                          | #52    | error   | Traceback (most recent call last):
-  File "/home/pi/Scripts/Shared/Threading.py", line 47, in __run
-    self.target(*self.args)
-  File "/home/pi/Scripts/UI/TV/GUI.py", line 85, in get_backgrounds
-    json_data = json.loads(result)
-  File "/usr/lib/python3.5/json/__init__.py", line 312, in loads
-    s.__class__.__name__))
-TypeError: the JSON object must be str, not 'bytes'

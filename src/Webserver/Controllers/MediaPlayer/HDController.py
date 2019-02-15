@@ -39,6 +39,9 @@ class HDController(BaseHandler):
             return json.dumps(["/"])
 
     def get_directory(self, path):
+        if sys.platform == "win32":
+            path = "C:" + path
+
         Logger.write(2, path)
         directory = FileStructure(urllib.parse.unquote(path))
         history = Database().get_history()

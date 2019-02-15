@@ -42,7 +42,7 @@ class ShowsView extends Component {
 
   getShows(page, order, searchTerm, include_previous_pages){
     this.setState({loading: true});
-    axios.get('http://'+window.location.hostname+'/shows/get_shows?page='+page+'&orderby='+encodeURIComponent(order)+'&keywords='+encodeURIComponent(searchTerm)+ "&include_previous="+include_previous_pages).then(data => {
+    axios.get(window.vars.apiBase + 'shows/get_shows?page='+page+'&orderby='+encodeURIComponent(order)+'&keywords='+encodeURIComponent(searchTerm)+ "&include_previous="+include_previous_pages).then(data => {
         var newShows = this.state.shows;
         for(var i = 0; i < data.data.length; i++){
             if(newShows.some(e => e.id === data.data[i].id))

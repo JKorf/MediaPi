@@ -38,7 +38,7 @@ class ShowController(BaseHandler):
         data = await RequestFactory.make_request_async(ShowController.shows_api_path + "shows/" + page + "?sort=" + urllib.parse.quote(order_by) + search_string)
 
         if data is not None:
-            return self.parse_show_data(data)
+            return self.parse_show_data(data.decode('utf-8'))
         else:
             EventManager.throw_event(EventType.Error, ["get_error", "Could not get shows data"])
             Logger.write(2, "Error fetching shows")

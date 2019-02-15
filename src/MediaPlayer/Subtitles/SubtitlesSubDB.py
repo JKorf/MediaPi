@@ -19,9 +19,10 @@ class SubtitlesSubDB(SubtitleSourceBase):
         result = RequestFactory.make_request(
             "http://sandbox.thesubdb.com/?action=download&hash=" + file_hash + "&language=en",
             useragent="SubDB/1.0 (MediaPi/0.1; http://github.com/jkorf/mediapi)")
-        if result:
-            Logger.write(2, "SubDB: Found a subtitle for hash " + file_hash)
-            return [SubtitleSourceBase.save_file("SubDB", result)]
+        if not result:
+            Logger.write(2, "SubDB: no subtitles found for " + file_hash)
+            return []
 
-        Logger.write(2, "SubDB: no subtitles found for " + file_hash)
-        return []
+        Logger.write(2, "SubDB: Found a subtitle for hash " + file_hash)
+        return [SubtitleSourceBase.save_file("SubDB", result)]
+

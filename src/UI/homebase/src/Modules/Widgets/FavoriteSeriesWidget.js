@@ -18,7 +18,7 @@ class FavoriteSeriesWidget extends Component {
   }
 
   componentDidMount() {
-    axios.get('http://'+window.location.hostname+'/data/get_favorites').then(data => {
+    axios.get(window.vars.apiBase + 'data/get_favorites').then(data => {
             console.log(data.data);
             this.setState({favorites: data.data.filter(f => f.type == "Show")});
         }, err =>{

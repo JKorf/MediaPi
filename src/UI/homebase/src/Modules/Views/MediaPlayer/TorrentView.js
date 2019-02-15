@@ -67,7 +67,7 @@ class TorrentView extends Component {
     this.setState({loading: true});
     if(this.state.searchTerm){
 
-        axios.get('http://'+window.location.hostname+'/torrent/search?keywords=' + encodeURIComponent(this.state.searchTerm)).then(data => {
+        axios.get(window.vars.apiBase + 'torrent/search?keywords=' + encodeURIComponent(this.state.searchTerm)).then(data => {
                 console.log(data.data);
                 this.setState({torrents: data.data, loading: false});
             }, err =>{
@@ -76,7 +76,7 @@ class TorrentView extends Component {
             });
     }
     else{
-        axios.get('http://'+window.location.hostname+'/torrent/top').then(data => {
+        axios.get(window.vars.apiBase + 'torrent/top').then(data => {
                 console.log(data.data);
                 this.setState({torrents: data.data, loading: false});
             }, err =>{
@@ -97,7 +97,7 @@ class TorrentView extends Component {
   playTorrent(instance, torrent)
   {
     this.setState({loading: true});
-    axios.post('http://'+window.location.hostname+'/play/torrent?instance=' + instance
+    axios.post(window.vars.apiBase + 'play/torrent?instance=' + instance
     + "&title=" + encodeURIComponent(torrent.title)
     + "&url=" + encodeURIComponent(torrent.url)).then(() => {
             this.setState({loading: false});

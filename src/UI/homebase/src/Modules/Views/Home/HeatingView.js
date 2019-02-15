@@ -18,7 +18,7 @@ class HeatingView extends Component {
   }
 
   componentDidMount() {
-    axios.get('http://'+window.location.hostname+'/toon/get_details').then(
+    axios.get(window.vars.apiBase + 'toon/get_details').then(
         (data) => {
             this.setState({thermostatData: data.data});
             console.log(data.data);
@@ -34,7 +34,7 @@ class HeatingView extends Component {
     old.active_state = -1;
     this.setState({thermostatData: old});
 
-    axios.post('http://'+window.location.hostname+'/toon/set_temperature?temperature=' + newTemp).then(
+    axios.post(window.vars.apiBase + 'toon/set_temperature?temperature=' + newTemp).then(
         (data) => {
             console.log(data);
          },
@@ -47,7 +47,7 @@ class HeatingView extends Component {
     old.active_state = state.id;
     old.current_setpoint = state.temp;
     this.setState({thermostatData: old});
-    axios.post('http://'+window.location.hostname+'/toon/set_active_state?state=' + state.name).then(
+    axios.post(window.vars.apiBase + 'toon/set_active_state?state=' + state.name).then(
         (data) => {
             console.log(data);
          },

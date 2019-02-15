@@ -99,7 +99,7 @@ class Footer extends Component
     }
 
     pausePlayClick(instance, e){
-        axios.post('http://localhost/play/pause_resume_player?instance=' + instance.id);
+        axios.post(window.vars.apiBase + 'play/pause_resume_player?instance=' + instance.id);
         e.preventDefault();
       }
 
@@ -115,7 +115,7 @@ class Footer extends Component
 
       confirmStop(instance){
         this.props.functions.closePopup(this.stopPopup);
-        axios.post('http://localhost/play/stop_player?instance=' + instance.id );
+        axios.post(window.vars.apiBase + 'play/stop_player?instance=' + instance.id );
       }
 
     render () {

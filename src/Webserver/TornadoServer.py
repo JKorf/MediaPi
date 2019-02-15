@@ -29,7 +29,7 @@ class TornadoServer:
     master_ip = None
 
     def __init__(self):
-        self.port = 80
+        self.port = Settings.get_int("api_port")
         TornadoServer.master_ip = Settings.get_string("master_ip")
         if not Settings.get_bool("slave"):
             handlers = [
@@ -66,39 +66,13 @@ class TornadoServer:
 
         MasterWebsocketController().start()
 
-        while True:
-            try:
-                self.application.listen(self.port)
-                Logger.write(2, "Tornado server running on port " + str(self.port))
-                break
-            except OSError:
-                self.port += 1
+        self.application.listen(self.port)
+        Logger.write(2, "API running on port " + str(self.port))
+
         tornado.ioloop.IOLoop.instance().start()
 
     def stop(self):
         tornado.ioloop.IOLoop.instance().stop()
-
-    @staticmethod
-    async def notify_master_async(url):
-        reroute = str(TornadoServer.master_ip) + url
-        Logger.write(2, "Sending notification to master at " + reroute)
-        await RequestFactory.make_request_async(reroute, "POST")
-
-    @staticmethod
-    def notify_master(url):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(TornadoServer.notify_master_async(url))
-
-    @staticmethod
-    def request_master(url):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(TornadoServer.request_master_async(url))
-
-    @staticmethod
-    async def request_master_async(url):
-        reroute = str(TornadoServer.master_ip) + url
-        Logger.write(2, "Sending request to master at " + reroute)
-        return await RequestFactory.make_request_async(reroute, "GET")
 
 
 class StaticFileHandler(tornado.web.StaticFileHandler):

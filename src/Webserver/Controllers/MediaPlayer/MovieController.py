@@ -29,7 +29,6 @@ class MovieController(BaseHandler):
         if keywords:
             search_string = "&keywords=" + urllib.parse.quote(keywords)
 
-
         if include_previous_pages:
             data = []
             current_page = 0
@@ -48,7 +47,7 @@ class MovieController(BaseHandler):
         data = await RequestFactory.make_request_async(url)
 
         if data is not None:
-            return self.parse_movie_data(data)
+            return self.parse_movie_data(data.decode('utf-8'))
         else:
             EventManager.throw_event(EventType.Error, ["get_error", "Could not get movie data"])
             Logger.write(2, "Error fetching movies")

@@ -17,7 +17,7 @@ class HDView extends Component {
     this.state = {selectedFile: null, loading: true};
     this.viewRef = React.createRef();
 
-    this.path = "C:/";
+    this.path = "/";
     this.props.functions.changeBack({ to: "/mediaplayer/" });
     this.props.functions.changeTitle("Hard drive");
     this.props.functions.changeRightImage(null);
@@ -73,7 +73,7 @@ class HDView extends Component {
     console.log("Continue from " + file.position);
 
     this.setState({loading: true});
-    axios.post('http://'+window.location.hostname+'/play/file?instance=' + instance + "&path=" + encodeURIComponent(file.url) + "&position=" + (shouldContinue ? file.position + "": "0"))
+    axios.post(window.vars.apiBase + 'play/file?instance=' + instance + "&path=" + encodeURIComponent(file.url) + "&position=" + (shouldContinue ? file.position + "": "0"))
     .then(
         () => this.setState({loading: false}),
         () => this.setState({loading: false})
@@ -82,7 +82,7 @@ class HDView extends Component {
 
   loadFolder(){
       this.setState({loading: true});
-      axios.get('http://'+window.location.hostname+'/hd/directory?path=' + this.path).then(data => {
+      axios.get(window.vars.apiBase + 'hd/directory?path=' + this.path).then(data => {
             this.setState({loading: false});
             console.log(data.data);
             this.setState({structure: data.data});

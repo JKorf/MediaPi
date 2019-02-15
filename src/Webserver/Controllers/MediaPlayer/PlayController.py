@@ -1,5 +1,7 @@
 import urllib.parse
 
+import sys
+
 from Database.Database import Database
 from MediaPlayer.MediaManager import MediaManager
 from Shared.Logger import Logger
@@ -57,6 +59,9 @@ class PlayController(BaseHandler):
         # ------------ Play file --------------
         elif url == "file":
             file = urllib.parse.unquote(self.get_argument("path"))
+            if sys.platform == "win32":
+                file = "C:" + file
+
             Logger.write(2, "Play file " + file + " on " + str(instance))
 
             if MasterWebsocketController().is_self(instance):

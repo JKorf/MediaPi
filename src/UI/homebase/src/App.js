@@ -34,7 +34,6 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    Socket.init();
     this.state = {backConfig: {to:"/"}};
     this.infoMessageRef = React.createRef();
 
@@ -51,6 +50,18 @@ class App extends Component {
         showPopup: (popup) => this.popupControllerRef.current.showPopup(popup),
         closePopup: (popup) => this.popupControllerRef.current.closePopup(popup),
     }
+  }
+
+  componentWillMount() {
+    var apiPort = 50021;
+    var location = window.location.hostname + ":" + apiPort;
+    window.vars = {
+        apiPort: 50021,
+        websocketBase: "ws://" + location + "/ws",
+        apiBase: "http://" + location + "/"
+    };
+
+    Socket.init();
   }
 
   changeBack (value){
