@@ -26,7 +26,7 @@ class ShowView extends Component {
 
   componentDidMount() {
     axios.get(window.vars.apiBase + 'shows/get_show?id=' + this.props.match.params.id).then(data => {
-        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+        if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         console.log(data.data);
         const seasonEpisodes = data.data.episodes.reduce((seasons, epi) => {
           if (!seasons[epi.season])
@@ -39,7 +39,7 @@ class ShowView extends Component {
         this.props.functions.changeTitle(data.data.title);
         this.props.functions.changeRightImage({image: (data.data.favorite? favoriteFullImage: favoriteImage), click: this.toggleFavorite});
     }, err => {
-        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+        if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         console.log(err);
     });
   }
@@ -95,11 +95,11 @@ class ShowView extends Component {
         + "&episode=" + episode.episode
         + "&position=" + episode.played_for).then(() =>
             {
-                if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+                if(this.viewRef.current) { this.viewRef.current.changeState(0); }
             }
         , err => {
             console.log(err);
-            if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
+            if(this.viewRef.current) { this.viewRef.current.changeState(0); } }
         );
   }
 

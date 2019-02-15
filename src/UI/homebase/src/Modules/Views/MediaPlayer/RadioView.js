@@ -36,13 +36,13 @@ class RadioView extends Component {
   }
 
   componentDidMount() {
-    axios.get(window.vars.apiBase + '/radio/get_radios').then(data => {
+    axios.get(window.vars.apiBase + 'radio/get_radios').then(data => {
         console.log(data.data);
         this.setState({radios: data.data});
-        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+        if(this.viewRef.current) { this.viewRef.current.changeState(0); }
     }, err =>{
         console.log(err);
-        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+        if(this.viewRef.current) { this.viewRef.current.changeState(0); }
     });
   }
 
@@ -51,12 +51,12 @@ class RadioView extends Component {
   }
 
   playRadio(instance, radio){
-    axios.post(window.vars.apiBase + '/play/radio?instance=' + instance + "&id=" + radio.id)
+    axios.post(window.vars.apiBase + 'play/radio?instance=' + instance + "&id=" + radio.id)
     .then(
         () => {
-            if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+            if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         },
-        () => { if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
+        () => { if(this.viewRef.current) { this.viewRef.current.changeState(0); } }
     );
   }
 

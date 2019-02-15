@@ -21,13 +21,13 @@ class MovieView extends Component {
   }
 
   componentDidMount() {
-    axios.get(window.vars.apiBase + '/movies/get_movie?id=' + this.props.match.params.id).then(data => {
-        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+    axios.get(window.vars.apiBase + 'movies/get_movie?id=' + this.props.match.params.id).then(data => {
+        if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         console.log(data.data);
         this.props.functions.changeTitle(data.data.title);
         this.setState({movie: data.data});
     }, err =>{
-        if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+        if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         console.log(err);
         this.setState({loading: false});
     });
@@ -65,9 +65,9 @@ class MovieView extends Component {
             + "&title=" + encodeURIComponent(this.state.movie.title + " Trailer"))
             .then(
                 () => {
-                    if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+                    if(this.viewRef.current) { this.viewRef.current.changeState(0); }
                  },
-                () => { if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
+                () => { if(this.viewRef.current) { this.viewRef.current.changeState(0); } }
             );
     }else{
         if(media.played_for > 0)
@@ -82,9 +82,9 @@ class MovieView extends Component {
             .then(
                 () =>
                 {
-                    if(this.viewRef.current) { this.viewRef.current.changeState(1); }
+                    if(this.viewRef.current) { this.viewRef.current.changeState(0); }
                 },
-                () => { if(this.viewRef.current) { this.viewRef.current.changeState(1); } }
+                () => { if(this.viewRef.current) { this.viewRef.current.changeState(0); } }
             );
     }
   }
