@@ -71,6 +71,27 @@ class LightingView extends Component {
     axios.post(window.vars.apiBase + 'lighting/set_group_state?group='+group.id+'&state=' + value);
   }
 
+  titleChange(group, newTitle)
+  {
+    this.setState(state => {
+      const lightData = state.lightData.map(s => {
+        if(s.id === group.id){
+            s.name = newTitle;
+        }
+        return s;
+      });
+
+      return {
+        lightData,
+      };
+    });
+  }
+
+  titleSave(group, newTitle)
+  {
+      axios.post(window.vars.apiBase + 'lighting/set_group_name?group='+group.id+'&name=' + encodeURIComponent(newTitle));
+  }
+
   render() {
     return (
       <div className="lighting-view">
@@ -79,7 +100,7 @@ class LightingView extends Component {
             this.state.lightData.map(lightGroup => {
                 return(
                     <div key={lightGroup.id} className="light-group">
-                        <InfoGroup title={lightGroup.name}>
+                        <InfoGroup title={lightGroup.name} titleChangeable={true} onTitleChange={(title) => this.titleChange(lightGroup, title)} onTitleSave={(title) => this.titleSave(lightGroup, title)}>
                             <div className="light-group-dimmer">
                                 <Slider format={this.writeDimmerPercentage} min={0} max={255} value={lightGroup.dimmer} onChange={(value) => this.dimmerChange(lightGroup, value)} />
                             </div>

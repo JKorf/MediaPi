@@ -53,11 +53,7 @@ class StreamManager:
         self.stream_tolerance = Settings.get_int("stream_pause_tolerance")
 
         self.player_state_id = EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
-        self.seek_id = EventManager.register_event(EventType.Seek, self.seeking)
         self.listener.start_listening()
-
-    def seeking(self, pos):
-        self.currently_seeking = True
 
     def player_state_change(self, old, new):
         if new == PlayerState.Playing:

@@ -1,3 +1,5 @@
+import urllib.parse
+
 from Controllers.LightManager import LightManager
 from Shared.Logger import Logger
 from Shared.Util import to_JSON
@@ -24,6 +26,8 @@ class LightController(BaseHandler):
             self.set_group_state(int(self.get_argument("group")), self.get_argument("state") == "true")
         elif url == "set_group_dimmer":
             self.set_group_dimmer(int(self.get_argument("group")), int(self.get_argument("dimmer")))
+        elif url == "set_group_name":
+            self.set_group_name(int(self.get_argument("group")), str(urllib.parse.unquote(self.get_argument("name"))))
 
     def get_lights(self):
         devices = LightManager().get_lights()
@@ -76,7 +80,11 @@ class LightController(BaseHandler):
 
     def set_group_dimmer(self, group, dimmer):
         Logger.write(2, "Set " + str(group) + " to " + str(dimmer))
-        LightManager().switch_group(group, dimmer)
+        LightManager().dimmer_group(group, dimmer)
+
+    def set_group_name(self, group, name):
+        Logger.write(2, "Set " + str(group) + " to " + str(name))
+        LightManager().name_group(group, name)
 
     def create_test_groups(self):
         return [LightGroup(1, "Woonkamer 1", True, 254), LightGroup(2, "Woonkamer 2", True, 128), LightGroup(3, "Keuken", False, 254)]

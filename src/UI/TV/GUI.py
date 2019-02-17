@@ -26,7 +26,7 @@ class App(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.parent = parent
 
-        self.background_time = 30
+        self.background_time = 60 * 15
         self.background_max_requests = 10
         self.background_images = []
         self.base_image_path = os.getcwd() + "/UI/TV/Images/"
@@ -53,7 +53,6 @@ class App(tk.Frame):
         self.master.geometry("{0}x{1}+0+0".format(w, h))
         self.parent.bind("<Escape>", self.fullscreen_cancel)
         self.fullscreen_toggle()
-
 
         self.background_canvas = tk.Canvas(self.parent, width=w, height=h, highlightthickness=0)
         self.background_canvas.pack(side='top', fill='both', expand='yes')
@@ -113,7 +112,7 @@ class App(tk.Frame):
             self.unset_image()
 
         elif self.last_media_title is not None and media_data.title is None:
-            self.swap_background()
+            self.background_canvas.itemconfig(self.background_image, image=self.background_canvas.background_image)
 
         self.last_media_title = media_data.title
 

@@ -4,7 +4,7 @@ import time
 from enum import Enum
 
 from MediaPlayer.Player import vlc
-from MediaPlayer.Player.vlc import libvlc_get_version, EventType as VLCEventType, MediaSlaveType, MediaSlave
+from MediaPlayer.Player.vlc import libvlc_get_version, EventType as VLCEventType, MediaSlaveType, MediaSlave, Media
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Observable import Observable
@@ -21,7 +21,10 @@ class VLCPlayer(metaclass=Singleton):
 
         self.instantiate_vlc()
 
+        self.media = None
         self.__player = self.__vlc_instance.media_player_new()
+        self.__player.set_fullscreen(True)
+
         self.__event_manager = self.__player.event_manager()
         self.hook_events()
 
@@ -38,7 +41,6 @@ class VLCPlayer(metaclass=Singleton):
 
         EventManager.register_event(EventType.PauseResumePlayer, self.pause_resume)
         EventManager.register_event(EventType.SetVolume, self.set_volume)
-        EventManager.register_event(EventType.Seek, self.set_time)
 
         EventManager.register_event(EventType.StartPlayer, self.play)
         EventManager.register_event(EventType.StopPlayer, self.stop)
@@ -51,7 +53,7 @@ class VLCPlayer(metaclass=Singleton):
     def instantiate_vlc(self):
         parameters = self.get_instance_parameters()
         Logger.write(2, "VLC parameters: " + str(parameters))
-        self.__vlc_instance = vlc.Instance("vlc", *parameters)
+        self.__vlc_instance = vlc.Instance("cvlc", *parameters)
         Logger.write(3, "VLC version " + libvlc_get_version().decode('utf8'))
 
     def play(self, url, time=0):
@@ -61,8 +63,9 @@ class VLCPlayer(metaclass=Singleton):
         Logger.write(2, "VLC Play | Time: " + str(time))
         Logger.write(2, "VLC Play | Parameters: " + str(parameters))
 
-        self.__player.set_mrl(url, *parameters)
-        return self.__player.play() != -1
+        self.media = Media(url, *parameters)
+        self.__player.set_media(self.media)
+        self.__player.play()
 
     @staticmethod
     def get_instance_parameters():
@@ -75,8 +78,7 @@ class VLCPlayer(metaclass=Singleton):
             log_path = Settings.get_string("log_folder")
             params.append("--logfile=" + log_path + '/vlclog_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt")
             params.append("--file-logging")
-            params.append("--codec=omxil")
-            params.append("--vout=omxil_vout")
+            # params.append("--vout=omxil_vout")
             params.append("--file-caching=5000")
 
         return params

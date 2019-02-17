@@ -21,7 +21,7 @@ class DashboardView extends Component {
 
     this.widgetRefs = [
         {
-            component: <LightWidget title="Lights" titleLink={"/home/heating"} ref={React.createRef()} />,
+            component: <LightWidget title="Lights" titleLink={"/home/lighting"} ref={React.createRef()} />,
             style: {},
             width: 0,
             height: 0,
@@ -30,7 +30,7 @@ class DashboardView extends Component {
             index: 0
         },
         {
-            component: <TempWidget title="Temperature" titleLink={"/home/lighting"} ref={React.createRef()} />,
+            component: <TempWidget title="Temperature" titleLink={"/home/heating"} ref={React.createRef()} />,
             style: {},
             width: 0,
             height: 0,
