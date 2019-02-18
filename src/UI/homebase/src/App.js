@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import { BrowserRouter as Router, Route } from "react-router-dom";
+import axios from 'axios';
 
 import Header from './Modules/Header'
 import Footer from './Modules/Footer'
@@ -34,12 +35,13 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {backConfig: {to:"/"}};
+    this.state = {backConfig: {to:"/"}, auth: false};
     this.infoMessageRef = React.createRef();
 
     this.changeBack = this.changeBack.bind(this);
     this.changeTitle = this.changeTitle.bind(this);
     this.changeRightImage = this.changeRightImage.bind(this);
+    this.processAuthResult = this.processAuthResult.bind(this);
 
     this.popupControllerRef = React.createRef();
 
@@ -53,6 +55,7 @@ class App extends Component {
   }
 
   componentWillMount() {
+
     var apiPort = 50021;
     var location = window.location.hostname + ":" + apiPort;
     window.vars = {
@@ -61,7 +64,21 @@ class App extends Component {
         apiBase: "http://" + location + "/"
     };
 
+    var key = localStorage.getItem('Auth-Key');
+    if (key)
+        axios.defaults.headers.common['Auth-Key'] = '123';
+    else{
+        var pw = prompt("Password");
+        axios.post(window.vars.apiBase + "auth/init?p=" + encodeURIComponent(pw)).then(this.processAuthResult, this.processAuthResult);
+    }
+
     Socket.init();
+  }
+
+  processAuthResult(result)
+  {
+    if(result.data.success)
+        this.setState({auth: true});
   }
 
   changeBack (value){
@@ -77,6 +94,10 @@ class App extends Component {
   }
 
   render() {
+    if (!this.state.auth){
+        return <div>Not authenticated</div>
+    }
+
     const link = this.state.backConfig;
     return (
       <Router>

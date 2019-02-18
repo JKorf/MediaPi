@@ -11,6 +11,7 @@ from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
+from Webserver.Controllers.AuthController import AuthController
 from Webserver.Controllers.DataController import DataController
 from Webserver.Controllers.LightController import LightController
 from Webserver.Controllers.MediaPlayer.HDController import HDController
@@ -33,6 +34,7 @@ class TornadoServer:
         TornadoServer.master_ip = Settings.get_string("master_ip")
         if not Settings.get_bool("slave"):
             handlers = [
+                (r"/auth/(.*)", AuthController),
                 (r"/play/(.*)", PlayController),
                 (r"/util/(.*)", UtilController),
                 (r"/movies/(.*)", MovieController),

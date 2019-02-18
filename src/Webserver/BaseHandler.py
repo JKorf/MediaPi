@@ -8,8 +8,17 @@ from Shared.Settings import Settings
 
 
 class BaseHandler(tornado.web.RequestHandler):
+    def prepare(self):
+        if self.request.method == "GET" or self.request.method == "POST":
+            key = self.request.headers.get('Auth-Key', None)
+            Logger.write(2, "KEY RECEIVED: " + str(key))
+
+            #self.send_error(401)
+
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+        self.set_header("Access-Control-Allow-Headers", "Auth-Key")
 
     def _handle_request_exception(self, e):
         Logger.write(3, "Error in Tornado requests: " + str(e), 'error')
@@ -18,6 +27,9 @@ class BaseHandler(tornado.web.RequestHandler):
             Logger.write(3, stack_line)
         self.set_status(503)
         self.finish(str(e))
+
+    def options(self, *args, **kwargs):
+        self.set_status(200)
 
     @staticmethod
     async def request_master_async(url):
