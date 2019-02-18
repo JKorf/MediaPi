@@ -76,6 +76,34 @@ class LightManager(metaclass=Singleton):
         devices_commands = self.api(self.gateway.get_devices())
         return self.api(devices_commands)
 
+    def set_light_state(self, light, state):
+        if not self.check_state():
+            return
+
+        device = self.api(self.gateway.get_device(light))
+        self.api(device.light_control.set_state(state))
+
+    def set_light_warmth(self, light, warmth):
+        if not self.check_state():
+            return
+
+        device = self.api(self.gateway.get_device(light))
+        self.api(device.light_control.set_color_temp(warmth))
+
+    def set_light_dimmer(self, light, amount):
+        if not self.check_state():
+            return
+
+        device = self.api(self.gateway.get_device(light))
+        self.api(device.light_control.set_dimmer(amount))
+
+    def set_light_name(self, light, name):
+        if not self.check_state():
+            return
+
+        device = self.api(self.gateway.get_device(light))
+        self.api(device.set_name(name))
+
     def get_light_groups(self):
         if not self.check_state():
             return []
@@ -86,60 +114,34 @@ class LightManager(metaclass=Singleton):
         Logger.write(2, "Get light groups 2: " + str([x.raw for x in result]))
         return result
 
-    def switch_light(self, index, state):
+    def get_lights_in_group(self, group):
         if not self.check_state():
-            return
+            return []
 
-        Logger.write(2, "Switching light with index " + str(index) + " to state " + str(state))
-        light = self.get_device_by_index(index)
-        self.api(light.light_control.set_state(state))
+        group = self.api(self.gateway.get_group(group))
+        members = group.member_ids
+        return [self.gateway.get_device(x) for x in members]
 
-    def warmth_light(self, index, warmth):
-        if not self.check_state():
-            return
-
-        Logger.write(2, "Setting warmth of light with index " + str(index) + " to " + str(warmth))
-        light = self.get_device_by_index(index)
-        self.api(light.light_control.set_color_temp(warmth))
-
-    def dimmer_light(self, index, amount):
-        if not self.check_state():
-            return
-
-        Logger.write(2, "Setting dimmer of light with index " + str(index) + " to " + str(amount))
-        light = self.get_device_by_index(index)
-        self.api(light.light_control.set_dimmer(amount))
-
-    def name_group(self, group, name):
+    def set_group_name(self, group, name):
         if not self.check_state():
             return
 
         group = self.api(self.gateway.get_group(group))
         self.api(group.set_name(name))
 
-    def switch_group(self, group, state):
+    def set_group_state(self, group, state):
         if not self.check_state():
             return
 
         group = self.api(self.gateway.get_group(group))
         self.api(group.set_state(state))
 
-    def dimmer_group(self, group, dimmer):
+    def set_group_dimmer(self, group, dimmer):
         if not self.check_state():
             return
 
-        Logger.write(2, "Setting dimmer of group " + str(group) + " to " + str(dimmer))
         group = self.api(self.gateway.get_group(group))
         self.api(group.set_dimmer(dimmer))
-
-    def get_device_by_index(self, index):
-        i = 0
-        lights = self.get_lights()
-        for control_device in [x for x in lights if x.has_light_control]:
-            if i == index:
-                return control_device
-            i += 1
-        return None
 
     def check_state(self):
         if not self.enabled:

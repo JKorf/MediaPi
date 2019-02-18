@@ -159,7 +159,6 @@ class StreamManager:
 
     def stop(self):
         EventManager.deregister_event(self.player_state_id)
-        EventManager.deregister_event(self.seek_id)
         self.listener.stop()
 
 

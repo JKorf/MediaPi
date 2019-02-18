@@ -18,6 +18,7 @@
 
   input-outer: #212a2d;
   input-inner: #425359;
+  input-highlight: #617a82;
 }
 
 
@@ -492,31 +493,31 @@ a {
 .switch{
     border-radius: 6px;
     border: 1px solid #colors[borders];
-    height: 26px;
+    height: 22px;
     position: relative;
-    width: 60px;
+    width: 54px;
     background: #colors[input-outer];
 
     .switch-inner{
         border-radius: 4px;
-        height: 20px;
+        height: 16px;
         left: 2px;
         top: 2px;
         position: absolute;
-        width: 30px;
+        width: 26px;
         background: #colors[input-inner];
         transition: left 0.15s ease;
     }
 
     &.on{
-        background: #colors[input-inner];
+        background: #colors[input-highlight];
 
         .switch-inner{
-            background: #colors[input-outer];
-
-            left: 26px;
+            left: 22px;
         }
     }
+
+
 }
 
 .view-loader-wrapper{
@@ -553,11 +554,11 @@ a {
     position: relative;
 
     .info-group-title-change{
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         position: absolute;
-        right: 5px;
-        top: 5px;
+        right: 6px;
+        top: 6px;
 
         svg{
             fill: #colors[images];

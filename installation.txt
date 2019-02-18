@@ -1,39 +1,24 @@
-1.  Set static IP: https://www.raspberrypi.org/forums/viewtopic.php?t=191140+
+*  Set static IP: https://www.raspberrypi.org/forums/viewtopic.php?t=191140+
 
-2.  Adjust overscan: https://github.com/ukscone/set_overscan
+*  Adjust overscan: https://github.com/ukscone/set_overscan
 
-3.  Enable ssh in desktop -> preferences -> raspberry config -> interfaces -> ssh
+*  Enable ssh in desktop -> preferences -> raspberry config -> interfaces -> ssh
 
-4.  Set correct time
+*  Set correct time
 
-4.  Disable screensaver: sudo apt-get install xscreensaver -> menu preferences -> screensaver -> disable
+*  Disable screensaver: sudo apt-get install xscreensaver -> menu preferences -> screensaver -> disable
 
-5.  Install VLC with hardware acceleration: https://www.raspberrypi.org/forums/viewtopic.php?f=66&t=195221
-    (Can now just do: sudo apt-get install vlc)
+*  auto start script on startup   
+   sudo nano /etc/xdg/lxsession/LXDE-pi/autostart, add before screensaver:
+   sudo python3 /home/pi/Scripts/start.py &
 
-6.  auto start script on startup   
-    sudo nano /etc/xdg/lxsession/LXDE-pi/autostart, add before screensaver:
-    sudo python3 /home/pi/Scripts/start.py &
+*  Copy over scripts
 
-7.  Copy over scripts
-
-8.  Install dependencies:
-sudo apt-get install python3-pyqt4 libxml2-dev libxslt-dev cec-utils pillow
+*  Install dependencies:
+sudo apt-get install vlc libxml2-dev libxslt-dev cec-utils pillow (nginx for master)
 sudo pip3 install tornado psutil lxml purl pytradfri toonapilib websocket
-(for unit tests: pytest)
 
-9.  Make coap client for lighting controll:
-sudo apt-get install build-essential autoconf automake libtool
-git clone --recursive https://github.com/obgm/libcoap.git
-cd libcoap
-git checkout dtls
-git submodule update --init --recursive
-./autogen.sh
-./configure --disable-documentation --disable-shared --without-debug CFLAGS="-D COAP_DEBUG_FD=stderr"
-make
-sudo make install
-
-10.  Adjust boot config: sudo nano /boot/config.txt
+*  Adjust boot config: sudo nano /boot/config.txt
 	hdmi_group=1
 	hdmi_mode=19
 	arm_freq=1350
@@ -50,5 +35,21 @@ sudo make install
         overscan_top=-16
         overscan_bottom=-16
 
+
+*  (Master) Configure nginix
+sudo nano /etc/nginx/sites-available -> set port and folder
+
+*  (Master) Portforward to PI
+
+*  (Master) Make coap client for lighting controll:
+sudo apt-get install build-essential autoconf automake libtool
+git clone --recursive https://github.com/obgm/libcoap.git
+cd libcoap
+git checkout dtls
+git submodule update --init --recursive
+./autogen.sh
+./configure --disable-documentation --disable-shared --without-debug CFLAGS="-D COAP_DEBUG_FD=stderr"
+make
+sudo make install
 
 	

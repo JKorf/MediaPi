@@ -13,9 +13,6 @@
 
     check if people are home
 
-    https://www.raspberrypi.org/documentation/remote-access/web-server/nginx.md
-    https://readwrite.com/2014/06/27/raspberry-pi-web-server-website-hosting/
-
     First check device identity
     Before loading real page, first request device id is known from API
     If not known, request password

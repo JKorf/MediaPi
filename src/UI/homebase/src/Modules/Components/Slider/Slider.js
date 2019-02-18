@@ -43,7 +43,7 @@ class Slider extends Component {
     const min = this.props.min;
     const max = this.props.max;
     const value = this.props.value;
-    const percentage = (value / (max - min)) * 100;
+    const percentage = ((value - min) / (max - min)) * 100;
     let offset = this.state.startX - this.state.currentX;
     let width = 0;
     if (this.elementRef.current){
@@ -58,7 +58,7 @@ class Slider extends Component {
 
     const left = percentage / 100 * width - offset;
     const leftPercentage = left / width;
-    this.newValue = max * leftPercentage;
+    this.newValue = (max - min) * leftPercentage + min;
 
     let minStr = min;
     let maxStr = max;

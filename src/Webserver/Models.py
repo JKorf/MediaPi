@@ -270,15 +270,16 @@ class MediaFile:
 
 class LightControl:
 
-    def __init__(self, index, application_type, last_seen, reachable, can_set_dimmer, can_set_temp, can_set_color, lights):
+    def __init__(self, id, name, application_type, last_seen, reachable, can_set_dimmer, can_set_temp, can_set_color, lights):
         self.application_type = application_type
+        self.name = name
         self.last_seen = last_seen
         self.reachable = reachable
         self.can_set_dimmer = can_set_dimmer
         self.can_set_temp = can_set_temp
         self.can_set_color = can_set_color
         self.lights = lights
-        self.index = index
+        self.id = id
 
 
 class LightDevice:
