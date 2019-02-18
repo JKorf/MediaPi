@@ -13,7 +13,7 @@ class Database(metaclass=Singleton):
     def __init__(self):
         self.path = Settings.get_string("base_folder") + "Solution/database.data"
         self.slave = Settings.get_bool("slave")
-        self.current_version = 9
+        self.current_version = 10
         self.lock = Lock()
 
     def init_database(self):
@@ -308,6 +308,24 @@ class Database(metaclass=Singleton):
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("DELETE FROM Stats WHERE Name=?", [key])
+            database.commit()
+            database.close()
+
+    def check_client_key(self, key):
+        with self.lock:
+            database, cursor = self.connect()
+            cursor.execute("SELECT ClientId FROM Keys WHERE ClientKey=?", [key])
+            data = cursor.fetchall()
+            database.commit()
+            database.close()
+            if not data:
+                return None
+            return str(data[0][0])
+
+    def add_client(self, id, key):
+        with self.lock:
+            database, cursor = self.connect()
+            cursor.execute("INSERT INTO Keys (ClientId, ClientKey, Issued) Values (?, ?, ?)", [id, key, current_time()])
             database.commit()
             database.close()
 

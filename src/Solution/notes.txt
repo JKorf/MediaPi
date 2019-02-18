@@ -21,8 +21,5 @@
     check identity in the tornado base handler
     browser can track identity in local storage
 
-	ident -> server
-	server -> unknown
-	password -> server
-	key -> ident ^ password
-	key used per request
+	Salt needed, key shouldn´t map 1 on 1 to db value
+	Need to check auth status. If unauthorized prompt password again

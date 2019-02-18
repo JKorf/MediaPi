@@ -9,7 +9,6 @@ export default class WS {
 
     this.subscriptions = [];
     this.request_handlers = [];
-    WS.connect();
   }
 
   static connect(){

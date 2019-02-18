@@ -87,7 +87,20 @@ class LightingView extends Component {
 
   lightTitleChange(group, light, newTitle)
   {
-    this.updateLight(group.id, light.id, "name", newTitle);
+    this.setState(state =>
+    ({
+        lightData: state.lightData.map(s => {
+            if(s.id === group.id){
+                for(var i = 0; i < s.lights.length; i++)
+                {
+                    if(s.lights[i].id === light.id){
+                        s.lights[i].name = newTitle;
+                    }
+                }
+            }
+            return s;
+        })
+    }));
   }
 
   lightTitleSave(light, newTitle)
@@ -129,8 +142,9 @@ class LightingView extends Component {
             if(s.id === groupId){
                 for(var i = 0; i < s.lights.length; i++)
                 {
-                    if(s.lights[i].id == lightId)
+                    if(s.lights[i].id === lightId){
                         s.lights[i].lights[0][property] = value;
+                    }
                 }
             }
             return s;

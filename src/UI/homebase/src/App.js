@@ -64,21 +64,38 @@ class App extends Component {
         apiBase: "http://" + location + "/"
     };
 
+    Socket.init();
+    this.authenticate();
+  }
+
+  authenticate()
+  {
     var key = localStorage.getItem('Auth-Key');
-    if (key)
-        axios.defaults.headers.common['Auth-Key'] = '123';
+    if (key){
+        axios.defaults.headers.common['Auth-Key'] = key;
+        this.setState({auth: true});
+    }
     else{
         var pw = prompt("Password");
-        axios.post(window.vars.apiBase + "auth/init?p=" + encodeURIComponent(pw)).then(this.processAuthResult, this.processAuthResult);
+        axios.post(window.vars.apiBase + "auth/init?p=" + encodeURIComponent(pw) + "&i=" + encodeURIComponent(this.generate_id())).then(this.processAuthResult, this.processAuthResult);
     }
+  }
 
-    Socket.init();
+  generate_id()
+  {
+      return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+      )
   }
 
   processAuthResult(result)
   {
-    if(result.data.success)
+    if(result.data.success){
+        localStorage.setItem('Auth-Key', result.data.key);
+        axios.defaults.headers.common['Auth-Key'] =  result.data.key;
+        Socket.connect();
         this.setState({auth: true});
+    }
   }
 
   changeBack (value){
@@ -95,7 +112,7 @@ class App extends Component {
 
   render() {
     if (!this.state.auth){
-        return <div>Not authenticated</div>
+        return <div>Authentication failed</div>
     }
 
     const link = this.state.backConfig;

@@ -120,7 +120,7 @@ class LightManager(metaclass=Singleton):
 
         group = self.api(self.gateway.get_group(group))
         members = group.member_ids
-        return [self.gateway.get_device(x) for x in members]
+        return [self.api(self.gateway.get_device(x)) for x in members]
 
     def set_group_name(self, group, name):
         if not self.check_state():

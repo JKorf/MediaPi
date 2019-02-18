@@ -2,6 +2,7 @@ import traceback
 
 import tornado.web
 
+from Database.Database import Database
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
@@ -11,9 +12,16 @@ class BaseHandler(tornado.web.RequestHandler):
     def prepare(self):
         if self.request.method == "GET" or self.request.method == "POST":
             key = self.request.headers.get('Auth-Key', None)
-            Logger.write(2, "KEY RECEIVED: " + str(key))
+            if key is None:
+                self.send_error(401)
+                return
 
-            #self.send_error(401)
+            client = Database().check_client_key(key)
+            if client is None:
+                self.send_error(401)
+                return
+
+            Logger.write(2, "Client " + str(client) + " authenticated")
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
