@@ -13,13 +13,6 @@
 
     check if people are home
 
-    First check device identity
-    Before loading real page, first request device id is known from API
-    If not known, request password
-    track identities in db
-    identity send with each request via central handler
-    check identity in the tornado base handler
-    browser can track identity in local storage
-
-	Salt needed, key shouldn´t map 1 on 1 to db value
-	Need to check auth status. If unauthorized prompt password again
+    After searching keep going back and forth because earlier request is still running
+    Movie details not scrollable
+    Titles for too small tiles unreadable, remove rating

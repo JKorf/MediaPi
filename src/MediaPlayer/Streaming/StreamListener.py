@@ -50,11 +50,6 @@ class StreamListener:
         self.thread.start()
 
     def handle_request(self, socket):
-        if len(self.requests) > 0 and self.torrent is not None:
-            Logger.write(2, self.name + " new request, now " + str(len(self.requests)))
-            for request in self.requests:
-                request.active = False
-
         self.add_socket(socket, "")
         Logger.write(2, self.name + " new request, now " + str(len(self.requests)))
 
@@ -141,24 +136,37 @@ class StreamListener:
         range_start = 0
         if header.range:
             range_start = header.range_start
+            if range_start == self.torrent.media_file.length:
+                Logger.write(2, "Request for content length 0, cant process")
+                self.write_header(socket, "416 Requested range not satisfiable")
+                return
 
         if self.is_open(socket):
             if header.range is None or (range_start == 0 and header.range_end == self.torrent.media_file.length - 1):
                 Logger.write(2, self.name + ' request without range')
                 self.update_socket(socket, "Without range: 0 - " + str(header.range_end))
-                self.write_header(socket, "200 OK", 0, header.range_end, self.torrent.media_file.length,
+                self.write_header_with_content(socket, "200 OK", 0, header.range_end, self.torrent.media_file.length,
                                   self.torrent.media_file.path)
                 self.write_data(socket, header.range_start, header.range_end - header.range_start + 1,
                                 self.torrent.get_data_bytes_for_stream)
             else:
                 Logger.write(2, self.name + ' request with range')
                 self.update_socket(socket, "With range: " + str(header.range_start) + " - " + str(header.range_end))
-                self.write_header(socket, "206 Partial Content", header.range_start, header.range_end,
+                self.write_header_with_content(socket, "206 Partial Content", header.range_start, header.range_end,
                                   self.torrent.media_file.length, self.torrent.media_file.path)
                 self.write_data(socket, header.range_start, header.range_end - header.range_start + 1,
                                 self.torrent.get_data_bytes_for_stream)
 
-    def write_header(self, socket, status, start, end, length, path):
+    def write_header(self, socket, status):
+        response_header = HttpHeader()
+        response_header.status_code = status
+        try:
+            socket.send(response_header.to_string().encode())
+        except (ConnectionAbortedError, ConnectionResetError, OSError):
+            Logger.write(2, "Connection closed 2")
+            return
+
+    def write_header_with_content(self, socket, status, start, end, length, path):
         response_header = HttpHeader()
         Logger.write(2, self.name + " stream requested: " + str(start) + "-" + str(end))
 
@@ -383,10 +391,12 @@ class HttpHeader:
     def to_string(self):
         result = ""
         result += "HTTP/1.1 " + self.status_code + "\r\n"
-        result += "Content-Type: " + self.mime_type + "\r\n"
-        result += "Accept-Ranges: bytes" + "\r\n"
-        result += "Content-Length: " + str(self.content_length) + "\r\n"
-        result += "Content-Range: " + self.range + "\r\n" + "\r\n"
+        if self.mime_type:
+            result += "Content-Type: " + self.mime_type + "\r\n"
+        if self.content_length:
+            result += "Accept-Ranges: bytes" + "\r\n"
+            result += "Content-Length: " + str(self.content_length) + "\r\n"
+            result += "Content-Range: " + self.range + "\r\n" + "\r\n"
         return result
 
 

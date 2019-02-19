@@ -46,9 +46,6 @@ class WiFiController(metaclass=Singleton):
                                 value_max = key_value[1].split("/")
                                 EventManager.throw_event(EventType.WiFiQualityUpdate, [float(value_max[0]) / float(value_max[1]) * 100])
 
-                                if not self.connected:
-                                    self.connected = self.get_actual_address()
-
         else:
             proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
             out, err = proc.communicate()
