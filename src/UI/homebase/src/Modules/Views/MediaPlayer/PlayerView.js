@@ -227,13 +227,18 @@ class PlayerView extends Component {
     if (this.state.torrentData.title)
         torrentComponent = (
             <InfoGroup title="Torrent">
-                <InfoRow name="Torrent name" value={this.state.torrentData.title} />
-                <InfoRow name="Media name" value={this.state.torrentData.media_file} />
-                <InfoRow name="Speed" value={this.writeSpeed(this.state.torrentData.download_speed)} />
-                <InfoRow name="Downloaded" value={this.writeSize(this.state.torrentData.downloaded)} />
-                <InfoRow name="Left" value={this.writeSize(this.state.torrentData.left)} />
-                <InfoRow name="Size" value={this.writeSize(this.state.torrentData.size)} />
-                <InfoRow name="Overhead" value={this.writeSpeed(this.state.torrentData.overhead)} />
+                <div className="player-group-details">
+                    <InfoRow name="Torrent name" value={this.state.torrentData.title} />
+                    <InfoRow name="Media name" value={this.state.torrentData.media_file} />
+                    <InfoRow name="Speed" value={this.writeSpeed(this.state.torrentData.download_speed)} />
+                    <InfoRow name="Downloaded" value={this.writeSize(this.state.torrentData.downloaded)} />
+                    <InfoRow name="Left" value={this.writeSize(this.state.torrentData.left)} />
+                    <InfoRow name="Size" value={this.writeSize(this.state.torrentData.size)} />
+                    <InfoRow name="Overhead" value={this.writeSpeed(this.state.torrentData.overhead)} />
+                    <InfoRow name="Peers available" value={this.state.torrentData.potential} />
+                    <InfoRow name="Peers connecting" value={this.state.torrentData.connecting} />
+                    <InfoRow name="Peers connected" value={this.state.torrentData.connected} />
+                </div>
             </InfoGroup>
         )
 
@@ -241,11 +246,13 @@ class PlayerView extends Component {
     if (this.state.torrentData.title)
         streamingComponent = (
             <InfoGroup title="Streaming">
-                <InfoRow name="Stream position" value={this.state.torrentData.stream_position} />
-                <InfoRow name="Buffer position" value={this.state.torrentData.buffer_position} />
-                <InfoRow name="Buffer ready" value={this.writeSize(this.state.torrentData.buffer_size)} />
-                <InfoRow name="Buffer total" value={this.writeSize(this.state.torrentData.buffer_total)} />
-                <InfoRow name="Total streamed" value={this.writeSize(this.state.torrentData.total_streamed)} />
+                <div className="player-group-details">
+                    <InfoRow name="Stream position" value={this.state.torrentData.stream_position} />
+                    <InfoRow name="Buffer position" value={this.state.torrentData.buffer_position} />
+                    <InfoRow name="Buffer ready" value={this.writeSize(this.state.torrentData.buffer_size)} />
+                    <InfoRow name="Buffer total" value={this.writeSize(this.state.torrentData.buffer_total)} />
+                    <InfoRow name="Total streamed" value={this.writeSize(this.state.torrentData.total_streamed)} />
+                </div>
             </InfoGroup>
         )
 
@@ -260,75 +267,80 @@ class PlayerView extends Component {
     return (
         <div className="player-details">
             <InfoGroup title="Media">
-                { this.state.mediaData.title &&
-                    <div>
-                        <div className="player-details-top">
-                            <div className="player-details-img"><img src={(this.state.mediaData.image ? this.state.mediaData.image: videoFile)} /></div>
-                            <div className="player-details-media">
-                                <div className="player-details-title">{this.state.mediaData.title}</div>
-                                <div className="player-details-type">{this.capitalizeFirstLetter(this.state.mediaData.type)}</div>
-                                <div className="player-details-bot">
-                                    <div className="player-details-controls">
-                                        <div className="player-details-control" onClick={this.pausePlayClick}>
-                                            {playPauseButton}
+                <div className="player-group-details">
+                    { this.state.mediaData.title &&
+                        <div>
+                            <div className="player-details-top">
+                                <div className="player-details-img"><img alt="Media poster" src={(this.state.mediaData.image ? this.state.mediaData.image: videoFile)} /></div>
+                                <div className="player-details-media">
+                                    <div className="player-details-title">{this.state.mediaData.title}</div>
+                                    <div className="player-details-type">{this.capitalizeFirstLetter(this.state.mediaData.type)}</div>
+                                    <div className="player-details-bot">
+                                        <div className="player-details-controls">
+                                            <div className="player-details-control" onClick={this.pausePlayClick}>
+                                                {playPauseButton}
+                                            </div>
+                                            <div className="player-details-control" onClick={this.stopClick}>
+                                                 <SvgImage src={stopImage} />
+                                            </div>
+                                            <div className="player-details-volume">
+                                                <Slider format={(e) => {return Math.round(e) + "%";}} iconLeft={speakerImage} min={0} max={100} value={this.state.playerData.volume} onChange={this.volumeChange} />
+                                            </div>
                                         </div>
-                                        <div className="player-details-control" onClick={this.stopClick}>
-                                             <SvgImage src={stopImage} />
+                                        <div className="player-details-slider"><Slider leftValue="value" format={this.writeTimespan} min={0} max={this.state.playerData.length} value={this.state.playerData.playing_for} onChange={this.seek} />
                                         </div>
-                                        <div className="player-details-volume">
-                                            <Slider format={(e) => {return Math.round(e) + "%";}} iconLeft={speakerImage} min={0} max={100} value={this.state.playerData.volume} onChange={this.volumeChange} />
-                                        </div>
-                                    </div>
-                                    <div className="player-details-slider"><Slider leftValue="value" format={this.writeTimespan} min={0} max={this.state.playerData.length} value={this.state.playerData.playing_for} onChange={this.seek} />
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        { (this.state.playerData.sub_tracks.length > 0 || this.state.playerData.audio_tracks.length > 2) &&
-                            <div className="player-details-track-select">
-                                { this.state.playerData.sub_tracks.length > 0 &&
-                                    <div className={"player-details-subtitle-select " + subtitleClass}>
-                                        <InfoGroup title="Subtitles">
-                                            { this.state.playerData.sub_tracks.map((o) => (
-                                                <div key={o[0]} className="selection-box-option" onClick={() => this.subChange(o[0])}>
-                                                    <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.sub_track == o[0]} /></div>
-                                                    <div className="selection-box-option-title truncate">{o[1]}</div>
-                                                </div> )
-                                            ) }
-                                            <div className="player-details-delay-slider"><Slider formatMinMax={(e) => { return "";}} format={(e) => {return (e / 1000 / 1000 - 5).toFixed(1);}} min={0} max={10 * 1000 * 1000} value={this.state.playerData.sub_delay + 5 *1000 * 1000} onChange={(v) => this.delayChange(v - 5 * 1000 * 1000)} /></div>
-                                            <div className="player-details-sub-delay-controls">
-                                                <div className="player-details-sub-delay-min" onClick={this.decreaseSubDelay}><SvgImage src={minusImage} /></div>
-                                                <div className="player-details-sub-delay-plus" onClick={this.increaseSubDelay}><SvgImage src={plusImage} /></div>
-                                            </div>
-                                        </InfoGroup>
-                                    </div>
-                                 }
-                                { this.state.playerData.audio_tracks.length > 2 &&
-                                    <div className={"player-details-subtitle-select " + subtitleClass}>
-                                        <InfoGroup title="Audio">
-                                            { this.state.playerData.audio_tracks.map((o) => (
-                                                <div  key={o[0]} className="selection-box-option" onClick={() => this.audioChange(o[0])}>
-                                                    <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.audio_track == o[0]} /></div>
-                                                    <div className="selection-box-option-title truncate">{o[1]}</div>
-                                                </div> )
-                                            ) }
-                                        </InfoGroup>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                }
-                { !this.state.mediaData.title &&
-                    <div>Nothing playing</div>
-                }
+                            { (this.state.playerData.sub_tracks.length > 0 || this.state.playerData.audio_tracks.length > 2) &&
+                                <div className="player-details-track-select">
+                                    { this.state.playerData.sub_tracks.length > 0 &&
+                                        <div className={"player-details-subtitle-select " + subtitleClass}>
+                                            <InfoGroup title="Subtitles">
+                                                <div className="player-group-details">
+                                                    { this.state.playerData.sub_tracks.map((o) => (
+                                                        <div key={o[0]} className="selection-box-option" onClick={() => this.subChange(o[0])}>
+                                                            <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.sub_track === o[0]} /></div>
+                                                            <div className="selection-box-option-title truncate">{o[1]}</div>
+                                                        </div> )
+                                                    ) }
+                                                    <div className="player-details-delay-slider"><Slider formatMinMax={(e) => { return "";}} format={(e) => {return (e / 1000 / 1000 - 5).toFixed(1);}} min={0} max={10 * 1000 * 1000} value={this.state.playerData.sub_delay + 5 *1000 * 1000} onChange={(v) => this.delayChange(v - 5 * 1000 * 1000)} /></div>
+                                                    <div className="player-details-sub-delay-controls">
+                                                        <div className="player-details-sub-delay-min" onClick={this.decreaseSubDelay}><SvgImage src={minusImage} /></div>
+                                                        <div className="player-details-sub-delay-plus" onClick={this.increaseSubDelay}><SvgImage src={plusImage} /></div>
+                                                    </div>
+                                                </div>
+                                            </InfoGroup>
+                                        </div>
+                                     }
+                                    { this.state.playerData.audio_tracks.length > 2 &&
+                                        <div className={"player-details-subtitle-select " + subtitleClass}>
+                                            <InfoGroup title="Audio">
+                                                { this.state.playerData.audio_tracks.map((o) => (
+                                                    <div  key={o[0]} className="selection-box-option" onClick={() => this.audioChange(o[0])}>
+                                                        <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.audio_track === o[0]} /></div>
+                                                        <div className="selection-box-option-title truncate">{o[1]}</div>
+                                                    </div> )
+                                                ) }
+                                            </InfoGroup>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    { !this.state.mediaData.title &&
+                        <div>Nothing playing</div>
+                    }
+                </div>
             </InfoGroup>
              {streamingComponent}
 
              {torrentComponent}
 
              <InfoGroup title="System statistics">
+                <div className="player-group-details">
                  <InfoRow name="Max download speed" value={this.writeSpeed(this.state.statData["max_download_speed"])}></InfoRow>
                  <InfoRow name="Total downloaded" value={this.writeSize(this.state.statData["total_downloaded"])}></InfoRow>
 
@@ -339,17 +351,20 @@ class PlayerView extends Component {
                  <InfoRow name="UDP tracker peers" value={this.writeNumber(this.state.statData["peers_source_udp_tracker"])}></InfoRow>
                  <InfoRow name="Subtitles downloaded" value={this.writeNumber(this.state.statData["subs_downloaded"])}></InfoRow>
                  <InfoRow name="Threads started" value={this.writeNumber(this.state.statData["threads_started"])}></InfoRow>
+                </div>
              </InfoGroup>
 
             <InfoGroup title="System state">
-                <InfoRow name="CPU" value={this.state.stateData.cpu + "%"} />
-                <InfoRow name="Memory" value={this.state.stateData.memory + "%"} />
-                <InfoRow name="Threads" value={this.state.stateData.threads} />
+                <div className="player-group-details">
+                    <InfoRow name="CPU" value={this.state.stateData.cpu + "%"} />
+                    <InfoRow name="Memory" value={this.state.stateData.memory + "%"} />
+                    <InfoRow name="Threads" value={this.state.stateData.threads} />
+                </div>
             </InfoGroup>
-            { this.state.state == this.states[0] &&
+            { this.state.state === this.states[0] &&
                 <Popup loading={true} />
             }
-            { this.state.state == this.states[2] &&
+            { this.state.state === this.states[2] &&
                 <StopPopup title={this.state.mediaData.title} onConfirm={this.confirmStop} onCancel={()=> this.setState({state: this.states[1]})}/>
             }
         </div>

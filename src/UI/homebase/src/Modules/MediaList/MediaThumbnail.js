@@ -27,11 +27,11 @@ class MediaThumbnail extends Component {
             maxWidth: "100%"
         };
         if(this.props.rating)
-            style.maxWidth = "calc(100% - 60px)";
+            style.maxWidth = "calc(100% - 40px)";
 
       return (
           <div className="media-thumbnail">
-            <img className="media-thumbnail-img" src={this.props.img} />
+            <img className="media-thumbnail-img" alt="Media thumbnail" src={this.props.img} />
             <div className="media-thumbnail-info">
                 <div className="media-thumbnail-info-title truncate2" style={style}>{this.props.title}</div>
                 { this.props.rating && <div className="media-thumbnail-info-rating">

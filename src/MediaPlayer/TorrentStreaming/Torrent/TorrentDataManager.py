@@ -185,3 +185,6 @@ class TorrentDataManager:
             result.extend(data[offset:offset + going_to_copy])
             current_read += going_to_copy
         return result
+
+    def stop(self):
+        self.torrent = None

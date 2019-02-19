@@ -184,12 +184,12 @@ class LightingView extends Component {
                                                            onSave={(title) => this.lightTitleSave(light, title)}>
                                                      <div className="light-group-light">
                                                          <div className="light-group-dimmer">
-                                                            <Slider format={this.writeDimmerPercentage} formatMinMax={(value) => value == 0 ? "Dimmer": "" } min={0} max={255} value={light.lights[0].dimmer} onChange={(value) => this.lightDimmerChange(lightGroup, light, value)} />
+                                                            <Slider format={this.writeDimmerPercentage} formatMinMax={(value) => value === 0 ? "Dimmer": "" } min={0} max={255} value={light.lights[0].dimmer} onChange={(value) => this.lightDimmerChange(lightGroup, light, value)} />
                                                         </div>
                                                         <div className="light-group-state"><Switch value={light.lights[0].state} onToggle={(value) => this.toggleLight(lightGroup, light, value)} /></div>
                                                         { light.can_set_temp &&
                                                             <div className="light-group-warmth">
-                                                                <Slider format={this.writeWarmthPercentage} formatMinMax={(value) => value == 250 ? "Warmth": "" } min={250} max={454} value={light.lights[0].color_temp} onChange={(value) => this.lightWarmthChange(lightGroup, light, value)} />
+                                                                <Slider format={this.writeWarmthPercentage} formatMinMax={(value) => value === 250 ? "Warmth": "" } min={250} max={454} value={light.lights[0].color_temp} onChange={(value) => this.lightWarmthChange(lightGroup, light, value)} />
                                                             </div>
                                                         }
                                                     </div>

@@ -1,15 +1,8 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 
-import View from './View.js'
-import SvgImage from './../Components/SvgImage'
-import TestWidget from './../Widgets/TestWidget.js'
 import FavoriteSeriesWidget from './../Widgets/FavoriteSeriesWidget.js'
 import TempWidget from './../Widgets/TempWidget.js'
 import LightWidget from './../Widgets/LightWidget.js'
-import Socket from './../../Socket.js'
-
-import settingsImage from './../../Images/settings.svg';
 
 class DashboardView extends Component {
   constructor(props) {
@@ -46,16 +39,7 @@ class DashboardView extends Component {
             x: -1,
             y: -1,
             index: 2
-        },
-        {
-            component: <TestWidget ref={React.createRef()} />,
-            style: {},
-            width: 0,
-            height: 0,
-            x: -1,
-            y: -1,
-            index: 3
-        },
+        }
     ];
 
     for(var i = 0; i < this.widgetRefs.length; i++)
@@ -90,7 +74,7 @@ class DashboardView extends Component {
     for(var y = 0; y < 20; y++){
         for(var x = 0; x <= this.maxColumns - width; x++){
             var result = this.getWidgetsInArea(x, y, width, height);
-            if (result.length == 0)
+            if (result.length === 0)
                 return {x: x, y: y};
         }
      }
@@ -102,7 +86,7 @@ class DashboardView extends Component {
   {
     for(var i = 0; i < this.widgetRefs.length; i++){
         var widget = this.widgetRefs[i];
-        if(widget.x != -1){
+        if(widget.x !== -1){
             if (x >= widget.x && x < widget.x + widget.width
             && y >= widget.y && y < widget.y + widget.height)
                 return false;
@@ -121,10 +105,10 @@ class DashboardView extends Component {
 
             for(var k = 0; k < this.widgetRefs.length; k++){
                 var widget = this.widgetRefs[k];
-                if(result.indexOf(widget) != -1)
+                if(result.indexOf(widget) !== -1)
                     continue;
 
-                if(widget.x != -1){
+                if(widget.x !== -1){
                     if (checkX >= widget.x && checkX < widget.x + widget.width
                     && checkY >= widget.y && checkY < widget.y + widget.height)
                         result.push(widget);
@@ -145,10 +129,10 @@ class DashboardView extends Component {
         for(var i = 0; i < this.widgetRefs.length; i++){
             var widget = this.widgetRefs[i];
             var minSize = widget.ref.current.getSize();
-            const columns =  Math.min(Math.ceil((minSize.width + 20) / columnWidth), this.maxColumns);
+            var columns =  Math.min(Math.ceil((minSize.width + 20) / columnWidth), this.maxColumns);
             const rows = Math.ceil((minSize.height + 20) / this.rowHeight);
 
-            if(columns == this.maxColumns - 1)
+            if(columns === this.maxColumns - 1)
                 columns = this.maxColumns;
 
             widget.x = -1;
@@ -163,19 +147,19 @@ class DashboardView extends Component {
             };
         }
 
-        for(var i = 0; i < this.widgetRefs.length; i++){
-            var widget = this.widgetRefs[i];
-            var pos = this.findFreeSpot(widget.width, widget.height);
-            widget.x = pos.x;
-            widget.y = pos.y;
+        for(var j = 0; j < this.widgetRefs.length; j++){
+            var widgetj = this.widgetRefs[j];
+            var pos = this.findFreeSpot(widgetj.width, widgetj.height);
+            widgetj.x = pos.x;
+            widgetj.y = pos.y;
         }
 
-        for(var i = 0; i < this.widgetRefs.length; i++){
-            var widget = this.widgetRefs[i];
-            widget.style.left = (widget.x * columnWidth) + "px";
-            widget.style.width = (widget.width * columnWidth) + "px";
-            widget.style.top = (widget.y * this.rowHeight) + "px";
-            widget.style.height = (widget.height * this.rowHeight) + "px";
+        for(var k = 0; k < this.widgetRefs.length; k++){
+            var widgetk = this.widgetRefs[k];
+            widgetk.style.left = (widgetk.x * columnWidth) + "px";
+            widgetk.style.width = (widgetk.width * columnWidth) + "px";
+            widgetk.style.top = (widgetk.y * this.rowHeight) + "px";
+            widgetk.style.height = (widgetk.height * this.rowHeight) + "px";
         }
         this.forceUpdate();
      }

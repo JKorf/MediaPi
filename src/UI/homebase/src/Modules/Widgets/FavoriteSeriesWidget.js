@@ -20,7 +20,7 @@ class FavoriteSeriesWidget extends Component {
   componentDidMount() {
     axios.get(window.vars.apiBase + 'data/get_favorites').then(data => {
             console.log(data.data);
-            this.setState({favorites: data.data.filter(f => f.type == "Show")});
+            this.setState({favorites: data.data.filter(f => f.type === "Show")});
         }, err =>{
             console.log(err);
         });
@@ -39,7 +39,7 @@ class FavoriteSeriesWidget extends Component {
             { shows.map((fav) =>
                 <Link to={"/mediaplayer/shows/" + fav.id} key={fav.id}>
                     <div className="favorite-item">
-                        <div className="favorite-item-image"><img src={fav.image} /></div>
+                        <div className="favorite-item-image"><img alt="Favorite poster" src={fav.image} /></div>
                     </div>
                 </Link>
             )}

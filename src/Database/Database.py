@@ -311,21 +311,36 @@ class Database(metaclass=Singleton):
             database.commit()
             database.close()
 
-    def check_client_key(self, key):
+    def check_session_key(self, client_key, session_key):
         with self.lock:
             database, cursor = self.connect()
-            cursor.execute("SELECT ClientId FROM Keys WHERE ClientKey=?", [key])
+            cursor.execute("SELECT ClientKey FROM Keys WHERE SessionKey=? AND ClientKey=?", [session_key, client_key])
             data = cursor.fetchall()
             database.commit()
             database.close()
-            if not data:
-                return None
-            return str(data[0][0])
+            return data is not None and len(data) > 0
 
-    def add_client(self, id, key):
+    def check_client_key(self, client_key):
         with self.lock:
             database, cursor = self.connect()
-            cursor.execute("INSERT INTO Keys (ClientId, ClientKey, Issued) Values (?, ?, ?)", [id, key, current_time()])
+            cursor.execute("SELECT ClientKey FROM Keys WHERE ClientKey=?", [client_key])
+            data = cursor.fetchall()
+            database.commit()
+            database.close()
+            return data is not None and len(data) > 0
+
+    def refresh_session_key(self, client_key, new_session_key):
+        with self.lock:
+            database, cursor = self.connect()
+            cursor.execute("UPDATE Keys SET SessionKey=? WHERE ClientKey=?", [new_session_key, client_key])
+            database.commit()
+            database.close()
+
+    def add_client(self, client_key, session_key):
+        with self.lock:
+            database, cursor = self.connect()
+            time = current_time()
+            cursor.execute("INSERT INTO Keys (ClientKey, SessionKey, Issued, LastSeen) Values (?, ?, ?, ?)", [client_key, session_key, time, time])
             database.commit()
             database.close()
 

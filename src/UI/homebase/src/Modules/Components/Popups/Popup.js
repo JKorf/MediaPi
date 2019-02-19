@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import SvgImage from "./../SvgImage";
 
 import loaderImage from "./../../../Images/loader.svg";

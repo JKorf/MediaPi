@@ -68,10 +68,10 @@ class HeatingView extends Component {
         var date = new Date(0);
         date.setUTCSeconds(this.state.thermostatData.next_time);
         nextTime = new Intl.DateTimeFormat('en-GB', { hour: 'numeric', minute: 'numeric' }).format(date);
-        currentState = this.state.thermostatData.states.filter(x => x.id == this.state.thermostatData.active_state)[0];
+        currentState = this.state.thermostatData.states.filter(x => x.id === this.state.thermostatData.active_state)[0];
         if(!currentState)
             currentState = {id: -1, temp: this.state.thermostatData.real_setpoint, name: "Manual"};
-        nextState = this.state.thermostatData.states.filter(x => x.id == this.state.thermostatData.next_state)[0];
+        nextState = this.state.thermostatData.states.filter(x => x.id === this.state.thermostatData.next_state)[0];
     }
     return (
       <div className="heating-view">
@@ -99,7 +99,7 @@ class HeatingView extends Component {
             <InfoGroup title="State">
                 <div className="heating-states">
                     { this.state.thermostatData.states.map(state =>
-                        <div key={state.id} className={"heating-state " + (state.id == this.state.thermostatData.active_state ? "selected": "")} onClick={() => this.setActiveState(state)}>{state.name}</div>
+                        <div key={state.id} className={"heating-state " + (state.id === this.state.thermostatData.active_state ? "selected": "")} onClick={() => this.setActiveState(state)}>{state.name}</div>
                     ) }
                 </div>
 

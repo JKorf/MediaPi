@@ -17,7 +17,7 @@
 
 .media-thumbnail {
     display: inline-block;
-    width: calc(100% / 3 - 10px);
+    width: calc(50% - 10px);
     min-height: 100px;
     position:relative;
     margin: 5px;
@@ -27,16 +27,26 @@
 }
 
 .radio .media-thumbnail{
-    width: calc(100% / 6 - 10px);
+    width: calc(100% / 4 - 10px);
 }
 
-@media only screen and (max-device-width: 768px){
+@media only screen and (min-device-width: 400px){
     .media-thumbnail{
-        width: calc(50% - 10px);
+        width: calc(100% / 4 - 10px);
     }
 
     .radio .media-thumbnail{
-        width: calc(100% / 4 - 10px);
+        width: calc(100% / 6 - 10px);
+    }
+}
+
+@media only screen and (min-device-width: 600px){
+    .media-thumbnail{
+        width: calc(100% / 6 - 10px);
+    }
+
+    .radio .media-thumbnail{
+        width: calc(100% / 8 - 10px);
     }
 }
 
@@ -51,12 +61,14 @@
 
 .media-thumbnail-info{
     padding: 8px;
+    min-height: 52px;
     position: relative;
 }
 
 
 .media-thumbnail-info-title{
-    max-width: calc(100% - 60px);
+    max-width: calc(100% - 40px);
+    word-break: break-all;
 }
 
 .media-thumbnail-info-rating{
@@ -67,8 +79,8 @@
 
 .media-thumbnail-info-rating-text{
     position: absolute;
-    right: 26px;
-    top: 2px;
+    right: 1px;
+    top: 23px;
 }
 
 .media-thumbnail-info-rating-img{
@@ -1132,4 +1144,8 @@
 
 .light-group-warmth{
     margin-top: 4px;
+}
+
+.player-group-details{
+    padding: 10px;
 }

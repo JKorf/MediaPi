@@ -253,6 +253,7 @@ class StreamListener:
         EventManager.deregister_event(self.event_id_log)
 
         self.running = False
+        self.torrent = None
         if self.server is not None:
             self.server.close()
         Logger.write(2, self.name + " stopped")

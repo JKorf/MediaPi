@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import threading
 from datetime import datetime
 from subprocess import call
 import sys
@@ -8,7 +7,6 @@ import time
 import traceback
 
 os.chdir(os.path.dirname(__file__))
-
 
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer

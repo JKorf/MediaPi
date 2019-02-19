@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import Popup from "./Popup.js"
 import Button from "./../Button"
 
@@ -29,7 +28,7 @@ class SelectInstancePopup extends Component {
     if (!this.state.instance)
         this.setState({instance: data[0].id});
 
-    if (data.length == 1)
+    if (data.length === 1)
         this.select(data[0].id);
     else
         this.setState({loading: false});

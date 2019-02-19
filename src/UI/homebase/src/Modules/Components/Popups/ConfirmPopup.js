@@ -1,9 +1,6 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import Popup from "./Popup.js"
 import Button from "./../Button"
-
-import Socket from "./../../../Socket.js"
 
 class ConfirmPopup extends Component {
   constructor(props) {

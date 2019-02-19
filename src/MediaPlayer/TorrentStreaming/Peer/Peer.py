@@ -79,6 +79,7 @@ class Peer:
 
         Logger.write(1, str(self.id) + ' Peer stopping')
         self.running = False
+        self.torrent = None
         self.engine.stop()
 
         self.download_manager.stop()

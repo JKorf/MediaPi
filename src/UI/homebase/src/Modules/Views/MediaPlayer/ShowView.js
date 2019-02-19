@@ -106,8 +106,7 @@ class ShowView extends Component {
   writeTimespan(duration)
   {
      duration = Math.round(duration);
-     var milliseconds = parseInt((duration % 1000) / 100),
-      seconds = parseInt((duration / 1000) % 60),
+     var seconds = parseInt((duration / 1000) % 60),
       minutes = parseInt((duration / (1000 * 60)) % 60),
       hours = parseInt((duration / (1000 * 60 * 60)) % 24);
 
@@ -124,13 +123,12 @@ class ShowView extends Component {
     const show = this.state.show;
     const selectedSeason = this.state.selectedSeason;
     const selectedEpisode = this.state.selectedEpisode;
-    const favorited = this.state.show.favorite;
 
     return (
         <MediaPlayerView ref={this.viewRef} playMedia={this.playShow}>
           <div className="show">
             <div className="show-image">
-                <img src={show.images.poster} />
+                <img alt="Show poster" src={show.images.poster} />
             </div>
             <div className="show-details">
                 <div className="label-row">
@@ -171,7 +169,7 @@ class ShowView extends Component {
                                     <div className="show-episode-title-date">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(1970, 0, 0).setSeconds(episode.first_aired))}</div>
                                     { episode.seen && <div className="show-episode-title-seen"><SvgImage src={seenImage} /></div> }
                                 </div>
-                                { selectedEpisode == episode.episode &&
+                                { selectedEpisode === episode.episode &&
                                     <div className="show-episode-selected">
                                         <div className="show-episode-synopsis">
                                             {episode.overview}

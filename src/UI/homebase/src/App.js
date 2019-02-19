@@ -1,3 +1,5 @@
+/*eslint no-mixed-operators: "off"*/
+
 import React, {Component} from 'react';
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import axios from 'axios';
@@ -41,7 +43,9 @@ class App extends Component {
     this.changeBack = this.changeBack.bind(this);
     this.changeTitle = this.changeTitle.bind(this);
     this.changeRightImage = this.changeRightImage.bind(this);
-    this.processAuthResult = this.processAuthResult.bind(this);
+    this.processLoginResult = this.processLoginResult.bind(this);
+    this.processRefreshResult = this.processRefreshResult.bind(this);
+    this.setSessionKey = this.setSessionKey.bind(this);
 
     this.popupControllerRef = React.createRef();
 
@@ -52,6 +56,11 @@ class App extends Component {
         showPopup: (popup) => this.popupControllerRef.current.showPopup(popup),
         closePopup: (popup) => this.popupControllerRef.current.closePopup(popup),
     }
+
+    axios.interceptors.request.use(request => {
+      request.headers['Session-Key'] = sessionStorage.getItem('Session-Key');
+      return request
+    });
   }
 
   componentWillMount() {
@@ -70,15 +79,29 @@ class App extends Component {
 
   authenticate()
   {
-    var key = localStorage.getItem('Auth-Key');
-    if (key){
-        axios.defaults.headers.common['Auth-Key'] = key;
-        this.setState({auth: true});
+    var clientId = localStorage.getItem('Client-ID');
+    if (!clientId){
+        clientId = this.generate_id();
+        localStorage.setItem('Client-ID', clientId);
+        axios.defaults.headers.common['Client-ID'] = clientId;
+        this.login();
     }
     else{
-        var pw = prompt("Password");
-        axios.post(window.vars.apiBase + "auth/init?p=" + encodeURIComponent(pw) + "&i=" + encodeURIComponent(this.generate_id())).then(this.processAuthResult, this.processAuthResult);
+        axios.defaults.headers.common['Client-ID'] = clientId;
+        this.refresh();
     }
+  }
+
+  login()
+  {
+    var pw = prompt("Password");
+    if (pw)
+        axios.post(window.vars.apiBase + "auth/login?p=" + encodeURIComponent(pw)).then(this.processLoginResult, this.processLoginResult);
+  }
+
+  refresh()
+  {
+    axios.post(window.vars.apiBase + "auth/refresh").then(this.processRefreshResult, this.processRefreshResult);
   }
 
   generate_id()
@@ -88,14 +111,58 @@ class App extends Component {
       )
   }
 
-  processAuthResult(result)
+  processLoginResult(result)
   {
-    if(result.data.success){
-        localStorage.setItem('Auth-Key', result.data.key);
-        axios.defaults.headers.common['Auth-Key'] =  result.data.key;
-        Socket.connect();
-        this.setState({auth: true});
+    if (result.response)
+        result = result.response;
+
+    if(!result.status)
+    {
+        this.setState({authError: "No connection could be made to server"});
     }
+    else if(result.status === 200)
+    {
+        console.log("Successfully logged in");
+        this.setSessionKey(result.data.key);
+    }
+    else if(result.status === 401)
+    {
+        console.log("Login failed");
+        this.login();
+    }
+    else{
+        this.setState({authError: "Error during login: " + result.statusText});
+    }
+  }
+
+  processRefreshResult(result)
+  {
+    if (result.response)
+        result = result.response;
+
+    if(!result.status)
+    {
+        this.setState({authError: "No connection could be made to server"});
+    }
+    else if(result.status === 200)
+    {
+        console.log("Successfully refreshed");
+        this.setSessionKey(result.data.key);
+    }
+    else if(result.status === 401)
+    {
+        console.log("Refresh failed, need to log in again");
+        this.login();
+    }
+    else{
+        this.setState({authError: "Error during authentication: " + result.statusText});
+    }
+  }
+
+  setSessionKey(key){
+    sessionStorage.setItem('Session-Key', key);
+    Socket.connect();
+    this.setState({auth: true});
   }
 
   changeBack (value){
@@ -112,7 +179,8 @@ class App extends Component {
 
   render() {
     if (!this.state.auth){
-        return <div>Authentication failed</div>
+        if (this.state.authError) return <div>Authentication failed: {this.state.authError}</div>
+        else  return <div>Authentication required</div>
     }
 
     const link = this.state.backConfig;

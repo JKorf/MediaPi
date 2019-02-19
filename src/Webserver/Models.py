@@ -128,6 +128,12 @@ class WebSocketRequestMessage:
         self.info_type = info_type
         self.data = data
 
+class WebSocketInitResponseMessage:
+
+    def __init__(self, success):
+        self.type = "init_response"
+        self.success = success
+
 class WebSocketInvalidMessage:
 
     def __init__(self, id, info_type):

@@ -1,8 +1,6 @@
 import json
 import os
-import urllib.parse
 
-from MediaPlayer.Player.VLCPlayer import VLCPlayer, PlayerState
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger

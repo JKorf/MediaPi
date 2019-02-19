@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import axios from 'axios'
 
 import DashboardLink from './../../Components/DashboardLink'
 import heatingImg from './../../../Images/heating.svg'

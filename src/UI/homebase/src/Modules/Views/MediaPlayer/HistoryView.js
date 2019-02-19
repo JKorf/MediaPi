@@ -34,7 +34,7 @@ class HistoryView extends Component {
                 <div className="history-list">
                     { this.state.history.map((history, index) => { return (
                         <div className="history-item" key={history.id}>
-                            <div className="history-item-image"><img src={(history.image ? history.image: videoFile)} /></div>
+                            <div className="history-item-image"><img alt={history.title + " poster"} src={(history.image ? history.image: videoFile)} /></div>
                             <div className="history-item-details">
                                 <div className="history-item-title truncate2">{history.title}</div>
                                 <div className="history-item-type">{history.type}</div>

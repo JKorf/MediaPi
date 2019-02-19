@@ -9,6 +9,7 @@ export default class WS {
 
     this.subscriptions = [];
     this.request_handlers = [];
+    this.reconnectTimeout = 3000;
   }
 
   static connect(){
@@ -25,21 +26,31 @@ export default class WS {
     console.log("Websocket opened");
     this.wsConnected = true;
 
-    this.ws.send(JSON.stringify({event: "init", type: "UI"}));
-    this.subscriptions.forEach(sub => {
-        if(!sub.subscribed)
-            this.send_subscription(sub);
-    });
+    this.ws.send(JSON.stringify({request_id: newId(), event: "init", type: "UI", clientId: localStorage.getItem('Client-ID'), sessionKey: sessionStorage.getItem('Session-Key')}));
   }
 
   static socketMessage(e){
     var data = JSON.parse(e.data);
     //console.log("Received: ", data);
 
-    if (data.type == "update"){
+    if (data.type === "update"){
         var subscription = this.subscriptions.find(el => el.subscription_id === data.subscription_id);
         if(subscription)
             subscription.trigger(data.data);
+    }
+    else if(data.type === "init_response")
+    {
+        if (data.success){
+            console.log("Websocket authenticated");
+            this.subscriptions.forEach(sub => {
+            if(!sub.subscribed)
+                this.send_subscription(sub);
+            });
+        }
+        else{
+            alert("Websocket authentication failed");
+            this.reconnectTimeout = 30000;
+        }
     }
     else if(data.type === "response")
     {
@@ -56,7 +67,7 @@ export default class WS {
             });
         }
     }
-    else if(data.type == "request" || data.type == "invalid")
+    else if(data.type === "request" || data.type === "invalid")
     {
         var handler = this.request_handlers.find(el => el.name === data.info_type);
         if (!handler){
@@ -82,7 +93,7 @@ export default class WS {
      setTimeout(function()
      {
         WS.connect();
-     }, 3000);
+     }, this.reconnectTimeout);
   }
 
   static addRequestHandler(name, handler){
@@ -159,7 +170,7 @@ export default class WS {
   }
 
   static send_unsubscription(subscription){
-      this.subscriptions.remove(subscription);
+      WS.remove(this.subscriptions, subscription);
       var msg = {request_id: subscription.subscription_id, event: "unsubscribe", topic: subscription.topic};
       //console.log("Requested: ", msg);
       this.ws.send(JSON.stringify(msg));
@@ -175,6 +186,15 @@ export default class WS {
         }
         return dup;
     }
+
+  static remove(arr, element)
+  {
+      var index = arr.indexOf(element);
+
+      if (index !== -1) {
+        arr.splice(index, 1);
+      }
+  }
 }
 
 class SocketSubscription
@@ -200,7 +220,7 @@ class SocketSubscription
         {
             if(this.callbacks[i].id === id)
             {
-                this.callbacks.remove(this.callbacks[i]);
+                this.remove(this.callbacks, this.callbacks[i]);
                 return true;
             }
         }
@@ -210,5 +230,14 @@ class SocketSubscription
     trigger(data){
         this.lastData = data;
         this.callbacks.forEach(cb => cb.callback(cb.id, data));
+    }
+
+    remove(arr, element)
+    {
+      var index = arr.indexOf(element);
+
+      if (index !== -1) {
+        arr.splice(index, 1);
+      }
     }
 }

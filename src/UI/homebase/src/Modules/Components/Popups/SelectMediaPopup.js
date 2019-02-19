@@ -1,11 +1,8 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import Popup from "./Popup.js"
 import Button from "./../Button"
 import seenImage from './../../../Images/watched.svg';
 import SvgImage from './../../Components/SvgImage';
-
-import Socket from "./../../../Socket.js"
 
 class SelectMediaPopup extends Component {
   constructor(props) {
@@ -25,7 +22,7 @@ class SelectMediaPopup extends Component {
 
   select(start_from)
   {
-    var file = this.props.files.filter(f => f.path == this.state.selectedFile)[0];
+    var file = this.props.files.filter(f => f.path === this.state.selectedFile)[0];
     this.props.onSelect(file, start_from);
   }
 
@@ -39,8 +36,7 @@ class SelectMediaPopup extends Component {
     writeTimespan(duration)
       {
          duration = Math.round(duration);
-         var milliseconds = parseInt((duration % 1000) / 100),
-          seconds = parseInt((duration / 1000) % 60),
+         var seconds = parseInt((duration / 1000) % 60),
           minutes = parseInt((duration / (1000 * 60)) % 60),
           hours = parseInt((duration / (1000 * 60 * 60)) % 24);
 
@@ -65,7 +61,7 @@ class SelectMediaPopup extends Component {
             <div className={"media-file-select " + (this.state.selectedFile === file.path ? "selected" : "")} key={file.path}>
                 <div className={"media-file-select-file " + (this.state.selectedFile === file.path ? "" : "truncate")}>
                     <div className="media-file-select-title" onClick={(e) => this.selectionChange(file.path)}>{file.path}</div>
-                    { this.state.selectedFile == file.path &&
+                    { this.state.selectedFile === file.path &&
                         <div className="media-file-select-details">
                             <Button text="Select" onClick={(e) => this.select(0)} classId="secondary"/>
                             { file.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(file.played_for)} onClick={() => this.select(file.played_for)} classId="secondary"></Button> }

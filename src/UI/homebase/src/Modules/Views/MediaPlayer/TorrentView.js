@@ -126,8 +126,8 @@ class TorrentView extends Component {
                             { selectedTorrent === torrent &&
                                 <div className="torrent-details">
                                     <div className="torrent-details-peers">
-                                        <div className="torrent-details-seeders truncate">{selectedTorrent.seeders}<img src={seedersImage} /></div>
-                                        <div className="torrent-details-leechers truncate">{selectedTorrent.leechers}<img src={leechersImage} /></div>
+                                        <div className="torrent-details-seeders truncate">{selectedTorrent.seeders}<img alt="Seeders" src={seedersImage} /></div>
+                                        <div className="torrent-details-leechers truncate">{selectedTorrent.leechers}<img alt="Leechers" src={leechersImage} /></div>
                                     </div>
                                     <div className="torrent-details-size">{selectedTorrent.size}</div>
                                     <Button text="Play" onClick={(e) => this.torrentPlay(torrent)} classId="secondary"/>

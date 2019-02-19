@@ -3,15 +3,6 @@ import loaderImage from "./../../../Images/loader.svg";
 import SvgImage from "./../SvgImage";
 
 class ViewLoader extends Component {
-  constructor(props) {
-    super(props);
-  }
-
-  componentDidMount() {
-  }
-
-  componentWillUnmount(){
-  }
 
   render() {
     if(!this.props.loading)

@@ -19,7 +19,7 @@ class ShowController(BaseHandler):
 
     async def get(self, url):
         if url == "get_shows":
-            data = await self.get_shows(self.get_argument("page"), self.get_argument("orderby"), self.get_argument("keywords"))
+            data = await self.get_shows(int(self.get_argument("page")), self.get_argument("orderby"), self.get_argument("keywords"), self.get_argument("include_previous") == "true")
             self.write(data)
         elif url == "get_show":
             show = await self.get_by_id(self.get_argument("id"))
@@ -31,18 +31,34 @@ class ShowController(BaseHandler):
         elif url == "remove_favorite":
             await self.remove_favorite(self.get_argument("id"))
 
-    async def get_shows(self, page, order_by, keywords):
+    async def get_shows(self, page, order_by, keywords, include_previous_pages):
         search_string = ""
         if keywords:
             search_string = "&keywords=" + urllib.parse.quote(keywords)
-        data = await RequestFactory.make_request_async(ShowController.shows_api_path + "shows/" + page + "?sort=" + urllib.parse.quote(order_by) + search_string)
+
+        if include_previous_pages:
+            data = []
+            current_page = 0
+            while current_page != page:
+                current_page+= 1
+                data += await self.request_shows(
+                    ShowController.shows_api_path + "shows/" + str(current_page) + "?sort=" + urllib.parse.quote(
+                        order_by) + search_string)
+
+        else:
+            data = await self.request_shows(ShowController.shows_api_path + "shows/" + str(page) + "?sort=" + urllib.parse.quote(order_by) + search_string)
+
+        return to_JSON(data).encode()
+
+    async def request_shows(self, url):
+        data = await RequestFactory.make_request_async(url)
 
         if data is not None:
             return self.parse_show_data(data.decode('utf-8'))
         else:
-            EventManager.throw_event(EventType.Error, ["get_error", "Could not get shows data"])
+            EventManager.throw_event(EventType.Error, ["get_error", "Could not get show data"])
             Logger.write(2, "Error fetching shows")
-            return ""
+            return []
 
     async def get_by_id(self, id):
         Logger.write(2, "Get show by id " + id)
@@ -74,10 +90,19 @@ class ShowController(BaseHandler):
     def parse_show_data(data):
         json_data = json.loads(data)
         if isinstance(json_data, list):
-            return to_JSON([Show(x['imdb_id'], x['images']['poster'], x['title'], x['rating']['percentage']) for x in json_data]).encode()
+            return [Show(x['imdb_id'], ShowController.get_poster(x), x['title'], x['rating']['percentage']) for x in json_data]
         else:
-            return to_JSON(Show(json_data['imdb_id'], json_data['images']['poster'], json_data['title'], json_data['rating']['percentage'])).encode()
+            return Show(json_data['imdb_id'], ShowController.get_poster(json_data), json_data['title'], json_data['rating']['percentage'])
 
+    @staticmethod
+    def get_poster(show):
+        poster = ""
+        if 'images' in show:
+            if 'poster' in show['images']:
+                poster = show['images']['poster']
+            elif len(show['images']) > 0:
+                poster = show['images'][0]
+        return poster
 
 class Show(BaseMedia):
 

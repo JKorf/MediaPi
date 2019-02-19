@@ -82,9 +82,9 @@ class PopupController extends Component {
     {
         if(this.state.popups.length > 0)
         {
-            var list = this.state.popups;
-            var newPopup = list.splice(0, 1);
-            this.setState({currentPopup: newPopup, popups: list});
+            var poplist = this.state.popups;
+            var newPopup = poplist.splice(0, 1);
+            this.setState({currentPopup: newPopup, popups: poplist});
         }
         else
         {
@@ -107,11 +107,11 @@ class PopupController extends Component {
   {
     return (
         <div>
-        { this.state.mediaSelect.show == true &&
+        { this.state.mediaSelect.show === true &&
             <SelectMediaPopup files={this.state.mediaSelect.files} onSelect={this.selectMediaFile} onCancel={this.cancelMediaSelect} />
         }
 
-        { this.state.continueNextEpisode.show == true &&
+        { this.state.continueNextEpisode.show === true &&
             <ContinueNextEpisodePopup title={this.state.continueNextEpisode.title} onSelect={this.continueNextEpisode} onCancel={this.cancelNextEpisode} />
         }
         {  this.state.currentPopup &&

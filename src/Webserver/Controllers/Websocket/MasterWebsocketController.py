@@ -13,8 +13,10 @@ from Shared.State import StateManager
 from Shared.Stats import Stats
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, Singleton
+from Webserver.Controllers.AuthController import AuthController
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
-from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand, WebSocketRequestMessage, WebSocketInvalidMessage, WebSocketSlaveResponse
+from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand, WebSocketRequestMessage, WebSocketInvalidMessage, WebSocketSlaveResponse, \
+    WebSocketInitResponseMessage
 
 
 class MasterWebsocketController(metaclass=Singleton):
@@ -105,7 +107,15 @@ class MasterWebsocketController(metaclass=Singleton):
                 Logger.write(2, "Slave initialized: " + data['data'])
             elif data['type'] == 'UI':
                 self.clients[client] = []
+                auth = self.authenticateSocket(data['clientId'], data['sessionKey'])
+                if not auth:
+                    Logger.write(2, "UI client authentication failed, closing client")
+                    self.write_message(client, WebSocketInitResponseMessage(False))
+                    client.close()
+                    return
+
                 Logger.write(2, "UI client initialized")
+                self.write_message(client, WebSocketInitResponseMessage(True))
                 for message in self.pending_message_handler.get_pending_for_new_client():
                     self.write_message(client, WebSocketRequestMessage(message.id, self.own_slave.id, message.type, message.data))
 
@@ -209,6 +219,11 @@ class MasterWebsocketController(metaclass=Singleton):
         with self.last_id_lock:
             self.last_id += 1
             return self.last_id
+
+    def authenticateSocket(self, client_id, session_key):
+        client_key = AuthController.get_salted(client_id)
+        return Database().check_session_key(client_key, session_key)
+
 
 class Subscription:
 

@@ -1,16 +1,6 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 
-import axios from 'axios'
-
-import View from './View.js'
-import SvgImage from './../Components/SvgImage'
-import TestWidget from './../Widgets/TestWidget.js'
-import FavoriteSeriesWidget from './../Widgets/FavoriteSeriesWidget.js'
-import Socket from './../../Socket.js'
-import { InfoGroup, InfoRow } from './../Components/InfoGroup'
-
-import settingsImage from './../../Images/settings.svg';
+import { InfoGroup } from './../Components/InfoGroup'
 
 class SettingsView extends Component {
   constructor(props) {

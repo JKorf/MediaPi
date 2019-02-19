@@ -243,3 +243,4 @@ class TorrentPeerManager:
         self.cant_connect_peers.clear()
         self.update_peer_status()
         self.disconnected_peers.clear()
+        self.torrent = None

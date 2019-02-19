@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import SearchBox from './../Components/SearchBox/'
 import MediaThumbnail from './MediaThumbnail.js'

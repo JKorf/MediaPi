@@ -1,13 +1,13 @@
 from toonapilib import Toon
 
-from Shared.Settings import Settings
+from Shared.Settings import SecureSettings
 from Shared.Util import Singleton
 
 
 class ToonManager(metaclass=Singleton):
 
     def __init__(self):
-        self.api = Toon(Settings.get_string("eneco_username"), Settings.get_string("eneco_pw"), Settings.get_string("toon_consumer_id"), Settings.get_string("toon_consumer_secret"))
+        self.api = Toon(SecureSettings.get_string("eneco_username"), SecureSettings.get_string("eneco_pw"), SecureSettings.get_string("toon_consumer_id"), SecureSettings.get_string("toon_consumer_secret"))
 
     def get_status(self):
         return self.api.thermostat_info

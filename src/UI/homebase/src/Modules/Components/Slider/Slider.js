@@ -35,7 +35,7 @@ class Slider extends Component {
 
   touchEnd(){
     this.setState({showToolTip: false, startX: 0, currentX: 0});
-    if (this.beforeChange != this.newValue)
+    if (this.beforeChange !== this.newValue)
         this.props.onChange(this.newValue);
   }
 
@@ -104,7 +104,7 @@ class Slider extends Component {
             <div className={"slider-content " + iconClass}>
                 <div className="slider-tooltip" style={toolTipStyle}>{newValueStr}</div>
                 <div className="slider-info">
-                    <div className="slider-value">{(this.props.leftValue == "value" ? valueStr: minStr)}</div>
+                    <div className="slider-value">{(this.props.leftValue === "value" ? valueStr: minStr)}</div>
                     <div className="slider-max">{maxStr}</div>
                 </div>
                 <div className="slider-background" onTouchStart={this.touchStartBackground} onTouchMove={this.touchMove} onTouchEnd={this.touchEnd}></div>

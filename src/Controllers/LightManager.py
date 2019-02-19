@@ -8,7 +8,7 @@ from pytradfri.api.libcoap_api import APIFactory
 
 from Database.Database import Database
 from Shared.Logger import Logger
-from Shared.Settings import Settings
+from Shared.Settings import Settings, SecureSettings
 from Shared.Util import Singleton
 
 
@@ -56,7 +56,7 @@ class LightManager(metaclass=Singleton):
 
                 if key is None:
                     try:
-                        security_code = Settings.get_string("tradfri_hub_code")  # the code at the bottom of the hub
+                        security_code = SecureSettings.get_string("tradfri_hub_code")  # the code at the bottom of the hub
                         key = self.api_factory.generate_psk(security_code)
                         Database().update_stat("LightingKey", key)  # Save the new key
                         Logger.write(2, "Lighting: New key retrieved")

@@ -16,6 +16,7 @@ class TorrentNetworkManager:
         self.last_inputs = 0
         self.last_outputs = 0
 
+        self.thread = None
         self.event_id_log = EventManager.register_event(EventType.Log, self.log)
         self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
 
@@ -30,8 +31,8 @@ class TorrentNetworkManager:
 
     def start(self):
         Logger.write(2, "Starting network manager")
-        thread = CustomThread(self.execute, "Torrent network thread")
-        thread.start()
+        self.thread = CustomThread(self.execute, "Torrent network thread")
+        self.thread.start()
 
     def execute(self):
         while self.running:
@@ -63,3 +64,5 @@ class TorrentNetworkManager:
 
     def stop(self):
         self.running = False
+        self.thread.join()
+        self.torrent = None

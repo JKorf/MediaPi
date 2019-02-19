@@ -54,6 +54,7 @@ class Engine:
     def stop(self):
         self.running = False
         EventManager.deregister_event(self.event_id)
+        self.thread.join()
 
     def tick(self):
         tick_time = current_time()
@@ -64,6 +65,9 @@ class Engine:
             if work_item.last_run_time + work_item.interval < tick_time:
                 self.current_item = work_item
                 self.start_time = current_time()
+                if not self.running:
+                    return
+
                 if work_item.is_async:
                     result = asyncio.run(work_item.action())
                 else:

@@ -47,3 +47,6 @@ class StreamPrioritizer:
 
         dif_bytes = dif*self.torrent.piece_length
         return max(10, round(100 - (dif_bytes / 1000 / 1000), 4))
+
+    def stop(self):
+        self.torrent = None

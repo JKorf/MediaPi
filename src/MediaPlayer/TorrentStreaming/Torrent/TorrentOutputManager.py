@@ -73,6 +73,7 @@ class TorrentOutputManager:
 
     def stop(self):
         self.stream_manager.stop()
+        self.torrent = None
 
 
 class DiskWriter:

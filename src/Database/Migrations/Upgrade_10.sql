@@ -1,7 +1,8 @@
 CREATE TABLE `Keys` (
 	`Id`	    INTEGER,
-	`ClientId`	TEXT,
 	`ClientKey`	TEXT,
+	`SessionKey`TEXT,
 	`Issued`	INTEGER,
+	`LastSeen`  INTEGER,
 	PRIMARY KEY(`Id`)
 );

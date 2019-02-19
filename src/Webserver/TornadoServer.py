@@ -9,7 +9,7 @@ from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory
-from Shared.Settings import Settings
+from Shared.Settings import Settings, SecureSettings
 from Shared.Threading import CustomThread
 from Webserver.Controllers.AuthController import AuthController
 from Webserver.Controllers.DataController import DataController

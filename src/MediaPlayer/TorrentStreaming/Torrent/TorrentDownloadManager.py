@@ -283,6 +283,9 @@ class TorrentDownloadManager:
                 block_download = BlockDownload(block, piece)
                 self.queue.insert(0, block_download)
 
+    def stop(self):
+        self.prioritizer.stop()
+        self.torrent = None
 
 class BlockDownload:
 

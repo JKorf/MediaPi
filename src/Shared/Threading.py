@@ -54,4 +54,5 @@ class CustomThread:
             ThreadManager.remove_thread(self)
 
     def join(self):
-        self.thread.join()
+        if threading.current_thread() is not self.thread:
+            self.thread.join()

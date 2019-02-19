@@ -1,9 +1,7 @@
-import socket
 import subprocess
 
 from Shared.Engine import Engine
 from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Util import Singleton
 
@@ -59,21 +57,4 @@ class WiFiController(metaclass=Singleton):
                 if "Signal" in line:
                     split = line.split(":")
                     EventManager.throw_event(EventType.WiFiQualityUpdate, [float(split[1].replace("%", ""))])
-
-                    if not self.connected:
-                        self.connected = self.get_actual_address()
         return True
-
-    def get_actual_address(self):
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(("gmail.com", 80))
-                ip = s.getsockname()[0]
-                s.close()
-                Logger.write(3, "WebServer running on " + ip)
-                EventManager.throw_event(EventType.RetrievedAddress, [ip])
-                return True
-
-            except Exception as e:
-                Logger.write(2, "Failed to connect to remote server")
-                return False

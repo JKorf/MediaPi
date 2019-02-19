@@ -1,8 +1,12 @@
 import asyncio
 import json
+import linecache
 import os
 import time
+import tracemalloc
 import urllib.parse
+
+import gc
 
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.TorrentStreaming.Torrent.Torrent import Torrent
@@ -17,7 +21,7 @@ from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Observable import Observable
 from Shared.Settings import Settings
-from Shared.Threading import CustomThread
+from Shared.Threading import CustomThread, ThreadManager
 from Shared.Util import current_time, Singleton
 
 
@@ -141,10 +145,15 @@ class MediaManager(metaclass=Singleton):
         VLCPlayer().set_subtitle_delay(delay)
 
     def stop_play(self):
+        #t = self.torrent
         self.stop_torrent()
         VLCPlayer().stop()
         time.sleep(1)
         self.media_data.reset()
+        gc.collect()
+        #refs = gc.get_referrers(t)
+        #b = ThreadManager.threads
+        #a = ""
 
     def play_next_episode(self, should_play):
         if should_play:

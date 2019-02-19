@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 const Button = ({text, onClick, classId}) => (
   <div className={"button " + classId} onClick={onClick}>

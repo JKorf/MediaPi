@@ -1,3 +1,5 @@
+/*eslint no-loop-func: "off"*/
+
 import React, { Component } from 'react';
 import { Link } from "react-router-dom";
 import axios from 'axios';
@@ -132,7 +134,7 @@ class Footer extends Component
                         playPauseButton = <SvgImage key={x.playerData.state} src={playImage} />
 
                     let percentagePlaying = x.playerData.playing_for / x.playerData.length * 100;
-                    if (x.playerData.length === 0 && x.playerData.playing_for != 0)
+                    if (x.playerData.length === 0 && x.playerData.playing_for !== 0)
                         percentagePlaying = 100;
 
                     return (

@@ -1,9 +1,6 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 
-import View from './../View.js';
 import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup.js';
-import Popup from './../../Components/Popups/Popup.js';
 import StartMediaPopup from './../../Components/Popups/StartMediaPopup.js';
 
 class MediaPlayerView extends Component {
@@ -51,10 +48,10 @@ class MediaPlayerView extends Component {
     return (
       <div className="media-view">
         { this.props.children }
-        { state == this.states[1] &&
+        { state === this.states[1] &&
             <SelectInstancePopup onCancel={this.cancel} onSelect={this.instanceSelect} />
         }
-        { state == this.states[2] &&
+        { state === this.states[2] &&
             <StartMediaPopup onCancel={this.cancel} onConfirm={this.playConfirm} instance={this.selectedInstance} title={this.selectedMedia.title} />
         }
       </div>

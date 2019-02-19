@@ -397,6 +397,8 @@ class Torrent:
         self.output_manager.stop()
         self.peer_manager.stop()
         self.tracker_manager.stop()
+        self.download_manager.stop()
+        self.data_manager.stop()
         self.network_manager.stop()
         for file in self.files:
             file.close()
