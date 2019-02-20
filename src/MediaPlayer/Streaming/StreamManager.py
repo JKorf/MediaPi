@@ -1,7 +1,7 @@
 import math
 from threading import Lock
 
-from MediaPlayer.Player.VLCPlayer import PlayerState
+from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
 from MediaPlayer.Streaming.StreamListener import StreamListener
 from MediaPlayer.Util.Enums import TorrentState, DownloadMode
 from Shared.Events import EventManager, EventType
@@ -43,7 +43,6 @@ class StreamManager:
 
         self.end_buffer_start_byte = 0
         self.start_buffer_end_byte = 0
-        self.playing = False
         self.has_played = False
         self.last_request_end = 0
         self.currently_seeking = False
@@ -52,15 +51,12 @@ class StreamManager:
         self.max_in_buffer_threshold = Settings.get_int("max_bytes_reached_threshold")
         self.stream_tolerance = Settings.get_int("stream_pause_tolerance")
 
-        self.player_state_id = EventManager.register_event(EventType.PlayerStateChange, self.player_state_change)
+        VLCPlayer().player_state.register_callback(self.player_change)
         self.listener.start_listening()
 
-    def player_state_change(self, old, new):
-        if new == PlayerState.Playing:
-            self.playing = True
+    def player_change(self, new):
+        if new.state == PlayerState.Playing:
             self.has_played = True
-        else:
-            self.playing = False
 
     def update(self):
         if self.torrent.is_preparing:

@@ -72,6 +72,7 @@ class Block:
         self.length = length
         self.done = False
         self.data = None
+        self.initialized = False
         self.persistent = persistent
 
         self.download_lock = Lock()
@@ -94,6 +95,13 @@ class Block:
 
 
 class Piece:
+    @property
+    def blocks(self):
+        if not self.initialized:
+            self.init_blocks()
+            self.initialized = True
+        return self._blocks
+
     def __init__(self, index, block_start_index, start_byte, length, persistent):
         self.index = index
         self.block_start_index = block_start_index
@@ -101,25 +109,27 @@ class Piece:
         self.end_byte = start_byte + length
         self.length = length
         self.done = False
-        self.blocks = dict()
+
+        self._blocks = dict()
+        self.initialized = False
+
         self.block_writes = 0
         self.total_blocks = 0
         self.block_size = Settings.get_int("block_size")
         self.priority = 0
         self.persistent = persistent
 
-        self.init_blocks()
-
     def init_blocks(self):
+        self._blocks = dict()
         partial_block = self.length % self.block_size
         whole_blocks = int(math.floor(self.length / self.block_size))
         for index in range(whole_blocks):
-            self.blocks[index] = Block(self.block_start_index + index, self.index, index, index * self.block_size,
+            self._blocks[index] = Block(self.block_start_index + index, self.index, index, index * self.block_size,
                                        self.start_byte + (index * self.block_size), self.block_size, self.persistent)
         if partial_block != 0:
-            self.blocks[len(self.blocks)] = Block(self.block_start_index + len(self.blocks), self.index, len(self.blocks),
-                                                  len(self.blocks) * self.block_size, self.start_byte + (len(self.blocks) * self.block_size), partial_block, self.persistent)
-        self.total_blocks = len(self.blocks)
+            self._blocks[len(self._blocks)] = Block(self.block_start_index + len(self._blocks), self.index, len(self._blocks),
+                                                  len(self._blocks) * self.block_size, self.start_byte + (len(self._blocks) * self.block_size), partial_block, self.persistent)
+        self.total_blocks = len(self._blocks)
 
     def get_block_by_offset(self, offset_in_piece):
         index = int(math.floor(offset_in_piece / self.block_size))
@@ -147,12 +157,12 @@ class Piece:
         if self.persistent:
             raise Exception("Can't clear persistent pieces")
 
-        for block in self.blocks.values():
+        for block in self._blocks.values():
             block.clear()
 
     def reset(self):
         self.block_writes = 0
-        for block in self.blocks.values():
+        for block in self._blocks.values():
             block.clear()
             block.done = False
         self.done = False

@@ -146,8 +146,8 @@ class MediaManager(metaclass=Singleton):
 
     def stop_play(self):
         #t = self.torrent
-        self.stop_torrent()
         VLCPlayer().stop()
+        self.stop_torrent()
         time.sleep(1)
         self.media_data.reset()
         gc.collect()

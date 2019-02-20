@@ -29,8 +29,8 @@ class UtilController(BaseHandler):
             self.shutdown()
         elif url == "restart_pi":
             self.restart_pi()
-        elif url == "test":
-            self.test()
+        elif url == "log":
+            self.log()
 
     def info(self):
         info = Info(current_time() - Stats.total('start_time'), Stats.total('peers_connect_try'), Stats.total('peers_connect_failed'), Stats.total('peers_connect_success'),
@@ -41,7 +41,7 @@ class UtilController(BaseHandler):
 
         return to_JSON(info)
 
-    def test(self):
+    def log(self):
         Logger.write(2, "============== Test ===============")
         EventManager.throw_event(EventType.Log, [])
         with Logger.lock:

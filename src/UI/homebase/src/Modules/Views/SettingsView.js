@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import axios from 'axios';
 
 import { InfoGroup } from './../Components/InfoGroup'
 
@@ -17,10 +18,16 @@ class SettingsView extends Component {
   componentWillUnmount() {
   }
 
+  debugLogging(){
+    axios.post(window.vars.apiBase + 'util/log')
+  }
+
   render() {
     return <div className="settings-view">
         <InfoGroup title="Appearance">
+            Test
         </InfoGroup>
+        <input type="button" value="Debug logging" onClick={() => this.debugLogging()}/>
     </div>
   }
 };

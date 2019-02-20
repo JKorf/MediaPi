@@ -122,10 +122,6 @@ class TorrentDownloadManager:
             self.queue.append(piece)
             left += piece.length
 
-            # for block in piece.blocks.values():
-            #     self.queue.append(block)
-            #     left += block.length
-
         self.slow_peer_block_offset = 15000000 // self.torrent.data_manager.piece_length # TODO Setting
         Logger.write(2, "Queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
         self.torrent.left = left
@@ -219,25 +215,25 @@ class TorrentDownloadManager:
                         skipped += 1
                         continue
 
+                    if self.download_mode == DownloadMode.ImportantOnly:
+                        if piece.start_byte - self.torrent.stream_position * self.torrent.data_manager.piece_length > 100000000:
+                            # The block is more than 100mb from our current position; don't download this
+                            break
+
                     for block in [x for x in piece.blocks.values() if not x.done]:
                         if len(block.peers_downloading) == 0:
                             result.append(block)
-                            block.add_downloader(peer)
 
                         elif not self.torrent.starting:
                             if self.can_download_priority_pieces(block, peer, piece.priority):
                                 result.append(block)
-                                block.add_downloader(peer)
-
-                        elif self.download_mode == DownloadMode.ImportantOnly:
-                            if block.start_byte_total - self.torrent.stream_position * self.torrent.data_manager.piece_length > 100000000:
-                                # The block is more than 100mb from our current position; don't download this
-                                break
                         else:
                             skipped += 1
 
                         if len(result) == amount:
                             break
+                    if len(result) == amount:
+                        break
 
             for piece in to_remove:
                 self.queue.remove(piece)
@@ -303,21 +299,3 @@ class TorrentDownloadManager:
     def stop(self):
         self.prioritizer.stop()
         self.torrent = None
-
-# class BlockDownload:
-#
-#     def __init__(self, block, piece):
-#         self.block = block
-#         self.piece = piece
-#         self.peers = []
-#         self.lock = Lock()
-#
-#     def add_peer(self, peer):
-#         self.lock.acquire()
-#         self.peers.append(peer)
-#         self.lock.release()
-#
-#     def remove_peer(self, peer):
-#         self.lock.acquire()
-#         self.peers.remove(peer)
-#         self.lock.release()

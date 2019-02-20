@@ -13,6 +13,7 @@
 
     check if people are home
 
+    720p for series
     Next episode for shows requires auth to access controller
     Continue with piece download queue
     Torrent file selection order season/episode

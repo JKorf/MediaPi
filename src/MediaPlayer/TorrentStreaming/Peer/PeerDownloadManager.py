@@ -77,6 +77,7 @@ class PeerDownloadManager:
 
     def request(self, to_download):
         for block in to_download:
+            block.add_downloader(self.peer)
             request = RequestMessage(block.piece_index, block.start_byte_in_piece, block.length)
             Logger.write(1, str(self.peer.id) + ' Sending request for piece ' + str(request.index) + ", block " + str(
                 request.offset // 16384))
@@ -138,7 +139,7 @@ class PeerDownloadManager:
                 self.downloading.remove(peer_download[0])
 
     def log(self):
-        cur_downloading = [str(x.block_download.block.index) + ", " for x in self.downloading]
+        cur_downloading = [str(x.block.index) + ", " for x in self.downloading]
         Logger.write(3, "       Currently downloading: " + str(len(self.downloading)))
         Logger.write(3, "       Blocks: " + ''.join(str(e) for e in cur_downloading))
         Logger.write(3, "       Speed: " + write_size(self.peer.counter.value))
