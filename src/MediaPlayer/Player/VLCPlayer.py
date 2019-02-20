@@ -23,7 +23,7 @@ class VLCPlayer(metaclass=Singleton):
 
         self.media = None
         self.__player = self.__vlc_instance.media_player_new()
-        if Settings.get_string("raspberry"):
+        if Settings.get_bool("raspberry"):
             self.__player.set_fullscreen(True)
 
         self.__event_manager = self.__player.event_manager()

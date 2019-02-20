@@ -8,6 +8,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Stats import Stats
+from Shared.Util import current_time
 
 
 class TorrentDataManager:
@@ -66,6 +67,7 @@ class TorrentDataManager:
         end_piece = math.ceil(self.torrent.media_file.end_byte / self.piece_length)
         current_byte = start_piece * self.piece_length
 
+        start_time = current_time()
         pers_pieces = ""
         for index in range(end_piece - start_piece):
             relative_current_byte = current_byte - start_piece * self.piece_length
@@ -84,7 +86,7 @@ class TorrentDataManager:
             current_byte += self.piece_length
 
         self.init_done = True
-        Logger.write(2, "Pieces initialized, " + str(len(self._pieces)) + " pieces created")
+        Logger.write(2, "Pieces initialized, " + str(len(self._pieces)) + " pieces created in " + str(current_time() - start_time) + "ms")
         Logger.write(2, "Persistent pieces: " + pers_pieces)
 
     def update_write_blocks(self):

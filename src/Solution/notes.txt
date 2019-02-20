@@ -13,6 +13,5 @@
 
     check if people are home
 
-    After searching keep going back and forth because earlier request is still running
-    Movie details not scrollable
-    Titles for too small tiles unreadable, remove rating
+    Torrent file selection order season/episode
+    Continue with popup styling?
