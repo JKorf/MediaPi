@@ -1,5 +1,7 @@
 from threading import Lock
 
+import itertools
+
 from MediaPlayer.TorrentStreaming.Torrent.Prioritizer import StreamPrioritizer
 from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 from Shared.Events import EventManager, EventType
@@ -43,7 +45,7 @@ class TorrentDownloadManager:
             Logger.write(3, "-- TorrentDownloadManager state --")
             first = ""
             if self.queue:
-                first = str(self.queue[0].block.piece_index) + "-" + str(self.queue[0].block.block_index_in_piece)
+                first = str(self.queue[0].piece_index) + "-" + str(self.queue[0].block_index_in_piece)
             Logger.write(3, "     Queue status: length: " + str(len(self.queue)) + ", init: " + str(self.init) + ", prio: " + str(self.prio))
             Logger.write(3, "     First in queue: " + first)
             Logger.write(3, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]) + " " + str(current_time() - self.last_get_time) + "ms ago")
@@ -90,12 +92,12 @@ class TorrentDownloadManager:
         for piece in pieces_to_look_at:
             piece.priority = self.prioritizer.prioritize_piece_index(piece.index)
         if full:
-            self.queue = sorted(self.queue, key=lambda x: x.piece.priority, reverse=True)
+            self.queue = sorted(self.queue, key=lambda x: x.priority, reverse=True)
 
         if self.queue:
-            block_download = self.queue[0]
-            Logger.write(2, "Highest prio: " + str(block_download.block.piece_index) + ": "+str(block_download.piece.priority)+"% "
-                            "("+str(block_download.piece.start_byte)+"-"+str(block_download.piece.end_byte)+"), took " + str(current_time()-start_time)+"ms, full: " + str(full))
+            piece = self.queue[0]
+            Logger.write(2, "Highest prio: " + str(piece.index) + ": "+str(piece.priority)+"% "
+                            "("+str(piece.start_byte)+"-"+str(piece.end_byte)+"), took " + str(current_time()-start_time)+"ms, full: " + str(full))
         else:
             Logger.write(2, "No prio: queue empty")
 
@@ -117,48 +119,52 @@ class TorrentDownloadManager:
                 continue
 
             piece.reset()
-            for block in piece.blocks.values():
-                self.queue.append(BlockDownload(block, piece))
-                left += block.length
+            self.queue.append(piece)
+            left += piece.length
 
-        self.slow_peer_block_offset = 15000000 // self.torrent.data_manager.block_size # TODO Setting
+            # for block in piece.blocks.values():
+            #     self.queue.append(block)
+            #     left += block.length
+
+        self.slow_peer_block_offset = 15000000 // self.torrent.data_manager.piece_length # TODO Setting
         Logger.write(2, "Queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
         self.torrent.left = left
 
         self.update_priority(True, False)
 
     def get_allowed_fast_blocks_to_download(self, peer, amount):
-        can_download_pieces = []
-        result = []
-        piece_max_offset = 50000000 // self.torrent.data_manager.piece_length
-        if self.download_mode == DownloadMode.ImportantOnly:
-            return result
-
-        for piece_index in peer.allowed_fast_pieces:
-            if piece_index > self.torrent.stream_position and piece_index - self.torrent.stream_position < piece_max_offset:
-                if self.torrent.media_file is not None and piece_index > self.torrent.media_file.end_piece(self.torrent.data_manager.piece_length):
-                    continue
-
-                can_download_pieces.append(piece_index)
-
-        if len(can_download_pieces) == 0:
-            return result
-
-        max_piece_index = max(can_download_pieces)
-        with self.queue_lock:
-            for block_download in self.queue:
-                if block_download.block.piece_index in can_download_pieces:
-                    if peer.bitfield.has_piece(block_download.block.piece_index) and peer not in block_download.peers:
-                        result.append(block_download)
-                        block_download.add_peer(peer)
-
-                if block_download.block.piece_index > max_piece_index and not block_download.block.persistent:
-                    break
-
-                if len(result) == amount:
-                    break
-
-        return result
+        return []
+        # can_download_pieces = []
+        # result = []
+        # piece_max_offset = 50000000 // self.torrent.data_manager.piece_length
+        # if self.download_mode == DownloadMode.ImportantOnly:
+        #     return result
+        #
+        # for piece_index in peer.allowed_fast_pieces:
+        #     if piece_index > self.torrent.stream_position and piece_index - self.torrent.stream_position < piece_max_offset:
+        #         if self.torrent.media_file is not None and piece_index > self.torrent.media_file.end_piece(self.torrent.data_manager.piece_length):
+        #             continue
+        #
+        #         can_download_pieces.append(piece_index)
+        #
+        # if len(can_download_pieces) == 0:
+        #     return result
+        #
+        # max_piece_index = max(can_download_pieces)
+        # with self.queue_lock:
+        #     for block_download in self.queue:
+        #         if block_download.block.piece_index in can_download_pieces:
+        #             if peer.bitfield.has_piece(block_download.block.piece_index) and peer not in block_download.peers:
+        #                 result.append(block_download)
+        #                 block_download.add_peer(peer)
+        #
+        #         if block_download.block.piece_index > max_piece_index and not block_download.block.persistent:
+        #             break
+        #
+        #         if len(result) == amount:
+        #             break
+        #
+        # return result
 
     def get_blocks_to_download(self, peer, amount):
         if self.torrent.state != TorrentState.Downloading:
@@ -169,58 +175,72 @@ class TorrentDownloadManager:
 
         to_remove = []
         result = []
-        block_offset = 0
+        piece_offset = 0
 
         if peer.peer_speed == PeerSpeed.Low:
             if self.torrent.peer_manager.are_fast_peers_available():
                 # Slow peer; get block further down the queue
-                block_offset = self.slow_peer_block_offset
-                if len(self.queue) < block_offset:
-                    block_offset = max(len(self.queue) - 10, 0)
+                piece_offset = self.slow_peer_block_offset
+                if len(self.queue) < piece_offset:
+                    piece_offset = max(len(self.queue) - 10, 0)
 
         skipped = 0
         removed = 0
 
         with self.queue_lock:
             start = current_time()
-
-            queue = self.queue[block_offset:]
             if self.torrent.end_game:
-                queue.sort(key=lambda x: len(x.peers))
+                queue_blocks = [x.blocks.values() for x in self.queue]
+                total = []
+                for block_list in queue_blocks:
+                    for block in block_list:
+                        total.append(block)
 
-            for block_download in queue:
-                if block_download.block.done:
-                    to_remove.append(block_download)
+                blocks = sorted([x for x in total if not x.done], key=lambda x: len(x.peers_downloading))
+                for block in blocks:
+                    if peer in block.peers_downloading:
+                        continue
+
+                    result.append(block)
+                    if len(result) == amount:
+                        break
+                return result
+
+            queue = self.queue[piece_offset:]
+            for piece in queue:
+                if piece.done:
+                    to_remove.append(piece)
                     removed += 1
-                elif block_download.piece.priority == 0:
-                    to_remove.append(block_download)
+                elif piece.priority == 0:
+                    to_remove.append(piece)
                     removed += 1
                 else:
-                    if not peer.bitfield.has_piece(block_download.block.piece_index):
+                    if not peer.bitfield.has_piece(piece.index):
                         skipped += 1
                         continue
 
-                    if len(block_download.peers) == 0:
-                        result.append(block_download)
-                        block_download.add_peer(peer)
+                    for block in [x for x in piece.blocks.values() if not x.done]:
+                        if len(block.peers_downloading) == 0:
+                            result.append(block)
+                            block.add_downloader(peer)
 
-                    elif not self.torrent.starting:
-                        if self.can_download_priority_pieces(block_download, peer):
-                            result.append(block_download)
-                            block_download.add_peer(peer)
+                        elif not self.torrent.starting:
+                            if self.can_download_priority_pieces(block, peer, piece.priority):
+                                result.append(block)
+                                block.add_downloader(peer)
 
-                    elif self.download_mode == DownloadMode.ImportantOnly:
-                        if block_download.block.start_byte_total - self.torrent.stream_position * self.torrent.data_manager.piece_length > 100000000:
-                            # The block is more than 100mb from our current position; don't download this
+                        elif self.download_mode == DownloadMode.ImportantOnly:
+                            if block.start_byte_total - self.torrent.stream_position * self.torrent.data_manager.piece_length > 100000000:
+                                # The block is more than 100mb from our current position; don't download this
+                                break
+                        else:
+                            skipped += 1
+
+                        if len(result) == amount:
                             break
-                    else:
-                        skipped += 1
 
-                    if len(result) == amount:
-                        break
-
-            for block_download in to_remove:
-                self.queue.remove(block_download)
+            for piece in to_remove:
+                self.queue.remove(piece)
 
             if self.ticks == 100:
                 self.ticks = 0
@@ -231,21 +251,20 @@ class TorrentDownloadManager:
             self.last_get_time = current_time()
         return result
 
-    def can_download_priority_pieces(self, block_download, peer):
-        if peer in block_download.peers:
+    def can_download_priority_pieces(self, block, peer, prio):
+        if peer in block.peers_downloading:
             return False  # already downloading this
 
-        if len([x for x in block_download.peers if x.peer_speed == PeerSpeed.High]) > 0:
+        if len([x for x in block.peers_downloading if x.peer_speed == PeerSpeed.High]) > 0:
             return False  # a high speed peer is already downloading this
 
-        if peer.peer_speed != PeerSpeed.High and len([x for x in block_download.peers if x.peer_speed == PeerSpeed.Medium]) > 0:
+        if peer.peer_speed != PeerSpeed.High and len([x for x in block.peers_downloading if x.peer_speed == PeerSpeed.Medium]) > 0:
             return False  # a medium speed peer is already downloading this and we're not fast ourselfs
 
         if self.torrent.end_game:
             return True
 
-        currently_downloading = len(block_download.peers)
-        prio = block_download.piece.priority
+        currently_downloading = len(block.peers_downloading)
 
         if self.download_mode == DownloadMode.ImportantOnly:
             if prio == 100:
@@ -278,29 +297,27 @@ class TorrentDownloadManager:
 
     def redownload_piece(self, piece):
         with self.queue_lock:
-            for block in piece.blocks.values():
-                self.torrent.left += block.length
-                block_download = BlockDownload(block, piece)
-                self.queue.insert(0, block_download)
+            self.torrent.left += piece.length
+            self.queue.insert(0, piece)
 
     def stop(self):
         self.prioritizer.stop()
         self.torrent = None
 
-class BlockDownload:
-
-    def __init__(self, block, piece):
-        self.block = block
-        self.piece = piece
-        self.peers = []
-        self.lock = Lock()
-
-    def add_peer(self, peer):
-        self.lock.acquire()
-        self.peers.append(peer)
-        self.lock.release()
-
-    def remove_peer(self, peer):
-        self.lock.acquire()
-        self.peers.remove(peer)
-        self.lock.release()
+# class BlockDownload:
+#
+#     def __init__(self, block, piece):
+#         self.block = block
+#         self.piece = piece
+#         self.peers = []
+#         self.lock = Lock()
+#
+#     def add_peer(self, peer):
+#         self.lock.acquire()
+#         self.peers.append(peer)
+#         self.lock.release()
+#
+#     def remove_peer(self, peer):
+#         self.lock.acquire()
+#         self.peers.remove(peer)
+#         self.lock.release()

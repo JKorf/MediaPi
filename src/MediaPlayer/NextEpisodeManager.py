@@ -59,7 +59,7 @@ class NextEpisodeManager(metaclass=Singleton):
         if Settings.get_bool("slave"):
             raw_data = RequestFactory.make_request(Settings.get_string("master_ip") + ":" + str(Settings.get_int("api_port")) + "/shows/get_show?id=" + media_data.id)
         else:
-            raw_data = RequestFactory.make_request("http://127.0.0.1/shows/get_show?id=" + media_data.id)
+            raw_data = RequestFactory.make_request("http://127.0.0.1:"+str(Settings.get_int("api_port"))+"/shows/get_show?id=" + media_data.id)
         if raw_data is None:
             Logger.write(2, "No next episode of show, request failed")
             return

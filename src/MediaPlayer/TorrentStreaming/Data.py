@@ -1,4 +1,5 @@
 import math
+from threading import Lock
 
 from Shared.Settings import Settings
 
@@ -73,12 +74,23 @@ class Block:
         self.data = None
         self.persistent = persistent
 
+        self.download_lock = Lock()
+        self.peers_downloading = []
+
     def write_data(self, data):
         self.data = data
         self.done = True
 
     def clear(self):
         self.data = None
+
+    def add_downloader(self, peer):
+        with self.download_lock:
+            self.peers_downloading.append(peer)
+
+    def remove_downloader(self, peer):
+        with self.download_lock:
+            self.peers_downloading.remove(peer)
 
 
 class Piece:
