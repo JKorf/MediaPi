@@ -392,7 +392,6 @@ class Torrent:
 
         self.engine.stop()
         self.message_engine.stop()
-        time.sleep(0.5)  # Allow all updates to finish
 
         self.output_manager.stop()
         self.peer_manager.stop()

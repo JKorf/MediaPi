@@ -1,12 +1,15 @@
 import json
 import os
 
+import asyncio
+
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import Singleton
+from Webserver.Controllers.MediaPlayer.ShowController import ShowController
 from Webserver.Models import FileStructure
 
 
@@ -56,13 +59,13 @@ class NextEpisodeManager(metaclass=Singleton):
             Logger.write(2, "No next episode of show, season/epi not parsed")
             return
 
-        if Settings.get_bool("slave"):
-            raw_data = RequestFactory.make_request(Settings.get_string("master_ip") + ":" + str(Settings.get_int("api_port")) + "/shows/get_show?id=" + media_data.id)
-        else:
-            raw_data = RequestFactory.make_request("http://127.0.0.1:"+str(Settings.get_int("api_port"))+"/shows/get_show?id=" + media_data.id)
+        loop = asyncio.get_event_loop()
+        raw_data = loop.run_until_complete(ShowController.get_by_id(media_data.id))
+
         if raw_data is None:
             Logger.write(2, "No next episode of show, request failed")
             return
+
 
         show = json.loads(raw_data.decode("utf-8"))
         next_epi = [x for x in show["episodes"] if x["season"] == season and x["episode"] == epi + 1]

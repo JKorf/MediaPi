@@ -144,4 +144,52 @@ class LightController(BaseHandler):
                                            "")
                                    ]))
 
+        result.append(LightControl(2,
+                                   "Test led 3",
+                                   "Type",
+                                   123,
+                                   True,
+                                   True,
+                                   False,
+                                   False,
+                                   [
+                                       LightDevice(
+                                           False,
+                                           200,
+                                           0,
+                                           "")
+                                   ]))
+
+        result.append(LightControl(2,
+                                   "Test led 4",
+                                   "Type",
+                                   123,
+                                   True,
+                                   True,
+                                   False,
+                                   False,
+                                   [
+                                       LightDevice(
+                                           False,
+                                           200,
+                                           0,
+                                           "")
+                                   ]))
+
+        result.append(LightControl(2,
+                                   "Test led 5",
+                                   "Type",
+                                   123,
+                                   True,
+                                   True,
+                                   False,
+                                   False,
+                                   [
+                                       LightDevice(
+                                           False,
+                                           200,
+                                           0,
+                                           "")
+                                   ]))
+
         return result

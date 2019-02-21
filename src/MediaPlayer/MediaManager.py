@@ -1,9 +1,7 @@
 import asyncio
 import json
-import linecache
 import os
 import time
-import tracemalloc
 import urllib.parse
 
 import gc
@@ -21,7 +19,7 @@ from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Observable import Observable
 from Shared.Settings import Settings
-from Shared.Threading import CustomThread, ThreadManager
+from Shared.Threading import CustomThread
 from Shared.Util import current_time, Singleton
 
 
@@ -146,8 +144,13 @@ class MediaManager(metaclass=Singleton):
 
     def stop_play(self):
         #t = self.torrent
+        stop_torrent = False
+        if VLCPlayer().player_state.state == PlayerState.Nothing:
+            stop_torrent = True
         VLCPlayer().stop()
-        self.stop_torrent()
+        if stop_torrent:
+            self.stop_torrent()
+
         time.sleep(1)
         self.media_data.reset()
         gc.collect()

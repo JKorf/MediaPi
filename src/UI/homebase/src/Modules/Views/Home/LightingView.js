@@ -167,7 +167,7 @@ class LightingView extends Component {
                                    onSave={(title) => this.groupTitleSave(lightGroup, title)}>
                            <div className="light-group-content">
                                 <div className="light-group-dimmer">
-                                    <Slider format={this.writeDimmerPercentage} min={0} max={255} value={lightGroup.dimmer} onChange={(value) => this.dimmerChange(lightGroup, value)} />
+                                    <Slider format={this.writeDimmerPercentage} formatMinMax={(value) => value === 0 ? "Dimmer": "" } min={0} max={255} value={lightGroup.dimmer} onChange={(value) => this.dimmerChange(lightGroup, value)} />
                                 </div>
                                 <div className="light-group-state"><Switch value={lightGroup.state} onToggle={(value) => this.toggleGroup(lightGroup, value)} /></div>
                             </div>

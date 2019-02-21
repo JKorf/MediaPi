@@ -269,6 +269,10 @@
 
 .show-details{
     padding: 10px;
+
+    .label-field{
+        color: #colors[text-faded];
+    }
 }
 
 .show-synopsis{
@@ -386,6 +390,10 @@
     margin-top: 5px;
 }
 
+.show-episode-play{
+    margin-left: -5px;
+}
+
 .show-episode-play .button{
     margin: 5px;
 }
@@ -398,6 +406,10 @@
 
 .movie-details{
     padding: 10px;
+
+    .label-field{
+        color: #colors[text-faded];
+    }
 }
 
 .movie-synopsis{
@@ -1087,6 +1099,7 @@
 
 .light-group{
     margin-top: 10px;
+    vertical-align: top;
     &:first-child{
         margin-top: 0;
     }
@@ -1118,13 +1131,13 @@
 .light-widget-group{
     padding: 0 10px;
     height: 30px;
-    line-height: 30px;
     margin-bottom: 5px;
     padding-bottom: 5px;
     border-bottom: 1px solid #colors[borders];
 
     .light-widget-group-name{
         display: inline-block;
+        line-height: 30px;
         vertical-align: top;
         width: calc(100% - 60px);
     }
@@ -1143,6 +1156,33 @@
 .light-group-details{
     border-top: 1px solid #colors[borders];
     padding: 10px;
+}
+
+.light-group-details .player-details-group{
+    display: inline-block;
+    vertical-align: top;
+    width: 100%;
+}
+
+@media only screen and (min-device-width: 390px){
+    .light-group-details .player-details-group{
+        width: calc(50% - 10px);
+        margin: 5px;
+    }
+}
+
+@media only screen and (min-device-width: 600px){
+    .light-group-details .player-details-group{
+        width: calc(100% / 3 - 10px);
+        margin: 5px;
+    }
+}
+
+@media only screen and (min-device-width: 800px){
+    .light-group-details .player-details-group{
+        width: calc(25% - 10px);
+        margin: 5px;
+    }
 }
 
 .light-group-light{
@@ -1165,14 +1205,15 @@
     color: #colors[text-faded];
 }
 
+.light-group-dimmer .slider-value{
+    font-size: 10px;
+    color: #colors[text-faded];
+}
+
 .light-group-warmth{
     margin-top: 4px;
 }
 
 .player-group-details{
     padding: 10px;
-}
-
-.mediaplayer-widget-content{
-
 }

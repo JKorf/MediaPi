@@ -71,9 +71,9 @@ class ShowView extends Component {
     return "0" + value;
   }
 
-  play(episode, played_for){
+  play(episode, played_for, torrent){
     this.viewRef.current.play({
-        url: episode.torrents["0"].url,
+        url: torrent.url,
         episode: episode.episode,
         season: episode.season,
         played_for: played_for,
@@ -175,7 +175,8 @@ class ShowView extends Component {
                                             {episode.overview}
                                         </div>
                                         <div className="show-episode-play">
-                                             <Button text="Play" onClick={(e) => this.play(episode, 0)} classId="secondary"></Button>
+                                             { episode.torrents['480p'] && <Button text="Play 480p" onClick={(e) => this.play(episode, 0, episode.torrents['480p'])} classId="secondary"></Button> }
+                                             { episode.torrents['720p'] && <Button text="Play 720p" onClick={(e) => this.play(episode, 0, episode.torrents['720p'])} classId="secondary"></Button> }
                                              { episode.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(episode.played_for)} onClick={(e) => this.play(episode, episode.played_for)} classId="secondary"></Button> }
                                         </div>
                                     </div>

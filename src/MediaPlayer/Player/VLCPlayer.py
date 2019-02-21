@@ -32,7 +32,6 @@ class VLCPlayer(metaclass=Singleton):
         self.set_volume(75)
 
         self.trying_subitems = False
-        self.youtube_end_counter = 0
 
         EventManager.register_event(EventType.SetSubtitleFiles, self.set_subtitle_files)
         EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_track)
@@ -64,6 +63,10 @@ class VLCPlayer(metaclass=Singleton):
         Logger.write(2, "VLC Play | Time: " + str(time))
         Logger.write(2, "VLC Play | Parameters: " + str(parameters))
 
+        self.player_state.start_update()
+        self.player_state.path = url
+        self.player_state.stop_update()
+
         self.media = Media(url, *parameters)
         self.__player.set_media(self.media)
         self.__player.play()
@@ -79,7 +82,6 @@ class VLCPlayer(metaclass=Singleton):
             log_path = Settings.get_string("log_folder")
             params.append("--logfile=" + log_path + '/vlclog_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt")
             params.append("--file-logging")
-            # params.append("--vout=omxil_vout")
             params.append("--file-caching=5000")
 
         return params
@@ -99,11 +101,6 @@ class VLCPlayer(metaclass=Singleton):
 
     def stop(self):
         self.__player.stop()
-        self.player_state.start_update()
-        self.youtube_end_counter = 0
-        self.player_state.length = 0
-        self.player_state.playing_for = 0
-        self.player_state.stop_update()
 
     def mute_on(self):
         self.__player.audio_set_mute(True)
@@ -214,26 +211,40 @@ class VLCPlayer(metaclass=Singleton):
         if self.player_state.state != PlayerState.Nothing:
             self.change_state(PlayerState.Nothing)
 
+            self.player_state.start_update()
+            self.player_state.length = 0
+            self.player_state.playing_for = 0
+            self.player_state.path = None
+            self.player_state.sub_delay = 0
+            self.player_state.sub_track = 0
+            self.player_state.sub_tracks = []
+            self.player_state.audio_track = 0
+            self.player_state.audio_tracks = []
+            self.player_state.stop_update()
+
     def state_change_end_reached(self, event):
+        if self.player_state.path is not None and "youtube" in self.player_state.path and not self.trying_subitems:
+            Logger.write(2, "Trying youtube sub items")
+            self.trying_subitems = True
+            thread = CustomThread(self.try_play_subitem, "Try play subitem")
+            thread.start()
+        elif self.trying_subitems:
+            self.trying_subitems = False
+
         if self.player_state.state != PlayerState.Ended:
-            if not self.trying_subitems:
-                self.change_state(PlayerState.Ended)
+            self.change_state(PlayerState.Ended)
 
     def on_error(self, event):
-        self.trying_subitems = True
-        thread = CustomThread(self.try_play_subitem, "Try play subitem")
-        thread.start()
+        Logger.write(2, "VLC error")
 
     def try_play_subitem(self):
         media = self.__player.get_media()
         if media is None:
-            self.trying_subitems = False
             self.stop()
             return
 
         subs = media.subitems()
         if subs is None:
-            self.trying_subitems = False
             self.stop()
             return
 
@@ -241,7 +252,6 @@ class VLCPlayer(metaclass=Singleton):
             subs[0].add_options("demux=avformat")
             self.__player.set_media(subs[0])
             self.__player.play()
-            self.trying_subitems = False
 
     def change_state(self, new):
         self.player_state.start_update()

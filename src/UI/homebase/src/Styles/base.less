@@ -25,7 +25,7 @@
 body, html{
     width: 100%;
     height: 100%;
-    margin: 0;
+    margin: auto;
     padding: 0;
     overflow: hidden;
     position:relative;
@@ -491,20 +491,28 @@ a {
 }
 
 .switch{
-    border-radius: 6px;
+    border-radius: 12px;
     border: 1px solid #colors[borders];
-    height: 22px;
+    height: 26px;
     position: relative;
     width: 54px;
     background: #colors[input-outer];
 
+    .switch-value-text{
+        position:absolute;
+        top: 4px;
+        left: 26px;
+        font-size: 12px;
+        color: #colors[text-faded];
+    }
+
     .switch-inner{
-        border-radius: 4px;
-        height: 16px;
+        border-radius: 20px;
+        height: 20px;
         left: 2px;
         top: 2px;
         position: absolute;
-        width: 26px;
+        width: 20px;
         background: #colors[input-inner];
         transition: left 0.15s ease;
     }
@@ -512,12 +520,15 @@ a {
     &.on{
         background: #colors[input-highlight];
 
+        .switch-value-text{
+            left: 9px;
+            color: #colors[text];
+        }
+
         .switch-inner{
-            left: 22px;
+            left: 30px;
         }
     }
-
-
 }
 
 .view-loader-wrapper{

@@ -154,7 +154,6 @@ class StreamManager:
         self.buffer.write_piece(piece)
 
     def stop(self):
-        EventManager.deregister_event(self.player_state_id)
         self.torrent = None
         self.listener.stop()
 

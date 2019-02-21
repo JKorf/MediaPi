@@ -45,7 +45,7 @@ class List(object):
         """
         Logger.write(2, "TPB requesting " + str(self.url))
         request = Request(str(self.url), data=None, headers=headers)
-        request = urlopen(request)
+        request = urlopen(request, timeout=10)
 
         document = html.parse(request)
         root = document.getroot()
@@ -324,7 +324,7 @@ class Torrent(object):
     @staticmethod
     def get_magnet_uri(url):
         request = Request(str(url), data=None, headers=headers)
-        request = urlopen(request)
+        request = urlopen(request, 10)
         document = html.parse(request)
         root = document.getroot()
         return root.xpath("//div[contains(@class, 'download')]")[0][0].get("href")

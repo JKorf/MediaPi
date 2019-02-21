@@ -1,8 +1,6 @@
 import json
 import urllib.parse
 
-import time
-
 from Database.Database import Database
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
@@ -31,7 +29,8 @@ class ShowController(BaseHandler):
         elif url == "remove_favorite":
             await self.remove_favorite(self.get_argument("id"))
 
-    async def get_shows(self, page, order_by, keywords, include_previous_pages):
+    @staticmethod
+    async def get_shows(page, order_by, keywords, include_previous_pages):
         search_string = ""
         if keywords:
             search_string = "&keywords=" + urllib.parse.quote(keywords)
@@ -41,26 +40,28 @@ class ShowController(BaseHandler):
             current_page = 0
             while current_page != page:
                 current_page+= 1
-                data += await self.request_shows(
+                data += await ShowController.request_shows(
                     ShowController.shows_api_path + "shows/" + str(current_page) + "?sort=" + urllib.parse.quote(
                         order_by) + search_string)
 
         else:
-            data = await self.request_shows(ShowController.shows_api_path + "shows/" + str(page) + "?sort=" + urllib.parse.quote(order_by) + search_string)
+            data = await ShowController.request_shows(ShowController.shows_api_path + "shows/" + str(page) + "?sort=" + urllib.parse.quote(order_by) + search_string)
 
         return to_JSON(data).encode()
 
-    async def request_shows(self, url):
+    @staticmethod
+    async def request_shows(url):
         data = await RequestFactory.make_request_async(url)
 
         if data is not None:
-            return self.parse_show_data(data.decode('utf-8'))
+            return ShowController.parse_show_data(data.decode('utf-8'))
         else:
             EventManager.throw_event(EventType.Error, ["get_error", "Could not get show data"])
             Logger.write(2, "Error fetching shows")
             return []
 
-    async def get_by_id(self, id):
+    @staticmethod
+    async def get_by_id(id):
         Logger.write(2, "Get show by id " + id)
         response = await RequestFactory.make_request_async(ShowController.shows_api_path + "show/" + id)
         data = json.loads(response.decode('utf-8'))
@@ -78,11 +79,13 @@ class ShowController(BaseHandler):
             episode['length'] = seen.length
         return json.dumps(data).encode('utf-8')
 
-    async def add_favorite(self, id, title, image):
+    @staticmethod
+    async def add_favorite(id, title, image):
         Logger.write(2, "Add show favorite: " + id)
         Database().add_favorite(id, "Show", title, image)
 
-    async def remove_favorite(self, id):
+    @staticmethod
+    async def remove_favorite(id):
         Logger.write(2, "Remove show favorite: " + id)
         Database().remove_favorite(id)
 

@@ -20,7 +20,7 @@ class Logger:
     @staticmethod
     def write(log_priority, message, type='info'):
         if Logger.file is None:
-            log_path = Settings.get_string("log_folder")
+            log_path = Settings.get_string("base_folder") + "/Logs"
             if not os.path.exists(log_path):
                 os.makedirs(log_path)
             Logger.file = open(log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt", 'ab', buffering=0)
