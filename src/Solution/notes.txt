@@ -13,7 +13,6 @@
 
     check if people are home
 
-    Other icons for mediaplayer
     Continue with optimizations
-    Torrent file selection order season/episode
+    Torrent file selection order season/episode - styling (width)
     Continue with popup styling?

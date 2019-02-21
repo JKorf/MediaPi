@@ -11,7 +11,10 @@ class SelectMediaPopup extends Component {
     this.cancel = this.cancel.bind(this);
     this.select = this.select.bind(this);
     this.selectionChange = this.selectionChange.bind(this);
-    console.log(this.props.files);
+
+    this.orderedFiles = this.groupBy(this.props.files, "season");
+
+    console.log(this.orderedFiles);
   }
 
   cancel()
@@ -49,6 +52,22 @@ class SelectMediaPopup extends Component {
           return minutes + ":" + seconds;
       }
 
+    groupBy(collection, property) {
+        var i = 0, val, index,
+            values = [], result = [];
+        for (; i < collection.length; i++) {
+            val = collection[i][property];
+            index = values.indexOf(val);
+            if (index > -1)
+                result[index].push(collection[i]);
+            else {
+                values.push(val);
+                result.push([collection[i]]);
+            }
+        }
+        return result;
+    }
+
   render() {
     const buttons = (
         <div>
@@ -57,7 +76,8 @@ class SelectMediaPopup extends Component {
     )
     return (
     <Popup title="Select a file" loading={false} buttons={buttons} classId="select-media-popup">
-        {this.props.files.map((file, index) =>
+        {this.orderedFiles.map((episodeList, index) =>
+            episodeList.map((file, index) =>
             <div className={"media-file-select " + (this.state.selectedFile === file.path ? "selected" : "")} key={file.path}>
                 <div className={"media-file-select-file " + (this.state.selectedFile === file.path ? "" : "truncate")}>
                     <div className="media-file-select-title" onClick={(e) => this.selectionChange(file.path)}>{file.path}</div>
@@ -70,7 +90,7 @@ class SelectMediaPopup extends Component {
 
                     { file.seen && <div className="media-file-seen"><SvgImage src={seenImage} /></div> }
                 </div>
-        </div>)}
+        </div>))}
     </Popup>
     )
   }

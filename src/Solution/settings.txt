@@ -42,7 +42,7 @@ network_caching=5000
 # Application
 main_engine_tick_rate=500
 log_level=2
-vlc_log_level=3
+vlc_log_level=1
 show_gui=False
 raspberry=False
 
