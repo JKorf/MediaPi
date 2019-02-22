@@ -8,7 +8,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Stats import Stats
-from Shared.Util import current_time
+from Shared.Util import current_time, write_size
 
 
 class TorrentDataManager:
@@ -23,6 +23,7 @@ class TorrentDataManager:
         self.blocks_done = []
         self.persistent_pieces = []
         self.blocks_done_lock = Lock()
+        self.total_cleared = 0
 
         self.block_size = Settings.get_int("block_size")
 
@@ -89,6 +90,19 @@ class TorrentDataManager:
         Logger.write(2, "Pieces initialized, " + str(len(self._pieces)) + " pieces created in " + str(current_time() - start_time) + "ms")
         Logger.write(2, "Persistent pieces: " + pers_pieces)
 
+    def cleanup_used_pieces(self):
+        stream_pos = self.torrent.stream_position
+        cleared = 0
+        cleared_size = 0
+        for piece in [x for x in self._pieces.values() if x.index < stream_pos and not x.cleared and not x.persistent]:
+            piece.clear()
+            self.total_cleared += piece.length
+            cleared += 1
+            cleared_size += piece.length
+        if cleared > 0:
+            Logger.write(2, "Cleared " + str(cleared) + " piece(s): " + str(write_size(cleared_size)) + ". Total cleared: " + str(write_size(self.total_cleared)))
+        return True
+
     def update_write_blocks(self):
         block_count = 0
 
@@ -99,7 +113,7 @@ class TorrentDataManager:
         for peer, piece_index, offset, data in blocks:
             block_count += 1
 
-            block = self.get_block_by_offset(piece_index, offset)
+            piece, block = self.get_piece_and_block_by_offset(piece_index, offset)
             Logger.write(1, str(peer.id) + ' Received piece message: ' + str(block.piece_index) + ', block: ' + str(block.index))
 
             peer.download_manager.block_done(block)
@@ -118,7 +132,7 @@ class TorrentDataManager:
                 self.torrent.overhead += len(data)
                 continue
 
-            self.write_block(block, data)
+            self.write_block(piece, block, data)
 
             self.torrent.left -= block.length
             self.torrent.download_counter.add_value(block.length)
@@ -132,6 +146,7 @@ class TorrentDataManager:
 
     def piece_hash_valid(self, piece):
         Logger.write(1, "Piece " + str(piece.index) + " has valid hash")
+        piece.validated = True
         self.torrent.output_manager.add_piece_to_output(piece)
 
     def piece_hash_invalid(self, piece):
@@ -141,6 +156,10 @@ class TorrentDataManager:
         Logger.write(2, "Piece " + str(piece.index) + " has invalid hash, re-downloading it")
         piece.reset()
         self.torrent.download_manager.redownload_piece(piece)
+
+    def get_piece_and_block_by_offset(self, piece_index, offset_in_piece):
+        piece = self.get_piece_by_index(piece_index)
+        return piece, piece.get_block_by_offset(offset_in_piece)
 
     def get_block_by_offset(self, piece_index, offset_in_piece):
         return self.get_piece_by_index(piece_index).get_block_by_offset(offset_in_piece)
@@ -158,10 +177,11 @@ class TorrentDataManager:
         with self.blocks_done_lock:
             self.blocks_done.append((peer, piece_index, offset, data))
 
-    def write_block(self, block, data):
-        piece = self.get_piece_by_index(block.piece_index)
-        piece.write_block(block, data)
-        if piece.done:
+    def write_block(self, piece, block, data):
+        if piece.done or piece.validated:
+            return
+
+        if piece.write_block(block, data):
             self.piece_hash_validator.add_piece_to_hash(piece)
 
     def is_interested_in(self, bitfield):

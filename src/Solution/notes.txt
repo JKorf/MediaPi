@@ -14,5 +14,6 @@
     check if people are home
 
     Continue with optimizations
+        data_ready in streambuffer van list[pieces] naar list[indexes]
     Torrent file selection order season/episode - styling (width)
     Continue with popup styling?

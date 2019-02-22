@@ -231,6 +231,7 @@ class Torrent:
         self.engine.add_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
         self.engine.add_work_item("stream_manager", 1000, self.output_manager.stream_manager.update)
         self.engine.add_work_item("check_download_speed", 1000, self.check_download_speed)
+        self.engine.add_work_item("cleanup_used_pieces", 5000, self.data_manager.cleanup_used_pieces)
 
         self.message_engine.add_work_item("data_manager", 200, self.data_manager.update_write_blocks)
         self.message_engine.add_work_item("peer_messages", 200, self.peer_manager.process_peer_messages)

@@ -45,7 +45,6 @@ class StreamManager:
         self.start_buffer_end_byte = 0
         self.has_played = False
         self.last_request_end = 0
-        self.currently_seeking = False
 
         self.max_in_buffer = Settings.get_int("max_bytes_ready_in_buffer")
         self.max_in_buffer_threshold = Settings.get_int("max_bytes_reached_threshold")
@@ -116,15 +115,8 @@ class StreamManager:
                 self.last_request_end = start_byte + length
                 return self.buffer.get_data_for_stream(start_byte, length)
 
-            if self.currently_seeking:
-                # If currently seeking and not in metadata range, seek and return data
-                self.currently_seeking = False
-                self.seek(start_byte)
-                self.last_request_end = start_byte + length
-                return self.buffer.get_data_for_stream(start_byte, length)
-
-            # This request is not the same as last, not following up, we aren't seeking and not in metadata range.
-            # Best we can do is just seek it
+            # This request is not the same as last, not following up, and not in metadata range
+            # Seeking?
             request_piece = int(math.floor(start_byte / self.torrent.piece_length))
             self.last_request_end = start_byte + length
             if request_piece not in self.torrent.download_manager.upped_prios:
@@ -238,7 +230,6 @@ class StreamBuffer:
         with self.__lock:
             for piece in self.data_ready:
                 if piece.index < (stream_position - 1) and not piece.persistent:
-                    piece.clear()
                     self.data_ready.remove(piece)
 
         self.update_consecutive()

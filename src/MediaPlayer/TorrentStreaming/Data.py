@@ -78,7 +78,7 @@ class Block:
         self.download_lock = Lock()
         self.peers_downloading = []
 
-    def write_data(self, data):
+    def _write_data(self, data):
         self.data = data
         self.done = True
 
@@ -109,15 +109,20 @@ class Piece:
         self.end_byte = start_byte + length
         self.length = length
         self.done = False
+        self.cleared = False
 
+        self._data = None
         self._blocks = dict()
         self.initialized = False
 
+        self.validated = False
         self.block_writes = 0
         self.total_blocks = 0
         self.block_size = Settings.get_int("block_size")
         self.priority = 0
         self.persistent = persistent
+
+        self.write_lock = Lock()
 
     def init_blocks(self):
         self._blocks = dict()
@@ -136,22 +141,32 @@ class Piece:
         return self.blocks.get(index)
 
     def write_block(self, block, data):
-        block.write_data(data)
-        self.block_writes += 1
-        if self.block_writes >= self.total_blocks:
-            if len([x for x in self.blocks.values() if not x.done]) == 0:
-                self.done = True
+        with self.write_lock:
+            if self.done:
+                return False
+
+            block._write_data(data)
+            self.block_writes += 1
+            if self.block_writes >= self.total_blocks:
+                if len([x for x in self.blocks.values() if not x.done]) == 0:
+                    self.done = True
+                    return True
+            return False
 
     def get_data(self):
         if not self.done:
             return None
 
-        data = bytearray()
-        for block in self.blocks.values():
-            if not block.done:
-                return None
-            data.extend(block.data)
-        return data
+        if self._data is None:
+            self._data = bytearray()
+            for block in self.blocks.values():
+                if not block.done:
+                    return None #Shouldn't happen?
+
+                if self._data is None or block.data is None:
+                    raise Exception("Erased data on piece " + str(self.index) + ", block: " + str(block.index) )
+                self._data.extend(block.data)
+        return self._data
 
     def clear(self):
         if self.persistent:
@@ -159,6 +174,8 @@ class Piece:
 
         for block in self._blocks.values():
             block.clear()
+        self.cleared = True
+        self._data = None
 
     def reset(self):
         self.block_writes = 0
@@ -166,6 +183,9 @@ class Piece:
             block.clear()
             block.done = False
         self.done = False
+        self._data = None
+        self.validated = False
+        self.cleared = False
 
     def get_data_and_clear(self):
         data = self.get_data()
