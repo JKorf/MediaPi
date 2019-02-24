@@ -90,10 +90,11 @@ class TorrentPeerManager:
         elif source == PeerSource.PeerExchange:
             Stats.add('peers_source_exchange', 1)
 
-    def piece_done(self, piece_index):
+    def pieces_done(self, pieces):
         for peer in list(self.connected_peers):
-            Logger.write(1, str(peer.id) + " Sending have message for piece " + str(piece_index))
-            peer.connection_manager.send(HaveMessage(piece_index).to_bytes())
+            for piece in pieces:
+                Logger.write(1, str(peer.id) + " Sending have message for piece " + str(piece.index))
+                peer.connection_manager.send(HaveMessage(piece.index).to_bytes())
 
     def get_peer_by_id(self, peer_id):
         peers = [x for x in self.connected_peers if x.id == peer_id]

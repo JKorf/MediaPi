@@ -229,7 +229,7 @@ class Torrent:
         self.engine.add_work_item("output_manager", 1000, self.output_manager.update)
         self.engine.add_work_item("counter", 1000, self.download_counter.update)
         self.engine.add_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
-        self.engine.add_work_item("stream_manager", 1000, self.output_manager.stream_manager.update)
+        self.engine.add_work_item("stream_manager", 3000, self.output_manager.stream_manager.update)
         self.engine.add_work_item("check_download_speed", 1000, self.check_download_speed)
         self.engine.add_work_item("cleanup_used_pieces", 5000, self.data_manager.cleanup_used_pieces)
 

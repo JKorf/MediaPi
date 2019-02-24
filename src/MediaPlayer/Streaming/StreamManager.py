@@ -87,7 +87,7 @@ class StreamManager:
             Logger.write(2, "Leaving ImportantOnly download mode")
             self.torrent.download_manager.download_mode = DownloadMode.Full
 
-        return True
+        return self.buffer.update()
 
     def get_data_bytes_for_hash(self, start_byte, length):
         return self.buffer.get_data_for_hash(start_byte, length)
@@ -140,10 +140,9 @@ class StreamManager:
             Logger.write(2, 'Stream position changed: ' + str(self.stream_position_piece_index) + ' -> ' + str(
                 new_index))
             self.stream_position_piece_index = new_index
-            self.buffer.last_consecutive_piece_dirty = True
 
-    def write_piece(self, piece):
-        self.buffer.write_piece(piece)
+    def write_pieces(self, pieces):
+        self.buffer.write_pieces(pieces)
 
     def stop(self):
         self.torrent = None
@@ -161,32 +160,35 @@ class StreamBuffer:
     def __init__(self, manager, piece_length):
         self.stream_manager = manager
         self.piece_length = piece_length
-        self.data_ready = []
+        self.data_ready = set()
         self.__lock = Lock()
+        self.last_check_start_piece = 0
         self.last_consecutive_piece = 0
-        self.last_consecutive_piece_dirty = True
-        self.end_piece = math.ceil(
-            self.stream_manager.torrent.media_file.end_byte / self.stream_manager.torrent.piece_length)
+
+    def update(self):
+        with self.__lock:
+            self.data_ready = {x for x in self.data_ready if x.index >= self.stream_manager.stream_position_piece_index or x.persistent}
+
+        self.update_consecutive(True)
+        return True
 
     def seek(self, new_index):
-        self.data_ready = [x for x in self.data_ready
+        self.data_ready = {x for x in self.data_ready
                            if x.persistent or
                            (x.index >= new_index
-                           and (x.index - new_index) * self.piece_length < 100000000)]
-        self.last_consecutive_piece_dirty = True
-        self.update_consecutive()
+                           and (x.index - new_index) * self.piece_length < 100000000)}
+        self.update_consecutive(True)
 
     def get_consecutive_bytes_in_buffer(self, start_from):
-        self.update_consecutive()
         return max((self.last_consecutive_piece - start_from) * self.piece_length, 0)
 
     def get_data_for_hash(self, start_byte, length):
         return self.retrieve_data(start_byte, length)
 
     def get_data_for_stream(self, start_byte, length):
-        result = self.retrieve_data(start_byte, length)
-        self.clear(self.stream_manager.stream_position_piece_index)
-        return result
+        data = self.retrieve_data(start_byte, length)
+        self.update_consecutive(False)
+        return data
 
     def retrieve_data(self, start_byte, length):
         current_read = 0
@@ -215,35 +217,21 @@ class StreamBuffer:
             current_read += going_to_copy
         return result
 
-    def write_piece(self, piece):
+    def write_pieces(self, pieces):
         with self.__lock:
-            if piece in self.data_ready:
-                return
+            self.data_ready.update(pieces)
 
-            Logger.write(1, "Piece " + str(piece.index) + " ready for streaming")
-            self.data_ready.append(piece)
+        self.update_consecutive(True)
 
-        self.last_consecutive_piece_dirty = True
-        self.clear(self.stream_manager.stream_position_piece_index)
-
-    def clear(self, stream_position):
-        with self.__lock:
-            for piece in self.data_ready:
-                if piece.index < (stream_position - 1) and not piece.persistent:
-                    self.data_ready.remove(piece)
-
-        self.update_consecutive()
-
-    def update_consecutive(self):
-        if not self.last_consecutive_piece_dirty:
+    def update_consecutive(self, force):
+        if not force and self.last_check_start_piece == self.stream_manager.stream_position_piece_index:
             return
 
         with self.__lock:
-            self.data_ready.sort(key=lambda x: x.index)
-
+            ordered_data = sorted(self.data_ready, key=lambda x: x.index)
             start = self.stream_manager.stream_position_piece_index
 
-            for item in self.data_ready:
+            for item in ordered_data:
                 if item.index <= start:
                     continue
 
@@ -252,5 +240,5 @@ class StreamBuffer:
                 else:
                     break
 
-        self.last_consecutive_piece_dirty = False
         self.last_consecutive_piece = start
+        self.last_check_start_piece = self.stream_manager.stream_position_piece_index

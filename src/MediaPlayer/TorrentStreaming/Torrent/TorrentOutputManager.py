@@ -33,9 +33,9 @@ class TorrentOutputManager:
 
         Logger.write(2, str(len(to_write)) + ' pieces done')
 
-        for item in to_write:
-            self.torrent.peer_manager.piece_done(item.index)
-            self.stream_manager.write_piece(item)
+        #for item in to_write:
+        self.torrent.peer_manager.pieces_done(to_write)
+        self.stream_manager.write_pieces(to_write)
 
         if not self.broadcasted_hash_data:
             # Check if first and last piece(s) are done to calculate the hash
