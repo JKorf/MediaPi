@@ -7,8 +7,6 @@ import urllib.parse
 
 import gc
 
-import objgraph
-
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.TorrentStreaming.Torrent.Torrent import Torrent
 

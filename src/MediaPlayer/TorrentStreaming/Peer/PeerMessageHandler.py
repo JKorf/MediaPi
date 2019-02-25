@@ -17,6 +17,10 @@ class PeerMessageHandler:
         self.metadata_wait_list = []
 
     def update(self, allowed_process_time):
+        if self.peer is None:
+            # This peer is stopped stopped
+            return True
+
         if self.peer.connection_state != ConnectionState.Connected\
         and self.peer.connection_state != ConnectionState.Disconnected:
             return True

@@ -1,7 +1,5 @@
 import os
 
-import objgraph
-
 from Controllers.LightManager import LightManager
 from Shared.Events import EventManager
 from Shared.Events import EventType

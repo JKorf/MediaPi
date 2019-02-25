@@ -128,11 +128,13 @@ class TrackerManager:
         self.request_peers_id = EventManager.register_event(EventType.RequestPeers, self.request_peers)
 
     def request_peers(self, torrent):
-        for uri in torrent.announce_uris:
-            if len([x for x in self.trackers if x.host == uri]) == 0:
-                tracker = TrackerFactory.create_tracker(uri)
-                if tracker is not None:
-                    self.trackers.append(tracker)
+        if not self.initialized:
+            for uri in torrent.announce_uris:
+                if len([x for x in self.trackers if x.host == uri]) == 0:
+                    tracker = TrackerFactory.create_tracker(uri)
+                    if tracker is not None:
+                        self.trackers.append(tracker)
+            self.initialized = True
 
         for tracker in self.trackers:
             thread = CustomThread(self.tracker_announce, "Tracker announce", [tracker, torrent])

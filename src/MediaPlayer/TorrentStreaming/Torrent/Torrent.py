@@ -6,7 +6,6 @@ import urllib.request
 from threading import Lock
 
 import gc
-import objgraph
 
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDataManager import TorrentDataManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDownloadManager import TorrentDownloadManager
