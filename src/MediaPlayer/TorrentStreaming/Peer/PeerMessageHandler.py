@@ -162,3 +162,6 @@ class PeerMessageHandler:
             Logger.write(1, str(self.peer.id) + ' Received metadata message index ' + str(message.piece_index))
             self.peer.torrent.metadata_manager.add_metadata_piece(message.piece_index, message.data)
             return
+
+    def stop(self):
+        self.peer = None

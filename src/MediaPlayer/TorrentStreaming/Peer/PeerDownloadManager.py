@@ -150,6 +150,7 @@ class PeerDownloadManager:
             for peer_download in self.downloading:
                 peer_download.block.remove_downloader(self.peer)
             self.downloading.clear()
+            self.blocks_done.clear()
 
 
 class PeerDownload:

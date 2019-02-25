@@ -1,8 +1,8 @@
-import threading
 from enum import Enum
 from threading import Lock
 
 from Shared.Logger import Logger
+from Shared.Threading import CustomThread
 
 
 class EventType(Enum):
@@ -64,8 +64,7 @@ class EventManager:
 
     @staticmethod
     def throw_event(event_type, args):
-        thread = threading.Thread(name="Event " + str(event_type), target=EventManager.execute_handlers, args=[event_type, args])
-        thread.daemon = True
+        thread = CustomThread(EventManager.execute_handlers, "EventHandler " + str(event_type), args=[event_type, args])
         thread.start()
 
     @staticmethod

@@ -6,9 +6,10 @@ from MediaPlayer.TorrentStreaming.Peer.PeerMetaDataManager import PeerMetaDataMa
 from MediaPlayer.TorrentStreaming.Data import Bitfield
 from MediaPlayer.TorrentStreaming.Peer.PeerMessageHandler import PeerMessageHandler
 from MediaPlayer.Util.Counter import Counter
-from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState
+from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState, PeerSource
 from Shared import Engine
 from Shared.Logger import *
+from Shared.Stats import Stats
 
 
 class Peer:
@@ -52,7 +53,7 @@ class Peer:
         Logger.write(1, str(self.id) + ' Starting peer')
         self.running = True
 
-        self.connection_manager = PeerConnectionManager(self, self.uri)
+        self.connection_manager = PeerConnectionManager(self.id, self.uri, self.on_connect, self.on_disconnect)
         self.download_manager = PeerDownloadManager(self)
         self.metadata_manager = PeerMetaDataManager(self)
         self.message_handler = PeerMessageHandler(self)
@@ -73,16 +74,37 @@ class Peer:
         self.connection_manager.log()
         self.download_manager.log()
 
+    def on_connect(self):
+        self.add_connected_peer_stat(self.source)
+
+    def on_disconnect(self):
+        self.stop()
+
+    @staticmethod
+    def add_connected_peer_stat(source):
+        if source == PeerSource.DHT:
+            Stats.add('peers_source_dht_connected', 1)
+        elif source == PeerSource.HttpTracker:
+            Stats.add('peers_source_http_tracker_connected', 1)
+        elif source == PeerSource.UdpTracker:
+            Stats.add('peers_source_udp_tracker_connected', 1)
+        elif source == PeerSource.PeerExchange:
+            Stats.add('peers_source_exchange_connected', 1)
+
     def stop(self):
         if not self.running:
             return
 
         Logger.write(1, str(self.id) + ' Peer stopping')
         self.running = False
-        self.engine.stop()
 
+        self.engine.stop()
         self.download_manager.stop()
+        self.message_handler.stop()
+        self.metadata_manager.stop()
         self.connection_manager.disconnect()
+
+        self.torrent = None
         Logger.write(1, str(self.id) + ' Peer stopped')
 
 

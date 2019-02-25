@@ -1,6 +1,8 @@
 import math
 from threading import Lock
 
+import sys
+
 from MediaPlayer.TorrentStreaming.Data import Bitfield, Piece
 from MediaPlayer.TorrentStreaming.Torrent.TorrentPieceHashValidator import TorrentPieceHashValidator
 from MediaPlayer.Util.Enums import TorrentState
@@ -122,7 +124,7 @@ class TorrentDataManager:
                 self.torrent.overhead += len(data)
                 continue
 
-            if block.piece_index < self.torrent.stream_position and not block.persistent:
+            if block.piece_index < self.torrent.stream_position and not piece.persistent:
                 Logger.write(1, 'Received a block which is no longer needed')
                 self.torrent.overhead += len(data)
                 continue

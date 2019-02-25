@@ -2,11 +2,13 @@ from threading import Lock
 
 import itertools
 
+import sys
+
 from MediaPlayer.TorrentStreaming.Torrent.Prioritizer import StreamPrioritizer
 from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
-from Shared.Util import current_time
+from Shared.Util import current_time, write_size
 
 
 class TorrentDownloadManager:
@@ -45,7 +47,7 @@ class TorrentDownloadManager:
             Logger.write(3, "-- TorrentDownloadManager state --")
             first = ""
             if self.queue:
-                first = str(self.queue[0].piece_index) + "-" + str(self.queue[0].block_index_in_piece)
+                first = str(self.queue[0].index)
             Logger.write(3, "     Queue status: length: " + str(len(self.queue)) + ", init: " + str(self.init) + ", prio: " + str(self.prio))
             Logger.write(3, "     First in queue: " + first)
             Logger.write(3, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]) + " " + str(current_time() - self.last_get_time) + "ms ago")

@@ -1,10 +1,12 @@
 import base64
 import hashlib
 import math
-import time
 import urllib.parse
 import urllib.request
 from threading import Lock
+
+import gc
+import objgraph
 
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDataManager import TorrentDataManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDownloadManager import TorrentDownloadManager
@@ -64,21 +66,6 @@ class Torrent:
         return self.output_manager.stream_manager.listener.bytes_send
 
     @property
-    def bytes_missing_for_buffering(self):
-        missing = 7500000
-        if self.piece_length == 0:
-            return missing
-
-        start_piece = self.media_file.start_piece(self.piece_length)
-        pieces_to_check = 5000000 // self.piece_length
-        for piece in self.data_manager.get_pieces_by_index_range(start_piece, start_piece + pieces_to_check):
-            for block in piece.blocks.values():
-                if block.done:
-                    missing -= block.length
-
-        return missing
-
-    @property
     def end_game(self):
         # TODO setting
         if self.left < 2000000:
@@ -129,6 +116,7 @@ class Torrent:
         self.overhead = 0
 
         self.user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
+        self.log_id = EventManager.register_event(EventType.Log, self.log)
 
         self.engine = Engine.Engine('Main Engine', Settings.get_int("main_engine_tick_rate"))
         self.message_engine = Engine.Engine('Peer Message Engine', 200)
@@ -383,6 +371,9 @@ class Torrent:
             Stats.set('max_download_speed', self.download_counter.max)
         return True
 
+    def log(self):
+        pass
+
     def stop(self):
         if self.__state == TorrentState.Stopping:
             return
@@ -390,6 +381,7 @@ class Torrent:
         Logger.write(2, 'Torrent stopping')
         self.__set_state(TorrentState.Stopping)
         EventManager.deregister_event(self.user_file_selected_id)
+        EventManager.deregister_event(self.log_id)
 
         self.engine.stop()
         self.message_engine.stop()
@@ -400,6 +392,7 @@ class Torrent:
         self.download_manager.stop()
         self.data_manager.stop()
         self.network_manager.stop()
+        self.metadata_manager.stop()
         for file in self.files:
             file.close()
 

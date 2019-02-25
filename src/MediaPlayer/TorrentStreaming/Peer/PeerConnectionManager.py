@@ -11,8 +11,8 @@ from Shared.Util import current_time
 
 class PeerConnectionManager:
 
-    def __init__(self, peer, uri):
-        self.peer = peer
+    def __init__(self, peer_id, uri, on_connect, on_disconnect):
+        self.peer_id = peer_id
         self.uri = uri
         self.received_bytes = []
         self.to_send_bytes = bytearray()
@@ -23,6 +23,8 @@ class PeerConnectionManager:
         self.receiveLock = Lock()
         self.peer_timeout = Settings.get_int("peer_timeout")
         self.connection_timeout = Settings.get_int("connection_timeout") / 1000
+        self.on_connect = on_connect
+        self.on_disconnect = on_disconnect
 
         self.connection = TcpClient(uri.hostname, uri.port, self.connection_timeout)
         self.buffer = bytearray()
@@ -33,32 +35,21 @@ class PeerConnectionManager:
     def start(self):
         self.connection_state = ConnectionState.Connecting
         self.connected_on = 0
-        Logger.write(1, str(self.peer.id) + ' connecting to ' + str(self.uri.netloc))
+        Logger.write(1, str(self.peer_id) + ' connecting to ' + str(self.uri.netloc))
         Stats.add('peers_connect_try', 1)
 
         if not self.connection.connect():
             Stats.add('peers_connect_failed', 1)
-            Logger.write(1, str(self.peer.id) + ' could not connect to ' + str(self.uri.netloc))
+            Logger.write(1, str(self.peer_id) + ' could not connect to ' + str(self.uri.netloc))
             self.disconnect()
             return
 
         self.connected_on = current_time()
-        self.add_connected_peer_stat(self.peer.source)
+        self.on_connect()
         Stats.add('peers_connect_success', 1)
-        Logger.write(1, str(self.peer.id) + ' connected to ' + str(self.uri.netloc))
+        Logger.write(1, str(self.peer_id) + ' connected to ' + str(self.uri.netloc))
         self.connection_state = ConnectionState.Connected
         self.connection.socket.setblocking(0)
-
-    @staticmethod
-    def add_connected_peer_stat(source):
-        if source == PeerSource.DHT:
-            Stats.add('peers_source_dht_connected', 1)
-        elif source == PeerSource.HttpTracker:
-            Stats.add('peers_source_http_tracker_connected', 1)
-        elif source == PeerSource.UdpTracker:
-            Stats.add('peers_source_udp_tracker_connected', 1)
-        elif source == PeerSource.PeerExchange:
-            Stats.add('peers_source_exchange_connected', 1)
 
     def on_readable(self):
         self.handle_read()
@@ -118,7 +109,7 @@ class PeerConnectionManager:
         success = True
         with self.sendLock:
             if len(self.to_send_bytes) != 0:
-                Logger.write(1, str(self.peer.id) + ' Sending ' + str(len(self.to_send_bytes)) + " bytes of data")
+                Logger.write(1, str(self.peer_id) + ' Sending ' + str(len(self.to_send_bytes)) + " bytes of data")
                 success = self.connection.send(self.to_send_bytes)
                 self.to_send_bytes.clear()
                 self.last_communication = current_time()
@@ -160,7 +151,7 @@ class PeerConnectionManager:
         if self.connection_state == ConnectionState.Disconnected:
             return
 
-        Logger.write(1, str(self.peer.id) + ' disconnected')
+        Logger.write(1, str(self.peer_id) + ' disconnected')
         self.connection_state = ConnectionState.Disconnected
 
         with self.sendLock:
@@ -170,5 +161,4 @@ class PeerConnectionManager:
             self.received_bytes.clear()
 
         self.connection.disconnect()
-
-        self.peer.stop()
+        self.on_disconnect()

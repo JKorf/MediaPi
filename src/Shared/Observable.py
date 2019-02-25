@@ -1,3 +1,4 @@
+import traceback
 from threading import Event
 
 from Shared.Logger import Logger
@@ -56,4 +57,8 @@ class Observable:
                 self.__changed = False
                 self.__last_update = current_time()
                 for cb in self.__callbacks:
-                    cb(self)
+                    try:
+                        cb(self)
+                    except Exception as e:
+                        Logger.write(3, "Exception in observer thread: " + str(e))
+                        Logger.write(3, traceback.format_exc())

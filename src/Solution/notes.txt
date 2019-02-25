@@ -13,6 +13,7 @@
 
     check if people are home
 
+    Loggen hoeveel welke event worden gegooit, hoeveel subscriptions op events, hoevaak welke threads worden gestart
     Mouse not in tv gui
     TV Gui
     Continue with optimizations

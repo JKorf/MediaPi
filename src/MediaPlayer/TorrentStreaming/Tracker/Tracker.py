@@ -30,8 +30,6 @@ class HttpTracker:
     def __init__(self, uri):
         self.uri = uri
         self.host = uri.hostname
-        self.could_connect = True
-        self.try_number = 0
         self.last_announce = 0
         self.tracker_peer_request_amount = Settings.get_int("tracker_peer_request_amount")
 
@@ -68,12 +66,10 @@ class UdpTracker:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.could_connect = True
         self.last_announce = 0
         self.transaction_id = 0
         self.connection_id = 0
         self.connection_id_retrieved = 0
-        self.try_number = 0
         self.connection = UdpClient(host, port, Settings.get_int("connection_timeout") / 1000)
         self.tracker_peer_request_amount = Settings.get_int("tracker_peer_request_amount")
 
@@ -129,7 +125,6 @@ class TrackerManager:
         self.initialized = False
         self.running = True
 
-        self.tracker_retry = Settings.get_int("tracker_retry")
         self.request_peers_id = EventManager.register_event(EventType.RequestPeers, self.request_peers)
 
     def request_peers(self, torrent):
@@ -140,25 +135,13 @@ class TrackerManager:
                     self.trackers.append(tracker)
 
         for tracker in self.trackers:
-            if tracker.could_connect:
-                thread = CustomThread(self.tracker_announce, "Tracker announce", [tracker, torrent])
-                thread.start()
+            thread = CustomThread(self.tracker_announce, "Tracker announce", [tracker, torrent])
+            thread.start()
 
     def tracker_announce(self, tracker, torrent):
         if not tracker.announce_torrent(torrent):
-            if tracker.try_number > self.tracker_retry:
-                return
-
-            tracker.could_connect = False
             Logger.write(1, 'Could not connect to tracker ' + tracker.host)
-            self.sleep(15 * 2 ^ tracker.try_number)
-            if not self.running:
-                return
-            tracker.try_number += 1
-            self.tracker_announce(tracker, torrent)
         else:
-            tracker.try_number = 0
-            tracker.could_connect = True
             Logger.write(1, 'Tracker ok! ' + tracker.host)
 
     def sleep(self, t):

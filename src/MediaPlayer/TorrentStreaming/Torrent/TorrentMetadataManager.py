@@ -87,6 +87,9 @@ class TorrentMetadataManager:
     def get_pieces_to_do(self):
         return [x for x in self.metadata_blocks if not x.done]
 
+    def stop(self):
+        self.torrent = None
+
 
 class MetadataBlock:
 

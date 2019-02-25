@@ -1,6 +1,9 @@
 import math
 from threading import Lock
 
+import sys
+
+from Shared.Logger import Logger
 from Shared.Settings import Settings
 
 
@@ -63,7 +66,7 @@ class Bitfield:
 
 
 class Block:
-    def __init__(self, index, piece_index, block_index_in_piece, start_byte_in_piece, start_byte_total, length, persistent):
+    def __init__(self, index, piece_index, block_index_in_piece, start_byte_in_piece, start_byte_total, length):
         self.index = index
         self.piece_index = piece_index
         self.block_index_in_piece = block_index_in_piece
@@ -72,8 +75,6 @@ class Block:
         self.length = length
         self.done = False
         self.data = None
-        self.initialized = False
-        self.persistent = persistent
 
         self.download_lock = Lock()
         self.peers_downloading = []
@@ -130,10 +131,10 @@ class Piece:
         whole_blocks = int(math.floor(self.length / self.block_size))
         for index in range(whole_blocks):
             self._blocks[index] = Block(self.block_start_index + index, self.index, index, index * self.block_size,
-                                       self.start_byte + (index * self.block_size), self.block_size, self.persistent)
+                                       self.start_byte + (index * self.block_size), self.block_size)
         if partial_block != 0:
             self._blocks[len(self._blocks)] = Block(self.block_start_index + len(self._blocks), self.index, len(self._blocks),
-                                                  len(self._blocks) * self.block_size, self.start_byte + (len(self._blocks) * self.block_size), partial_block, self.persistent)
+                                                  len(self._blocks) * self.block_size, self.start_byte + (len(self._blocks) * self.block_size), partial_block)
         self.total_blocks = len(self._blocks)
 
     def get_block_by_offset(self, offset_in_piece):
@@ -157,12 +158,12 @@ class Piece:
         if not self.done:
             return None
 
+        if self.cleared:
+            raise Exception("Trying to retrieve cleared piece")
+
         if self._data is None:
             self._data = bytearray()
             for block in self.blocks.values():
-                if not block.done:
-                    return None #Shouldn't happen?
-
                 if self._data is None or block.data is None:
                     raise Exception("Erased data on piece " + str(self.index) + ", block: " + str(block.index) )
                 self._data.extend(block.data)

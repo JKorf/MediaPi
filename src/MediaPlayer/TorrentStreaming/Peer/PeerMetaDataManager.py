@@ -152,3 +152,6 @@ class PeerMetaDataManager:
         Logger.write(1, "Received valid handshake response")
         self.handshake_successful = True
         return True
+
+    def stop(self):
+        self.peer = None

@@ -122,12 +122,6 @@ class TorrentPeerManager:
                 EventManager.throw_event(EventType.NoPeers, [])
                 return False
 
-        peer_list = list(self.potential_peers)  # Try connecting to new peers from potential list
-        if len(peer_list) == 0:
-            peer_list = [x for x in self.disconnected_peers if current_time() - x[2] > 30000]  # If we dont have any new peers to try, try connecting to disconnected peers
-            if len(peer_list) == 0:
-                return True  # No peers available
-
         if len(self.connected_peers) >= self.max_peers_connected:
             # already have max connections
             return True
@@ -138,7 +132,15 @@ class TorrentPeerManager:
 
         connected_peers_under_max = self.max_peers_connected - len(self.connected_peers)
         connecting_peers_under_max = self.max_peers_connecting - len(self.connecting_peers)
-        peers_to_connect = min(min(connecting_peers_under_max, connected_peers_under_max), len(peer_list))
+        peers_to_connect = min(connecting_peers_under_max, connected_peers_under_max)
+
+        peer_list = list(self.potential_peers)  # Try connecting to new peers from potential list
+        if len(peer_list) == 0:
+            peer_list = [x for x in self.disconnected_peers if current_time() - x[2] > 30000][peers_to_connect:]  # If we dont have any new peers to try, try connecting to disconnected peers
+            if len(peer_list) == 0:
+                return True  # No peers available
+
+
         for index in range(peers_to_connect):
             if len(peer_list) == 0:
                 # We probably stopped the torrent if this happens

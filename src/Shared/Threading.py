@@ -1,7 +1,6 @@
 import threading
 import traceback
 
-from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Util import current_time
 
@@ -9,9 +8,14 @@ from Shared.Util import current_time
 class ThreadManager:
 
     threads = []
+    thread_history = dict()
 
     @staticmethod
     def add_thread(thread):
+        thread.history_entry = ThreadEntry(thread.thread_name, current_time())
+        if thread.thread_name not in ThreadManager.thread_history:
+            ThreadManager.thread_history[thread.thread_name] = []
+        ThreadManager.thread_history[thread.thread_name].append(thread.history_entry)
         ThreadManager.threads.append(thread)
 
     @staticmethod
@@ -20,7 +24,16 @@ class ThreadManager:
 
     @staticmethod
     def remove_thread(thread):
+        thread.history_entry.end_time = current_time()
         ThreadManager.threads.remove(thread)
+
+
+class ThreadEntry:
+
+    def __init__(self, name, start_time):
+        self.thread_name = name
+        self.start_time = start_time
+        self.end_time = 0
 
 
 class CustomThread:
@@ -36,6 +49,7 @@ class CustomThread:
         self.thread.daemon = True
         self.thread_name = thread_name
         self.start_time = 0
+        self.history_entry = None
         ThreadManager.add_thread(self)
 
     def start(self):
@@ -50,7 +64,6 @@ class CustomThread:
             excep = str(traceback.format_exc())
             Logger.write(3, "Unhandled exception in thread " + self.thread_name)
             Logger.write(3, excep, 'error')
-            EventManager.throw_event(EventType.Error, ["thread_error", "Unknown error in thread " + self.thread_name + ": " + excep])
             ThreadManager.remove_thread(self)
 
     def join(self):
