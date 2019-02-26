@@ -1,4 +1,5 @@
 import datetime
+import glob
 import inspect
 import ntpath
 import os
@@ -57,6 +58,19 @@ class Logger:
 
                 Logger.file.write((file_log + "\r\n").encode('utf8'))
 
+    @staticmethod
+    def get_log_files():
+        list_of_files = glob.glob(Settings.get_string("base_folder") + "/Logs/*.txt")
+        latest_files = sorted(list_of_files, key=os.path.getctime, reverse=True)
+        return [(os.path.basename(x), os.path.getsize(x)) for x in latest_files]
+
+    @staticmethod
+    def get_log_file(file):
+        if not file.endswith(".txt"):
+            raise Exception("Not a log file")
+
+        with open(Settings.get_string("base_folder") + "/Logs/" + file) as f:
+            return "\r\n".join(f.readlines())
 
 def get_info():
     caller_frame_record = inspect.stack()[2]
@@ -68,3 +82,4 @@ def get_info():
 def path_leaf(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
+

@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 
 from Controllers.LightManager import LightManager
 from Shared.Events import EventManager
@@ -19,6 +20,10 @@ class UtilController(BaseHandler):
             self.write(self.startup())
         elif url == "info":
             self.write(self.info())
+        elif url == "get_log_files":
+            self.write(self.get_log_files())
+        elif url == "get_log_file":
+            self.write(self.get_log_file(urllib.parse.unquote(self.get_argument("file"))))
 
     def post(self, url):
         if url == "shutdown":
@@ -46,6 +51,13 @@ class UtilController(BaseHandler):
                 Logger.write(3, "     " + thread_list[0].thread_name + " " + str(len(thread_list)) + " entries, averages " + str(sum(c.end_time - c.start_time for c in thread_list if c.end_time != 0) / len(thread_list)) + "ms")
                 for thread in [x for x in thread_list if x.end_time == 0]:
                     Logger.write(3, "         Currently running for " + str((current_time() - thread.start_time)/1000) + " seconds")
+
+    def get_log_files(self):
+        log_files = Logger.get_log_files()
+        return to_JSON([(name, write_size(size)) for name, size in log_files])
+
+    def get_log_file(self, file):
+        return Logger.get_log_file(file)
 
     def shutdown(self):
         Logger.write(3, "Shutdown")
