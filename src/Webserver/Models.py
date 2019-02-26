@@ -5,27 +5,6 @@ from os.path import isfile, join
 from Shared.Util import write_size
 
 
-class CurrentMedia:
-
-    def __init__(self, state, type, title, path, img, playing_for, play_time, volume, length, selected_sub, subtitles, sub_delay, subs_done, audio_tracks, current_audio_track, buffered_percentage):
-        self.state = state
-        self.type = type
-        self.title = title
-        self.path = path
-        self.img = img
-        self.playing_for = playing_for
-        self.play_time = play_time
-        self.volume = volume
-        self.length = length
-        self.subs_done = subs_done
-        self.selected_sub = selected_sub
-        self.subtitles = subtitles
-        self.subtitle_delay = sub_delay
-        self.audio_tracks = audio_tracks
-        self.current_audio_track = current_audio_track
-        self.buffered = buffered_percentage
-
-
 class FileStructure:
 
     def __init__(self, path, just_files=False):
@@ -42,82 +21,6 @@ class FileStructure:
                 self.file_names.extend(filenames)
                 break
 
-
-class MediaInfo:
-
-    def __init__(self, potential, connected, size, downloaded, speed, buffer_ready, buffer_total, bytes_streamed,
-                 torrent_state, stream_position, stream_buffer_position, threads, left_to_download, overhead):
-        self.potential = potential
-        self.connected = connected
-        self.size = write_size(size)
-        self.downloaded = write_size(downloaded)
-        self.speed = write_size(speed)
-        self.stream_buffer_ready = write_size(buffer_ready)
-        self.stream_buffer_total = write_size(buffer_total)
-        self.torrent_state = torrent_state
-        self.stream_position = stream_position
-        self.stream_buffer_position = stream_buffer_position
-        self.bytes_streamed = write_size(bytes_streamed)
-        self.threads = threads
-        self.dht_nodes = 0
-        self.left_to_download = write_size(left_to_download)
-        self.overhead = write_size(overhead)
-
-    def add_dht(self, nodes):
-        self.dht_nodes = nodes
-
-
-class Info:
-
-    def __init__(self, running_for, peers_attempted, peers_failed, peers_succeeded, peers_from_dht, peers_from_udp_tracker, peers_from_http_tracker, peers_from_pex,
-                 total_downloaded, subs_downloaded, play_time, max_download, connected_dht, connected_udp, connected_http, connected_pex):
-        self.running_for = running_for
-        self.peers_attempted = peers_attempted
-        self.peers_failed = peers_failed
-        self.peers_succeeded = peers_succeeded
-
-        self.peers_from_dht = peers_from_dht
-        self.peers_from_udp_tracker = peers_from_udp_tracker
-        self.peers_from_http_tracker = peers_from_http_tracker
-        self.peers_from_pex = peers_from_pex
-        self.peers_from_dht_connected = connected_dht
-        self.peers_from_udp_tracker_connected = connected_udp
-        self.peers_from_http_tracker_connected = connected_http
-        self.peers_from_pex_connected = connected_pex
-
-        self.total_downloaded = total_downloaded
-        self.subs_downloaded = subs_downloaded
-        self.play_time = play_time
-        self.max_download = max_download
-
-
-class Status:
-
-    def __init__(self, total_speed, buffer_ready, cpu, memory, torrent_state, peers_connected, potential_peers):
-        self.speed = total_speed
-        self.buffer_ready = buffer_ready
-        self.cpu = cpu
-        self.memory = memory
-        self.torrent_state = torrent_state
-        self.peers_connected = peers_connected
-        self.potential_peers = potential_peers
-
-
-class Settings:
-
-    def __init__(self, raspberry, gui, external_trackers, max_sub_files):
-        self.raspberry = raspberry
-        self.gui = gui
-        self.external_trackers = external_trackers
-        self.max_sub_files = max_sub_files
-
-
-# class WebSocketMessage:
-#
-#     def __init__(self, evnt, topic, data):
-#         self.event = evnt
-#         self.topic = topic
-#         self.data = data
 
 class WebSocketRequestMessage:
 
@@ -186,19 +89,6 @@ class WebSocketSlaveCommand:
         self.topic = topic
         self.method = method
         self.parameters = parameters
-
-class Version:
-
-    def __init__(self, build_date):
-        self.build_date = build_date
-
-
-class StartUp:
-
-    def __init__(self, instance_name, lighting_enabled):
-        self.instance_name = instance_name
-        self.lighting_enabled = lighting_enabled
-
 
 class TorrentModel:
 

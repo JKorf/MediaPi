@@ -9,7 +9,6 @@ from urllib.request import urlopen
 from PIL import Image, ImageTk
 
 from MediaPlayer.MediaManager import MediaManager
-from Shared.Logger import Logger
 from Shared.Network import RequestFactory
 from Shared.Threading import CustomThread
 
@@ -27,7 +26,7 @@ class App(tk.Frame):
         self.parent = parent
 
         self.background_time = 60 * 15
-        self.background_max_requests = 10
+        self.background_max_requests = 5
         self.background_images = []
         self.base_image_path = os.getcwd() + "/UI/TV/Images/"
         self.background_canvas = None
