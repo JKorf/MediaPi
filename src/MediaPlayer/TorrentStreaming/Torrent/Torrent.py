@@ -232,7 +232,6 @@ class Torrent:
 
     def parse_info_dictionary(self, info_dict):
         self.name = info_dict[b'name'].decode('utf8')
-        base_folder = Settings.get_string("base_folder")
 
         if b'files' in info_dict:
             # Multifile

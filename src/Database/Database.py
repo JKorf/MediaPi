@@ -11,13 +11,14 @@ from Shared.Util import current_time, Singleton
 
 class Database(metaclass=Singleton):
     def __init__(self):
-        self.path = Settings.get_string("base_folder") + "Solution/database.data"
+        self.path = Settings.get_string("base_folder") + "/Solution/database.data"
         self.slave = Settings.get_bool("slave")
         self.current_version = 10
         self.lock = Lock()
 
     def init_database(self):
         with self.lock:
+            Logger.write(2, "Opening database at " + str(self.path))
             database_exists = os.path.isfile(self.path)
 
             if not database_exists:

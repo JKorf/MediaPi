@@ -69,7 +69,7 @@ class VLCPlayer(metaclass=Singleton):
                   "--image-duration=-1"]
 
         if Settings.get_bool("raspberry"):
-            log_path = Settings.get_string("log_folder")
+            log_path = Settings.get_string("base_folder") + "/Logs"
             params.append("--logfile=" + log_path + '/vlclog_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt")
             params.append("--file-logging")
             params.append("--file-caching=5000")
