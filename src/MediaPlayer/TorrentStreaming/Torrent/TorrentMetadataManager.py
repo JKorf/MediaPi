@@ -1,9 +1,12 @@
 import math
 from threading import Lock
 
+from pympler import asizeof
+
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from MediaPlayer.Util.Bencode import bdecode
+from Shared.Util import write_size
 
 
 class TorrentMetadataManager:

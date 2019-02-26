@@ -1,9 +1,12 @@
 import os
 from threading import Lock
 
+from pympler import asizeof
+
 from MediaPlayer.Streaming.StreamManager import StreamManager
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
+from Shared.Util import write_size
 
 
 class TorrentOutputManager:
@@ -15,6 +18,10 @@ class TorrentOutputManager:
         self.file_writer = DiskWriter(self.torrent)
         self.stream_manager = StreamManager(self.torrent)
         self.broadcasted_hash_data = False
+
+    def check_size(self):
+        for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
+            Logger.write(2, "       Size of " + str(key) + ": " + write_size(size))
 
     def add_piece_to_output(self, piece):
         with self.__lock:

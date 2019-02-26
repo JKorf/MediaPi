@@ -1,7 +1,7 @@
 import math
 from threading import Lock
 
-import sys
+from pympler import asizeof
 
 from MediaPlayer.TorrentStreaming.Data import Bitfield, Piece
 from MediaPlayer.TorrentStreaming.Torrent.TorrentPieceHashValidator import TorrentPieceHashValidator
@@ -35,6 +35,27 @@ class TorrentDataManager:
 
         self.event_id_log = EventManager.register_event(EventType.Log, self.log_queue)
         self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
+
+    def check_size(self):
+        for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
+            Logger.write(2, "       Size of " + str(key) + ": " + write_size(size))
+
+    def check_pieces_size(self):
+        Logger.write(2, "    _pieces size: " + write_size(asizeof.asizeof(self._pieces)))
+        not_done_pieces = [piece for piece in self._pieces.values() if not piece.done]
+        done_pieces = [piece for piece in self._pieces.values() if piece.done]
+        cleared_pieces = [piece for piece in self._pieces.values() if piece.cleared]
+        stream_index = [piece for piece in self._pieces.values() if piece.index < self.torrent.stream_position]
+        stream_index_50_mb = [piece for piece in self._pieces.values() if piece.index > self.torrent.stream_position + (50000000 // self.piece_length)]
+        Logger.write(2, "    pieces not done: " + str(len(not_done_pieces)) + " - " + write_size(asizeof.asizeof(not_done_pieces)))
+        Logger.write(2, "    pieces done: " + str(len(done_pieces)) + " - " + write_size(asizeof.asizeof(done_pieces)))
+        Logger.write(2, "    pieces cleared: " + str(len(cleared_pieces)) + " - " + write_size(asizeof.asizeof(cleared_pieces)))
+        Logger.write(2, "    pieces < stream index: " + str(len(stream_index)) + " - " + write_size(asizeof.asizeof(stream_index)))
+        Logger.write(2, "    pieces > stream index + 50mb: " + str(len(stream_index_50_mb)) + " - " + write_size(asizeof.asizeof(stream_index_50_mb)))
+        Logger.write(2, "    pieces with initialized blocks: " + str(len([piece for piece in self._pieces.values() if len(piece._blocks) > 0])))
+        if self.torrent.output_manager.stream_manager.buffer is not None:
+            data_ready = [piece for piece in self.torrent.output_manager.stream_manager.buffer.data_ready]
+            Logger.write(2, "    pieces in data_ready: " + str(len(data_ready)) + " - " + write_size(asizeof.asizeof(data_ready)))
 
     def log_queue(self):
         unfinished = [x for x in self._pieces.values() if not x.done]
@@ -115,22 +136,28 @@ class TorrentDataManager:
         for peer, piece_index, offset, data in blocks:
             block_count += 1
 
-            piece, block = self.get_piece_and_block_by_offset(piece_index, offset)
-            Logger.write(1, str(peer.id) + ' Received piece message: ' + str(block.piece_index) + ', block: ' + str(block.index))
+            piece = self._pieces[piece_index]
+            Logger.write(1, str(peer.id) + ' Received piece message: ' + str(piece.index) + ', block offset: ' + str(offset))
 
-            peer.download_manager.block_done(block)
+            peer.download_manager.block_done(piece_index * self.piece_length + offset)
             if self.torrent.state == TorrentState.Done:
                 Logger.write(1, 'Received a block but were already done')
                 self.torrent.overhead += len(data)
                 continue
 
-            if block.piece_index < self.torrent.stream_position and not piece.persistent:
+            if piece.index < self.torrent.stream_position and not piece.persistent:
                 Logger.write(1, 'Received a block which is no longer needed')
                 self.torrent.overhead += len(data)
                 continue
 
-            if block.done:
+            if piece.done:
                 Logger.write(1, 'Received block but piece was already done')
+                self.torrent.overhead += len(data)
+                continue
+
+            block = piece.get_block_by_offset(offset)
+            if block.done:
+                Logger.write(1, 'Received block but block was already done')
                 self.torrent.overhead += len(data)
                 continue
 
@@ -158,10 +185,6 @@ class TorrentDataManager:
         Logger.write(2, "Piece " + str(piece.index) + " has invalid hash, re-downloading it")
         piece.reset()
         self.torrent.download_manager.redownload_piece(piece)
-
-    def get_piece_and_block_by_offset(self, piece_index, offset_in_piece):
-        piece = self.get_piece_by_index(piece_index)
-        return piece, piece.get_block_by_offset(offset_in_piece)
 
     def get_block_by_offset(self, piece_index, offset_in_piece):
         return self.get_piece_by_index(piece_index).get_block_by_offset(offset_in_piece)

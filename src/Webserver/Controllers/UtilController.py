@@ -1,26 +1,18 @@
 import os
 import urllib.parse
 
-from Controllers.LightManager import LightManager
 from Shared.Events import EventManager
 from Shared.Events import EventType
 from Shared.Logger import Logger
-from Shared.Settings import Settings as AppSettings
-from Shared.Stats import Stats
 from Shared.Threading import ThreadManager
 from Shared.Util import to_JSON, current_time, write_size
-from Webserver.Models import Info, StartUp
 from Webserver.BaseHandler import BaseHandler
 
 
 class UtilController(BaseHandler):
 
     async def get(self, url):
-        if url == "startup":
-            self.write(self.startup())
-        elif url == "info":
-            self.write(self.info())
-        elif url == "get_log_files":
+        if url == "get_log_files":
             self.write(self.get_log_files())
         elif url == "get_log_file":
             self.write(self.get_log_file(urllib.parse.unquote(self.get_argument("file"))))
@@ -32,15 +24,6 @@ class UtilController(BaseHandler):
             self.restart_pi()
         elif url == "log":
             self.log()
-
-    def info(self):
-        info = Info(current_time() - Stats.total('start_time'), Stats.total('peers_connect_try'), Stats.total('peers_connect_failed'), Stats.total('peers_connect_success'),
-                    Stats.total('peers_source_dht'), Stats.total('peers_source_udp_tracker'), Stats.total('peers_source_http_tracker'), Stats.total('peers_source_exchange'),
-                    write_size(Stats.total('total_downloaded')), Stats.total('subs_downloaded'), Stats.total('vlc_played'),
-                    write_size(Stats.total('max_download_speed')), Stats.total('peers_source_dht_connected'), Stats.total('peers_source_udp_tracker_connected'), Stats.total('peers_source_http_tracker_connected'),
-                    Stats.total('peers_source_pex_connected'))
-
-        return to_JSON(info)
 
     def log(self):
         Logger.write(2, "============== Test ===============")
@@ -66,7 +49,3 @@ class UtilController(BaseHandler):
     def restart_pi(self):
         Logger.write(3, "Restart")
         os.system('sudo reboot')
-
-    def startup(self):
-        return to_JSON(
-            StartUp(AppSettings.get_string("name"), LightManager().enabled))

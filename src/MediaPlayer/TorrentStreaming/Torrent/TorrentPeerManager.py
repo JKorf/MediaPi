@@ -1,6 +1,8 @@
 from random import Random
 from urllib.parse import urlparse
 
+from pympler import asizeof
+
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import HaveMessage
 
 from MediaPlayer.TorrentStreaming.Peer.Peer import Peer
@@ -40,6 +42,10 @@ class TorrentPeerManager:
 
         self.high_speed_peers = 0
         self.medium_speed_peers = 0
+
+    def check_size(self):
+        for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
+            Logger.write(2, "       Size of " + str(key) + ": " + write_size(size))
 
     def unregister(self):
         EventManager.deregister_event(self.event_id_log)

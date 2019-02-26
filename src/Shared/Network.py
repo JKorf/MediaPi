@@ -60,6 +60,7 @@ class TcpClient:
     def disconnect(self):
         if self.socket is not None:
             self.socket.close()
+            self.socket = None
 
 
 class UdpClient:

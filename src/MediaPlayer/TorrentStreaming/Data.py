@@ -3,8 +3,11 @@ from threading import Lock
 
 import sys
 
+from pympler import asizeof
+
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Util import write_size
 
 
 class Bitfield:
@@ -138,6 +141,9 @@ class Piece:
         self.total_blocks = len(self._blocks)
 
     def get_block_by_offset(self, offset_in_piece):
+        if self.cleared:
+            raise Exception("Trying to retrieve block of cleared piece")
+
         index = int(math.floor(offset_in_piece / self.block_size))
         return self.blocks.get(index)
 
@@ -151,6 +157,12 @@ class Piece:
             if self.block_writes >= self.total_blocks:
                 if len([x for x in self.blocks.values() if not x.done]) == 0:
                     self.done = True
+                    self._data = bytearray()
+                    for block in self.blocks.values():
+                        if self._data is None or block.data is None:
+                            raise Exception("Erased data on piece " + str(self.index) + ", block: " + str(block.index))
+                        self._data.extend(block.data)
+                    self._blocks = dict()
                     return True
             return False
 
@@ -158,23 +170,16 @@ class Piece:
         if not self.done:
             return None
 
-        if self.cleared:
+        if self.cleared or self._data is None:
             raise Exception("Trying to retrieve cleared piece")
 
-        if self._data is None:
-            self._data = bytearray()
-            for block in self.blocks.values():
-                if self._data is None or block.data is None:
-                    raise Exception("Erased data on piece " + str(self.index) + ", block: " + str(block.index) )
-                self._data.extend(block.data)
         return self._data
 
     def clear(self):
         if self.persistent:
             raise Exception("Can't clear persistent pieces")
 
-        for block in self._blocks.values():
-            block.clear()
+        self._blocks = dict()
         self.cleared = True
         self._data = None
 

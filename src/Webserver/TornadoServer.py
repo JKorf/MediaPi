@@ -45,8 +45,7 @@ class TornadoServer:
                 (r"/data/(.*)", DataController),
                 (r"/toon/(.*)", ToonController),
                 (r"/lighting/(.*)", LightController),
-                (r"/ws", MasterWebsocketHandler),
-                (r"/(.*)", StaticFileHandler, {"path": os.getcwd() + "/UI/homebase/build", "default_filename": "index.html"})
+                (r"/ws", MasterWebsocketHandler)
             ]
 
             self.application = web.Application(handlers)
@@ -75,17 +74,6 @@ class TornadoServer:
 
     def stop(self):
         tornado.ioloop.IOLoop.instance().stop()
-
-
-class StaticFileHandler(tornado.web.StaticFileHandler):
-    def set_extra_headers(self, path):
-        # Disable cache
-        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-
-        if path.endswith(".js"):
-            self.set_header('content-type', 'application/javascript')
-        if path.endswith(".css"):
-            self.set_header('content-type', 'text/css')
 
 
 class MasterWebsocketHandler(websocket.WebSocketHandler):

@@ -6,52 +6,22 @@ from Shared.Threading import CustomThread
 
 
 class EventType(Enum):
-    HashDataKnown = 0,
-    SearchSubtitles = 1,
-
-    Seek = 2,
-    StartPlayer = 3,
-    PreparePlayer = 35,
-    StopPlayer = 9,
-    PlayerStopped = 10
-    SetVolume = 11,
-    PauseResumePlayer = 12,
-    PlayerPaused = 13,
-    PlayerError = 14,
-    PlayerStateChange = 15,
-    PlayerMediaLoaded = 39,
-
-    SetSubtitleFiles = 16,
-    SetSubtitleId = 17,
-    SetSubtitleOffset = 18,
-    SubtitlesDownloaded = 19,
-
-    SetAudioId = 22,
-
-    StartTorrent = 23,
-    StopTorrent = 24,
-    TorrentMetadataDone = 25
+    SearchSubtitles = 1
+    Seek = 2
+    StopPlayer = 9
+    SetSubtitleFiles = 16
     TorrentStopped = 26
-    TorrentMediaFileSet = 34,
-    TorrentStateChange = 37,
-
-    Error = 27,
-
-    NewDHTNode = 28,
-    Log = 30,
-
-    NewRequest = 31,
-    TorrentMediaSelectionRequired = 32,
-    TorrentMediaFileSelection = 33,
-    NextEpisodeSelection = 36,
-    NoPeers = 38,
-
-    PeersFound = 40,
-    RequestPeers = 41,
-    RetrievedAddress = 42,
-    WiFiQualityUpdate = 43,
-
-    ClientRequest = 44,
+    TorrentMediaFileSet = 34
+    TorrentStateChange = 37
+    Error = 27
+    NewDHTNode = 28
+    Log = 30
+    TorrentMediaSelectionRequired = 32
+    TorrentMediaFileSelection = 33
+    NoPeers = 38
+    PeersFound = 40
+    RequestPeers = 41
+    ClientRequest = 44
     DatabaseUpdate = 45
     RequestSubtitles = 46
 

@@ -7,6 +7,8 @@ import urllib.parse
 
 import gc
 
+from pympler import asizeof
+
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.TorrentStreaming.Torrent.Torrent import Torrent
 
@@ -21,7 +23,7 @@ from Shared.Network import RequestFactory
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
-from Shared.Util import current_time, Singleton
+from Shared.Util import current_time, Singleton, write_size
 
 
 class MediaManager(metaclass=Singleton):
@@ -52,6 +54,18 @@ class MediaManager(metaclass=Singleton):
         VLCPlayer().player_state.register_callback(self.player_state_change)
         self.torrent_observer = CustomThread(self.observe_torrent, "Torrent observer")
         self.torrent_observer.start()
+
+        # self.check_size_thread = CustomThread(self.check_size, "Torrent check size")
+        # self.check_size_thread.start()
+
+    def check_size(self):
+        while True:
+            if self.torrent is not None:
+                with Logger.lock:
+                    Logger.write(2, "Size of torrent: " + write_size(asizeof.asizeof(self.torrent)))
+                    #self.torrent.check_size()
+                    self.torrent.data_manager.check_pieces_size()
+            time.sleep(10)
 
     def start_file(self, url, time):
         actual_url = url

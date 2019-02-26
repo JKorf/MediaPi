@@ -7,6 +7,8 @@ from threading import Lock
 
 import gc
 
+from pympler import asizeof
+
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDataManager import TorrentDataManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDownloadManager import TorrentDownloadManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentMetadataManager import TorrentMetadataManager
@@ -25,7 +27,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Stats import Stats
-from Shared.Util import headers
+from Shared.Util import headers, write_size
 
 
 class Torrent:
@@ -37,12 +39,6 @@ class Torrent:
     @left.setter
     def left(self, value):
         self.to_download_bytes = value
-
-    @property
-    def percentage_done(self):
-        if self.total_size == 0:
-            return 0
-        return round((self.download_counter.total / self.total_size) * 100, 2)
 
     @property
     def bytes_ready_in_buffer(self):
@@ -128,6 +124,12 @@ class Torrent:
         self.output_manager = TorrentOutputManager(self)
         self.metadata_manager = TorrentMetadataManager(self)
         self.network_manager = TorrentNetworkManager(self)
+
+    def check_size(self):
+        for key, value, size in sorted([(key, value, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[2], reverse=True):
+            Logger.write(2, "   Size of " + str(key) + ": " + write_size(size))
+            if getattr(value, "check_size", None) is not None:
+                value.check_size()
 
     @classmethod
     def create_torrent(cls, id, url):
@@ -288,7 +290,6 @@ class Torrent:
                         file.episode = epi
                 EventManager.throw_event(EventType.TorrentMediaSelectionRequired, [media_files])
 
-        EventManager.throw_event(EventType.TorrentMetadataDone, [])
         Logger.write(3, "Torrent metadata read")
 
     def set_selected_media_file(self, file):

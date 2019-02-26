@@ -4,6 +4,8 @@ import itertools
 
 import sys
 
+from pympler import asizeof
+
 from MediaPlayer.TorrentStreaming.Torrent.Prioritizer import StreamPrioritizer
 from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 from Shared.Events import EventManager, EventType
@@ -41,6 +43,10 @@ class TorrentDownloadManager:
     def unregister(self):
         EventManager.deregister_event(self.event_id_stopped)
         EventManager.deregister_event(self.event_id_log)
+
+    def check_size(self):
+        for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
+            Logger.write(2, "       Size of " + str(key) + ": " + write_size(size))
 
     def log_queue(self):
         with Logger.lock:

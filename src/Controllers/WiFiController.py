@@ -12,6 +12,7 @@ class WiFiController(metaclass=Singleton):
         self.engine = Engine("WiFi Manager")
         self.engine.add_work_item("WiFi watcher", 5000, self.watch_wifi, False)
         self.pi = Settings.get_bool("raspberry")
+        self.quality = 0
 
         self.connected = False
 
@@ -44,7 +45,7 @@ class WiFiController(metaclass=Singleton):
 
                             if key_value[0] == "Quality":
                                 value_max = key_value[1].split("/")
-                                EventManager.throw_event(EventType.WiFiQualityUpdate, [float(value_max[0]) / float(value_max[1]) * 100])
+                                self.quality = float(value_max[0]) / float(value_max[1]) * 100
 
         else:
             proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
@@ -53,5 +54,5 @@ class WiFiController(metaclass=Singleton):
             for line in lines:
                 if "Signal" in line:
                     split = line.split(":")
-                    EventManager.throw_event(EventType.WiFiQualityUpdate, [float(split[1].replace("%", ""))])
+                    self.quality = float(split[1].replace("%", ""))
         return True

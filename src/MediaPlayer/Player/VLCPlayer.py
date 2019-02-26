@@ -34,17 +34,7 @@ class VLCPlayer(metaclass=Singleton):
         self.trying_subitems = False
 
         EventManager.register_event(EventType.SetSubtitleFiles, self.set_subtitle_files)
-        EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_track)
-        EventManager.register_event(EventType.SetSubtitleOffset, self.set_subtitle_delay)
-        EventManager.register_event(EventType.SubtitlesDownloaded, self.set_subtitle_files)
-        EventManager.register_event(EventType.SetAudioId, self.set_audio_track)
-
-        EventManager.register_event(EventType.PauseResumePlayer, self.pause_resume)
-        EventManager.register_event(EventType.SetVolume, self.set_volume)
-
-        EventManager.register_event(EventType.StartPlayer, self.play)
         EventManager.register_event(EventType.StopPlayer, self.stop)
-
         EventManager.register_event(EventType.NoPeers, self.stop)
 
         self.player_observer = CustomThread(self.observe_player, "Player observer")
@@ -91,9 +81,6 @@ class VLCPlayer(metaclass=Singleton):
         if time != 0:
             params.append("start-time=" + str(time // 1000))
 
-        if not url.startswith("file://"):
-            if (time != 0 and url.endswith("mp4")) or url.endswith("avi"):
-                params.append("demux=avformat")
         return params
 
     def pause_resume(self):
@@ -110,6 +97,9 @@ class VLCPlayer(metaclass=Singleton):
 
     def set_volume(self, vol):
         self.__player.audio_set_volume(vol)
+        self.player_state.start_update()
+        self.player_state.volume = vol
+        self.player_state.stop_update()
 
     def get_volume(self):
         return self.__player.audio_get_volume()
@@ -134,6 +124,9 @@ class VLCPlayer(metaclass=Singleton):
 
     def set_subtitle_delay(self, delay):
         self.__player.video_set_spu_delay(delay)
+        self.player_state.start_update()
+        self.player_state.sub_delay = delay
+        self.player_state.stop_update()
 
     def get_state(self):
         return self.__player.get_state()
@@ -142,7 +135,10 @@ class VLCPlayer(metaclass=Singleton):
         return self.__player.audio_get_track()
 
     def set_audio_track(self, track_id):
-        return self.__player.audio_set_track(track_id)
+        self.__player.audio_set_track(track_id)
+        self.player_state.start_update()
+        self.player_state.audio_track = track_id
+        self.player_state.stop_update()
 
     def get_audio_tracks(self):
         tracks = self.__player.audio_get_track_description()
@@ -163,6 +159,9 @@ class VLCPlayer(metaclass=Singleton):
 
     def set_subtitle_track(self, id):
         self.__player.video_set_spu(id)
+        self.player_state.start_update()
+        self.player_state.sub_track = id
+        self.player_state.stop_update()
 
     def get_subtitle_count(self):
         return self.__player.video_get_spu_count()

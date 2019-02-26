@@ -80,10 +80,10 @@ class StreamManager:
             if self.consecutive_pieces_total_length < self.max_in_buffer - self.max_in_buffer_threshold:
                 self.torrent.unpause()
 
-        if self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer > 50000000 and self.torrent.download_manager.download_mode == DownloadMode.Full:
+        if self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer > 40000000 and self.torrent.download_manager.download_mode == DownloadMode.Full:
             Logger.write(2, "Entering ImportantOnly download mode: " + write_size(self.torrent.bytes_total_in_buffer) + " in buffer total, " + write_size(self.consecutive_pieces_total_length) + " consequtive")
             self.torrent.download_manager.download_mode = DownloadMode.ImportantOnly
-        elif self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer < 30000000 and self.torrent.download_manager.download_mode == DownloadMode.ImportantOnly:
+        elif self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer < 20000000 and self.torrent.download_manager.download_mode == DownloadMode.ImportantOnly:
             Logger.write(2, "Leaving ImportantOnly download mode")
             self.torrent.download_manager.download_mode = DownloadMode.Full
 

@@ -1,9 +1,12 @@
 import select
 from time import sleep
 
+from pympler import asizeof
+
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Threading import CustomThread
+from Shared.Util import write_size
 
 
 class TorrentNetworkManager:
@@ -58,9 +61,13 @@ class TorrentNetworkManager:
                 continue
 
             for client in readable:
-                [x for x in input_peers if x.connection_manager.connection.socket == client][0].connection_manager.on_readable()
+                peer = [x for x in input_peers if x.connection_manager.connection.socket == client]
+                if len(peer) > 0:
+                    peer[0].connection_manager.on_readable()
             for client in writeable:
-                [x for x in output_peers if x.connection_manager.connection.socket == client][0].connection_manager.on_writeable()
+                peer = [x for x in output_peers if x.connection_manager.connection.socket == client]
+                if len(peer) > 0:
+                    peer[0].connection_manager.on_writeable()
 
     def stop(self):
         self.running = False

@@ -53,7 +53,7 @@ class PeerDownloadManager:
                 new_blocks = self.max_blocks - len(self.downloading)
                 to_download = self.peer.torrent.download_manager.get_allowed_fast_blocks_to_download(self.peer, new_blocks)
                 for block in to_download:
-                    self.downloading.append(PeerDownload(block))
+                    self.downloading.append((block, current_time()))
 
                 if len(to_download) == 0:
                     return True
@@ -69,7 +69,7 @@ class PeerDownloadManager:
             new_blocks = self.max_blocks - len(self.downloading)
             to_download = self.peer.torrent.download_manager.get_blocks_to_download(self.peer, new_blocks)
             for block in to_download:
-                self.downloading.append(PeerDownload(block))
+                self.downloading.append((block, current_time()))
 
             self.request(to_download)
 
@@ -83,9 +83,9 @@ class PeerDownloadManager:
                 request.offset // 16384))
             self.peer.connection_manager.send(request.to_bytes())
 
-    def block_done(self, block):
+    def block_done(self, block_offset):
         with self.blocks_done_lock:
-            self.blocks_done.append(block.index)
+            self.blocks_done.append(block_offset)
 
     def check_current_downloading(self):
         canceled = 0
@@ -95,19 +95,19 @@ class PeerDownloadManager:
             if self.stopped:
                 return False
 
-            for peer_download in list(self.downloading):
-                if peer_download.block.index in done_copy:  # Peer downloaded this block; it's done
-                    self.downloading.remove(peer_download)
-                    peer_download.block.remove_downloader(self.peer)
-                    done_copy.remove(peer_download.block.index)
+            for block, request_time in list(self.downloading):
+                if block.start_byte_total in done_copy:  # Peer downloaded this block; it's done
+                    self.downloading = [x for x in self.downloading if not x[0].index == block.index]
+                    block.remove_downloader(self.peer)
+                    done_copy.remove(block.start_byte_total)
                     continue
 
-                block_prio = self.peer.torrent.data_manager._pieces[peer_download.block.piece_index].priority
+                block_prio = self.peer.torrent.data_manager._pieces[block.piece_index].priority
                 prio_timeout = self.get_priority_timeout(block_prio)
-                passed_time = current_time() - peer_download.request_time
+                passed_time = current_time() - request_time
                 if passed_time > prio_timeout:
-                    self.downloading.remove(peer_download)
-                    peer_download.block.remove_downloader(self.peer)
+                    self.downloading = [x for x in self.downloading if not x[0].index == block.index]
+                    block.remove_downloader(self.peer)
                     canceled += 1
 
                 with self.blocks_done_lock:
@@ -131,24 +131,24 @@ class PeerDownloadManager:
 
     def request_rejected(self, piece_index, offset, length):
         with self.lock:
-            block = self.peer.torrent.data_manager.get_block_by_offset(piece_index, offset)
-            peer_download = [x for x in self.downloading if x.block.index == block.index]
+            peer_download = [x for x in self.downloading if x[0].piece_index == piece_index and x[0].start_byte_in_piece == offset]
             if len(peer_download) != 0:
-                peer_download[0].block.remove_downloader(self.peer)
+                peer_download[0][0].remove_downloader(self.peer)
                 Logger.write(1, "Removed a rejected request from peer download manager")
                 self.downloading.remove(peer_download[0])
 
     def log(self):
-        cur_downloading = [str(x.block.index) + ", " for x in self.downloading]
+        cur_downloading = [str(block.index) + ", " for block, request_time in self.downloading]
         Logger.write(3, "       Currently downloading: " + str(len(self.downloading)))
         Logger.write(3, "       Blocks: " + ''.join(str(e) for e in cur_downloading))
+        Logger.write(3, "       Done blocks: " + ','.join(str(x) for x in self.blocks_done))
         Logger.write(3, "       Speed: " + write_size(self.peer.counter.value))
 
     def stop(self):
         self.stopped = True
         with self.lock:
-            for peer_download in self.downloading:
-                peer_download.block.remove_downloader(self.peer)
+            for block, request_time in self.downloading:
+                block.remove_downloader(self.peer)
             self.downloading.clear()
             self.blocks_done.clear()
 
