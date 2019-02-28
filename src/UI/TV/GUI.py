@@ -18,6 +18,7 @@ class App(tk.Frame):
     @staticmethod
     def initialize():
         root = tk.Tk()
+        root.config(cursor="none")
         App(root).pack(side="top", fill="both", expand=True)
         root.mainloop()
 
