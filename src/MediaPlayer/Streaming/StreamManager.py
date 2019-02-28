@@ -53,7 +53,7 @@ class StreamManager:
         VLCPlayer().player_state.register_callback(self.player_change)
         self.listener.start_listening()
 
-    def player_change(self, new):
+    def player_change(self, old, new):
         if new.state == PlayerState.Playing:
             self.has_played = True
 

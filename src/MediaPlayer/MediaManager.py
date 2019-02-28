@@ -38,7 +38,6 @@ class MediaManager(metaclass=Singleton):
         self.play_position = 0
         self.play_length = 0
 
-        self.previous_player_state = PlayerState.Nothing
         self.history_id = 0
         self.last_tracking_update = 0
 
@@ -238,20 +237,20 @@ class MediaManager(metaclass=Singleton):
 
             time.sleep(1)
 
-    def player_state_change(self, new_state):
-        if self.previous_player_state != new_state.state:
-            Logger.write(2, "Player state changed from " + str(self.previous_player_state) + " to " + str(new_state.state))
+    def player_state_change(self, old_state, new_state):
+        if old_state.state != new_state.state:
+            Logger.write(2, "Player state changed from " + str(old_state.state) + " to " + str(new_state.state))
 
         if new_state.state == PlayerState.Playing:
             self.play_position = new_state.playing_for
             self.play_length = new_state.length
 
-        if self.previous_player_state != new_state.state and new_state.state == PlayerState.Playing:
+        if old_state.state != new_state.state and new_state.state == PlayerState.Playing:
             self.update_subtitles(new_state)
             next_episode_thread = CustomThread(lambda: self.next_episode_manager.check_next_episode(self.media_data, self.torrent), "Check next episode", [])
             next_episode_thread.start()
 
-        if self.previous_player_state != new_state.state and new_state.state == PlayerState.Nothing:
+        if old_state.state != new_state.state and new_state.state == PlayerState.Nothing:
             self.history_id = 0
             self.media_data.reset()
             self.stop_torrent()
@@ -263,7 +262,6 @@ class MediaManager(metaclass=Singleton):
             self.play_length = 0
 
         self.update_tracking(new_state)
-        self.previous_player_state = new_state.state
 
     def update_subtitles(self, new_state):
         media_type = self.media_data.type

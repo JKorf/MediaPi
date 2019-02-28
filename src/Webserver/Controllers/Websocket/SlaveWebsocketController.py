@@ -41,11 +41,11 @@ class SlaveWebsocketController:
         EventManager.register_event(EventType.RequestSubtitles, lambda file: self.write(WebSocketSlaveRequest("subtitles", "get", [file])))
 
     def start(self):
-        VLCPlayer().player_state.register_callback(lambda x: self.broadcast_data("player", x))
-        MediaManager().media_data.register_callback(lambda x: self.broadcast_data("media", x))
-        MediaManager().torrent_data.register_callback(lambda x: self.broadcast_data("torrent", x))
-        StateManager().state_data.register_callback(lambda x: self.broadcast_data("state", x))
-        Stats().cache.register_callback(lambda x: self.broadcast_data("stats", x))
+        VLCPlayer().player_state.register_callback(lambda old, new: self.broadcast_data("player", new))
+        MediaManager().media_data.register_callback(lambda old, new: self.broadcast_data("media", new))
+        MediaManager().torrent_data.register_callback(lambda old, new: self.broadcast_data("torrent", new))
+        StateManager().state_data.register_callback(lambda old, new: self.broadcast_data("state", new))
+        Stats().cache.register_callback(lambda old, new: self.broadcast_data("stats", new))
 
         self.server_connect_engine.start()
 

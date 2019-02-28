@@ -1,6 +1,6 @@
 import traceback
 from threading import Event
-
+from collections import namedtuple
 from Shared.Logger import Logger
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
@@ -14,7 +14,10 @@ class Observable:
         self.__callbacks = []
         self.__changed = True
         self.__last_update = 0
+
         self.__start_state = None
+        self.__last_update_state = None
+
         self.__wait_event = Event()
 
         self.__update_thread = CustomThread(self.__check_update, name + " update")
@@ -56,9 +59,12 @@ class Observable:
             if self.__changed:
                 self.__changed = False
                 self.__last_update = current_time()
+                dic = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
+                last_update = namedtuple("Observable", dic.keys())(*dic.values())
                 for cb in self.__callbacks:
                     try:
-                        cb(self)
+                        cb(self.__last_update_state or self, self)
                     except Exception as e:
                         Logger.write(3, "Exception in observer thread: " + str(e))
                         Logger.write(3, traceback.format_exc())
+                self.__last_update_state = last_update

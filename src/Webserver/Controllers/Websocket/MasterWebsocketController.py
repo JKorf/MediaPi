@@ -48,12 +48,12 @@ class MasterWebsocketController(metaclass=Singleton):
         return self.own_slave.id == id
 
     def start(self):
-        StateManager().state_data.register_callback(lambda x: self.slave_update(self.own_slave, "state", x))
-        VLCPlayer().player_state.register_callback(lambda x: self.slave_update(self.own_slave, "player", x))
-        MediaManager().media_data.register_callback(lambda x: self.slave_update(self.own_slave, "media", x))
-        MediaManager().torrent_data.register_callback(lambda x: self.slave_update(self.own_slave, "torrent", x))
-        Stats().cache.register_callback(lambda x: self.slave_update(self.own_slave, "stats", x))
-        self.slaves.register_callback(lambda x: self.update_slaves_data(x.data))
+        StateManager().state_data.register_callback(lambda old, new: self.slave_update(self.own_slave, "state", new))
+        VLCPlayer().player_state.register_callback(lambda old, new: self.slave_update(self.own_slave, "player", new))
+        MediaManager().media_data.register_callback(lambda old, new: self.slave_update(self.own_slave, "media", new))
+        MediaManager().torrent_data.register_callback(lambda old, new: self.slave_update(self.own_slave, "torrent", new))
+        Stats().cache.register_callback(lambda old, new: self.slave_update(self.own_slave, "stats", new))
+        self.slaves.register_callback(lambda old, new: self.update_slaves_data(new.data))
 
     def add_client_request(self, callback, callback_no_answer, valid_for, type, data):
         self.pending_message_handler.add_pending_message(ClientMessage(self.next_id(), callback, callback_no_answer, valid_for, type, data))
