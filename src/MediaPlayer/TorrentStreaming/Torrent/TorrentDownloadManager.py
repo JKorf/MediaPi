@@ -57,6 +57,10 @@ class TorrentDownloadManager:
             Logger.write(3, "     Queue status: length: " + str(len(self.queue)) + ", init: " + str(self.init) + ", prio: " + str(self.prio))
             Logger.write(3, "     First in queue: " + first)
             Logger.write(3, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]) + " " + str(current_time() - self.last_get_time) + "ms ago")
+            if len(self.queue) > 0:
+                blocks = [x for x in self.queue[0].blocks.values() if not x.done][0: 5]
+                for block in blocks:
+                    Logger.write(3, "     Block " + str(block.index) + " being downloaded by peers: " + ",".join([str(x.id) for x in block.peers_downloading]))
 
     def up_priority(self, piece_index):
         self.upped_prios.append(piece_index)

@@ -13,7 +13,11 @@
 
     check if people are home
 
+    Add a rule based task system for automation
+        Do (x) when (x) == True
+        ie: Turn on lights at 18:00 and people are home
     SSL certificates
+        https://www.nginx.com/blog/using-free-ssltls-certificates-from-lets-encrypt-with-nginx/
     Mouse not in tv gui
     TV Gui
     Continue with optimizations

@@ -152,10 +152,3 @@ class PeerDownloadManager:
             self.downloading.clear()
             self.blocks_done.clear()
 
-
-class PeerDownload:
-
-    def __init__(self, block):
-        self.block = block
-        self.request_time = current_time()
-
