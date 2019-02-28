@@ -52,6 +52,16 @@ class SelectMediaPopup extends Component {
           return minutes + ":" + seconds;
       }
 
+      writeSize(value){
+        if (value < 1000)
+            return value + "b";
+        if (value < 1000 * 1000)
+            return Math.round(value / 1000) + "kb";
+        if (value < 1000 * 1000 * 1000)
+            return Math.round(value / (1000 * 1000) * 100) / 100 + "mb";
+        return Math.round(value / (1000 * 1000 * 1000) * 100) / 100 + "gb";
+      }
+
     groupBy(collection, property) {
         var i = 0, val, index,
             values = [], result = [];
@@ -83,6 +93,7 @@ class SelectMediaPopup extends Component {
                     <div className="media-file-select-title" onClick={(e) => this.selectionChange(file.path)}>{file.path}</div>
                     { this.state.selectedFile === file.path &&
                         <div className="media-file-select-details">
+                            <div className="media-file-select-size">{this.writeSize(file.length)}</div>
                             <Button text="Select" onClick={(e) => this.select(0)} classId="secondary"/>
                             { file.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(file.played_for)} onClick={() => this.select(file.played_for)} classId="secondary"></Button> }
                         </div>

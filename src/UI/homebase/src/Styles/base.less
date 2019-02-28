@@ -248,8 +248,14 @@ a {
     background: #colors[item-background];
     min-width: 250px;
     min-height: 150px;
-    max-width: 100%;
+    max-width: calc(100% - 30px);
     z-index: 11;
+}
+
+@media only screen and (min-device-width: 630px){
+    .popup-window{
+        max-width: 600px;
+    }
 }
 
 .popup-loader{

@@ -7,8 +7,6 @@
 
     zigbee
 
-    Out of memory als een torrent lang aan staat?
-
     Tv control goed toepassen
 
     check if people are home
@@ -20,5 +18,8 @@
     SSL certificates
         https://www.nginx.com/blog/using-free-ssltls-certificates-from-lets-encrypt-with-nginx/
     Continue with optimizations
-    Torrent file selection order season/episode - styling (width)
+
+    Torrent file selection
+        order season/episode
+
     Continue with popup styling?
