@@ -37,8 +37,8 @@ class SettingsView extends Component {
   {
     axios.get(window.vars.apiBase + 'util/get_log_file?file=' + encodeURIComponent(file)).then((data) => {
         console.log(data);
-        var newWindow = window.open();
         var html = data.data.replace(/\r\n/g, '<br />');
+        var newWindow = window.open();
         newWindow.document.write(html);
     });
   }

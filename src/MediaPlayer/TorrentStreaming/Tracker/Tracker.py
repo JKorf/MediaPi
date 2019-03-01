@@ -35,7 +35,7 @@ class HttpTracker:
 
     def announce_torrent(self, torrent):
         self.last_announce = current_time()
-        announce_message = TrackerMessages.TrackerAnnounceMessage.for_http(torrent.info_hash, 2, torrent.download_counter.total, torrent.left, torrent.uploaded, self.tracker_peer_request_amount)
+        announce_message = TrackerMessages.TrackerAnnounceMessage.for_http(torrent.info_hash, 2, torrent.total_size - torrent.left, torrent.left, torrent.uploaded, self.tracker_peer_request_amount)
 
         path = self.uri.path + announce_message.as_param_string()
         response = RequestFactory.make_request(path)
@@ -102,7 +102,7 @@ class UdpTracker:
             return False
 
         announce_message = TrackerMessages.TrackerAnnounceMessage.for_udp(self.connection_id, self.transaction_id, torrent.info_hash, 2,
-                                                                          torrent.download_counter.total, torrent.left, torrent.uploaded, self.tracker_peer_request_amount,
+                                                                          torrent.total_size - torrent.left, torrent.left, torrent.uploaded, self.tracker_peer_request_amount,
                                                                           6881)
 
         send_okay = self.connection.send(announce_message.as_bytes())

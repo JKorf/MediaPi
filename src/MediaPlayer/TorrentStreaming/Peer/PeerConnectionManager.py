@@ -51,29 +51,24 @@ class PeerConnectionManager:
         self.connection_state = ConnectionState.Connected
         self.connection.socket.setblocking(0)
 
-    def on_readable(self):
-        self.handle_read()
-
-    def on_writeable(self):
-        self.handle_write()
-
     def handle_read(self):
         if self.connection_state != ConnectionState.Connected:
-            return
+            return 0
 
         data = self.connection.receive_available(self.next_message_length)
         if data is None or len(data) == 0:
             self.disconnect()
-            return
+            return 0
 
         self.buffer[self.buffer_position:] = data
+        self.last_communication = current_time()
 
         data_length = len(data)
         if data_length < self.next_message_length:
             # incomplete message
             self.next_message_length -= data_length
             self.buffer_position += data_length
-            return
+            return data_length
         else:
             if self.receive_state == ReceiveState.ReceiveLength:
                 offset, msg_length = read_integer(self.buffer, 0)
@@ -88,7 +83,7 @@ class PeerConnectionManager:
                 else:
                     Logger.write(1, "Next message length: " + str(self.next_message_length))
 
-                return
+                return data_length
             else:
                 total_data = data_length + self.buffer_position
                 message = bytes(self.buffer[0: total_data])
@@ -100,7 +95,7 @@ class PeerConnectionManager:
                 with self.receiveLock:
                     self.received_bytes.append(message)
 
-                return
+                return data_length
 
     def handle_write(self):
         if self.connection_state != ConnectionState.Connected:

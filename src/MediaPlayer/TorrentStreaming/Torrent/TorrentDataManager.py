@@ -164,7 +164,6 @@ class TorrentDataManager:
             self.write_block(piece, block, data)
 
             self.torrent.left -= block.length
-            self.torrent.download_counter.add_value(block.length)
             Stats.add('total_downloaded', block.length)
 
         if self.init_done:

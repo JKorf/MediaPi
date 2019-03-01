@@ -11,6 +11,8 @@
 
     check if people are home
 
+    Player screen styling, more obvious buffer/download status
+
     Check stalling
     Add a rule based task system for automation
         Do (x) when (x) == True

@@ -320,10 +320,10 @@ class MediaManager(metaclass=Singleton):
             if self.torrent.media_file is not None:
                 self.torrent_data.media_file = self.torrent.media_file.name
             self.torrent_data.size = self.torrent.total_size
-            self.torrent_data.downloaded = self.torrent.download_counter.total
+            self.torrent_data.downloaded = self.torrent.network_manager.average_download_counter.total
             self.torrent_data.left = self.torrent.left
             self.torrent_data.overhead = self.torrent.overhead
-            self.torrent_data.download_speed = self.torrent.download_counter.value
+            self.torrent_data.download_speed = self.torrent.network_manager.average_download_counter.value
 
             self.torrent_data.buffer_position = self.torrent.stream_buffer_position
             self.torrent_data.buffer_total = self.torrent.bytes_total_in_buffer
@@ -332,6 +332,7 @@ class MediaManager(metaclass=Singleton):
             self.torrent_data.total_streamed = self.torrent.bytes_streamed
 
             self.torrent_data.state = self.torrent.state
+            self.torrent_data.max_download_speed = self.torrent.network_manager.max_download_speed
 
             self.torrent_data.potential = len(self.torrent.peer_manager.potential_peers)
             self.torrent_data.connecting = len(self.torrent.peer_manager.connecting_peers)
@@ -359,8 +360,11 @@ class TorrentData(Observable):
         self.buffer_size = 0
         self.stream_position = 0
         self.total_streamed = 0
+        self.stream_speed = 0
 
         self.state = 0
+        self.throttling = False
+        self.max_download_speed = 0
 
         self.potential = 0
         self.connecting = 0

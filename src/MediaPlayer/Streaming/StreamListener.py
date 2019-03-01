@@ -21,6 +21,10 @@ class StreamListener:
         ".srt": "json"
     }
 
+    @property
+    def stream_speed(self):
+        return max([x.stream_speed for x in self.sockets_writing_data], default=0)
+
     def __init__(self, name, port, arg=None):
 
         self.name = name
@@ -389,6 +393,10 @@ class HttpHeader:
 
 
 class SocketWritingData:
+
+    @property
+    def stream_speed(self):
+        return self.streamed / ((current_time() - self.connect_time) / 1000)
 
     def __init__(self, id, socket, range_start, range_end, connect_time):
         self.id = id

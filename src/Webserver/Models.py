@@ -106,50 +106,6 @@ class TorrentModel:
             self.category = "other"
 
 
-class TorrentDetailModel:
-
-    def __init__(self):
-        self.id = 0
-        self.name = None
-        self.state = 0
-        self.potential_peers = 0
-        self.connected_peers = 0
-        self.connecting_peers = 0
-
-        self.size = 0
-        self.percentage_done = 0
-        self.downloaded = 0
-        self.left = 0
-        self.speed = 0
-
-        self.stream_buffer_ready = 0
-        self.stream_buffer_total = 0
-        self.streamed = 0
-
-    @classmethod
-    def from_torrent(cls, torrent):
-        model = TorrentDetailModel()
-        model.id = torrent.id
-        model.name = torrent.name
-        model.state = torrent.state
-
-        model.potential_peers = len(torrent.peer_manager.potential_peers)
-        model.connected_peers = len(torrent.peer_manager.connected_peers)
-        model.connecting_peers = len(torrent.peer_manager.connecting_peers)
-
-        model.size = write_size(torrent.total_size)
-        model.percentage_done = torrent.percentage_done
-        model.downloaded = write_size(torrent.download_counter.total)
-        model.left = write_size(torrent.left)
-        model.speed = write_size(torrent.download_counter.value)
-
-        model.streaming = True
-        model.stream_buffer_ready = write_size(torrent.bytes_ready_in_buffer)
-        model.stream_buffer_total = write_size(torrent.bytes_total_in_buffer)
-        model.streamed = write_size(torrent.bytes_streamed)
-        return model
-
-
 class MediaFile:
 
     def __init__(self, path, title, size, season, episode, type, media_file, img, seen):

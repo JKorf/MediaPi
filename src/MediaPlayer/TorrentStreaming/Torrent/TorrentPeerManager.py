@@ -112,6 +112,9 @@ class TorrentPeerManager:
         if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData and self.torrent.state != TorrentState.WaitingUserFileSelection:
             return True
 
+        if self.torrent.network_manager.throttling:
+            return True # currently throttling, no need to request more peers
+
         if current_time() - self.last_peer_request > self.peer_request_interval or \
                                 len(self.potential_peers) <= 10 and current_time() - self.last_peer_request > self.peer_request_interval_no_potential:
             Logger.write(2, "Requesting peers")
@@ -142,10 +145,9 @@ class TorrentPeerManager:
 
         peer_list = list(self.potential_peers)  # Try connecting to new peers from potential list
         if len(peer_list) == 0:
-            peer_list = [x for x in self.disconnected_peers if current_time() - x[2] > 30000][peers_to_connect:]  # If we dont have any new peers to try, try connecting to disconnected peers
+            peer_list = [x for x in self.disconnected_peers if current_time() - x[2] > 10000][peers_to_connect:]  # If we dont have any new peers to try, try connecting to disconnected peers
             if len(peer_list) == 0:
                 return True  # No peers available
-
 
         for index in range(peers_to_connect):
             if len(peer_list) == 0:
@@ -201,6 +203,9 @@ class TorrentPeerManager:
         if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData:
             return True
 
+        if self.torrent.network_manager.throttling:
+            return True # currently throttling, don't stop slow peers because they might just be throttled
+
         if len(self.connected_peers) < self.max_peers_connected ** 0.66:
             return True  # Don't stop any peers if we have less than 66% of the max amount of peers
 
@@ -220,7 +225,7 @@ class TorrentPeerManager:
         return True
 
     def get_peers_for_io(self):
-        return list([x for x in self.connected_peers if x.connection_manager.connection_state == ConnectionState.Connected]), \
+        return list(sorted([x for x in self.connected_peers if x.connection_manager.connection_state == ConnectionState.Connected], key=lambda p: p.connection_manager.last_communication)), \
                list([x for x in self.connected_peers if len(x.connection_manager.to_send_bytes) > 0 and x.connection_manager.connection_state == ConnectionState.Connected])
 
     def are_fast_peers_available(self):

@@ -4,9 +4,6 @@ import math
 import urllib.parse
 import urllib.request
 from threading import Lock
-
-import gc
-
 from pympler import asizeof
 
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDataManager import TorrentDataManager
@@ -19,7 +16,6 @@ from MediaPlayer.TorrentStreaming.Tracker.Tracker import TrackerManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentPeerManager import TorrentPeerManager
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
-from MediaPlayer.Util.Counter import Counter
 from MediaPlayer.Util.Enums import TorrentState
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared import Engine
@@ -31,6 +27,10 @@ from Shared.Util import headers, write_size
 
 
 class Torrent:
+
+    @property
+    def stream_speed(self):
+        return self.output_manager.stream_manager.stream_speed
 
     @property
     def left(self):
@@ -70,7 +70,7 @@ class Torrent:
     @property
     def starting(self):
         # TODO setting
-        if self.download_counter.total < 4000000:
+        if self.network_manager.average_download_counter.total < 4000000:
             return True
         return False
 
@@ -115,7 +115,6 @@ class Torrent:
 
         self.engine = Engine.Engine('Main Engine', Settings.get_int("main_engine_tick_rate"))
         self.message_engine = Engine.Engine('Peer Message Engine', 200)
-        self.download_counter = Counter()
 
         self.tracker_manager = TrackerManager()
         self.peer_manager = TorrentPeerManager(self)
@@ -216,7 +215,6 @@ class Torrent:
         self.engine.add_work_item("torrent_download_manager", 5000, self.download_manager.update)
         self.engine.add_work_item("torrent_download_manager_prio", 5000, self.download_manager.update_priority)
         self.engine.add_work_item("output_manager", 1000, self.output_manager.update)
-        self.engine.add_work_item("counter", 1000, self.download_counter.update)
         self.engine.add_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
         self.engine.add_work_item("stream_manager", 3000, self.output_manager.stream_manager.update)
         self.engine.add_work_item("check_download_speed", 1000, self.check_download_speed)
@@ -365,9 +363,10 @@ class Torrent:
         return self.data_manager.get_data_bytes_for_hash(start_byte + self.media_file.start_byte, length)
 
     def check_download_speed(self):
-        current = Stats.total('max_download_speed')
-        if self.download_counter.max > current:
-            Stats.set('max_download_speed', self.download_counter.max)
+        current_max = Stats.total('max_download_speed')
+        current_speed = self.network_manager.live_download_counter.value
+        if current_speed > current_max:
+            Stats.set('max_download_speed', current_speed)
         return True
 
     def log(self):

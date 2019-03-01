@@ -5,7 +5,7 @@ from MediaPlayer.TorrentStreaming.Peer.PeerMetaDataManager import PeerMetaDataMa
 
 from MediaPlayer.TorrentStreaming.Data import Bitfield
 from MediaPlayer.TorrentStreaming.Peer.PeerMessageHandler import PeerMessageHandler
-from MediaPlayer.Util.Counter import Counter
+from MediaPlayer.Util.Counter import AverageCounter
 from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState, PeerSource
 from Shared import Engine
 from Shared.Logger import *
@@ -58,13 +58,13 @@ class Peer:
         self.metadata_manager = PeerMetaDataManager(self)
         self.message_handler = PeerMessageHandler(self)
         self.extension_manager = PeerExtensionManager(self)
-        self.counter = Counter()
+        self.counter = AverageCounter("Peerspeed counter", 3, 200)
 
         self.engine.add_work_item("connection_manager", 30000, self.connection_manager.update)
         self.engine.add_work_item("metadata_manager", 1000, self.metadata_manager.update)
         self.engine.add_work_item("download_manager", 200, self.download_manager.update)
-        self.engine.add_work_item("peer_counter", 1000, self.counter.update)
 
+        self.counter.start()
         self.engine.start()
         Logger.write(1, str(self.id) + ' Peer started')
 
@@ -103,6 +103,7 @@ class Peer:
         self.metadata_manager.stop()
         self.download_manager.stop()
         self.connection_manager.disconnect()
+        self.counter.stop()
 
         self.torrent = None
         Logger.write(1, str(self.id) + ' Peer stopped')

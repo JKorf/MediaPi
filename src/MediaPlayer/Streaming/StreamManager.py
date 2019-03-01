@@ -13,6 +13,10 @@ from Shared.Util import write_size
 class StreamManager:
 
     @property
+    def stream_speed(self):
+        return self.listener.stream_speed
+
+    @property
     def bytes_in_buffer(self):
         if self.buffer is None:
             return 0
@@ -80,10 +84,10 @@ class StreamManager:
             if self.consecutive_pieces_total_length < self.max_in_buffer - self.max_in_buffer_threshold:
                 self.torrent.unpause()
 
-        if self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer > 40000000 and self.torrent.download_manager.download_mode == DownloadMode.Full:
+        if self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer > Settings.get_int("important_only_start_threshold") and self.torrent.download_manager.download_mode == DownloadMode.Full:
             Logger.write(2, "Entering ImportantOnly download mode: " + write_size(self.torrent.bytes_total_in_buffer) + " in buffer total, " + write_size(self.consecutive_pieces_total_length) + " consequtive")
             self.torrent.download_manager.download_mode = DownloadMode.ImportantOnly
-        elif self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer < 20000000 and self.torrent.download_manager.download_mode == DownloadMode.ImportantOnly:
+        elif self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer < Settings.get_int("important_only_stop_threshold") and self.torrent.download_manager.download_mode == DownloadMode.ImportantOnly:
             Logger.write(2, "Leaving ImportantOnly download mode")
             self.torrent.download_manager.download_mode = DownloadMode.Full
 

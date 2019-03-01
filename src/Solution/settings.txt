@@ -39,6 +39,10 @@ stream_pause_tolerance=30000000
 stream_end_buffer_tolerance=5000000
 network_caching=5000
 
+start_throttling_buffer_size=30000000
+important_only_start_threshold=30000000
+important_only_stop_threshold=20000000
+
 # Application
 main_engine_tick_rate=500
 log_level=2

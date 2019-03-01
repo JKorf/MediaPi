@@ -181,7 +181,7 @@ class PlayerView extends Component {
 
   writeSize(value){
     if (value < 1000)
-        return value + "b";
+        return Math.round(value) + "b";
     if (value < 1000 * 1000)
         return Math.round(value / 1000) + "kb";
     if (value < 1000 * 1000 * 1000)
@@ -211,6 +211,9 @@ class PlayerView extends Component {
   }
 
   writeNumber(value){
+    if (isNaN(value))
+        return 0;
+
     var f = Math.round(parseFloat(value));
     if(f > 1000)
         f = (Math.round(f / 100) / 10) + "k";
@@ -225,12 +228,15 @@ class PlayerView extends Component {
 
     let torrentComponent = "";
     if (this.state.torrentData.title)
+    {
+        var max_dl = "(max " + this.writeSpeed(this.state.torrentData.max_download_speed) + ")";
+        if (this.state.torrentData.max_download_speed === 0)
+            max_dl = "";
         torrentComponent = (
             <InfoGroup title="Torrent">
                 <div className="player-group-details">
-                    <InfoRow name="Torrent name" value={this.state.torrentData.title} />
                     <InfoRow name="Media name" value={this.state.torrentData.media_file} />
-                    <InfoRow name="Speed" value={this.writeSpeed(this.state.torrentData.download_speed)} />
+                    <InfoRow name="Download speed" value={this.writeSpeed(this.state.torrentData.download_speed) + max_dl} />
                     <InfoRow name="Downloaded" value={this.writeSize(this.state.torrentData.downloaded)} />
                     <InfoRow name="Left" value={this.writeSize(this.state.torrentData.left)} />
                     <InfoRow name="Size" value={this.writeSize(this.state.torrentData.size)} />
@@ -241,7 +247,7 @@ class PlayerView extends Component {
                 </div>
             </InfoGroup>
         )
-
+    }
     let streamingComponent = "";
     if (this.state.torrentData.title)
         streamingComponent = (
