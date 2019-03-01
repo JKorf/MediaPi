@@ -13,6 +13,7 @@
 
     Player screen styling, more obvious buffer/download status
 
+    add queue and separate thread to logging
     Check stalling
     Add a rule based task system for automation
         Do (x) when (x) == True
