@@ -249,6 +249,7 @@ class TorrentPeerManager:
     def stop(self):
         for peer in self.connecting_peers:
             peer.stop()
+
         for peer in self.connected_peers:
             peer.stop()
 

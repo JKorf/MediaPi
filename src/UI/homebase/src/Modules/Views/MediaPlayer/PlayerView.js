@@ -229,7 +229,7 @@ class PlayerView extends Component {
     let torrentComponent = "";
     if (this.state.torrentData.title)
     {
-        var max_dl = "(max " + this.writeSpeed(this.state.torrentData.max_download_speed) + ")";
+        var max_dl = " (max " + this.writeSpeed(this.state.torrentData.max_download_speed) + ")";
         if (this.state.torrentData.max_download_speed === 0)
             max_dl = "";
         torrentComponent = (

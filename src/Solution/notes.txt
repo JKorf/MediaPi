@@ -20,8 +20,3 @@
     SSL certificates
         https://www.nginx.com/blog/using-free-ssltls-certificates-from-lets-encrypt-with-nginx/
     Continue with optimizations
-
-    Torrent file selection
-        order season/episode
-
-    Continue with popup styling?

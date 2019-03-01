@@ -1,4 +1,4 @@
-from threading import Lock
+from threading import Lock, Event
 
 import time
 
@@ -26,6 +26,7 @@ class AverageCounter:
         self.running = False
         self.current_second = 0
         self.__lock = Lock()
+        self.wait_event = Event()
 
     def start(self):
         self.running = True
@@ -34,6 +35,7 @@ class AverageCounter:
 
     def stop(self):
         self.running = False
+        self.wait_event.set()
         self.thread.join()
 
     @property
@@ -64,7 +66,7 @@ class AverageCounter:
                 self.last_seconds[self.loop_number] = self.current_second
                 self.current_second = 0
 
-            time.sleep(max(1 - ((current_time() - start_time) // 1000), 0))
+            self.wait_event.wait(max(1 - ((current_time() - start_time) / 1000), 0))
 
 
 class LiveCounter:
@@ -102,4 +104,4 @@ class LiveCounter:
             start_time = current_time()
             with self.__lock:
                 self.data = [x for x in self.data if current_time() - x[0] < 1000]
-            time.sleep(max(self.update_time // 1000 - ((current_time() - start_time) // 1000), 0))
+            time.sleep(max(self.update_time - (current_time() - start_time), 0) / 1000)

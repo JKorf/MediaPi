@@ -66,7 +66,7 @@ class ShowView extends Component {
 
   addLeadingZero(value)
   {
-    if (value > 10)
+    if (value >= 10)
         return value;
     return "0" + value;
   }

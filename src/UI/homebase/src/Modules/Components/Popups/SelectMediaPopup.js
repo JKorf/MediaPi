@@ -78,6 +78,13 @@ class SelectMediaPopup extends Component {
         return result;
     }
 
+    addLeadingZero(value)
+      {
+        if (value >= 10)
+            return value;
+        return "0" + value;
+      }
+
   render() {
     const buttons = (
         <div>
@@ -86,22 +93,27 @@ class SelectMediaPopup extends Component {
     )
     return (
     <Popup title="Select a file" loading={false} buttons={buttons} classId="select-media-popup">
-        {this.orderedFiles.map((episodeList, index) =>
-            episodeList.map((file, index) =>
-            <div className={"media-file-select " + (this.state.selectedFile === file.path ? "selected" : "")} key={file.path}>
-                <div className={"media-file-select-file " + (this.state.selectedFile === file.path ? "" : "truncate")}>
-                    <div className="media-file-select-title" onClick={(e) => this.selectionChange(file.path)}>{file.path}</div>
-                    { this.state.selectedFile === file.path &&
-                        <div className="media-file-select-details">
-                            <div className="media-file-select-size">{this.writeSize(file.length)}</div>
-                            <Button text="Select" onClick={(e) => this.select(0)} classId="secondary"/>
-                            { file.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(file.played_for)} onClick={() => this.select(file.played_for)} classId="secondary"></Button> }
-                        </div>
-                    }
+        { this.orderedFiles.map((episodeList, index) =>
+            <div className="media-file-select-season">
+                { this.orderedFiles.length > 1 && <div className="media-file-select-season-title">Season {episodeList[0].season}</div> }
+                { episodeList.map((file, index) =>
+                    <div className={"media-file-select " + (this.state.selectedFile === file.path ? "selected" : "")} key={file.path}>
+                        <div className="media-file-select-file">
+                            <div className={"media-file-select-title " + (this.state.selectedFile === file.path ? "" : "truncate")} onClick={(e) => this.selectionChange(file.path)}>{(file.episode != 0 ? ("[E" + this.addLeadingZero(file.episode) + "] "): "") +  file.path.replace(/^.*[\\\/]/, '')}</div>
+                            { this.state.selectedFile === file.path &&
+                                <div className="media-file-select-details">
+                                    <div className="media-file-select-size">{this.writeSize(file.length)}</div>
+                                    <Button text="Select" onClick={(e) => this.select(0)} classId="secondary"/>
+                                    { file.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(file.played_for)} onClick={() => this.select(file.played_for)} classId="secondary"></Button> }
+                                </div>
+                            }
 
-                    { file.seen && <div className="media-file-seen"><SvgImage src={seenImage} /></div> }
-                </div>
-        </div>))}
+                            { file.seen && <div className="media-file-seen"><SvgImage src={seenImage} /></div> }
+                        </div>
+                    </div>
+                    )}
+            </div>
+        )}
     </Popup>
     )
   }

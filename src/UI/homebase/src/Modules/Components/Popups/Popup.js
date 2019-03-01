@@ -27,16 +27,12 @@ class Popup extends Component {
             <div>
               <div className="popup-background"></div>
               <div className={classId + " popup-window"} onClick={(e) => e.preventDefault()}>
-                { loading &&
-                    <div className="popup-loader"><SvgImage src={loaderImage} /></div>
-                }
-                { !loading && (
-                    <div className="pupup-inner">
-                        <div className="popup-title">{title}</div>
-                        <div className="popup-content">{children}</div>
-                        <div className="popup-buttons">{this.props.buttons}</div>
-                    </div>
-                )}
+                <div className="popup-title">{title}</div>
+                <div className="popup-content">
+                    { loading && <div className="popup-loader"><SvgImage src={loaderImage} /></div> }
+                    { !loading && children}
+                </div>
+                <div className="popup-buttons">{this.props.buttons}</div>
               </div>
           </div>
         );

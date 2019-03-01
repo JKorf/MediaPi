@@ -103,6 +103,7 @@ class Peer:
         self.metadata_manager.stop()
         self.download_manager.stop()
         self.connection_manager.disconnect()
+
         self.counter.stop()
 
         self.torrent = None

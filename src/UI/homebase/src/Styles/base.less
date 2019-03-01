@@ -250,7 +250,13 @@ a {
     min-height: 150px;
     max-width: calc(100% - 30px);
     z-index: 11;
+    overflow:hidden;
+
+    display: flex;
+    max-height: calc(100% - 100px);
+    flex-direction: column;
 }
+
 
 @media only screen and (min-device-width: 630px){
     .popup-window{
@@ -279,11 +285,13 @@ a {
 .popup-title{
     background: #colors[secondary-header];
     padding: 4px 8px;
+    flex-shrink: 0;
 }
 
 .popup-content{
     padding: 10px;
     margin-bottom: 50px;
+    overflow-y: auto;
 }
 
 .popup-buttons{
@@ -293,6 +301,8 @@ a {
     bottom: 0;
     right: 0;
     height: 50px;
+        flex-shrink: 0;
+
 }
 
 .popup-buttons .button:last-child{

@@ -6,7 +6,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
-from Shared.Util import current_time, write_size
+from Shared.Util import current_time
 
 
 class TorrentNetworkManager:

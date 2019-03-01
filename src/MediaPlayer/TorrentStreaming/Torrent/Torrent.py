@@ -383,6 +383,7 @@ class Torrent:
 
         self.engine.stop()
         self.message_engine.stop()
+        Logger.write(2, 'Torrent engines stopped')
 
         self.output_manager.stop()
         self.peer_manager.stop()
@@ -391,6 +392,8 @@ class Torrent:
         self.data_manager.stop()
         self.network_manager.stop()
         self.metadata_manager.stop()
+        Logger.write(2, 'Torrent managers stopped')
+
         for file in self.files:
             file.close()
 
