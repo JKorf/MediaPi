@@ -1,6 +1,7 @@
 import psutil
 import time
 
+from Shared.Events import EventManager, EventType
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread, ThreadManager
@@ -14,6 +15,8 @@ class StateManager(metaclass=Singleton):
         self.state_data.name = Settings.get_string("name")
         self.watch_thread = CustomThread(self.update_state, "State observer")
         self.watch_thread.start()
+        self.memory_thread = CustomThread(self.check_memory, "Memory observer")
+        self.memory_thread.start()
 
     def update_state(self):
         while True:
@@ -23,6 +26,12 @@ class StateManager(metaclass=Singleton):
             self.state_data.threads = ThreadManager.thread_count()
             self.state_data.stop_update()
             time.sleep(1)
+
+    def check_memory(self):
+        while True:
+            if self.state_data.memory > 90:
+                EventManager.throw_event(EventType.Log, [])
+            time.sleep(15)
 
 
 class StateData(Observable):
