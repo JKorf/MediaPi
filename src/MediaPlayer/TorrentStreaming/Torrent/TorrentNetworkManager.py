@@ -14,7 +14,7 @@ class TorrentNetworkManager:
     @property
     def max_download_speed(self):
         if self.torrent.bytes_ready_in_buffer > self.throttle_limit:
-            return self.torrent.stream_speed
+            return max(self.torrent.stream_speed, self.min_download_speed)
         else:
             return 0
 
@@ -22,6 +22,7 @@ class TorrentNetworkManager:
         self.running = True
 
         self.throttle_limit = Settings.get_int("start_throttling_buffer_size")
+        self.min_download_speed = Settings.get_int("min_download_speed")
         self.torrent = torrent
 
         self.last_inputs = 0

@@ -40,6 +40,7 @@ stream_end_buffer_tolerance=5000000
 network_caching=5000
 
 start_throttling_buffer_size=30000000
+min_download_speed=100000
 important_only_start_threshold=30000000
 important_only_stop_threshold=20000000
 
