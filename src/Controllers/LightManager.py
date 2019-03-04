@@ -98,13 +98,16 @@ class LightManager(metaclass=Singleton):
         groups_commands = self.api(self.gateway.get_groups())
         result = self.api(groups_commands)
         for group in result:
-            observe_thread = CustomThread(lambda: self.api(group.observe(self.light_state.update_group, duration=30)), "Light group observer", [])
+            observe_thread = CustomThread(lambda: self.api(group.observe(self.light_state.update_group, self.err_callback, duration=30)), "Light group observer", [])
             observe_thread.start()
         observe_check = CustomThread(self.check_observing, "Check light observing", [])
         observe_check.start()
 
+    def err_callback(self, err):
+        Logger().write(2, "Error in light observe: " + str(err))
+
     def check_observing(self):
-        time.sleep(self.observing_end - current_time() / 1000)
+        time.sleep((self.observing_end - current_time()) / 1000)
         if self.observing:
             # Restart observing since it timed out
             self.start_observing()
@@ -225,11 +228,13 @@ class LightState(Observable):
         self._update_lock = Lock()
 
     def update_group(self, group):
+        if hasattr(group, 'raw'):
+            Logger().write(2, "Light update: " + str(group.raw))
         with self._update_lock:
             if not group.id in [x.id for x in self.groups]:
                 self.groups.append(LightGroup(group.id, group.name, group.state, group.dimmer))
             else:
-                g = [x for x in self.groups if x.id == group.id]
+                g = [x for x in self.groups if x.id == group.id][0]
                 g.state = group.state
                 g.dimmer = group.dimmer
             self.changed()
