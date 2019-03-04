@@ -31,7 +31,7 @@ class AuthController(tornado.web.RequestHandler):
             self.write(to_JSON(AuthResult(success, key)))
             if not success:
                 self.set_status(401)
-            Logger.write(2, str(client_id) + " log on result: " + str(success))
+            Logger().write(2, str(client_id) + " log on result: " + str(success))
 
         elif url == "refresh":
             client_id = self.request.headers.get('Client-ID', None)
@@ -39,14 +39,14 @@ class AuthController(tornado.web.RequestHandler):
             client_known = Database().check_client_key(client_key)
             if not client_known:
                 self.write(to_JSON(AuthResult(False, None)))
-                Logger.write(2, str(client_id) + " failed to refresh")
+                Logger().write(2, str(client_id) + " failed to refresh")
                 self.set_status(401)
                 return
 
             session_key = self.generate_session_key()
             Database().refresh_session_key(client_key, session_key)
             self.write(to_JSON(AuthResult(True, session_key)))
-            Logger.write(2, str(client_id) + " successfully refreshed")
+            Logger().write(2, str(client_id) + " successfully refreshed")
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -54,10 +54,10 @@ class AuthController(tornado.web.RequestHandler):
         self.set_header("Access-Control-Allow-Headers", "Client-ID, Session-Key")
 
     def _handle_request_exception(self, e):
-        Logger.write(3, "Error in Tornado requests: " + str(e), 'error')
+        Logger().write(3, "Error in Tornado requests: " + str(e), 'error')
         stack_trace = traceback.format_exc().split('\n')
         for stack_line in stack_trace:
-            Logger.write(3, stack_line)
+            Logger().write(3, stack_line)
         self.set_status(503)
         self.finish(str(e))
 

@@ -21,7 +21,7 @@ class TorrentOutputManager:
 
     def check_size(self):
         for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
-            Logger.write(2, "       Size of " + str(key) + ": " + write_size(size))
+            Logger().write(2, "       Size of " + str(key) + ": " + write_size(size))
 
     def add_piece_to_output(self, piece):
         with self.__lock:
@@ -38,7 +38,7 @@ class TorrentOutputManager:
 
             self.pieces_to_output.clear()
 
-        Logger.write(2, str(len(to_write)) + ' pieces done')
+        Logger().write(2, str(len(to_write)) + ' pieces done')
 
         #for item in to_write:
         self.torrent.peer_manager.pieces_done(to_write)
@@ -92,7 +92,7 @@ class DiskWriter:
         total_written = 0
         piece_start_byte = piece.start_byte
         data = piece.get_data_and_clear()
-        Logger.write(2, "Writing piece " + str(piece.index))
+        Logger().write(2, "Writing piece " + str(piece.index))
 
         while total_written < piece.length:
             file_to_write = self.get_file_for_byte(piece_start_byte + total_written)
@@ -100,7 +100,7 @@ class DiskWriter:
             total_written += this_write
             data = data[this_write:len(data)]
 
-        Logger.write(2, "Piece written " + str(piece.index))
+        Logger().write(2, "Piece written " + str(piece.index))
 
     def get_file_for_byte(self, byt):
         for file in self.torrent.files:

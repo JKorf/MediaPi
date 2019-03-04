@@ -26,7 +26,7 @@ class NextEpisodeManager(metaclass=Singleton):
         self.next_episode = 0
 
     def reset(self):
-        Logger.write(2, "Resetting next episode manager")
+        Logger().write(2, "Resetting next episode manager")
         self.next_id = None
         self.next_img = None
         self.next_type = None
@@ -38,7 +38,7 @@ class NextEpisodeManager(metaclass=Singleton):
 
     def notify_next_episode(self, callback, callback_no_answer):
         if self.next_type is not None:
-            Logger.write(2, "Can continue with next episode: " + self.next_title)
+            Logger().write(2, "Can continue with next episode: " + self.next_title)
             EventManager.throw_event(EventType.ClientRequest, [callback, callback_no_answer, 1000 * 60 * 1, "SelectNextEpisode", [self.next_title]])
 
     def check_next_episode(self, media_data, torrent):
@@ -56,24 +56,24 @@ class NextEpisodeManager(metaclass=Singleton):
         #  Try to get next episode from shows list
         season, epi = try_parse_season_episode(media_data.title)
         if season == 0 or epi == 0:
-            Logger.write(2, "No next episode of show, season/epi not parsed")
+            Logger().write(2, "No next episode of show, season/epi not parsed")
             return
 
         loop = asyncio.get_event_loop()
         raw_data = loop.run_until_complete(ShowController.get_by_id(media_data.id))
 
         if raw_data is None:
-            Logger.write(2, "No next episode of show, request failed")
+            Logger().write(2, "No next episode of show, request failed")
             return
 
 
         show = json.loads(raw_data.decode("utf-8"))
         next_epi = [x for x in show["episodes"] if x["season"] == season and x["episode"] == epi + 1]
         if len(next_epi) == 0:
-            Logger.write(2, "No next episode of show, request returned no results for next epi")
+            Logger().write(2, "No next episode of show, request returned no results for next epi")
             return
 
-        Logger.write(2, "Found next episode: " + next_epi[0]["title"])
+        Logger().write(2, "Found next episode: " + next_epi[0]["title"])
         self.next_id = media_data.id
         self.next_season = season
         self.next_episode = epi + 1
@@ -85,7 +85,7 @@ class NextEpisodeManager(metaclass=Singleton):
     def try_find_in_torrent(self, media_data, torrent):
         season, epi = try_parse_season_episode(torrent.media_file.path)
         if season == 0 or epi == 0:
-            Logger.write(2, "No next episode found, season/epi not parsed")
+            Logger().write(2, "No next episode found, season/epi not parsed")
             return
 
         # Try to get next episode from same torrent
@@ -95,7 +95,7 @@ class NextEpisodeManager(metaclass=Singleton):
 
             s, e = try_parse_season_episode(file.path)
             if s == season and e == epi + 1:
-                Logger.write(2, "Found next episode: " + file.path)
+                Logger().write(2, "Found next episode: " + file.path)
                 self.next_season = s
                 self.next_episode = epi + 1
                 self.next_type = "Torrent"
@@ -107,7 +107,7 @@ class NextEpisodeManager(metaclass=Singleton):
     def try_find_in_dir(self, media_data):
         season, epi = try_parse_season_episode(media_data.url)
         if season == 0 or epi == 0:
-            Logger.write(2, "No next episode of file, season/epi not parsed")
+            Logger().write(2, "No next episode of file, season/epi not parsed")
             return
 
         dir_name = os.path.dirname(media_data.url)
@@ -124,14 +124,14 @@ class NextEpisodeManager(metaclass=Singleton):
 
             s, e = try_parse_season_episode(potential)
             if s == season and e == epi + 1:
-                Logger.write(2, "Found next episode: " + potential)
+                Logger().write(2, "Found next episode: " + potential)
                 self.next_season = s
                 self.next_episode = epi + 1
                 self.next_type = "File"
                 self.next_title = potential
                 self.next_path = dir_name + "/" + potential
                 return
-        Logger.write(2, "No next episode of file, no matching next season/epi found in file list")
+        Logger().write(2, "No next episode of file, no matching next season/epi found in file list")
         return
 
     @staticmethod

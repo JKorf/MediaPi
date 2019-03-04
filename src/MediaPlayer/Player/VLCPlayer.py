@@ -42,16 +42,16 @@ class VLCPlayer(metaclass=Singleton):
 
     def instantiate_vlc(self):
         parameters = self.get_instance_parameters()
-        Logger.write(2, "VLC parameters: " + str(parameters))
+        Logger().write(2, "VLC parameters: " + str(parameters))
         self.__vlc_instance = vlc.Instance("cvlc", *parameters)
-        Logger.write(3, "VLC version " + libvlc_get_version().decode('utf8'))
+        Logger().write(3, "VLC version " + libvlc_get_version().decode('utf8'))
 
     def play(self, url, time=0):
         parameters = self.get_play_parameters(url, time)
 
-        Logger.write(2, "VLC Play | Url: " + url)
-        Logger.write(2, "VLC Play | Time: " + str(time))
-        Logger.write(2, "VLC Play | Parameters: " + str(parameters))
+        Logger().write(2, "VLC Play | Url: " + url)
+        Logger().write(2, "VLC Play | Time: " + str(time))
+        Logger().write(2, "VLC Play | Parameters: " + str(parameters))
 
         self.player_state.start_update()
         self.player_state.path = url
@@ -148,7 +148,7 @@ class VLCPlayer(metaclass=Singleton):
         return result
 
     def set_subtitle_files(self, files):
-        Logger.write(2, "Adding " + str(len(files)) + " subtitle files")
+        Logger().write(2, "Adding " + str(len(files)) + " subtitle files")
         pi = Settings.get_bool("raspberry")
         for file in reversed(files):
             if not pi and file[1] != ":":
@@ -223,7 +223,7 @@ class VLCPlayer(metaclass=Singleton):
 
     def state_change_end_reached(self, event):
         if self.player_state.path is not None and "youtube" in self.player_state.path and not self.trying_subitems:
-            Logger.write(2, "Trying youtube sub items")
+            Logger().write(2, "Trying youtube sub items")
             self.trying_subitems = True
             thread = CustomThread(self.try_play_subitem, "Try play subitem")
             thread.start()
@@ -234,7 +234,7 @@ class VLCPlayer(metaclass=Singleton):
             self.change_state(PlayerState.Ended)
 
     def on_error(self, event):
-        Logger.write(2, "VLC error")
+        Logger().write(2, "VLC error")
 
     def try_play_subitem(self):
         media = self.__player.get_media()

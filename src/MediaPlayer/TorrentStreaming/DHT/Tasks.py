@@ -62,11 +62,11 @@ class PingTask(BaseTask):
         self.send_request(request, self.ip, self.port, self.ping_response, self.ping_timeout)
 
     def ping_response(self, data):
-        Logger.write(1, "DHT: Ping response received")
+        Logger().write(1, "DHT: Ping response received")
         self.complete()
 
     def ping_timeout(self):
-        Logger.write(1, "DHT: Ping timed out")
+        Logger().write(1, "DHT: Ping timed out")
         self.complete()
 
 
@@ -99,7 +99,7 @@ class FindNodeTask(BaseTask):
 
     def find_node_response(self, data):
         if b"nodes" in data.response:
-            Logger.write(1, "DHT: FindNode request got a response with " + str(len(data.nodes) // 26) + " nodes")
+            Logger().write(1, "DHT: FindNode request got a response with " + str(len(data.nodes) // 26) + " nodes")
             self.found_nodes += 1
             found_nodes = Node.from_bytes_multiple(data.nodes)
             self.append_nodes(found_nodes)
@@ -122,12 +122,12 @@ class FindNodeTask(BaseTask):
                 self.available_nodes.append(node.node)
 
     def find_node_timeout(self):
-        Logger.write(1, "DHT: FindNode request timed out")
+        Logger().write(1, "DHT: FindNode request timed out")
         self.check_done()
 
     def check_done(self):
         if self.outstanding_requests == 0:
-            Logger.write(2, "DHT: FindNode found " + str(self.found_nodes) + " nodes")
+            Logger().write(2, "DHT: FindNode found " + str(self.found_nodes) + " nodes")
             self.complete()
 
 
@@ -160,13 +160,13 @@ class GetPeersTask(BaseTask):
 
     def on_response(self, data):
         if b'values' in data.response:
-            Logger.write(1, "DHT: GetPeers request got values response")
+            Logger().write(1, "DHT: GetPeers request got values response")
             for peer_data in data.values:
                 ip, port = ip_port_from_bytes(peer_data)
                 self.found_peers.append("tcp://" + ip + ":" + str(port))
 
         elif b'nodes' in data.response:
-            Logger.write(1, "DHT: GetPeers request got nodes response")
+            Logger().write(1, "DHT: GetPeers request got nodes response")
             new_nodes = Node.from_bytes_multiple(data.nodes)
             self.append_nodes(new_nodes)
             self.request_nodes()
@@ -189,12 +189,12 @@ class GetPeersTask(BaseTask):
                 self.available_nodes.append(node.node)
 
     def on_timeout(self):
-        Logger.write(1, "DHT: GetPeers request timed out")
+        Logger().write(1, "DHT: GetPeers request timed out")
         self.check_done()
 
     def check_done(self):
         if self.outstanding_requests == 0:
-            Logger.write(2, "DHT: GetPeers found " + str(len(self.found_peers)) + " peers")
+            Logger().write(2, "DHT: GetPeers found " + str(len(self.found_peers)) + " peers")
             self.complete()
 
 

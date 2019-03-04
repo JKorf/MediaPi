@@ -38,10 +38,10 @@ class BaseDHTMessage:
         try:
             data = Bencode.bdecode(bytes)
         except BTFailure:
-            Logger.write(2, "DHT: Invalid dht message" + str(bytes))
+            Logger().write(2, "DHT: Invalid dht message" + str(bytes))
             return None
         if b'y' not in data:
-            Logger.write(2, "DHT: Unknown message: " + str(data))
+            Logger().write(2, "DHT: Unknown message: " + str(data))
             return None
 
         if data[b'y'] == b'r':

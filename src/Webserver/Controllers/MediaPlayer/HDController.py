@@ -42,7 +42,7 @@ class HDController(BaseHandler):
         if sys.platform == "win32":
             path = "C:" + path
 
-        Logger.write(2, path)
+        Logger().write(2, path)
         directory = FileStructure(urllib.parse.unquote(path))
         history = Database().get_history()
         for file in directory.file_names:

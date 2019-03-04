@@ -45,7 +45,7 @@ class TorrentPeerManager:
 
     def check_size(self):
         for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
-            Logger.write(2, "       Size of " + str(key) + ": " + write_size(size))
+            Logger().write(2, "       Size of " + str(key) + ": " + write_size(size))
 
     def unregister(self):
         EventManager.deregister_event(self.event_id_log)
@@ -54,16 +54,15 @@ class TorrentPeerManager:
         EventManager.deregister_event(self.event_id_peers_found)
 
     def log_peers(self):
-        with Logger.lock:
-            Logger.write(3, "-- TorrentPeerManager state --")
-            Logger.write(3, "   Potential peers: " + str(len(self.potential_peers)))
-            Logger.write(3, "   Connected peers: " + str(len(self.connected_peers)))
-            Logger.write(3, "   Connecting peers: " + str(len(self.connecting_peers)))
-            Logger.write(3, "   CantConnect peers: " + str(len(self.cant_connect_peers)))
-            Logger.write(3, "   Disconnected peers: " + str(len(self.disconnected_peers)))
-            Logger.write(3, "   Complete list: " + str(len(self.complete_peer_list)))
-            for peer in self.connected_peers:
-                peer.log()
+        Logger().write(3, "-- TorrentPeerManager state --")
+        Logger().write(3, "   Potential peers: " + str(len(self.potential_peers)))
+        Logger().write(3, "   Connected peers: " + str(len(self.connected_peers)))
+        Logger().write(3, "   Connecting peers: " + str(len(self.connecting_peers)))
+        Logger().write(3, "   CantConnect peers: " + str(len(self.cant_connect_peers)))
+        Logger().write(3, "   Disconnected peers: " + str(len(self.disconnected_peers)))
+        Logger().write(3, "   Complete list: " + str(len(self.complete_peer_list)))
+        for peer in self.connected_peers:
+            peer.log()
 
     def torrent_state_change(self, old_state, new_state):
         if new_state == TorrentState.Downloading:
@@ -99,7 +98,7 @@ class TorrentPeerManager:
     def pieces_done(self, pieces):
         for peer in list(self.connected_peers):
             for piece in pieces:
-                Logger.write(1, str(peer.id) + " Sending have message for piece " + str(piece.index))
+                Logger().write(1, str(peer.id) + " Sending have message for piece " + str(piece.index))
                 peer.connection_manager.send(HaveMessage(piece.index).to_bytes())
 
     def get_peer_by_id(self, peer_id):
@@ -117,7 +116,7 @@ class TorrentPeerManager:
 
         if current_time() - self.last_peer_request > self.peer_request_interval or \
                                 len(self.potential_peers) <= 10 and current_time() - self.last_peer_request > self.peer_request_interval_no_potential:
-            Logger.write(2, "Requesting peers")
+            Logger().write(2, "Requesting peers")
             EventManager.throw_event(EventType.RequestPeers, [self.torrent])
             self.last_peer_request = current_time()
 
@@ -127,7 +126,7 @@ class TorrentPeerManager:
             if len(self.potential_peers) == 0 and \
                             len(self.connecting_peers) == 0 and \
                             len(self.connected_peers) == 0:
-                Logger.write(2, "No peers found for torrent")
+                Logger().write(2, "No peers found for torrent")
                 EventManager.throw_event(EventType.NoPeers, [])
                 return False
 
@@ -154,7 +153,7 @@ class TorrentPeerManager:
                 # We probably stopped the torrent if this happens
                 return True
 
-            Logger.write(1, 'starting new peer')
+            Logger().write(1, 'starting new peer')
             peer_to_connect = self.random.choice(peer_list)
 
             if peer_to_connect in self.potential_peers:
@@ -219,7 +218,7 @@ class TorrentPeerManager:
                 # If peer speed is more than 5kbps don't remove
                 break
 
-            Logger.write(2, "Stopping slowest peer to find a potential faster one. Peer speed last 5 seconds was " + str(write_size(peer.counter.value)) + ", total: " + str(write_size(peer.counter.total)))
+            Logger().write(2, "Stopping slowest peer to find a potential faster one. Peer speed last 5 seconds was " + str(write_size(peer.counter.value)) + ", total: " + str(write_size(peer.counter.total)))
             peer.stop()
 
         return True
@@ -237,12 +236,12 @@ class TorrentPeerManager:
 
         for peer in [x for x in list(self.connected_peers) if x.connection_state == ConnectionState.Connected]:
             allowed_process_time = max(min(50, end_time - current_time()), 10)
-            Logger.write(1, str(peer.id) + " peer with speed " + str(peer.counter.value) + " allowed " + str(allowed_process_time) + "ms at index " + str(index))
+            Logger().write(1, str(peer.id) + " peer with speed " + str(peer.counter.value) + " allowed " + str(allowed_process_time) + "ms at index " + str(index))
             if not peer.message_handler.update(allowed_process_time):
-                Logger.write(1, str(peer.id) + " removing peer, update = false")
+                Logger().write(1, str(peer.id) + " removing peer, update = false")
                 self.connected_peers.remove(peer)
             index += 1
-        Logger.write(1, "Total took " + str(current_time() - (end_time - 200)) + "ms")
+        Logger().write(1, "Total took " + str(current_time() - (end_time - 200)) + "ms")
 
         return True
 

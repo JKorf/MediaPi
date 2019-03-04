@@ -78,17 +78,17 @@ class StreamManager:
 
         if self.consecutive_pieces_total_length >= self.max_in_buffer and self.torrent.left > self.stream_tolerance:
             if self.torrent.state == TorrentState.Downloading:
-                Logger.write(2, "Pausing torrent: left to download = " + write_size((self.end_piece - self.consecutive_pieces_last_index) * self.torrent.piece_length))
+                Logger().write(2, "Pausing torrent: left to download = " + write_size((self.end_piece - self.consecutive_pieces_last_index) * self.torrent.piece_length))
                 self.torrent.pause()
         elif self.torrent.state == TorrentState.Paused:
             if self.consecutive_pieces_total_length < self.max_in_buffer - self.max_in_buffer_threshold:
                 self.torrent.unpause()
 
         if self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer > Settings.get_int("important_only_start_threshold") and self.torrent.download_manager.download_mode == DownloadMode.Full:
-            Logger.write(2, "Entering ImportantOnly download mode: " + write_size(self.torrent.bytes_total_in_buffer) + " in buffer total, " + write_size(self.consecutive_pieces_total_length) + " consequtive")
+            Logger().write(2, "Entering ImportantOnly download mode: " + write_size(self.torrent.bytes_total_in_buffer) + " in buffer total, " + write_size(self.consecutive_pieces_total_length) + " consequtive")
             self.torrent.download_manager.download_mode = DownloadMode.ImportantOnly
         elif self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer < Settings.get_int("important_only_stop_threshold") and self.torrent.download_manager.download_mode == DownloadMode.ImportantOnly:
-            Logger.write(2, "Leaving ImportantOnly download mode")
+            Logger().write(2, "Leaving ImportantOnly download mode")
             self.torrent.download_manager.download_mode = DownloadMode.Full
 
         return self.buffer.update()
@@ -124,7 +124,7 @@ class StreamManager:
             request_piece = int(math.floor(start_byte / self.torrent.piece_length))
             self.last_request_end = start_byte + length
             if request_piece not in self.torrent.download_manager.upped_prios:
-                Logger.write(2, "Received stray request, going to search to " + str(request_piece))
+                Logger().write(2, "Received stray request, going to search to " + str(request_piece))
                 self.seek(start_byte)
                 self.last_request_end = start_byte + length
                 return self.buffer.get_data_for_stream(start_byte, length)
@@ -141,7 +141,7 @@ class StreamManager:
     def change_stream_position(self, start_byte):
         new_index = int(math.floor(start_byte / self.torrent.piece_length))
         if new_index != self.stream_position_piece_index:
-            Logger.write(2, 'Stream position changed: ' + str(self.stream_position_piece_index) + ' -> ' + str(
+            Logger().write(2, 'Stream position changed: ' + str(self.stream_position_piece_index) + ' -> ' + str(
                 new_index))
             self.stream_position_piece_index = new_index
 

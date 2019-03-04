@@ -66,17 +66,17 @@ class SlaveWebsocketController:
 
     async def check_master_connection(self):
         if not self.connected:
-            Logger.write(2, "Connecting master socket")
+            Logger().write(2, "Connecting master socket")
             self.server_socket.run_forever()
             self.connected = False
 
         return True
 
     def on_close(self):
-        Logger.write(2, "Master server disconnected")
+        Logger().write(2, "Master server disconnected")
 
     def on_open(self):
-        Logger.write(2, "Connected master socket")
+        Logger().write(2, "Connected master socket")
         self.connected = True
         self.write(WebSocketInitMessage(self.instance_name))
         self.broadcast_data("player", VLCPlayer().player_state)
@@ -91,16 +91,16 @@ class SlaveWebsocketController:
 
     def on_master_message(self, raw_data):
         try:
-            Logger.write(2, "Received master message: " + raw_data)
+            Logger().write(2, "Received master message: " + raw_data)
             data = json.loads(raw_data)
             if data['event'] == 'response':
                 msg = self.pending_message_handler.get_message_by_response_id(int(data['response_id']))
                 if msg is None:
-                    Logger.write(2, "Received response on request not pending")
+                    Logger().write(2, "Received response on request not pending")
                     return
 
                 self.pending_message_handler.remove_client_message(msg, None)
-                Logger.write(2, "Client message response on " + str(id) + ", data: " + str(data['data']))
+                Logger().write(2, "Client message response on " + str(id) + ", data: " + str(data['data']))
                 cb_thread = CustomThread(lambda: msg.callback(*data['data']), "Message response handler", [])
                 cb_thread.start()
 
@@ -127,10 +127,10 @@ class SlaveWebsocketController:
 
 
         except Exception as e:
-            Logger.write(3, "Error in Slave websocket controller: " + str(e), 'error')
+            Logger().write(3, "Error in Slave websocket controller: " + str(e), 'error')
             stack_trace = traceback.format_exc().split('\n')
             for stack_line in stack_trace:
-                Logger.write(3, stack_line)
+                Logger().write(3, stack_line)
 
     def broadcast_data(self, type, data):
         if not self.connected:
@@ -141,7 +141,7 @@ class SlaveWebsocketController:
 
     def write(self, data):
         json = to_JSON(data)
-        Logger.write(1, "Sending to master: " + json)
+        Logger().write(1, "Sending to master: " + json)
         self.server_socket.send(json)
 
 

@@ -92,7 +92,7 @@ class BasePeerMessage:
             if extension_message_type == ExtensionProtocolMessageType.PeerExchange: return PeerExchangeMessage.from_bytes(data)
             if extension_message_type == ExtensionProtocolMessageType.Metadata: return MetadataMessage.from_bytes(data)
 
-        Logger.write(2, "Unknown message! type = " + str(type))
+        Logger().write(2, "Unknown message! type = " + str(type))
 
 
 class KeepAliveMessage:

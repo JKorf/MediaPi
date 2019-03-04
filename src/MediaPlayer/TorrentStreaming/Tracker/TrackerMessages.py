@@ -64,7 +64,7 @@ class TrackerResponseMessage:
             offset, msg.transaction_id = read_integer(data, offset)
             if msg.message_type == 3:
                 msg.error = str(data[offset: len(data)])
-                Logger.write(2, "Tracker error message: " + msg.error)
+                Logger().write(2, "Tracker error message: " + msg.error)
             else:
                 offset, msg.interval = read_integer(data, offset)
                 offset, msg.leechers = read_integer(data, offset)
@@ -76,7 +76,7 @@ class TrackerResponseMessage:
                     msg.peers.append(uri_from_bytes(data[offset:offset + 6]))
                     offset += 6
         except Exception as e:
-            Logger.write(3, "Error in tacker message: " +str(e) + ". Message: " + str(data))
+            Logger().write(3, "Error in tacker message: " +str(e) + ". Message: " + str(data))
             return None
 
         return msg

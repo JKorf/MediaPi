@@ -30,8 +30,8 @@ from Database.Database import Database
 class Program:
 
     def __init__(self):
-        Logger.set_log_level(Settings.get_int("log_level"))
-        Logger.write(2, "Starting")
+        Logger().start(Settings.get_int("log_level"))
+        Logger().write(2, "Starting")
         sys.excepthook = self.handle_exception
 
         self.is_slave = Settings.get_bool("slave")
@@ -57,13 +57,13 @@ class Program:
             self.file_listener = StreamListener("MasterFileServer", 50015)
             self.file_listener.start_listening()
 
-        Logger.write(3, "MediaPlayer build [" + self.version + "]")
-        Logger.write(3, "Slave: " + str(self.is_slave))
+        Logger().write(3, "MediaPlayer build [" + self.version + "]")
+        Logger().write(3, "Slave: " + str(self.is_slave))
         if self.is_slave:
-            Logger.write(3, "Master ip: " + str(Settings.get_string("master_ip")))
-        Logger.write(3, "Pi: " + str(Settings.get_bool("raspberry")))
+            Logger().write(3, "Master ip: " + str(Settings.get_string("master_ip")))
+        Logger().write(3, "Pi: " + str(Settings.get_bool("raspberry")))
 
-        Logger.write(2, "Started")
+        Logger().write(2, "Started")
         if Settings.get_bool("show_gui"):
             self.gui = App.initialize()
 
@@ -83,7 +83,7 @@ class Program:
     @staticmethod
     def init_sound():
         if sys.platform == "linux" or sys.platform == "linux2":
-            Logger.write(2, "Settings sound to 100%")
+            Logger().write(2, "Settings sound to 100%")
             call(["amixer", "sset", "PCM,0", "100%"])
 
     @staticmethod
@@ -114,8 +114,8 @@ class Program:
         filename, line, dummy, dummy = traceback.extract_tb(exc_traceback).pop()
         filename = os.path.basename(filename)
 
-        Logger.write(3, "Unhandled exception on line " + str(line) + ", file " + filename, 'error')
-        Logger.write(3, "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)), 'error')
+        Logger().write(3, "Unhandled exception on line " + str(line) + ", file " + filename, 'error')
+        Logger().write(3, "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)), 'error')
 
         sys.exit(1)
 
@@ -123,5 +123,5 @@ class Program:
 try:
     Program()
 except Exception as e:
-    Logger.write(3, "Exception during startup: " + str(e))
-    Logger.write(3, traceback.format_exc())
+    Logger().write(3, "Exception during startup: " + str(e))
+    Logger().write(3, traceback.format_exc())

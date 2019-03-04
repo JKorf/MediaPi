@@ -25,7 +25,7 @@ class YoutubeController:
 
     @staticmethod
     async def search(query, type):
-        Logger.write(2, "Searching youtube for " + query)
+        Logger().write(2, "Searching youtube for " + query)
         path = "search?part=snippet&q=" + query + "&type=video,channel&maxResults=20"
 
         data = await YoutubeController.internal_make_request(path)
@@ -122,7 +122,7 @@ class YoutubeController:
 
     @staticmethod
     def play_youtube(id, title):
-        Logger.write(2, "Play youtube: " + title)
+        Logger().write(2, "Play youtube: " + title)
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
@@ -131,7 +131,7 @@ class YoutubeController:
 
     @staticmethod
     def play_youtube_url(url, title):
-        Logger.write(2, "Play youtube url: " + unquote(title))
+        Logger().write(2, "Play youtube url: " + unquote(title))
 
         EventManager.throw_event(EventType.StopTorrent, [])
         time.sleep(0.2)
@@ -148,7 +148,7 @@ class YoutubeController:
             data = await YoutubeController.internal_make_request(uri)
             return data
 
-        Logger.write(1, "Requesting " + YoutubeController.api + uri)
+        Logger().write(1, "Requesting " + YoutubeController.api + uri)
         response = await RequestFactory.make_request_async(YoutubeController.api + uri, "GET", None, YoutubeController.headers, 15, 15)
         if response is None:
             if YoutubeController.token_received + (YoutubeController.token_expires * 1000) < current_time():
@@ -162,7 +162,7 @@ class YoutubeController:
 
     @staticmethod
     async def internal_do_refresh_token():
-        Logger.write(2, "Refreshing token")
+        Logger().write(2, "Refreshing token")
 
         fields = {"client_id": YoutubeController.client_id,
                   "client_secret": YoutubeController.client_secret,
@@ -179,5 +179,5 @@ class YoutubeController:
         YoutubeController.token_expires = int(data["expires_in"])
         YoutubeController.token_received = current_time()
         YoutubeController.headers = {"Authorization": "Bearer " + YoutubeController.access_token}
-        Logger.write(2, "Token refreshed")
+        Logger().write(2, "Token refreshed")
         return True

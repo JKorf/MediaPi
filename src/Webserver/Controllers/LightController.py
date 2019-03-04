@@ -43,19 +43,19 @@ class LightController(BaseHandler):
         return to_JSON(result)
 
     def set_light_name(self, light, name):
-        Logger.write(2, "Set light " + str(light) + " to name " + str(name))
+        Logger().write(2, "Set light " + str(light) + " to name " + str(name))
         LightManager().set_light_name(light, name)
 
     def set_light_state(self, light, state):
-        Logger.write(2, "Set light " + str(light) + " to state " + str(state))
+        Logger().write(2, "Set light " + str(light) + " to state " + str(state))
         LightManager().set_light_state(light, state)
 
     def set_light_warmth(self, light, warmth):
-        Logger.write(2, "Set light " + str(light) + " to warmth " + str(warmth))
+        Logger().write(2, "Set light " + str(light) + " to warmth " + str(warmth))
         LightManager().set_light_warmth(light, warmth)
 
     def set_light_dimmer(self, light, dimmer):
-        Logger.write(2, "Set light " + str(light) + " to dimmer " + str(dimmer))
+        Logger().write(2, "Set light " + str(light) + " to dimmer " + str(dimmer))
         LightManager().set_light_dimmer(light, dimmer)
 
     def get_groups(self):
@@ -76,15 +76,15 @@ class LightController(BaseHandler):
         return to_JSON(result)
 
     def set_group_state(self, group, state):
-        Logger.write(2, "Set group " + str(group) + " to state " + str(state))
+        Logger().write(2, "Set group " + str(group) + " to state " + str(state))
         LightManager().set_group_state(group, state)
 
     def set_group_dimmer(self, group, dimmer):
-        Logger.write(2, "Set group " + str(group) + " to dimmer " + str(dimmer))
+        Logger().write(2, "Set group " + str(group) + " to dimmer " + str(dimmer))
         LightManager().set_group_dimmer(group, dimmer)
 
     def set_group_name(self, group, name):
-        Logger.write(2, "Set group " + str(group) + " to name " + str(name))
+        Logger().write(2, "Set group " + str(group) + " to name " + str(name))
         LightManager().set_group_name(group, name)
 
     def parse_light_control(self, data):

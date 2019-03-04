@@ -38,12 +38,11 @@ class DHTEngine(metaclass=Singleton):
         EventManager.register_event(EventType.Log, self.log_table)
 
     def log_table(self):
-        with Logger.lock:
-            Logger.write(3, "-- DHT routing table --")
-            Logger.write(3, "Torrent nodes: " + str(len(self.torrent_nodes)))
-            Logger.write(3, "Own ID: " + str(self.own_node.int_id))
-            for bucket in sorted(self.routing_table.buckets, key=lambda x: x.start):
-                Logger.write(3, "Bucket from " + str(bucket.start) + " to " + str(bucket.end) + ", " + str(len(bucket.nodes)) + " nodes")
+        Logger().write(3, "-- DHT routing table --")
+        Logger().write(3, "Torrent nodes: " + str(len(self.torrent_nodes)))
+        Logger().write(3, "Own ID: " + str(self.own_node.int_id))
+        for bucket in sorted(self.routing_table.buckets, key=lambda x: x.start):
+            Logger().write(3, "Bucket from " + str(bucket.start) + " to " + str(bucket.end) + ", " + str(len(bucket.nodes)) + " nodes")
 
     def add_node(self, ip, port):
         self.start_task(PingTask(self, self.own_node.byte_id, ip, port))
@@ -63,39 +62,39 @@ class DHTEngine(metaclass=Singleton):
         if message.query == b"ping":
             response = ResponseDHTMessage.create_ping_response(self.own_node.byte_id, message.transaction_id)
             self.socket.send_response(response, ip, port)
-            Logger.write(1, "DHT: Sent ping response")
+            Logger().write(1, "DHT: Sent ping response")
         elif message.query == b"find_node":
             found_node = self.routing_table.get_node(message.target)
             if found_node is not None:
                 self.socket.send_response(ResponseDHTMessage.create_find_node_response(self.own_node.byte_id, message.transaction_id, None, found_node.byte_id), ip, port)
-                Logger.write(1, "DHT: Sent find_node response; found node")
+                Logger().write(1, "DHT: Sent find_node response; found node")
             else:
                 closest_nodes = self.routing_table.get_closest_nodes(message.target)
                 self.socket.send_response(ResponseDHTMessage.create_find_node_response(self.own_node.byte_id, message.transaction_id, bytes(Node.node_bytes_multiple(closest_nodes)), None), ip, port)
-                Logger.write(1, "DHT: Sent find_node response; sending " + str(len(closest_nodes)) + " closest nodes")
+                Logger().write(1, "DHT: Sent find_node response; sending " + str(len(closest_nodes)) + " closest nodes")
         elif message.query == b"get_peers":
             token = TokenManager.generate_token(request_node)
             if message.info_hash in self.torrent_nodes:
                 nodes = Node.node_bytes_multiple(self.torrent_nodes[message.info_hash])
                 response = ResponseDHTMessage.create_get_peers_response(self.own_node.byte_id, message.transaction_id, None, bytes(nodes), token)
-                Logger.write(1, "DHT: Sent get_peers response; found " + str(len(nodes)) + " peers")
+                Logger().write(1, "DHT: Sent get_peers response; found " + str(len(nodes)) + " peers")
             else:
                 closest_nodes = self.routing_table.get_closest_nodes(message.info_hash)
                 response = ResponseDHTMessage.create_get_peers_response(self.own_node.byte_id, message.transaction_id, bytes(Node.node_bytes_multiple(closest_nodes)), None, token)
-                Logger.write(1, "DHT: Sent get_peers response; sending closest " + str(len(closest_nodes)) + " nodes")
+                Logger().write(1, "DHT: Sent get_peers response; sending closest " + str(len(closest_nodes)) + " nodes")
             self.socket.send_response(response, ip, port)
         elif message.query == b"announce_peer":
             if not TokenManager.verify_token(request_node, message.token):
                 self.socket.send_response(ErrorDHTMessage(message.transaction_id, 203, "Invalid token"), ip, port)
-                Logger.write(1, "DHT: Received invalid token for announce_peer")
+                Logger().write(1, "DHT: Received invalid token for announce_peer")
             else:
                 if message.info_hash not in self.torrent_nodes:
                     self.torrent_nodes[message.info_hash] = []
                 self.torrent_nodes[message.message.info_hash].append(request_node)
                 self.socket.send_response(ResponseDHTMessage.create_announce_peer_response(self.own_node.byte_id, message.transaction_id), ip, port)
-                Logger.write(1, "DHT: Received announce_peer, added to dict")
+                Logger().write(1, "DHT: Received announce_peer, added to dict")
         else:
-            Logger.write(2, "DHT: received unknown query: " + str(message.query))
+            Logger().write(2, "DHT: received unknown query: " + str(message.query))
 
     def start(self):
         byte_id, nodes = self.load_nodes()
@@ -110,19 +109,19 @@ class DHTEngine(metaclass=Singleton):
 
     def search_peers(self, torrent):
         if torrent.info_hash.sha1_hashed_bytes in self.torrent_nodes:
-            Logger.write(2, "DHT: found " + str(len(self.torrent_nodes[torrent.info_hash.sha1_hashed_bytes])) + " nodes in torrent_nodes")
+            Logger().write(2, "DHT: found " + str(len(self.torrent_nodes[torrent.info_hash.sha1_hashed_bytes])) + " nodes in torrent_nodes")
             EventManager.throw_event(EventType.PeersFound, [[x.uri for x in self.torrent_nodes[torrent.info_hash.sha1_hashed_bytes]], PeerSource.DHT])
 
         self.start_task(GetPeersTask(self, self.own_node.byte_id, torrent.info_hash.sha1_hashed_bytes, self.routing_table.get_closest_nodes(torrent.info_hash.sha1_hashed_bytes)), lambda x: EventManager.throw_event(EventType.PeersFound, [x.found_peers, PeerSource.DHT]))
 
     def start_task(self, task, on_complete=None):
-        Logger.write(1, "DHT: starting " + type(task).__name__)
+        Logger().write(1, "DHT: starting " + type(task).__name__)
         task.on_complete = lambda: self.end_task(task, on_complete)
         self.running_tasks.append(task)
         task.execute()
 
     def end_task(self, task, on_complete):
-        Logger.write(1, "DHT: " + type(task).__name__ + " completed in " + str(task.end_time - task.start_time) + "ms")
+        Logger().write(1, "DHT: " + type(task).__name__ + " completed in " + str(task.end_time - task.start_time) + "ms")
         self.running_tasks.remove(task)
         if on_complete:
             on_complete(task)
@@ -142,7 +141,7 @@ class DHTEngine(metaclass=Singleton):
             if node.node_state != NodeState.Bad:
                 all_nodes.extend(node.node_bytes())
 
-        Logger.write(2, "DHT: Saving " + str(len(all_nodes) // 26) + " nodes")
+        Logger().write(2, "DHT: Saving " + str(len(all_nodes) // 26) + " nodes")
         with open('Solution/dht.data', 'wb') as w:
             w.write(all_nodes)
         return True
@@ -152,7 +151,7 @@ class DHTEngine(metaclass=Singleton):
             with open("Solution/dht.data", "rb") as file:
                 data = file.read()
             nodes = Node.from_bytes_multiple(data[20:])
-            Logger.write(2, "DHT: Starting with " + str(len(nodes)) + " nodes")
+            Logger().write(2, "DHT: Starting with " + str(len(nodes)) + " nodes")
             return data[0:20], nodes
         except FileNotFoundError:
             return None, []

@@ -68,7 +68,7 @@ class TornadoServer:
         MasterWebsocketController().start()
 
         self.application.listen(self.port)
-        Logger.write(2, "API running on port " + str(self.port))
+        Logger().write(2, "API running on port " + str(self.port))
 
         tornado.ioloop.IOLoop.instance().start()
 
@@ -99,15 +99,15 @@ class MasterWebsocketHandler(websocket.WebSocketHandler):
 #             return
 #
 #         if url == "add_watched_torrent_file":
-#             Logger.write(2, "Adding to watched torrent files")
+#             Logger().write(2, "Adding to watched torrent files")
 #             Database().add_watched_torrent_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("mediaFile"), self.get_argument("watchedAt"))
 #
 #         if url == "add_watched_file":
-#             Logger.write(2, "Adding to watched files")
+#             Logger().write(2, "Adding to watched files")
 #             Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"), urllib.parse.unquote(self.get_argument("mediaFile")))
 #
 #         if url == "add_watched_youtube":
-#             Logger.write(2, "Adding to watched youtube")
+#             Logger().write(2, "Adding to watched youtube")
 #             Database().add_watched_youtube(
 #                 self.get_argument("title"),
 #                 self.get_argument("watchedAt"),
@@ -115,7 +115,7 @@ class MasterWebsocketHandler(websocket.WebSocketHandler):
 #                 self.get_argument("url"))
 #
 #         if url == "add_watched_movie":
-#             Logger.write(2, "Adding to watched movie")
+#             Logger().write(2, "Adding to watched movie")
 #             Database().add_watched_movie(
 #                 self.get_argument("title"),
 #                 self.get_argument("movieId"),
@@ -125,7 +125,7 @@ class MasterWebsocketHandler(websocket.WebSocketHandler):
 #                 self.get_argument("mediaFile"))
 #
 #         if url == "add_watched_episode":
-#             Logger.write(2, "Adding to watched episodes")
+#             Logger().write(2, "Adding to watched episodes")
 #             Database().add_watched_episode(
 #                 self.get_argument("title"),
 #                 self.get_argument("showId"),
@@ -137,7 +137,7 @@ class MasterWebsocketHandler(websocket.WebSocketHandler):
 #                 self.get_argument("watchedAt"))
 #
 #         if url == "add_watched_torrent":
-#             Logger.write(2, "Adding to watched episodes")
+#             Logger().write(2, "Adding to watched episodes")
 #             Database().add_watched_torrent_file(
 #                 self.get_argument("title"),
 #                 self.get_argument("url"),
@@ -145,24 +145,24 @@ class MasterWebsocketHandler(websocket.WebSocketHandler):
 #                 self.get_argument("watchedAt"))
 #
 #         if url == "remove_watched":
-#             Logger.write(2, "Remove watched")
+#             Logger().write(2, "Remove watched")
 #             Database().remove_watched(self.get_argument("id"))
 #
 #         if url == "add_favorite":
-#             Logger.write(2, "Adding to favorites")
+#             Logger().write(2, "Adding to favorites")
 #             Database().add_favorite(self.get_argument("id"), self.get_argument("type"), self.get_argument("title"), self.get_argument("image"))
 #
 #         if url == "remove_favorite":
-#             Logger.write(2, "Removing from favorites")
+#             Logger().write(2, "Removing from favorites")
 #             Database().remove_favorite(self.get_argument("id"))
 #
 #         if url == "remove_unfinished":
-#             Logger.write(2, "Removing unfinished")
+#             Logger().write(2, "Removing unfinished")
 #             Database().remove_watching_item(
 #                 urllib.parse.unquote(self.get_argument("url")))
 #
 #         if url == "add_unfinished":
-#             Logger.write(2, "Adding unfinished")
+#             Logger().write(2, "Adding unfinished")
 #
 #             media_file = self.get_argument("mediaFile")
 #             if media_file == "None" or media_file == "null":

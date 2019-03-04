@@ -47,11 +47,11 @@ class ToonController(BaseHandler):
 
     def set_temperature(self, temp):
         temp /= 100
-        Logger.write(2, "Setting toon temperature to " + str(temp))
+        Logger().write(2, "Setting toon temperature to " + str(temp))
         ToonManager().set_temperature(temp)
 
     def set_active_state(self, state):
-        Logger.write(2, "Setting toon state to " + state)
+        Logger().write(2, "Setting toon state to " + state)
         ToonManager().set_state(state)
 
 

@@ -23,7 +23,7 @@ from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger
 from Shared.Settings import Settings
 from Shared.Stats import Stats
-from Shared.Util import headers, write_size
+from Shared.Util import headers, write_size, current_time
 
 
 class Torrent:
@@ -126,7 +126,7 @@ class Torrent:
 
     def check_size(self):
         for key, value, size in sorted([(key, value, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[2], reverse=True):
-            Logger.write(2, "   Size of " + str(key) + ": " + write_size(size))
+            Logger().write(2, "   Size of " + str(key) + ": " + write_size(size))
             if getattr(value, "check_size", None) is not None:
                 value.check_size()
 
@@ -147,17 +147,17 @@ class Torrent:
             request = urllib.request.Request(urllib.parse.unquote_plus(uri), None, headers)
             file = urllib.request.urlopen(request).read()
         except:
-            Logger.write(3, "Error downloading torrent file: " + urllib.parse.unquote_plus(uri), 'error')
+            Logger().write(3, "Error downloading torrent file: " + urllib.parse.unquote_plus(uri), 'error')
             return False, torrent
 
         try:
             meta_info = Bencode.bdecode(file)
         except BTFailure:
-            Logger.write(3, "Invalid torrent file", 'error')
+            Logger().write(3, "Invalid torrent file", 'error')
             return False, torrent
 
         if b'info' not in meta_info:
-            Logger.write(3, "Invalid bencoded torrent dictionary", 'error')
+            Logger().write(3, "Invalid bencoded torrent dictionary", 'error')
             return False, torrent
 
         info = meta_info[b'info']
@@ -173,17 +173,17 @@ class Torrent:
         try:
             file = open(file_path, 'rb')
         except IOError:
-            Logger.write(3, "Torrent file could not be opened: " + file_path)
+            Logger().write(3, "Torrent file could not be opened: " + file_path)
             return False, torrent
 
         try:
             meta_info = Bencode.bdecode(file.read())
         except BTFailure:
-            Logger.write(3, "Invalid torrent file", 'error')
+            Logger().write(3, "Invalid torrent file", 'error')
             return False, torrent
 
         if b'info' not in meta_info:
-            Logger.write(3, "Invalid bencoded torrent dictionary", 'error')
+            Logger().write(3, "Invalid bencoded torrent dictionary", 'error')
             return False, torrent
 
         info = meta_info[b'info']
@@ -199,11 +199,11 @@ class Torrent:
         if not torrent.parse_magnet_uri(uri):
             return False, torrent
 
-        Logger.write(3, "Torrent created: " + uri)
+        Logger().write(3, "Torrent created: " + uri)
         return True, torrent
 
     def start(self):
-        Logger.write(2, 'Starting torrent')
+        Logger().write(2, 'Starting torrent')
         if self.from_magnet:
             self.__set_state(TorrentState.DownloadingMetaData)
         else:
@@ -226,7 +226,7 @@ class Torrent:
         self.engine.start()
         self.message_engine.start()
         self.network_manager.start()
-        Logger.write(3, "Torrent started")
+        Logger().write(3, "Torrent started")
 
     def parse_info_dictionary(self, info_dict):
         self.name = info_dict[b'name'].decode('utf8')
@@ -248,13 +248,13 @@ class Torrent:
                 self.files.append(fi)
 
                 total_length += file_length
-                Logger.write(2, "File: " + fi.path)
+                Logger().write(2, "File: " + fi.path)
         else:
             # Singlefile
             total_length = info_dict[b'length']
             file = TorrentDownloadFile(total_length, 0, self.name, self.name, is_media_file(self.name))
             self.files.append(file)
-            Logger.write(2, "File: " + file.path)
+            Logger().write(2, "File: " + file.path)
 
         self.piece_length = info_dict[b'piece length']
         self.piece_hashes = info_dict[b'pieces']
@@ -262,7 +262,7 @@ class Torrent:
         media_files = [x for x in self.files if x.is_media]
         if len(media_files) == 0:
             # No media file, can't play so just stop
-            Logger.write(2, "No media file found in torrent, stopping")
+            Logger().write(2, "No media file found in torrent, stopping")
             EventManager.throw_event(EventType.StopPlayer, [])
         elif len(media_files) == 1:
             # Single media file, just play that
@@ -287,24 +287,24 @@ class Torrent:
                         file.episode = epi
                 EventManager.throw_event(EventType.TorrentMediaSelectionRequired, [media_files])
 
-        Logger.write(3, "Torrent metadata read")
+        Logger().write(3, "Torrent metadata read")
 
     def set_selected_media_file(self, file):
-        Logger.write(2, "Setting selected media file to " + file)
+        Logger().write(2, "Setting selected media file to " + file)
         self.selected_media_file = file
 
     def set_media_file(self, path):
         self.media_file = [x for x in self.files if x.path == path][0]
-        Logger.write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
+        Logger().write(2, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
 
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
         self.__set_state(TorrentState.Downloading)
         self.to_download_bytes = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
-        Logger.write(2, "To download: " + str(self.to_download_bytes) + " (" + str(self.to_download_bytes - self.media_file.length) + " overhead), piece length: " + str(self.piece_length))
+        Logger().write(2, "To download: " + str(self.to_download_bytes) + " (" + str(self.to_download_bytes - self.media_file.length) + " overhead), piece length: " + str(self.piece_length))
         EventManager.throw_event(EventType.TorrentMediaFileSet, [self.media_file.name])
 
     def user_file_selected(self, file_path):
-        Logger.write(2, "User selected media file: " + file_path)
+        Logger().write(2, "User selected media file: " + file_path)
         file = [x for x in self.files if x.path == file_path][0]
         self.set_media_file(file)
 
@@ -318,7 +318,7 @@ class Torrent:
         uri = urllib.parse.unquote_plus(uri)
 
         if not uri.startswith('magnet:?xt=urn:btih:'):
-            Logger.write(3, 'Invalid magnet uri ' + uri, 'error')
+            Logger().write(3, 'Invalid magnet uri ' + uri, 'error')
             return False
 
         protocol_stripped = uri[8:]
@@ -345,13 +345,13 @@ class Torrent:
         self.__set_state(TorrentState.Downloading)
 
     def torrent_done(self):
-        Logger.write(3, 'Torrent is done')
+        Logger().write(3, 'Torrent is done')
         self.output_manager.flush()
         self.to_download_bytes = 0
         self.__set_state(TorrentState.Done)
 
     def __set_state(self, value):
-        Logger.write(2, "Setting torrent state from " + TorrentState.get_str(self.__state) + " to " + TorrentState.get_str(value))
+        Logger().write(2, "Setting torrent state from " + TorrentState.get_str(self.__state) + " to " + TorrentState.get_str(value))
         old = self.__state
         self.__state = value
         EventManager.throw_event(EventType.TorrentStateChange, [old, value])
@@ -376,14 +376,14 @@ class Torrent:
         if self.__state == TorrentState.Stopping:
             return
 
-        Logger.write(2, 'Torrent stopping')
+        Logger().write(2, 'Torrent stopping')
         self.__set_state(TorrentState.Stopping)
         EventManager.deregister_event(self.user_file_selected_id)
         EventManager.deregister_event(self.log_id)
 
         self.engine.stop()
         self.message_engine.stop()
-        Logger.write(2, 'Torrent engines stopped')
+        Logger().write(2, 'Torrent engines stopped')
 
         self.output_manager.stop()
         self.peer_manager.stop()
@@ -392,7 +392,7 @@ class Torrent:
         self.data_manager.stop()
         self.network_manager.stop()
         self.metadata_manager.stop()
-        Logger.write(2, 'Torrent managers stopped')
+        Logger().write(2, 'Torrent managers stopped')
 
         for file in self.files:
             file.close()
@@ -408,7 +408,7 @@ class Torrent:
         self.network_manager = None
 
         EventManager.throw_event(EventType.TorrentStopped, [])
-        Logger.write(3, 'Torrent stopped')
+        Logger().write(3, 'Torrent stopped')
 
 
 class InfoHash:
@@ -478,7 +478,7 @@ class TorrentDownloadFile:
             offset += piece.length
         self.stream.close()
         self.done = True
-        Logger.write(2, "File " + self.name + " done")
+        Logger().write(2, "File " + self.name + " done")
 
     def write(self, offset_in_file, data):
         with self.__lock:

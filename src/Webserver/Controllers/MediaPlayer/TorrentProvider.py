@@ -43,7 +43,7 @@ class List(object):
         Request URL and parse response. Yield a ``Torrent`` for every torrent
         on page.
         """
-        Logger.write(2, "TPB requesting " + str(self.url))
+        Logger().write(2, "TPB requesting " + str(self.url))
         request = Request(str(self.url), data=None, headers=headers)
         request = urlopen(request, timeout=10)
 

@@ -38,7 +38,7 @@ class RadioController(BaseHandler):
 
     def get(self, url):
         if url == "get_radios":
-            Logger.write(2, "Get radio list")
+            Logger().write(2, "Get radio list")
             self.write(to_JSON(self.get_list()))
 
     def get_list(self):

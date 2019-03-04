@@ -18,7 +18,7 @@ class Database(metaclass=Singleton):
 
     def init_database(self):
         with self.lock:
-            Logger.write(2, "Opening database at " + str(self.path))
+            Logger().write(2, "Opening database at " + str(self.path))
             database_exists = os.path.isfile(self.path)
 
             if not database_exists:
@@ -49,23 +49,23 @@ class Database(metaclass=Singleton):
             database.commit()
 
         if db_version > self.current_version:
-            Logger.write(2, "DB version higher than software, can't process")
+            Logger().write(2, "DB version higher than software, can't process")
             raise Exception("DB version invalid")
 
         changed = False
         while db_version != self.current_version:
-            Logger.write(2, "Database version " + str(db_version) + ", latest is " + str(self.current_version) + ". Upgrading")
+            Logger().write(2, "Database version " + str(db_version) + ", latest is " + str(self.current_version) + ". Upgrading")
             self.upgrade(database, cursor, db_version)
             db_version += 1
             changed = True
 
         database.close()
         if changed:
-            Logger.write(2, "Database upgrade completed")
+            Logger().write(2, "Database upgrade completed")
 
     def upgrade(self, database, cursor, number):
         new_version = number + 1
-        Logger.write(2, "Upgrading database from " + str(number) + " to " + str(new_version))
+        Logger().write(2, "Upgrading database from " + str(number) + " to " + str(new_version))
 
         with open(str(pathlib.Path(__file__).parent) + '/Migrations/Upgrade_' + str(new_version) + '.sql', 'r') as script:
             data = script.read().replace('\n', '')

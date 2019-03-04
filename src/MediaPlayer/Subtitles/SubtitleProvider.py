@@ -42,7 +42,7 @@ class SubtitleProvider:
         EventManager.register_event(EventType.SearchSubtitles, self.search_subtitles)
 
     def search_subtitles(self, name, size, length, first_64k, last_64k):
-        Logger.write(2, "Going to search subs: name: " + name + ", size: " + str(size) + ", length: " + str(length))
+        Logger().write(2, "Going to search subs: name: " + name + ", size: " + str(size) + ", length: " + str(length))
         self.sub_files = []
         for source in self.subtitle_sources:
             thread = CustomThread(self.search_subtitles_thread, "Search subtitles", [source, size, length, name, first_64k, last_64k])

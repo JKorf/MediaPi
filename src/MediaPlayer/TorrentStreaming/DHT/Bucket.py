@@ -12,11 +12,11 @@ class Bucket:
         self.nodes = []
         self.last_changed = 0
 
-        Logger.write(1, "Creating new bucket from " + str(self.start) + " to " + str(self.end))
+        Logger().write(1, "Creating new bucket from " + str(self.start) + " to " + str(self.end))
 
     def split(self):
         self.start += (self.end - self.start) // 2
-        Logger.write(1, "DHT: Splitting bucket, new range: " + str(self.start) + " to " + str(self.end))
+        Logger().write(1, "DHT: Splitting bucket, new range: " + str(self.start) + " to " + str(self.end))
         split_nodes = [x for x in self.nodes if x.int_id < self.start]
         self.nodes = [x for x in self.nodes if x.int_id >= self.start]
         return split_nodes

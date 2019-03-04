@@ -47,7 +47,7 @@ class StreamListener:
         self.thread.start()
 
     def handle_request(self, socket):
-        Logger.write(2, self.name + " new request")
+        Logger().write(2, self.name + " new request")
 
         # Read headers
         total_message = self.read_headers(socket)
@@ -63,7 +63,7 @@ class StreamListener:
             self.handle_file_request(socket, header)
         else:
             # Unknown request
-            Logger.write(2, self.name + " streamListener received unknown request: " + header.path)
+            Logger().write(2, self.name + " streamListener received unknown request: " + header.path)
             socket.close()
 
     def read_headers(self, socket):
@@ -76,12 +76,12 @@ class StreamListener:
                 total_message += rec
         except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
             socket.close()
-            Logger.write(2, self.name + " error reading http header")
+            Logger().write(2, self.name + " error reading http header")
             return
 
         if not total_message.endswith(b'\r\n\r\n'):
             socket.close()
-            Logger.write(2, self.name + " invalid http header, closing")
+            Logger().write(2, self.name + " invalid http header, closing")
             return
         return total_message
 
@@ -93,7 +93,7 @@ class StreamListener:
         if not os.path.exists(file_path):
             file_path = urllib.parse.unquote_plus(file_path)
             if not os.path.exists(file_path):
-                Logger.write(2, self.name + " file not found: " + file_path)
+                Logger().write(2, self.name + " file not found: " + file_path)
                 self.write_header(socket, "404 Not Found")
                 socket.close()
                 return
@@ -105,11 +105,11 @@ class StreamListener:
             header.range_end = read_file.size - 1
 
         if header.range is None:
-            Logger.write(2, self.name + ' request without range')
+            Logger().write(2, self.name + ' request without range')
             self.write_header_with_content(socket, "200 OK", 0, header.range_end, read_file.size, file_path)
             self.write_data(socket, header.range_start, header.range_end - header.range_start + 1, read_file.get_bytes)
         else:
-            Logger.write(2, self.name + ' request with range')
+            Logger().write(2, self.name + ' request with range')
             self.write_header_with_content(socket, "206 Partial Content", header.range_start, header.range_end, read_file.size, file_path)
             self.write_data(socket, header.range_start, header.range_end - header.range_start + 1, read_file.get_bytes)
         read_file.close()
@@ -117,7 +117,7 @@ class StreamListener:
     def handle_torrent_request(self, socket, header):
         if not self.torrent or not self.running:
             socket.close()
-            Logger.write(2, self.name + " stopping connection because there is no more torrent")
+            Logger().write(2, self.name + " stopping connection because there is no more torrent")
             return
 
         if header.range_end == 0 or header.range_end == -1:
@@ -126,13 +126,13 @@ class StreamListener:
         if header.range:
             range_start = header.range_start
             if range_start == self.torrent.media_file.length:
-                Logger.write(2, "Request for content length 0, cant process")
+                Logger().write(2, "Request for content length 0, cant process")
                 self.write_header(socket, "416 Requested range not satisfiable")
                 socket.close()
                 return
 
         if header.range is None:
-            Logger.write(2, self.name + ' request without range')
+            Logger().write(2, self.name + ' request without range')
             success = self.write_header_with_content(socket, "200 OK", 0, header.range_end, self.torrent.media_file.length,
                               self.torrent.media_file.path)
 
@@ -142,7 +142,7 @@ class StreamListener:
             self.write_data(socket, header.range_start, header.range_end - header.range_start + 1,
                             self.torrent.get_data_bytes_for_stream)
         else:
-            Logger.write(2, self.name + ' request with range')
+            Logger().write(2, self.name + ' request with range')
             success = self.write_header_with_content(socket, "206 Partial Content", header.range_start, header.range_end,
                               self.torrent.media_file.length, self.torrent.media_file.path)
 
@@ -156,63 +156,63 @@ class StreamListener:
         response_header = HttpHeader()
         response_header.status_code = status
 
-        Logger.write(2, self.name + " return header: " + response_header.to_string())
+        Logger().write(2, self.name + " return header: " + response_header.to_string())
 
         try:
             socket.send(response_header.to_string().encode())
             return True
         except (ConnectionAbortedError, ConnectionResetError, OSError):
-            Logger.write(2, "Connection closed 2")
+            Logger().write(2, "Connection closed 2")
             socket.close()
             return False
 
     def write_header_with_content(self, socket, status, start, end, length, path):
         response_header = HttpHeader()
-        Logger.write(2, self.name + " stream requested: " + str(start) + "-" + str(end))
+        Logger().write(2, self.name + " stream requested: " + str(start) + "-" + str(end))
 
         response_header.status_code = status
         response_header.content_length = end - start + 1
         response_header.set_range(start, end, length)
         filename, file_extension = os.path.splitext(path.lower())
         if file_extension not in StreamListener.mime_mapping:
-            Logger.write(2, self.name + " unknown video type: " + str(file_extension) + ", defaulting to mp4")
+            Logger().write(2, self.name + " unknown video type: " + str(file_extension) + ", defaulting to mp4")
             response_header.mime_type = StreamListener.mime_mapping[".mp4"]
         else:
             response_header.mime_type = StreamListener.mime_mapping[file_extension]
 
-        Logger.write(2, self.name + " return header: " + response_header.to_string())
+        Logger().write(2, self.name + " return header: " + response_header.to_string())
 
         try:
             socket.send(response_header.to_string().encode())
             return True
         except (ConnectionAbortedError, ConnectionResetError, OSError):
-            Logger.write(2, "Connection closed 2")
+            Logger().write(2, "Connection closed 2")
             socket.close()
             return False
 
     def write_data(self, socket, requested_byte, length, data_delegate):
         written = 0
-        Logger.write(2, self.name + " write data: " + str(requested_byte) + ", length " + str(length))
+        Logger().write(2, self.name + " write data: " + str(requested_byte) + ", length " + str(length))
         id = self.id
         self.id += 1
         data_writer = SocketWritingData(id, socket, requested_byte, requested_byte + length, current_time())
         self.sockets_writing_data.append(data_writer)
         if len(self.sockets_writing_data) > 1:
-            Logger.write(2, "Multiple data writers:")
+            Logger().write(2, "Multiple data writers:")
             for writer in self.sockets_writing_data:
-                Logger.write(2, "    " + str(writer))
+                Logger().write(2, "    " + str(writer))
 
         while written < length:
             part_length = min(length - written, self.chunk_length)
             if not self.running:
-                Logger.write(2, self.name + " canceling retrieved data because we are no longer running 1")
+                Logger().write(2, self.name + " canceling retrieved data because we are no longer running 1")
                 socket.close()
                 self.sockets_writing_data.remove(data_writer)
                 return
 
             data = data_delegate(requested_byte + written, part_length)
             if not self.running:
-                Logger.write(2, self.name + " canceling retrieved data because we are no longer running 2")
+                Logger().write(2, self.name + " canceling retrieved data because we are no longer running 2")
                 socket.close()
                 self.sockets_writing_data.remove(data_writer)
                 return
@@ -223,14 +223,14 @@ class StreamListener:
                     socket.recv(1)
                 except OSError as e:
                     if e.args[0] != 'timed out':
-                        Logger.write(2, self.name + " socket no longer open 3: " + str(type(e)) + "" + str(requested_byte) + ", " + str(length))
+                        Logger().write(2, self.name + " socket no longer open 3: " + str(type(e)) + "" + str(requested_byte) + ", " + str(length))
                         socket.close()
                         self.sockets_writing_data.remove(data_writer)
                         return
                 continue
 
             socket.settimeout(None)
-            Logger.write(2, self.name + ' data retrieved for writer ' + str(data_writer.id) + ': ' + str(requested_byte + written) + " - " + str(requested_byte + written + part_length))
+            Logger().write(2, self.name + ' data retrieved for writer ' + str(data_writer.id) + ': ' + str(requested_byte + written) + " - " + str(requested_byte + written + part_length))
             send = 0
             try:
                 while send < len(data):
@@ -242,12 +242,12 @@ class StreamListener:
                     self.bytes_send += data_length
                     data_writer.streamed += data_length
             except (ConnectionAbortedError, ConnectionResetError, OSError) as e:
-                Logger.write(2, self.name + " connection closed during sending of data: " + str(e))
+                Logger().write(2, self.name + " connection closed during sending of data: " + str(e))
                 socket.close()
                 self.sockets_writing_data.remove(data_writer)
                 return
 
-        Logger.write(2, "Completed request: " + str(data_writer))
+        Logger().write(2, "Completed request: " + str(data_writer))
         socket.close()
         self.sockets_writing_data.remove(data_writer)
 
@@ -256,7 +256,7 @@ class StreamListener:
         self.torrent = None
         if self.server is not None:
             self.server.close()
-        Logger.write(2, self.name + " stopped")
+        Logger().write(2, self.name + " stopped")
 
 
 class StreamServer:
@@ -275,9 +275,9 @@ class StreamServer:
 
         try:
             self.soc.bind(("", self.port))
-            Logger.write(2, "StreamServer "+self.name+" listening on port " + str(self.port))
+            Logger().write(2, "StreamServer "+self.name+" listening on port " + str(self.port))
         except (socket.error, OSError) as e:
-            Logger.write(2, "Couldn't start StreamServer " + self.name + ": " + str(e))
+            Logger().write(2, "Couldn't start StreamServer " + self.name + ": " + str(e))
             return
 
         self.soc.listen(10)
@@ -288,11 +288,11 @@ class StreamServer:
                 if not self.running:
                     break
                 ip, port = str(addr[0]), str(addr[1])
-                Logger.write(1, 'New connection from ' + ip + ':' + port)
+                Logger().write(1, 'New connection from ' + ip + ':' + port)
                 thread = CustomThread(self.client_thread, "Stream thread", [conn])
                 thread.start()
         except Exception as e:
-            Logger.write(2, "Unexpected error in StreamServer " + self.name + ": " + str(e))
+            Logger().write(2, "Unexpected error in StreamServer " + self.name + ": " + str(e))
 
         self.soc.close()
 
@@ -321,7 +321,7 @@ class ReadFile:
     def get_bytes(self, start, length):
         with self.read_lock:
             if self.location != start:
-                Logger.write(2, "Seeking file to " + str(start))
+                Logger().write(2, "Seeking file to " + str(start))
                 self.file.seek(start)
             data = self.file.read(length)
             self.location = start + len(data)
@@ -350,7 +350,7 @@ class HttpHeader:
     @classmethod
     def from_string(cls, header):
         header = header.decode('utf8')
-        Logger.write(2, "Received header: " + header)
+        Logger().write(2, "Received header: " + header)
         result = cls()
         split = header.splitlines(False)
         request = split[0].split(" ")

@@ -23,12 +23,12 @@ class LightManager(metaclass=Singleton):
 
     def init(self):
         if self.initialized:
-            Logger.write(2, "already init")
+            Logger().write(2, "already init")
             return
 
         with self.init_lock:
             if sys.platform != "linux" and sys.platform != "linux2":
-                Logger.write(2, "Lighting: Not initializing, no coap client available on windows")
+                Logger().write(2, "Lighting: Not initializing, no coap client available on windows")
                 self.initialized = True
                 return
 
@@ -39,7 +39,7 @@ class LightManager(metaclass=Singleton):
                 key = Database().get_stat_string("LightingKey")
 
                 if identity is None or key is None:
-                    Logger.write(2, "Lighting: No identity/key found, going to generate new")
+                    Logger().write(2, "Lighting: No identity/key found, going to generate new")
                     # We don't have all information to connect, reset and start from scratch
                     Database().remove_stat("LightingId")
                     Database().remove_stat("LightingKey")
@@ -59,14 +59,14 @@ class LightManager(metaclass=Singleton):
                         security_code = SecureSettings.get_string("tradfri_hub_code")  # the code at the bottom of the hub
                         key = self.api_factory.generate_psk(security_code)
                         Database().update_stat("LightingKey", key)  # Save the new key
-                        Logger.write(2, "Lighting: New key retrieved")
+                        Logger().write(2, "Lighting: New key retrieved")
                         self.initialized = True
                     except Exception:
                         stack_trace = traceback.format_exc().split('\n')
                         for stack_line in stack_trace:
-                            Logger.write(3, stack_line)
+                            Logger().write(3, stack_line)
                 else:
-                    Logger.write(2, "Lighting: Previously saved key found")
+                    Logger().write(2, "Lighting: Previously saved key found")
                     self.initialized = True
 
     def get_lights(self):
@@ -110,8 +110,8 @@ class LightManager(metaclass=Singleton):
 
         groups_commands = self.api(self.gateway.get_groups())
         result = self.api(groups_commands)
-        Logger.write(2, "Get light groups 1: " + str(result))
-        Logger.write(2, "Get light groups 2: " + str([x.raw for x in result]))
+        Logger().write(2, "Get light groups 1: " + str(result))
+        Logger().write(2, "Get light groups 2: " + str([x.raw for x in result]))
         return result
 
     def get_lights_in_group(self, group):

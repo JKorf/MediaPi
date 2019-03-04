@@ -8,8 +8,9 @@ from MediaPlayer.Util.Bencode import BTFailure
 from MediaPlayer.Util.Enums import PeerSource
 from MediaPlayer.Util.Util import uri_from_bytes
 from Shared.Events import EventManager, EventType
-from Shared.Logger import *
+from Shared.Logger import Logger
 from Shared.Network import RequestFactory, UdpClient
+from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
@@ -45,7 +46,7 @@ class HttpTracker:
         try:
             response_dict = Bencode.bdecode(response)
         except BTFailure:
-            Logger.write(2, 'Invalid tracker response: ' + str(response))
+            Logger().write(2, 'Invalid tracker response: ' + str(response))
             return False
 
         if b"peers" not in response_dict:
@@ -142,9 +143,9 @@ class TrackerManager:
 
     def tracker_announce(self, tracker, torrent):
         if not tracker.announce_torrent(torrent):
-            Logger.write(1, 'Could not connect to tracker ' + tracker.host)
+            Logger().write(1, 'Could not connect to tracker ' + tracker.host)
         else:
-            Logger.write(1, 'Tracker ok! ' + tracker.host)
+            Logger().write(1, 'Tracker ok! ' + tracker.host)
 
     def sleep(self, t):
         slept = 0

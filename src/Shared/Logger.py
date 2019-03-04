@@ -4,40 +4,56 @@ import inspect
 import ntpath
 import os
 import threading
-from threading import RLock
+from queue import Queue
+
+import sys
 
 from Shared.Settings import Settings
+from Shared.Util import Singleton
 
 
-class Logger:
-    log_level = 1
-    file = None
-    lock = RLock()
+class Logger(metaclass=Singleton):
 
-    @staticmethod
-    def set_log_level(level):
-        Logger.log_level = level
+    def __init__(self):
+        self.file = None
+        self.log_level = 0
+        self.log_thread = None
+        self.queue = Queue()
+        self.raspberry = Settings.get_bool("raspberry")
 
-    @staticmethod
-    def write(log_priority, message, type='info'):
-        if Logger.file is None:
-            log_path = Settings.get_string("base_folder") + "/Logs"
-            if not os.path.exists(log_path):
-                os.makedirs(log_path)
-            Logger.file = open(log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt", 'ab', buffering=0)
-            Logger.file.write("\r\n".encode('utf8'))
-            Logger.file.write(("Time".ljust(14) + " | "
-                               + "Thread".ljust(30) + " | "
-                               + "File".ljust(25) + " | "
-                               + "Function".ljust(30) + " | #"
-                               + "Line".ljust(5) + " | "
-                               + "Type".ljust(7) + " | "
-                               + "Message\r\n").encode("utf8"))
-            Logger.file.write(("-" * 140 + "\r\n").encode("utf8"))
-            print("Log location: " + log_path)
+    def start(self, log_level):
+        self.log_level = log_level
+        log_path = Settings.get_string("base_folder") + "/Logs"
+        if not os.path.exists(log_path):
+            os.makedirs(log_path)
+        self.file = open(log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt", 'ab',
+                       buffering=0)
+        self.file.write("\r\n".encode('utf8'))
+        self.file.write(("Time".ljust(14) + " | "
+                       + "Thread".ljust(30) + " | "
+                       + "File".ljust(25) + " | "
+                       + "Function".ljust(30) + " | #"
+                       + "Line".ljust(5) + " | "
+                       + "Type".ljust(7) + " | "
+                       + "Message\r\n").encode("utf8"))
+        self.file.write(("-" * 140 + "\r\n").encode("utf8"))
 
-        if Logger.log_level <= log_priority:
-            info = get_info()
+        self.log_thread = threading.Thread(name="Logger() thread", target=self.process_queue)
+        self.log_thread.start()
+
+        print("Log location: " + log_path)
+
+    def process_queue(self):
+        while True:
+            item = self.queue.get()
+            if not self.raspberry:
+                print(item)
+
+            self.file.write((item + "\r\n").encode('utf8'))
+
+    def write(self, log_priority, message, type='info'):
+        if self.log_level <= log_priority:
+            info = inspect.getframeinfo(sys._getframe().f_back)
             str_info = datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3].ljust(14) + " | " \
                        + threading.currentThread().getName().ljust(30) + " | " \
                        + path_leaf(info.filename).ljust(25) + " | " \
@@ -45,18 +61,8 @@ class Logger:
                        + str(info.lineno).ljust(5) + " | " \
                        + str(type).ljust(7) + " | " \
                        + message
-            file_log = str_info
-            if type == 'error':
-                str_info = "\033[91m" + str_info + "\033[0m"
 
-            if log_priority == 3:
-                str_info = '\033[1m' + str_info + '\033[0m'
-
-            with Logger.lock:
-                if not Settings.get_bool("raspberry"):
-                    print(str_info)
-
-                Logger.file.write((file_log + "\r\n").encode('utf8'))
+            self.queue.put(str_info)
 
     @staticmethod
     def get_log_files():
@@ -71,13 +77,6 @@ class Logger:
 
         with open(Settings.get_string("base_folder") + "/Logs/" + file) as f:
             return "\r\n".join(f.readlines())
-
-def get_info():
-    caller_frame_record = inspect.stack()[2]
-    frame = caller_frame_record[0]
-    info = inspect.getframeinfo(frame)
-    return info
-
 
 def path_leaf(path):
     head, tail = ntpath.split(path)

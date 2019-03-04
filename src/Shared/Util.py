@@ -2,8 +2,6 @@ import json
 import time
 from enum import Enum
 
-from Shared.Logger import Logger
-
 
 def current_time():
     return int(round(time.time() * 1000))
@@ -46,7 +44,6 @@ class Singleton(type):
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            Logger.write(1, "Creating singleton: " + str(cls))
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 

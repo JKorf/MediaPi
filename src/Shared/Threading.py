@@ -62,8 +62,8 @@ class CustomThread:
             ThreadManager.remove_thread(self)
         except Exception:
             excep = str(traceback.format_exc())
-            Logger.write(3, "Unhandled exception in thread " + self.thread_name)
-            Logger.write(3, excep, 'error')
+            Logger().write(3, "Unhandled exception in thread " + self.thread_name)
+            Logger().write(3, excep, 'error')
             ThreadManager.remove_thread(self)
 
     def join(self):

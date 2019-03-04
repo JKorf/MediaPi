@@ -90,15 +90,14 @@ class Engine:
 
     def log(self):
         if self.own_time.ticks > 1:
-            with Logger.lock:
-                Logger.write(3, "-- Engine "+self.name + " --")
-                log_str = self.own_time.print() + ", tick time: " + str(self.tick_time)
-                if self.current_item:
-                    log_str += ", CT: " + str(current_time() - self.start_time) + " @ " + str(self.current_item.name)
-                Logger.write(3, log_str)
-                Logger.write(3, "Last round trip: " + str(current_time() - self.last_tick) + "ms ago")
-                for key, value in self.timing.items():
-                    Logger.write(3, "     " + value.print())
+            Logger().write(3, "-- Engine "+self.name + " --")
+            log_str = self.own_time.print() + ", tick time: " + str(self.tick_time)
+            if self.current_item:
+                log_str += ", CT: " + str(current_time() - self.start_time) + " @ " + str(self.current_item.name)
+            Logger().write(3, log_str)
+            Logger().write(3, "Last round trip: " + str(current_time() - self.last_tick) + "ms ago")
+            for key, value in self.timing.items():
+                Logger().write(3, "     " + value.print())
 
 
 class EngineWorkItem:

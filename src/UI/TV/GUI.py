@@ -31,7 +31,7 @@ class App(tk.Frame):
 
     @state.setter
     def state(self, value):
-        Logger.write(2, "Setting UI state from " + str(self._state) + " to " + str(value))
+        Logger().write(2, "Setting UI state from " + str(self._state) + " to " + str(value))
 
         self._state = value
         if value == UIState.Home:

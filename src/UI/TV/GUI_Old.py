@@ -236,7 +236,7 @@ class GUI(QtGui.QMainWindow):
         url = "http://api.openweathermap.org/data/2.5/forecast?id=2750947&units=metric&appid=" + api_key
         result = RequestFactory.make_request(url)
         if not result:
-            Logger.write(2, "Failed to get weather data")
+            Logger().write(2, "Failed to get weather data")
             return
 
         data = json.loads(result.decode('utf8'))
@@ -247,9 +247,9 @@ class GUI(QtGui.QMainWindow):
         for i in range(3):
             success, day, max, min, image = self.determine_day_weather([x for x in days if datetime.fromtimestamp(x['dt']).day == current_day + i])
             if not success:
-                Logger.write(2, "Failed to process weather data")
+                Logger().write(2, "Failed to process weather data")
                 return
-            Logger.write(1, str(day) + " max: " + str(max) + ", min: " + str(min) + ", image: " + str(image))
+            Logger().write(1, str(day) + " max: " + str(max) + ", min: " + str(min) + ", image: " + str(image))
             update_data.append((day, min, max, image))
         return update_data
 

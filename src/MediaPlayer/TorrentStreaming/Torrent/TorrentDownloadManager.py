@@ -46,21 +46,20 @@ class TorrentDownloadManager:
 
     def check_size(self):
         for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
-            Logger.write(2, "       Size of " + str(key) + ": " + write_size(size))
+            Logger().write(2, "       Size of " + str(key) + ": " + write_size(size))
 
     def log_queue(self):
-        with Logger.lock:
-            Logger.write(3, "-- TorrentDownloadManager state --")
-            first = ""
-            if self.queue:
-                first = str(self.queue[0].index)
-            Logger.write(3, "     Queue status: length: " + str(len(self.queue)) + ", init: " + str(self.init) + ", prio: " + str(self.prio))
-            Logger.write(3, "     First in queue: " + first)
-            Logger.write(3, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]) + " " + str(current_time() - self.last_get_time) + "ms ago")
-            if len(self.queue) > 0:
-                blocks = [x for x in self.queue[0].blocks.values() if not x.done][0: 5]
-                for block in blocks:
-                    Logger.write(3, "     Block " + str(block.index) + " being downloaded by peers: " + ",".join([str(x.id) for x in block.peers_downloading]))
+        Logger().write(3, "-- TorrentDownloadManager state --")
+        first = ""
+        if self.queue:
+            first = str(self.queue[0].index)
+        Logger().write(3, "     Queue status: length: " + str(len(self.queue)) + ", init: " + str(self.init) + ", prio: " + str(self.prio))
+        Logger().write(3, "     First in queue: " + first)
+        Logger().write(3, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]) + " " + str(current_time() - self.last_get_time) + "ms ago")
+        if len(self.queue) > 0:
+            blocks = [x for x in self.queue[0].blocks.values() if not x.done][0: 5]
+            for block in blocks:
+                Logger().write(3, "     Block " + str(block.index) + " being downloaded by peers: " + ",".join([str(x.id) for x in block.peers_downloading]))
 
     def up_priority(self, piece_index):
         self.upped_prios.append(piece_index)
@@ -108,10 +107,10 @@ class TorrentDownloadManager:
 
         if self.queue:
             piece = self.queue[0]
-            Logger.write(2, "Highest prio: " + str(piece.index) + ": "+str(piece.priority)+"% "
+            Logger().write(2, "Highest prio: " + str(piece.index) + ": "+str(piece.priority)+"% "
                             "("+str(piece.start_byte)+"-"+str(piece.end_byte)+"), took " + str(current_time()-start_time)+"ms, full: " + str(full))
         else:
-            Logger.write(2, "No prio: queue empty")
+            Logger().write(2, "No prio: queue empty")
 
         if lock:
             self.queue_lock.release()
@@ -120,7 +119,7 @@ class TorrentDownloadManager:
         return True
 
     def requeue(self, start_position):
-        Logger.write(2, "Starting download queue queuing")
+        Logger().write(2, "Starting download queue queuing")
         start_time = current_time()
         left = 0
         for piece in self.torrent.data_manager._pieces.values():
@@ -135,7 +134,7 @@ class TorrentDownloadManager:
             left += piece.length
 
         self.slow_peer_block_offset = 15000000 // self.torrent.data_manager.piece_length # TODO Setting
-        Logger.write(2, "Queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
+        Logger().write(2, "Queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
         self.torrent.left = left
 
         self.update_priority(True, False)
@@ -252,7 +251,7 @@ class TorrentDownloadManager:
 
             if self.ticks == 100:
                 self.ticks = 0
-                Logger.write(2, "Removed " + str(removed) + ", skipped " + str(skipped) + ", retrieved " + str(len(result)) + ", queue length: " + str(len(self.queue)) + " took " + str(current_time() - start) + "ms")
+                Logger().write(2, "Removed " + str(removed) + ", skipped " + str(skipped) + ", retrieved " + str(len(result)) + ", queue length: " + str(len(self.queue)) + " took " + str(current_time() - start) + "ms")
 
             self.ticks += 1
             self.last_get_result = amount, len(result)
@@ -292,7 +291,7 @@ class TorrentDownloadManager:
 
     def seek(self, old_index, new_piece_index):
         start_time = current_time()
-        Logger.write(2, "Seeking " + str(old_index) + " to " + str(new_piece_index) + ", now " + str(len(self.queue)) + " items")
+        Logger().write(2, "Seeking " + str(old_index) + " to " + str(new_piece_index) + ", now " + str(len(self.queue)) + " items")
         with self.queue_lock:
             self.queue = []
 
@@ -301,7 +300,7 @@ class TorrentDownloadManager:
 
             self.requeue(new_piece_index)
 
-        Logger.write(2, "Seeking done in " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
+        Logger().write(2, "Seeking done in " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
 
     def redownload_piece(self, piece):
         with self.queue_lock:

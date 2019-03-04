@@ -26,26 +26,25 @@ class UtilController(BaseHandler):
             self.log()
 
     def log(self):
-        Logger.write(2, "============== Test ===============")
+        Logger().write(2, "============== Test ===============")
         EventManager.throw_event(EventType.Log, [])
-        with Logger.lock:
-            Logger.write(3, "-- Threads --")
-            for thread_list in sorted(ThreadManager.thread_history.values(), key=lambda x: len(x), reverse=True):
-                Logger.write(3, "     " + thread_list[0].thread_name + " " + str(len(thread_list)) + " entries, averages " + str(sum(c.end_time - c.start_time for c in thread_list if c.end_time != 0) / len(thread_list)) + "ms")
-                for thread in [x for x in thread_list if x.end_time == 0]:
-                    Logger.write(3, "         Currently running for " + str((current_time() - thread.start_time)/1000) + " seconds")
+        Logger().write(3, "-- Threads --")
+        for thread_list in sorted(ThreadManager.thread_history.values(), key=lambda x: len(x), reverse=True):
+            Logger().write(3, "     " + thread_list[0].thread_name + " " + str(len(thread_list)) + " entries, averages " + str(sum(c.end_time - c.start_time for c in thread_list if c.end_time != 0) / len(thread_list)) + "ms")
+            for thread in [x for x in thread_list if x.end_time == 0]:
+                Logger().write(3, "         Currently running for " + str((current_time() - thread.start_time)/1000) + " seconds")
 
     def get_log_files(self):
-        log_files = Logger.get_log_files()
+        log_files = Logger().get_log_files()
         return to_JSON([(name, write_size(size)) for name, size in log_files])
 
     def get_log_file(self, file):
-        return Logger.get_log_file(file)
+        return Logger().get_log_file(file)
 
     def shutdown(self):
-        Logger.write(3, "Shutdown")
+        Logger().write(3, "Shutdown")
         os.system('sudo shutdown now')
 
     def restart_pi(self):
-        Logger.write(3, "Restart")
+        Logger().write(3, "Restart")
         os.system('sudo reboot')
