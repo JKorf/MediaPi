@@ -222,10 +222,10 @@ class LightState(Observable):
     def __init__(self):
         super().__init__("LightData", 1)
         self.groups = []
-        self.update_lock = Lock()
+        self._update_lock = Lock()
 
     def update_group(self, group):
-        with self.update_lock:
+        with self._update_lock:
             if not group.id in [x.id for x in self.groups]:
                 self.groups.append(LightGroup(group.id, group.name, group.state, group.dimmer))
             else:
