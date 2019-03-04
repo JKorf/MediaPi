@@ -34,8 +34,7 @@ class LightController(BaseHandler):
             self.set_group_name(int(self.get_argument("group")), str(urllib.parse.unquote(self.get_argument("name"))))
 
     def get_lights(self):
-        devices = LightManager().get_lights()
-        result = [self.parse_light_control(x) for x in devices if x.has_light_control]
+        result = LightManager().get_lights()
 
         if len(result) == 0:
             result = self.create_test_data()
@@ -59,16 +58,13 @@ class LightController(BaseHandler):
         LightManager().set_light_dimmer(light, dimmer)
 
     def get_groups(self):
-        groups = LightManager().get_light_groups()
-        result = [LightGroup(group.id, group.name, group.state, group.dimmer) for group in groups]
-
+        result = LightManager().get_light_groups()
         if len(result) == 0:
             result = self.create_test_groups()
         return to_JSON(result)
 
     def get_group_lights(self, group):
-        lights = LightManager().get_lights_in_group(group)
-        result = [self.parse_light_control(x) for x in lights if x.has_light_control]
+        result = LightManager().get_lights_in_group(group)
 
         if len(result) == 0:
             result = self.create_test_data()
@@ -86,25 +82,6 @@ class LightController(BaseHandler):
     def set_group_name(self, group, name):
         Logger().write(2, "Set group " + str(group) + " to name " + str(name))
         LightManager().set_group_name(group, name)
-
-    def parse_light_control(self, data):
-        lights = []
-        for light in data.light_control.lights:
-            lights.append(LightDevice(
-                light.state,
-                light.dimmer,
-                light.color_temp,
-                light.hex_color))
-
-        return LightControl(data.id,
-                            data.name,
-                            data.application_type,
-                            data.last_seen.timestamp(),
-                            data.reachable,
-                            data.light_control.can_set_dimmer,
-                            data.light_control.can_set_temp,
-                            data.light_control.can_set_color,
-                            lights)
 
     def create_test_groups(self):
         return [LightGroup(1, "Woonkamer 1", True, 254), LightGroup(2, "Woonkamer 2", True, 128), LightGroup(3, "Keuken", False, 254)]

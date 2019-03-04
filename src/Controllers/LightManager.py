@@ -3,13 +3,17 @@ import traceback
 import uuid
 from threading import Lock
 
+import time
 from pytradfri import Gateway
 from pytradfri.api.libcoap_api import APIFactory
 
 from Database.Database import Database
 from Shared.Logger import Logger
+from Shared.Observable import Observable
 from Shared.Settings import Settings, SecureSettings
-from Shared.Util import Singleton
+from Shared.Threading import CustomThread
+from Shared.Util import Singleton, current_time
+from Webserver.Models import LightGroup, LightDevice, LightControl
 
 
 class LightManager(metaclass=Singleton):
@@ -21,6 +25,11 @@ class LightManager(metaclass=Singleton):
     initialized = False
     init_lock = Lock()
 
+    def __init__(self):
+        self.light_state = LightState()
+        self.observing_end = 0
+        self.observing = False
+
     def init(self):
         if self.initialized:
             Logger().write(2, "already init")
@@ -30,6 +39,8 @@ class LightManager(metaclass=Singleton):
             if sys.platform != "linux" and sys.platform != "linux2":
                 Logger().write(2, "Lighting: Not initializing, no coap client available on windows")
                 self.initialized = True
+                self.light_state.update_group(LightGroup(1, "Test group", True, 128))
+                self.light_state.update_group(LightGroup(2, "Test group 2", False, 18))
                 return
 
             self.enabled = True
@@ -65,16 +76,50 @@ class LightManager(metaclass=Singleton):
                         stack_trace = traceback.format_exc().split('\n')
                         for stack_line in stack_trace:
                             Logger().write(3, stack_line)
+                        return
                 else:
                     Logger().write(2, "Lighting: Previously saved key found")
                     self.initialized = True
+
+                groups = self.get_light_groups()
+                for group in groups:
+                    self.light_state.update_group(group)
+
+    def start_observing(self):
+        Logger().write(2, "Start observing light data")
+        self.observing = True
+        if self.observing_end > current_time():
+            return # still observing, the check observing thread will renew
+
+        if not self.check_state():
+            return
+
+        self.observing_end = current_time() + 30000
+        groups_commands = self.api(self.gateway.get_groups())
+        result = self.api(groups_commands)
+        for group in result:
+            observe_thread = CustomThread(lambda: self.api(group.observe(self.light_state.update_group, duration=30)), "Light group observer", [])
+            observe_thread.start()
+        observe_check = CustomThread(self.check_observing, "Check light observing", [])
+        observe_check.start()
+
+    def check_observing(self):
+        time.sleep(self.observing_end - current_time() / 1000)
+        if self.observing:
+            # Restart observing since it timed out
+            self.start_observing()
+
+    def stop_observing(self):
+        Logger().write(2, "Stop observing light data")
+        self.observing = False
 
     def get_lights(self):
         if not self.check_state():
             return []
 
         devices_commands = self.api(self.gateway.get_devices())
-        return self.api(devices_commands)
+        lights = self.api(devices_commands)
+        [self.parse_light_control(x) for x in lights if x.has_light_control]
 
     def set_light_state(self, light, state):
         if not self.check_state():
@@ -110,9 +155,8 @@ class LightManager(metaclass=Singleton):
 
         groups_commands = self.api(self.gateway.get_groups())
         result = self.api(groups_commands)
-        Logger().write(2, "Get light groups 1: " + str(result))
         Logger().write(2, "Get light groups 2: " + str([x.raw for x in result]))
-        return result
+        return [LightGroup(group.id, group.name, group.state, group.dimmer) for group in result]
 
     def get_lights_in_group(self, group):
         if not self.check_state():
@@ -120,7 +164,8 @@ class LightManager(metaclass=Singleton):
 
         group = self.api(self.gateway.get_group(group))
         members = group.member_ids
-        return [self.api(self.gateway.get_device(x)) for x in members]
+        result = [self.api(self.gateway.get_device(x)) for x in members]
+        return [self.parse_light_control(x) for x in result if x.has_light_control]
 
     def set_group_name(self, group, name):
         if not self.check_state():
@@ -153,3 +198,41 @@ class LightManager(metaclass=Singleton):
                 return False  # init failed
         return True
 
+    def parse_light_control(self, data):
+        lights = []
+        for light in data.light_control.lights:
+            lights.append(LightDevice(
+                light.state,
+                light.dimmer,
+                light.color_temp,
+                light.hex_color))
+
+        return LightControl(data.id,
+                            data.name,
+                            data.application_type,
+                            data.last_seen.timestamp(),
+                            data.reachable,
+                            data.light_control.can_set_dimmer,
+                            data.light_control.can_set_temp,
+                            data.light_control.can_set_color,
+                            lights)
+
+class LightState(Observable):
+
+    def __init__(self):
+        super().__init__("LightData", 1)
+        self.groups = []
+        self.update_lock = Lock()
+
+    def update_group(self, group):
+        with self.update_lock:
+            if not group.id in [x.id for x in self.groups]:
+                self.groups.append(LightGroup(group.id, group.name, group.state, group.dimmer))
+            else:
+                g = [x for x in self.groups if x.id == group.id]
+                g.state = group.state
+                g.dimmer = group.dimmer
+            self.changed()
+
+    def update_device(self, device):
+        pass

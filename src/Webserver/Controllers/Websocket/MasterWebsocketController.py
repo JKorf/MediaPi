@@ -2,6 +2,7 @@ import json
 import traceback
 from threading import Lock
 
+from Controllers.LightManager import LightManager
 from Database.Database import Database
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaManager import MediaManager
@@ -54,6 +55,7 @@ class MasterWebsocketController(metaclass=Singleton):
         MediaManager().torrent_data.register_callback(lambda old, new: self.slave_update(self.own_slave, "torrent", new))
         Stats().cache.register_callback(lambda old, new: self.slave_update(self.own_slave, "stats", new))
         self.slaves.register_callback(lambda old, new: self.update_slaves_data(new.data))
+        LightManager().light_state.register_callback(lambda old, new: self.update_light_data(new))
 
     def add_client_request(self, callback, callback_no_answer, valid_for, type, data):
         self.pending_message_handler.add_pending_message(ClientMessage(self.next_id(), callback, callback_no_answer, valid_for, type, data))
@@ -78,6 +80,10 @@ class MasterWebsocketController(metaclass=Singleton):
         Logger().write(2, "Slave update broadcast")
         self.broadcast("slaves", data)
 
+    def update_light_data(self, data):
+        Logger().write(2, "Lights update broadcast")
+        self.broadcast("lights", data)
+
     def trigger_initial_data(self, client, id, subscription):
         msg = WebSocketUpdateMessage(id, None)
         if "." in subscription.topic:
@@ -92,6 +98,8 @@ class MasterWebsocketController(metaclass=Singleton):
         else:
             if subscription.topic == "slaves":
                 msg.data = self.slaves.data
+            elif subscription.topic == "lights":
+                msg.data = LightManager().light_state
 
         self.write_message(client, msg)
 
@@ -107,7 +115,7 @@ class MasterWebsocketController(metaclass=Singleton):
                 Logger().write(2, "Slave initialized: " + data['data'])
             elif data['type'] == 'UI':
                 self.clients[client] = []
-                auth = self.authenticateSocket(data['clientId'], data['sessionKey'])
+                auth = self.authenticate_socket(data['clientId'], data['sessionKey'])
                 if not auth:
                     Logger().write(2, "UI client authentication failed, closing client")
                     self.write_message(client, WebSocketInitResponseMessage(False))
@@ -131,6 +139,7 @@ class MasterWebsocketController(metaclass=Singleton):
             id = self.next_id()
             subscription = Subscription(id, data['topic'])
             self.clients[client].append(subscription)
+            self.on_new_subscription(data['topic'])
             Logger().write(2, "Client subscribed to " + str(data['topic']))
             self.write_message(client, WebSocketResponseMessage(request_id, [subscription.id]))
             self.trigger_initial_data(client, id, subscription)
@@ -138,6 +147,7 @@ class MasterWebsocketController(metaclass=Singleton):
         elif data['event'] == 'unsubscribe':
             request_id = int(data['request_id'])
             self.clients[client] = [x for x in self.clients[client] if x.id != request_id]
+            self.on_closed_subscription(data['topic'])
             Logger().write(2, "Client unsubscribed from " + str(data['topic']))
 
         elif data['event'] == 'response':
@@ -181,6 +191,15 @@ class MasterWebsocketController(metaclass=Singleton):
                 sub_data = MediaManager().subtitle_provider.search_subtitles_for_file(data['parameters'][0])
                 self.write_message(client, WebSocketSlaveResponse(data['type'], data['method'], sub_data))
 
+    def on_new_subscription(self, topic):
+        if topic == "lights" and not LightManager().observing:
+            LightManager().start_observing()
+
+    def on_closed_subscription(self, topic):
+        if topic == "lights" and LightManager().observing:
+            if len([k for k, v in self.clients.items() if [y for y in v if y.topic == "lights"]]) == 0:
+                LightManager().stop_observing()
+
     def closing_client(self, client):
         if client in self.clients:
             Logger().write(2, "Connection closed")
@@ -220,7 +239,7 @@ class MasterWebsocketController(metaclass=Singleton):
             self.last_id += 1
             return self.last_id
 
-    def authenticateSocket(self, client_id, session_key):
+    def authenticate_socket(self, client_id, session_key):
         client_key = AuthController.get_salted(client_id)
         return Database().check_session_key(client_key, session_key)
 

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import Socket from './../../../Socket.js';
 
 import { InfoGroup } from './../../Components/InfoGroup';
 import ViewLoader from './../../Components/ViewLoader';
@@ -15,16 +16,28 @@ class LightingView extends Component {
     this.props.functions.changeTitle("Lights");
     this.props.functions.changeRightImage(null);
     this.updateGroup = this.updateGroup.bind(this);
+    this.lightsUpdate = this.lightsUpdate.bind(this);
   }
 
   componentDidMount() {
-    axios.get(window.vars.apiBase + 'lighting/get_groups').then(
-        (data) => {
-            this.setState({lightData: data.data});
-            console.log(data.data);
-         },
-        (error) => { console.log(error) }
-    )
+    this.lightSub = Socket.subscribe("lights", this.lightsUpdate);
+
+//    axios.get(window.vars.apiBase + 'lighting/get_groups').then(
+//        (data) => {
+//            this.setState({lightData: data.data});
+//            console.log(data.data);
+//         },
+//        (error) => { console.log(error) }
+//    )
+  }
+
+  componentWillUnmount(){
+    Socket.unsubscribe(this.lightSub);
+  }
+
+  lightsUpdate(subId, data){
+    console.log("Light update: ", data);
+    this.setState({lightData: data.groups})
   }
 
   writeDimmerPercentage(value)
@@ -111,15 +124,14 @@ class LightingView extends Component {
   toggleGroupDetails(group)
   {
     this.updateGroup(group.id, "showDetails", !group.showDetails);
-
-    if (!group.lights)
-    {
-        console.log("request light data for group " + group.name);
-        axios.get(window.vars.apiBase + 'lighting/get_group_lights?group='+group.id).then(
-            (data) => { console.log(data.data); return this.updateGroup(group.id, "lights", data.data); },
-            (err) => { console.log (err) }
-        )
-    }
+//    if (!group.lights)
+//    {
+//        console.log("request light data for group " + group.name);
+//        axios.get(window.vars.apiBase + 'lighting/get_group_lights?group='+group.id).then(
+//            (data) => { console.log(data.data); return this.updateGroup(group.id, "lights", data.data); },
+//            (err) => { console.log (err) }
+//        )
+//    }
   }
 
   updateGroup(groupId, property, value)
