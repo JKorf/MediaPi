@@ -1,5 +1,9 @@
+import os
+
 import psutil
 import time
+
+import sys
 
 from Shared.Events import EventManager, EventType
 from Shared.Observable import Observable
@@ -12,6 +16,7 @@ class StateManager(metaclass=Singleton):
 
     def __init__(self):
         self.state_data = StateData()
+        self.watch_temperature = sys.platform == "linux" or sys.platform == "linux2"
         self.state_data.name = Settings.get_string("name")
         self.watch_thread = CustomThread(self.update_state, "State observer")
         self.watch_thread.start()
@@ -24,6 +29,7 @@ class StateManager(metaclass=Singleton):
             self.state_data.memory = psutil.virtual_memory().percent
             self.state_data.cpu = psutil.cpu_percent()
             self.state_data.threads = ThreadManager.thread_count()
+            self.state_data.temperature = self.get_temperature()
             self.state_data.stop_update()
             time.sleep(1)
 
@@ -33,6 +39,12 @@ class StateManager(metaclass=Singleton):
                 EventManager.throw_event(EventType.Log, [])
             time.sleep(15)
 
+    def get_temperature(self):
+        if not self.watch_temperature:
+            return "-"
+        temp = os.popen("vcgencmd measure_temp").readline()
+        return temp.replace("temp=", "")
+
 
 class StateData(Observable):
 
@@ -40,5 +52,6 @@ class StateData(Observable):
         super().__init__("StateData", 1)
         self.name = None
         self.memory = 0
+        self.temperature = 0
         self.cpu = 0
         self.threads = 0
