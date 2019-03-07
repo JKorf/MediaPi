@@ -15,9 +15,6 @@
 
     Check power supply/overclock for stalling
 
-
-    monitoring of lights, err cb gets called when stopped, then start again
-
     Add a rule based task system for automation
         Do (x) when (x) == True
         ie: Turn on lights at 18:00 and people are home

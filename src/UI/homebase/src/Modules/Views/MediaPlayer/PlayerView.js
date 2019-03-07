@@ -7,6 +7,7 @@ import SvgImage from './../../Components/SvgImage';
 import Slider from './../../Components/Slider';
 import StopPopup from './../../Components/Popups/StopPopup'
 import Popup from './../../Components/Popups/Popup'
+import PlayerSettingsPopup from './../../Components/Popups/PlayerSettingsPopup'
 import { InfoGroup, InfoRow } from './../../Components/InfoGroup'
 
 import videoFile from './../../../Images/video_file.png';
@@ -16,6 +17,8 @@ import playImage from './../../../Images/play.svg';
 import speakerImage from './../../../Images/speaker.svg';
 import plusImage from './../../../Images/plus.svg';
 import minusImage from './../../../Images/minus.svg';
+import settingsImage from './../../../Images/settings.svg';
+import subtitleImage from './../../../Images/subtitle.svg';
 
 class PlayerView extends Component {
   constructor(props) {
@@ -25,7 +28,7 @@ class PlayerView extends Component {
     this.states = ["loading", "nothing", "confirmStop"];
 
     this.changedTitle = false;
-    this.state = {playerData: { sub_tracks: [], audio_tracks: []}, mediaData: {}, torrentData: {}, stateData: {}, statData: {}, state: this.states[1]};
+    this.state = {playerData: { sub_tracks: [], audio_tracks: []}, mediaData: {}, torrentData: {}, stateData: {}, statData: {}, state: this.states[1], showPlayerSettings: false};
 
     this.playerUpdate = this.playerUpdate.bind(this);
     this.mediaUpdate = this.mediaUpdate.bind(this);
@@ -36,12 +39,12 @@ class PlayerView extends Component {
     this.stopClick = this.stopClick.bind(this);
     this.confirmStop = this.confirmStop.bind(this);
     this.seek = this.seek.bind(this);
+    this.volumeChange = this.volumeChange.bind(this);
+    this.showSettings = this.showSettings.bind(this);
+
     this.subChange = this.subChange.bind(this);
     this.audioChange = this.audioChange.bind(this);
-    this.volumeChange = this.volumeChange.bind(this);
     this.delayChange = this.delayChange.bind(this);
-    this.increaseSubDelay = this.increaseSubDelay.bind(this);
-    this.decreaseSubDelay = this.decreaseSubDelay.bind(this);
   }
 
   componentDidMount() {
@@ -121,6 +124,18 @@ class PlayerView extends Component {
     );
   }
 
+  volumeChange(value){
+    console.log("Change volume: " + value);
+    var playerData = this.state.playerData;
+    playerData.volume = value;
+    this.setState({state: this.states[0], playerData: playerData});
+    axios.post(window.vars.apiBase + 'play/change_volume?instance=' + this.props.match.params.id + "&volume=" + Math.round(value))
+    .then(
+        () => this.setState({state: this.states[1]}),
+        ()=> this.setState({state: this.states[1]})
+    );
+  }
+
   subChange(value){
     console.log("Change sub: " + value);
     var playerData = this.state.playerData;
@@ -145,38 +160,12 @@ class PlayerView extends Component {
     );
   }
 
-  volumeChange(value){
-    console.log("Change volume: " + value);
-    var playerData = this.state.playerData;
-    playerData.volume = value;
-    this.setState({state: this.states[0], playerData: playerData});
-    axios.post(window.vars.apiBase + 'play/change_volume?instance=' + this.props.match.params.id + "&volume=" + Math.round(value))
-    .then(
-        () => this.setState({state: this.states[1]}),
-        ()=> this.setState({state: this.states[1]})
-    );
-  }
-
   delayChange(value){
     console.log("Change sub delay: " + value);
     var playerData = this.state.playerData;
     playerData.sub_delay = value;
-    this.setState({state: this.states[0], playerData: playerData});
-    axios.post(window.vars.apiBase + 'play/change_sub_delay?instance=' + this.props.match.params.id + "&delay=" + Math.round(value))
-    .then(
-        () => this.setState({state: this.states[1]}),
-        ()=> this.setState({state: this.states[1]})
-    );
-  }
-
-  increaseSubDelay(){
-    var value = this.state.playerData.sub_delay + 0.2 * 1000 * 1000;
-    this.delayChange(value);
-  }
-
-  decreaseSubDelay(){
-    var value = this.state.playerData.sub_delay - 0.2 * 1000 * 1000;
-    this.delayChange(value);
+    this.setState({playerData: playerData});
+    axios.post(window.vars.apiBase + 'play/change_sub_delay?instance=' + this.props.match.params.id + "&delay=" + Math.round(value));
   }
 
   writeSize(value){
@@ -224,6 +213,10 @@ class PlayerView extends Component {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
+  showSettings(){
+    this.setState({showPlayerSettings: true});
+  }
+
   render() {
 
     let torrentComponent = "";
@@ -233,34 +226,16 @@ class PlayerView extends Component {
         if (this.state.torrentData.max_download_speed === 0)
             max_dl = "";
         torrentComponent = (
-            <InfoGroup title="Torrent">
                 <div className="player-group-details">
-                    <InfoRow name="Media name" value={this.state.torrentData.media_file} />
+                    <InfoRow name="Buffer ready" value={this.writeSize(this.state.torrentData.buffer_size)} />
+                    <InfoRow name="Total streamed" value={this.writeSize(this.state.torrentData.total_streamed)} />
                     <InfoRow name="Download speed" value={this.writeSpeed(this.state.torrentData.download_speed) + max_dl} />
-                    <InfoRow name="Downloaded" value={this.writeSize(this.state.torrentData.downloaded)} />
-                    <InfoRow name="Left" value={this.writeSize(this.state.torrentData.left)} />
-                    <InfoRow name="Size" value={this.writeSize(this.state.torrentData.size)} />
-                    <InfoRow name="Overhead" value={this.writeSpeed(this.state.torrentData.overhead)} />
+                    <InfoRow name="Left" value={this.writeSize(this.state.torrentData.left) + " / " + this.writeSize(this.state.torrentData.size)} />
                     <InfoRow name="Peers available" value={this.state.torrentData.potential} />
-                    <InfoRow name="Peers connecting" value={this.state.torrentData.connecting} />
                     <InfoRow name="Peers connected" value={this.state.torrentData.connected} />
                 </div>
-            </InfoGroup>
         )
     }
-    let streamingComponent = "";
-    if (this.state.torrentData.title)
-        streamingComponent = (
-            <InfoGroup title="Streaming">
-                <div className="player-group-details">
-                    <InfoRow name="Stream position" value={this.state.torrentData.stream_position} />
-                    <InfoRow name="Buffer position" value={this.state.torrentData.buffer_position} />
-                    <InfoRow name="Buffer ready" value={this.writeSize(this.state.torrentData.buffer_size)} />
-                    <InfoRow name="Buffer total" value={this.writeSize(this.state.torrentData.buffer_total)} />
-                    <InfoRow name="Total streamed" value={this.writeSize(this.state.torrentData.total_streamed)} />
-                </div>
-            </InfoGroup>
-        )
 
     let playPauseButton = <SvgImage key={this.state.playerData.state} src={pauseImage} />
     if (this.state.playerData.state === 4)
@@ -272,14 +247,20 @@ class PlayerView extends Component {
 
     return (
         <div className="player-details">
+            { this.state.showPlayerSettings &&
+                <PlayerSettingsPopup onClose={() => this.setState({showPlayerSettings: false})} playerData={this.state.playerData} onSubTrackChange={this.subChange} onSubDelayChange={this.delayChange} onAudioTrackChange={this.audioChange}/>
+            }
             <InfoGroup title="Media">
                 <div className="player-group-details">
                     { this.state.mediaData.title &&
                         <div>
+                            <div className="player-details-settings">
+                                <div className="player-details-settings-icon" onClick={this.showSettings} ><SvgImage src={settingsImage} /></div>
+                            </div>
                             <div className="player-details-top">
                                 <div className="player-details-img"><img alt="Media poster" src={(this.state.mediaData.image ? this.state.mediaData.image: videoFile)} /></div>
                                 <div className="player-details-media">
-                                    <div className="player-details-title">{this.state.mediaData.title}</div>
+                                    <div className="player-details-title truncate">{this.state.mediaData.title}</div>
                                     <div className="player-details-type">{this.capitalizeFirstLetter(this.state.mediaData.type)}</div>
                                     <div className="player-details-bot">
                                         <div className="player-details-controls">
@@ -298,65 +279,26 @@ class PlayerView extends Component {
                                     </div>
                                 </div>
                             </div>
-
-                            { (this.state.playerData.sub_tracks.length > 0 || this.state.playerData.audio_tracks.length > 2) &&
-                                <div className="player-details-track-select">
-                                    { this.state.playerData.sub_tracks.length > 0 &&
-                                        <div className={"player-details-subtitle-select " + subtitleClass}>
-                                            <InfoGroup title="Subtitles">
-                                                <div className="player-group-details">
-                                                    { this.state.playerData.sub_tracks.map((o) => (
-                                                        <div key={o[0]} className="selection-box-option" onClick={() => this.subChange(o[0])}>
-                                                            <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.sub_track === o[0]} /></div>
-                                                            <div className="selection-box-option-title truncate">{o[1]}</div>
-                                                        </div> )
-                                                    ) }
-                                                    <div className="player-details-delay-slider"><Slider formatMinMax={(e) => { return "";}} format={(e) => {return (e / 1000 / 1000 - 5).toFixed(1);}} min={0} max={10 * 1000 * 1000} value={this.state.playerData.sub_delay + 5 *1000 * 1000} onChange={(v) => this.delayChange(v - 5 * 1000 * 1000)} /></div>
-                                                    <div className="player-details-sub-delay-controls">
-                                                        <div className="player-details-sub-delay-min" onClick={this.decreaseSubDelay}><SvgImage src={minusImage} /></div>
-                                                        <div className="player-details-sub-delay-plus" onClick={this.increaseSubDelay}><SvgImage src={plusImage} /></div>
-                                                    </div>
-                                                </div>
-                                            </InfoGroup>
-                                        </div>
-                                     }
-                                    { this.state.playerData.audio_tracks.length > 2 &&
-                                        <div className={"player-details-subtitle-select " + subtitleClass}>
-                                            <InfoGroup title="Audio">
-                                                { this.state.playerData.audio_tracks.map((o) => (
-                                                    <div  key={o[0]} className="selection-box-option" onClick={() => this.audioChange(o[0])}>
-                                                        <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.audio_track === o[0]} /></div>
-                                                        <div className="selection-box-option-title truncate">{o[1]}</div>
-                                                    </div> )
-                                                ) }
-                                            </InfoGroup>
-                                        </div>
-                                    }
-                                </div>
-                            }
                         </div>
                     }
                     { !this.state.mediaData.title &&
                         <div>Nothing playing</div>
                     }
                 </div>
-            </InfoGroup>
-             {streamingComponent}
 
-             {torrentComponent}
+                 {torrentComponent}
+            </InfoGroup>
 
              <InfoGroup title="System statistics">
                 <div className="player-group-details">
                  <InfoRow name="Max download speed" value={this.writeSpeed(this.state.statData["max_download_speed"])}></InfoRow>
                  <InfoRow name="Total downloaded" value={this.writeSize(this.state.statData["total_downloaded"])}></InfoRow>
 
-                 <InfoRow name="Peers connected" value={this.writeNumber(this.state.statData["peers_connect_success"])}></InfoRow>
-                 <InfoRow name="Peers unreachable" value={this.writeNumber(this.state.statData["peers_connect_failed"])}></InfoRow>
+                 <InfoRow name="Peers connected" value={this.writeNumber(this.state.statData["peers_connect_success"]) + " / " + this.writeNumber(this.state.statData["peers_connect_failed"])}></InfoRow>
                  <InfoRow name="DHT peers" value={this.writeNumber(this.state.statData["peers_source_dht"])}></InfoRow>
                  <InfoRow name="Exchange peers" value={this.writeNumber(this.state.statData["peers_source_exchange"])}></InfoRow>
                  <InfoRow name="UDP tracker peers" value={this.writeNumber(this.state.statData["peers_source_udp_tracker"])}></InfoRow>
                  <InfoRow name="Subtitles downloaded" value={this.writeNumber(this.state.statData["subs_downloaded"])}></InfoRow>
-                 <InfoRow name="Threads started" value={this.writeNumber(this.state.statData["threads_started"])}></InfoRow>
                 </div>
              </InfoGroup>
 

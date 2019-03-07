@@ -734,33 +734,21 @@
     margin-top: 8px;
 }
 
+.player-settings-popup{
+    width: 400px;
+}
+
 .player-details-subtitle-select{
-    display: inline-block;
-    vertical-align: top;
-
-    &.both{
-        margin-right: 5px;
-        width: calc(50% - 5px);
-    }
-
-    &.single{
-        margin-right: 0;
-        width: 100%;
+    .player-details-group{
+        background: #colors[list-background-alternate] !important;
     }
 }
 
-.player-details-audio-select{
-    display: inline-block;
-    vertical-align: top;
+.player-details-subtitle-select{
+    margin-bottom: 10px;
 
-    &.both{
-        margin-left: 5px;
-        width: calc(50% - 5px);
-    }
-
-    &.single{
-        margin-left: 0;
-        width: 100%;
+    .player-details-group{
+        background: #colors[list-background-alternate] !important;
     }
 }
 
@@ -1220,6 +1208,12 @@
     margin-top: 4px;
 }
 
+.player-details{
+    .player-details-group{
+        margin-bottom: 10px;
+    }
+}
+
 .player-group-details{
     padding: 10px;
 }
@@ -1254,5 +1248,28 @@
 .settings-view{
     .player-details-group{
         margin-bottom: 10px;
+    }
+}
+
+.player-details-settings{
+    position: absolute;
+    height: 26px;
+    top: -26px;
+    right: 0;
+    text-align: right;
+    z-index: 9;
+}
+
+.player-details-settings-icon{
+    display: inline-block;
+    height: 26px;
+    width: 26px;
+    margin-left: 5px;
+
+    svg{
+        width: 16px;
+        height: 16px;
+        margin: 5px;
+        fill: #colors[images];
     }
 }

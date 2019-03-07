@@ -1,8 +1,8 @@
 from threading import Lock
 
 from Database.Database import Database
-from Shared.Engine import Engine
 from Shared.Observable import Observable
+from Shared.Threading import CustomThread
 from Shared.Util import Singleton
 
 
@@ -28,8 +28,7 @@ class Stats(metaclass=Singleton):
     cache = StatList()
 
     def __init__(self):
-        self.engine = Engine("Stat saver")
-        self.engine.add_work_item("Save stat", 10000, self.save_stats, False)
+        self.work_thread = CustomThread(self.save_stats, "Stat saver", [])
 
     def start(self):
         stats = Database().get_stats()
@@ -37,7 +36,7 @@ class Stats(metaclass=Singleton):
             for key, value, last_change in stats:
                 Stats.cache.update(key, value)
 
-        self.engine.start()
+        self.work_thread.start()
 
     @staticmethod
     def _update_stat(name, value):

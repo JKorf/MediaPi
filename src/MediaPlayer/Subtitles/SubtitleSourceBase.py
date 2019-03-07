@@ -1,5 +1,6 @@
 from Shared.Logger import Logger
 from Shared.Settings import Settings
+from Shared.Stats import Stats
 
 
 class SubtitleSourceBase:
@@ -11,4 +12,5 @@ class SubtitleSourceBase:
         with open(filename, "wb") as f:
             f.write(data)
         f.close()
+        Stats.add("subs_downloaded", 1)
         return filename
