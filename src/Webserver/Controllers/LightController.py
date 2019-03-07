@@ -121,7 +121,7 @@ class LightController(BaseHandler):
                                            "")
                                    ]))
 
-        result.append(LightControl(2,
+        result.append(LightControl(3,
                                    "Test led 3",
                                    "Type",
                                    123,
@@ -137,7 +137,7 @@ class LightController(BaseHandler):
                                            "")
                                    ]))
 
-        result.append(LightControl(2,
+        result.append(LightControl(4,
                                    "Test led 4",
                                    "Type",
                                    123,
@@ -153,7 +153,7 @@ class LightController(BaseHandler):
                                            "")
                                    ]))
 
-        result.append(LightControl(2,
+        result.append(LightControl(5,
                                    "Test led 5",
                                    "Type",
                                    123,

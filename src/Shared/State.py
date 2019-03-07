@@ -16,7 +16,7 @@ class StateManager(metaclass=Singleton):
 
     def __init__(self):
         self.state_data = StateData()
-        self.watch_temperature = sys.platform == "linux" or sys.platform == "linux2"
+        self.monitoring = sys.platform == "linux" or sys.platform == "linux2"
         self.state_data.name = Settings.get_string("name")
         self.watch_thread = CustomThread(self.update_state, "State observer")
         self.watch_thread.start()
@@ -34,13 +34,16 @@ class StateManager(metaclass=Singleton):
             time.sleep(1)
 
     def check_memory(self):
+        if not self.monitoring:
+            return
+
         while True:
             if self.state_data.memory > 90:
                 EventManager.throw_event(EventType.Log, [])
             time.sleep(15)
 
     def get_temperature(self):
-        if not self.watch_temperature:
+        if not self.monitoring:
             return "-"
         temp = os.popen("vcgencmd measure_temp").readline()
         return temp.replace("temp=", "")

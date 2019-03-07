@@ -98,19 +98,19 @@ class LightManager(metaclass=Singleton):
         groups_commands = self.api(self.gateway.get_groups())
         result = self.api(groups_commands)
         for group in result:
-            observe_thread = CustomThread(lambda: self.api(group.observe(self.light_state.update_group, self.err_callback, duration=30)), "Light group observer", [])
-            observe_thread.start()
-        observe_check = CustomThread(self.check_observing, "Check light observing", [])
-        observe_check.start()
+            self.observe_group(group)
 
-    def err_callback(self, err):
-        Logger().write(2, "Error in light observe: " + str(err))
+    def observe_group(self, group):
+        observe_thread = CustomThread(lambda: self.api(group.observe(
+            self.light_state.update_group,
+            lambda x: self.check_observe(group), duration=30)), "Light group observer", [])
+        observe_thread.start()
 
-    def check_observing(self):
-        time.sleep((self.observing_end - current_time()) / 1000)
+    def check_observe(self, group):
         if self.observing:
             # Restart observing since it timed out
-            self.start_observing()
+            Logger().write(2, "Restarting observing for group " + str(group.name))
+            self.observe_group(group)
 
     def stop_observing(self):
         Logger().write(2, "Stop observing light data")

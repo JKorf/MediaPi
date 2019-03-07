@@ -123,15 +123,16 @@ class LightingView extends Component {
 
   toggleGroupDetails(group)
   {
-    this.updateGroup(group.id, "showDetails", !group.showDetails);
-//    if (!group.lights)
-//    {
-//        console.log("request light data for group " + group.name);
-//        axios.get(window.vars.apiBase + 'lighting/get_group_lights?group='+group.id).then(
-//            (data) => { console.log(data.data); return this.updateGroup(group.id, "lights", data.data); },
-//            (err) => { console.log (err) }
-//        )
-//    }
+    group.showDetails = !group.showDetails;
+    this.updateGroup(group.id, "showDetails", group.showDetails);
+
+    if(group.showDetails){
+        console.log("request light data for group " + group.name);
+        axios.get(window.vars.apiBase + 'lighting/get_group_lights?group='+group.id).then(
+            (data) => { console.log(data.data); return this.updateGroup(group.id, "lights", data.data); },
+            (err) => { console.log (err) }
+        )
+    }
   }
 
   updateGroup(groupId, property, value)
@@ -185,7 +186,6 @@ class LightingView extends Component {
                             </div>
                             { lightGroup.showDetails &&
                                 <div className="light-group-details">
-
                                     { lightGroup.lights &&
                                         lightGroup.lights.map(light => {
                                             return (
