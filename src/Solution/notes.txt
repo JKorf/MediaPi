@@ -13,8 +13,6 @@
 
     Player screen styling, more obvious buffer/download status
 
-    Check power supply/overclock for stalling
-
     Add a rule based task system for automation
         Do (x) when (x) == True
         ie: Turn on lights at 18:00 and people are home

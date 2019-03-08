@@ -61,10 +61,10 @@ class Program:
         Logger().write(LogVerbosity.Info, "Slave: " + str(self.is_slave))
         if self.is_slave:
             Logger().write(LogVerbosity.Info, "Master ip: " + str(Settings.get_string("master_ip")))
-        Logger().write(LogVerbosity.Info, "Pi: " + str(Settings.get_bool("raspberry")))
+        Logger().write(LogVerbosity.Info, "Pi: " + str(sys.platform == "linux" or sys.platform == "linux2"))
 
         Logger().write(LogVerbosity.Important, "Started")
-        if Settings.get_bool("show_gui"):
+        if sys.platform == "linux" or sys.platform == "linux2":
             self.gui = App.initialize()
 
         else:
@@ -114,8 +114,8 @@ class Program:
         filename, line, dummy, dummy = traceback.extract_tb(exc_traceback).pop()
         filename = os.path.basename(filename)
 
-        Logger().write(LogVerbosity.Important, "Unhandled exception on line " + str(line) + ", file " + filename, 'error')
-        Logger().write(LogVerbosity.Important, "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)), 'error')
+        Logger().write(LogVerbosity.Important, "Unhandled exception on line " + str(line) + ", file " + filename)
+        Logger().write(LogVerbosity.Important, "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
         sys.exit(1)
 

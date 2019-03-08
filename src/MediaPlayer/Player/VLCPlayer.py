@@ -3,6 +3,8 @@ import os
 import time
 from enum import Enum
 
+import sys
+
 from MediaPlayer.Player import vlc
 from MediaPlayer.Player.vlc import libvlc_get_version, EventType as VLCEventType, MediaSlaveType, MediaSlave, Media
 from Shared.Events import EventManager, EventType
@@ -23,7 +25,7 @@ class VLCPlayer(metaclass=Singleton):
 
         self.media = None
         self.__player = self.__vlc_instance.media_player_new()
-        if Settings.get_bool("raspberry"):
+        if sys.platform == "linux" or sys.platform == "linux2":
             self.__player.set_fullscreen(True)
 
         self.__event_manager = self.__player.event_manager()
@@ -68,7 +70,7 @@ class VLCPlayer(metaclass=Singleton):
                   "--ipv4-timeout=500",
                   "--image-duration=-1"]
 
-        if Settings.get_bool("raspberry"):
+        if sys.platform == "linux" or sys.platform == "linux2":
             log_path = Settings.get_string("base_folder") + "/Logs"
             params.append("--logfile=" + log_path + '/vlclog_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt")
             params.append("--file-logging")
@@ -147,7 +149,7 @@ class VLCPlayer(metaclass=Singleton):
 
     def set_subtitle_files(self, files):
         Logger().write(LogVerbosity.Debug, "Adding " + str(len(files)) + " subtitle files")
-        pi = Settings.get_bool("raspberry")
+        pi = sys.platform == "linux" or sys.platform == "linux2"
         for file in reversed(files):
             if not pi and file[1] != ":":
                 file = "C:" + file

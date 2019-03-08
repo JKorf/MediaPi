@@ -127,7 +127,7 @@ class SlaveWebsocketController:
 
 
         except Exception as e:
-            Logger().write(LogVerbosity.Important, "Error in Slave websocket controller: " + str(e), 'error')
+            Logger().write(LogVerbosity.Important, "Error in Slave websocket controller: " + str(e))
             stack_trace = traceback.format_exc().split('\n')
             for stack_line in stack_trace:
                 Logger().write(LogVerbosity.Important, stack_line)

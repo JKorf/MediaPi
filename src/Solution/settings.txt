@@ -1,15 +1,15 @@
 # Instance config
 name=Woonkamer
 slave=False
-master_ip=http://127.0.0.1
-api_port=50021
-tradfri_hub_ip=192.168.2.73
 
 # Paths
 serie_api=https://tv-v2.api-fetch.website/
 movie_api=https://tv-v2.api-fetch.website/
 base_folder=C:/home/pi/Scripts/
 tpb_api=https://uktpb.net/
+master_ip=http://127.0.0.1
+api_port=50021
+tradfri_hub_ip=192.168.2.73
 
 # Connections
 max_peers_connecting=20
@@ -23,12 +23,15 @@ low_peer_max_download_buffer=200000
 medium_peer_max_download_buffer=500000
 fast_peer_max_download_buffer=1000000
 metadata_block_size=16384
+start_throttling_buffer_size=30000000
+min_download_speed=100000
+important_only_start_threshold=30000000
+important_only_stop_threshold=20000000
 
 # Trackers
 tracker_peer_request_amount=200
 peer_request_interval=300000
 peer_request_interval_no_potential=30000
-tracker_retry=1
 
 # Streaming
 max_chunk_size=250000
@@ -39,18 +42,10 @@ stream_pause_tolerance=30000000
 stream_end_buffer_tolerance=5000000
 network_caching=5000
 
-start_throttling_buffer_size=30000000
-min_download_speed=100000
-important_only_start_threshold=30000000
-important_only_stop_threshold=20000000
-
-# Application
-main_engine_tick_rate=500
+# Logging
 log_level=2
 max_log_file_size=5000000
 vlc_log_level=1
-show_gui=False
-raspberry=False
 
 # DHT
 dht=False

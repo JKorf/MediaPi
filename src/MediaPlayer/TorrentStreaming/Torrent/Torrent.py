@@ -113,7 +113,7 @@ class Torrent:
         self.user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
         self.log_id = EventManager.register_event(EventType.Log, self.log)
 
-        self.engine = Engine.Engine('Main Engine', Settings.get_int("main_engine_tick_rate"))
+        self.engine = Engine.Engine('Main Engine', 500)
         self.message_engine = Engine.Engine('Peer Message Engine', 200)
 
         self.tracker_manager = TrackerManager()
@@ -147,17 +147,17 @@ class Torrent:
             request = urllib.request.Request(urllib.parse.unquote_plus(uri), None, headers)
             file = urllib.request.urlopen(request).read()
         except:
-            Logger().write(LogVerbosity.Important, "Error downloading torrent file: " + urllib.parse.unquote_plus(uri), 'error')
+            Logger().write(LogVerbosity.Important, "Error downloading torrent file: " + urllib.parse.unquote_plus(uri))
             return False, torrent
 
         try:
             meta_info = Bencode.bdecode(file)
         except BTFailure:
-            Logger().write(LogVerbosity.Important, "Invalid torrent file", 'error')
+            Logger().write(LogVerbosity.Important, "Invalid torrent file")
             return False, torrent
 
         if b'info' not in meta_info:
-            Logger().write(LogVerbosity.Important, "Invalid bencoded torrent dictionary", 'error')
+            Logger().write(LogVerbosity.Important, "Invalid bencoded torrent dictionary")
             return False, torrent
 
         info = meta_info[b'info']
@@ -179,11 +179,11 @@ class Torrent:
         try:
             meta_info = Bencode.bdecode(file.read())
         except BTFailure:
-            Logger().write(LogVerbosity.Important, "Invalid torrent file", 'error')
+            Logger().write(LogVerbosity.Important, "Invalid torrent file")
             return False, torrent
 
         if b'info' not in meta_info:
-            Logger().write(LogVerbosity.Important, "Invalid bencoded torrent dictionary", 'error')
+            Logger().write(LogVerbosity.Important, "Invalid bencoded torrent dictionary")
             return False, torrent
 
         info = meta_info[b'info']
@@ -316,7 +316,7 @@ class Torrent:
         uri = urllib.parse.unquote_plus(uri)
 
         if not uri.startswith('magnet:?xt=urn:btih:'):
-            Logger().write(LogVerbosity.Important, 'Invalid magnet uri ' + uri, 'error')
+            Logger().write(LogVerbosity.Important, 'Invalid magnet uri ' + uri)
             return False
 
         protocol_stripped = uri[8:]

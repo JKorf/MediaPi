@@ -20,7 +20,7 @@ class Logger(metaclass=Singleton):
         self.log_level = 0
         self.log_thread = None
         self.queue = Queue()
-        self.raspberry = Settings.get_bool("raspberry")
+        self.raspberry = sys.platform == "linux" or sys.platform == "linux2"
         self.log_path = Settings.get_string("base_folder") + "/Logs"
         self.max_log_file_size = Settings.get_int("max_log_file_size")
 
@@ -32,14 +32,14 @@ class Logger(metaclass=Singleton):
             os.makedirs(self.log_path)
 
         self.create_log_file()
-        self.log_thread = threading.Thread(name="Logger() thread", target=self.process_queue)
+        self.log_thread = threading.Thread(name="Logger thread", target=self.process_queue)
         self.log_thread.start()
 
         print("Log location: " + self.log_path)
 
     def create_log_file(self):
         self.file_size = 0
-        self.file = open(self.log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt", 'ab',
+        self.file = open(self.log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab',
                          buffering=0)
         self.file.write("\r\n".encode('utf8'))
         self.file.write(("Time".ljust(14) + " | "

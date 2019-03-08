@@ -1,5 +1,7 @@
 import subprocess
 
+import sys
+
 from Shared.Engine import Engine
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
@@ -11,7 +13,7 @@ class WiFiController(metaclass=Singleton):
     def __init__(self):
         self.engine = Engine("WiFi Manager")
         self.engine.add_work_item("WiFi watcher", 15000, self.watch_wifi, False)
-        self.pi = Settings.get_bool("raspberry")
+        self.pi = sys.platform == "linux" or sys.platform == "linux2"
         self.quality = 0
 
         self.connected = False
