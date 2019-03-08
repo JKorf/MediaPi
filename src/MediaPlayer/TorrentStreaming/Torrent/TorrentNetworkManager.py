@@ -3,7 +3,7 @@ from time import sleep
 
 from MediaPlayer.Util.Counter import LiveCounter, AverageCounter
 from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
@@ -39,15 +39,15 @@ class TorrentNetworkManager:
         self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
 
     def log(self):
-        Logger().write(3, "-- TorrentNetworkManager state --")
-        Logger().write(3, "     Network manager: last run input sockets: " + str(self.last_inputs) + ", output: " + str(self.last_outputs))
+        Logger().write(LogVerbosity.Important, "-- TorrentNetworkManager state --")
+        Logger().write(LogVerbosity.Important, "     Network manager: last run input sockets: " + str(self.last_inputs) + ", output: " + str(self.last_outputs))
 
     def unregister(self):
         EventManager.deregister_event(self.event_id_stopped)
         EventManager.deregister_event(self.event_id_log)
 
     def start(self):
-        Logger().write(2, "Starting network manager")
+        Logger().write(LogVerbosity.Info, "Starting network manager")
         self.live_download_counter.start()
         self.average_download_counter.start()
         self.thread = CustomThread(self.execute, "Torrent network thread")
@@ -55,7 +55,8 @@ class TorrentNetworkManager:
 
     def execute(self):
         while self.running:
-            if current_time() - self.last_throttle > 2000:
+            if self.throttling and current_time() - self.last_throttle > 2000:
+                Logger().write(LogVerbosity.Debug, "No longer throttling")
                 self.throttling = False # has not throttled in last 2 seconds
 
             try:
@@ -76,7 +77,7 @@ class TorrentNetworkManager:
                 readable, writeable, exceptional = \
                     select.select(input_sockets, output_sockets, [], 0.2)
             except Exception as e:
-                Logger().write(3, "Select error: " + str(e))
+                Logger().write(LogVerbosity.Important, "Select error: " + str(e))
                 continue
 
             for client in readable:
@@ -84,6 +85,7 @@ class TorrentNetworkManager:
                 if self.max_download_speed != 0 and download_speed > self.max_download_speed:
                     self.last_throttle = current_time()
                     self.throttling = True
+                    Logger().write(LogVerbosity.Debug, "Start throttling at " + str(self.max_download_speed))
                     sleep(0.05)
                     break
 

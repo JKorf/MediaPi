@@ -47,6 +47,7 @@ important_only_stop_threshold=20000000
 # Application
 main_engine_tick_rate=500
 log_level=2
+max_log_file_size=5000000
 vlc_log_level=1
 show_gui=False
 raspberry=False

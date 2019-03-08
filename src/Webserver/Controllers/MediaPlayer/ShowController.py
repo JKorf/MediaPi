@@ -3,7 +3,7 @@ import urllib.parse
 
 from Database.Database import Database
 from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
@@ -57,12 +57,12 @@ class ShowController(BaseHandler):
             return ShowController.parse_show_data(data.decode('utf-8'))
         else:
             EventManager.throw_event(EventType.Error, ["get_error", "Could not get show data"])
-            Logger().write(2, "Error fetching shows")
+            Logger().write(LogVerbosity.Info, "Error fetching shows")
             return []
 
     @staticmethod
     async def get_by_id(id):
-        Logger().write(2, "Get show by id " + id)
+        Logger().write(LogVerbosity.Debug, "Get show by id " + id)
         response = await RequestFactory.make_request_async(ShowController.shows_api_path + "show/" + id)
         data = json.loads(response.decode('utf-8'))
 
@@ -81,12 +81,12 @@ class ShowController(BaseHandler):
 
     @staticmethod
     async def add_favorite(id, title, image):
-        Logger().write(2, "Add show favorite: " + id)
+        Logger().write(LogVerbosity.Info, "Add show favorite: " + id)
         Database().add_favorite(id, "Show", title, image)
 
     @staticmethod
     async def remove_favorite(id):
-        Logger().write(2, "Remove show favorite: " + id)
+        Logger().write(LogVerbosity.Info, "Remove show favorite: " + id)
         Database().remove_favorite(id)
 
     @staticmethod

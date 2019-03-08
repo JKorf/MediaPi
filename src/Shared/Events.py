@@ -1,7 +1,7 @@
 from enum import Enum
 from threading import Lock
 
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Threading import CustomThread
 
 
@@ -39,7 +39,7 @@ class EventManager:
 
     @staticmethod
     def execute_handlers(event_type, args):
-        Logger().write(1, "Firing event " + str(event_type))
+        Logger().write(LogVerbosity.All, "Firing event " + str(event_type))
         with EventManager.lock:
             to_handle = [x for x in EventManager.registered_events if x[1] == event_type]
 

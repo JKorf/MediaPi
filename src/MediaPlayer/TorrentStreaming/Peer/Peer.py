@@ -8,7 +8,7 @@ from MediaPlayer.TorrentStreaming.Peer.PeerMessageHandler import PeerMessageHand
 from MediaPlayer.Util.Counter import AverageCounter
 from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState, PeerSource
 from Shared import Engine
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Stats import Stats
 
 
@@ -50,7 +50,7 @@ class Peer:
         self.allowed_fast_pieces = []
 
     def start(self):
-        Logger().write(1, str(self.id) + ' Starting peer')
+        Logger().write(LogVerbosity.All, str(self.id) + ' Starting peer')
         self.running = True
 
         self.connection_manager = PeerConnectionManager(self.id, self.uri, self.on_connect, self.on_disconnect)
@@ -66,10 +66,10 @@ class Peer:
 
         self.counter.start()
         self.engine.start()
-        Logger().write(1, str(self.id) + ' Peer started')
+        Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer started')
 
     def log(self):
-        Logger().write(3, "     " + str(self.id) + " | " + self.communication_state.print())
+        Logger().write(LogVerbosity.Important, "     " + str(self.id) + " | " + self.communication_state.print())
 
         self.connection_manager.log()
         self.download_manager.log()
@@ -95,7 +95,7 @@ class Peer:
         if not self.running:
             return
 
-        Logger().write(1, str(self.id) + ' Peer stopping')
+        Logger().write(LogVerbosity.All, str(self.id) + ' Peer stopping')
         self.running = False
 
         self.engine.stop()
@@ -107,7 +107,7 @@ class Peer:
         self.counter.stop()
 
         self.torrent = None
-        Logger().write(1, str(self.id) + ' Peer stopped')
+        Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer stopped')
 
 
 class PeerCommunicationState:

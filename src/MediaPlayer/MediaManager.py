@@ -1,7 +1,6 @@
 import asyncio
 import json
 import os
-import random
 import time
 import urllib.parse
 
@@ -18,7 +17,7 @@ from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
 from MediaPlayer.TorrentStreaming.DHT.Engine import DHTEngine
 from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventType, EventManager
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
 from Shared.Observable import Observable
 from Shared.Settings import Settings
@@ -57,7 +56,7 @@ class MediaManager(metaclass=Singleton):
 
     def check_size(self):
         if self.torrent is not None:
-            Logger().write(2, "Size of torrent: " + write_size(asizeof.asizeof(self.torrent)))
+            Logger().write(LogVerbosity.Important, "Size of torrent: " + write_size(asizeof.asizeof(self.torrent)))
             #self.torrent.check_size()
             self.torrent.data_manager.check_pieces_size()
 
@@ -174,7 +173,7 @@ class MediaManager(metaclass=Singleton):
             else:
                 self.start_torrent(self.next_episode_manager.next_title, self.next_episode_manager.next_path, self.next_episode_manager.next_media_file)
 
-            Logger().write(2, "Play next! " + self.next_episode_manager.next_title)
+            Logger().write(LogVerbosity.Info, "Playing next: " + self.next_episode_manager.next_title)
         self.next_episode_manager.reset()
 
     def media_selection_required(self, files):
@@ -213,7 +212,7 @@ class MediaManager(metaclass=Singleton):
 
     def _start_torrent(self, url, media_file):
         if self.torrent is not None:
-            Logger().write(2, "Can't start new torrent, still torrent active")
+            Logger().write(LogVerbosity.Important, "Can't start new torrent, still torrent active")
             return
 
         success, torrent = Torrent.create_torrent(1, url)
@@ -224,7 +223,7 @@ class MediaManager(metaclass=Singleton):
             torrent.start()
             self.last_torrent_start = current_time()
         else:
-            Logger().write(2, "Invalid torrent")
+            Logger().write(LogVerbosity.Important, "Invalid torrent")
             EventManager.throw_event(EventType.Error, ["torrent_error", "Invalid torrent"])
             if self.torrent is not None:
                 self.torrent.stop()
@@ -234,7 +233,7 @@ class MediaManager(metaclass=Singleton):
 
     def player_state_change(self, old_state, new_state):
         if old_state.state != new_state.state:
-            Logger().write(2, "Player state changed from " + str(old_state.state) + " to " + str(new_state.state))
+            Logger().write(LogVerbosity.Info, "Player state changed from " + str(old_state.state) + " to " + str(new_state.state))
 
         if new_state.state == PlayerState.Playing:
             self.play_position = new_state.playing_for
@@ -300,7 +299,7 @@ class MediaManager(metaclass=Singleton):
 
     async def request_master_async(self, url):
         reroute = str(Settings.get_string("master_ip")) + url
-        Logger().write(2, "Sending request to master at " + reroute)
+        Logger().write(LogVerbosity.Debug, "Sending request to master at " + reroute)
         return await RequestFactory.make_request_async(reroute, "GET")
 
     def observe_torrent(self):

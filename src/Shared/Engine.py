@@ -4,7 +4,7 @@ from time import sleep
 
 from Shared.Events import EventManager
 from Shared.Events import EventType
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
@@ -90,14 +90,14 @@ class Engine:
 
     def log(self):
         if self.own_time.ticks > 1:
-            Logger().write(3, "-- Engine "+self.name + " --")
+            Logger().write(LogVerbosity.Important, "-- Engine "+self.name + " --")
             log_str = self.own_time.print() + ", tick time: " + str(self.tick_time)
             if self.current_item:
                 log_str += ", CT: " + str(current_time() - self.start_time) + " @ " + str(self.current_item.name)
-            Logger().write(3, log_str)
-            Logger().write(3, "Last round trip: " + str(current_time() - self.last_tick) + "ms ago")
+            Logger().write(LogVerbosity.Important, log_str)
+            Logger().write(LogVerbosity.Important, "Last round trip: " + str(current_time() - self.last_tick) + "ms ago")
             for key, value in self.timing.items():
-                Logger().write(3, "     " + value.print())
+                Logger().write(LogVerbosity.Important, "     " + value.print())
 
 
 class EngineWorkItem:

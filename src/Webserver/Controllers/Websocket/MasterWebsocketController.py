@@ -7,7 +7,7 @@ from Database.Database import Database
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaManager import MediaManager
 from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.State import StateManager
@@ -77,11 +77,11 @@ class MasterWebsocketController(metaclass=Singleton):
         self.broadcast(str(slave.id) + "." + type, data)
 
     def update_slaves_data(self, data):
-        Logger().write(2, "Slave update broadcast")
+        Logger().write(LogVerbosity.Info, "Slave update broadcast")
         self.broadcast("slaves", data)
 
     def update_light_data(self, data):
-        Logger().write(2, "Lights update broadcast")
+        Logger().write(LogVerbosity.Info, "Lights update broadcast")
         self.broadcast("lights", data)
 
     def trigger_initial_data(self, client, id, subscription):
@@ -105,24 +105,24 @@ class MasterWebsocketController(metaclass=Singleton):
 
     def opening_client(self, client):
         if client not in self.clients:
-            Logger().write(2, "New connection")
+            Logger().write(LogVerbosity.Info, "New connection")
 
     def client_message(self, client, msg):
         data = json.loads(msg)
         if 'event' in data and data['event'] == 'init':
             if data['type'] == 'Slave':
                 self.slaves.add_slave(SlaveClient(self.next_id(), data['data'], client))
-                Logger().write(2, "Slave initialized: " + data['data'])
+                Logger().write(LogVerbosity.Debug, "Slave initialized: " + data['data'])
             elif data['type'] == 'UI':
                 self.clients[client] = []
                 auth = self.authenticate_socket(data['clientId'], data['sessionKey'])
                 if not auth:
-                    Logger().write(2, "UI client authentication failed, closing client")
+                    Logger().write(LogVerbosity.Info, "UI client authentication failed, closing client")
                     self.write_message(client, WebSocketInitResponseMessage(False))
                     client.close()
                     return
 
-                Logger().write(2, "UI client initialized")
+                Logger().write(LogVerbosity.Debug, "UI client initialized")
                 self.write_message(client, WebSocketInitResponseMessage(True))
                 for message in self.pending_message_handler.get_pending_for_new_client():
                     self.write_message(client, WebSocketRequestMessage(message.id, self.own_slave.id, message.type, message.data))
@@ -133,14 +133,14 @@ class MasterWebsocketController(metaclass=Singleton):
             self.slave_client_message(client, data)
 
     def ui_client_message(self, client, data):
-        Logger().write(2, "UI client message " + str(data))
+        Logger().write(LogVerbosity.Debug, "UI client message " + str(data))
         if data['event'] == 'subscribe':
             request_id = int(data['request_id'])
             id = self.next_id()
             subscription = Subscription(id, data['topic'])
             self.clients[client].append(subscription)
             self.on_new_subscription(data['topic'])
-            Logger().write(2, "Client subscribed to " + str(data['topic']))
+            Logger().write(LogVerbosity.Debug, "Client subscribed to " + str(data['topic']))
             self.write_message(client, WebSocketResponseMessage(request_id, [subscription.id]))
             self.trigger_initial_data(client, id, subscription)
 
@@ -148,7 +148,7 @@ class MasterWebsocketController(metaclass=Singleton):
             request_id = int(data['request_id'])
             self.clients[client] = [x for x in self.clients[client] if x.id != request_id]
             self.on_closed_subscription(data['topic'])
-            Logger().write(2, "Client unsubscribed from " + str(data['topic']))
+            Logger().write(LogVerbosity.Debug, "Client unsubscribed from " + str(data['topic']))
 
         elif data['event'] == 'response':
             id = int(data['response_id'])
@@ -156,11 +156,11 @@ class MasterWebsocketController(metaclass=Singleton):
             if instance_id == self.own_slave.id:
                 msg = self.pending_message_handler.get_message_by_response_id(id)
                 if msg is None:
-                    Logger().write(2, "Received response on request not pending")
+                    Logger().write(LogVerbosity.Debug, "Received response on request not pending")
                     return
 
                 self.pending_message_handler.remove_client_message(msg, client)
-                Logger().write(2, "Client message response on " + str(id) +", data: " + str(data['data']))
+                Logger().write(LogVerbosity.Debug, "Client message response on " + str(id) +", data: " + str(data['data']))
                 cb_thread = CustomThread(lambda: msg.callback(*data['data']), "Message response handler", [])
                 cb_thread.start()
             else:
@@ -171,23 +171,23 @@ class MasterWebsocketController(metaclass=Singleton):
         slave = [x for x in self.slaves.data if x._client == client][0]
         if 'event' in data and data['event'] == 'update':
             self.slave_update(slave, data['topic'], data['data'])
-            Logger().write(1, "Slave update: " + data['topic'])
+            Logger().write(LogVerbosity.All, "Slave update: " + data['topic'])
 
         if 'type' in data and (data['type'] == 'request' or data['type'] == 'invalid'):
-            Logger().write(2, "Slave client request: " + data['info_type'])
+            Logger().write(LogVerbosity.Debug, "Slave client request: " + data['info_type'])
             data['instance_id'] = slave.id
             for client, subs in list(self.clients.items()):
                 self.write_message(client, data)
 
         if 'event' in data and data['event'] == 'master_request':
             if data['type'] == 'database':
-                Logger().write(2, "Slave db update: " + str(data))
+                Logger().write(LogVerbosity.Debug, "Slave db update: " + str(data))
                 method = getattr(Database(), data['method'])
                 result = method(*data['parameters'])
                 if result is not None:
                     self.write_message(client, WebSocketSlaveResponse(data['type'], data['method'], [result]))
             elif data['type'] == 'subtitles':
-                Logger().write(2, "Slave subtitle request: " + str(data))
+                Logger().write(LogVerbosity.Debug, "Slave subtitle request: " + str(data))
                 sub_data = MediaManager().subtitle_provider.search_subtitles_for_file(data['parameters'][0])
                 self.write_message(client, WebSocketSlaveResponse(data['type'], data['method'], sub_data))
 
@@ -202,12 +202,12 @@ class MasterWebsocketController(metaclass=Singleton):
 
     def closing_client(self, client):
         if client in self.clients:
-            Logger().write(2, "Connection closed")
+            Logger().write(LogVerbosity.Debug, "Connection closed")
             del self.clients[client]
 
         slave = [x for x in self.slaves.data if x._client == client]
         if len(slave) > 0:
-            Logger().write(2, "Slave " + slave[0].name + " disconnected")
+            Logger().write(LogVerbosity.Info, "Slave " + slave[0].name + " disconnected")
             self.slaves.remove_slave(slave[0])
 
     def broadcast(self, topic, data=None):
@@ -224,12 +224,12 @@ class MasterWebsocketController(metaclass=Singleton):
             try:
                 client.write_message(to_JSON(websocket_message))
             except:
-                Logger().write(2, "Failed to send msg to client because client is closed: " + traceback.format_exc())
+                Logger().write(LogVerbosity.Debug, "Failed to send msg to client because client is closed: " + traceback.format_exc())
 
     def send_to_slave(self, slave_id, topic, method, parameters):
         slave = self.slaves.get_slave_by_id(slave_id)
         if slave is None:
-            Logger().write(2, "Can't send to slave, slave not found")
+            Logger().write(LogVerbosity.Debug, "Can't send to slave, slave not found")
             return
 
         self.write_message(slave._client, WebSocketSlaveCommand(topic, method, parameters))

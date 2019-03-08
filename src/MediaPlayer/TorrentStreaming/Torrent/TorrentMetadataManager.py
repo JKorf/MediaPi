@@ -1,12 +1,9 @@
 import math
 from threading import Lock
 
-from pympler import asizeof
-
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from MediaPlayer.Util.Bencode import bdecode
-from Shared.Util import write_size
 
 
 class TorrentMetadataManager:
@@ -26,7 +23,7 @@ class TorrentMetadataManager:
     # Metadata size that is communicated doesn't seem to be very reliable, check for the most communicated size
     def set_total_size(self, size):
         if size <= 1:
-            Logger().write(2, "Invalid metadata size: " + str(size))
+            Logger().write(LogVerbosity.Debug, "Invalid metadata size: " + str(size))
             return
 
         if str(size) in self.total_size_sets:
@@ -41,14 +38,14 @@ class TorrentMetadataManager:
 
         if len(self.metadata_blocks) > 0:
             self.metadata_blocks.clear()
-            Logger().write(2, "Metadata size reset. ")
+            Logger().write(LogVerbosity.Debug, "Metadata size reset. ")
             for key, value in self.total_size_sets.items():
-                Logger().write(2, "size " + key + ": " + str(value) + "x")
+                Logger().write(LogVerbosity.Debug, "size " + key + ": " + str(value) + "x")
 
         # New total size determined
         self.current_total_size = size
         blocks = int(math.ceil(self.current_total_size / self.metadata_block_size))
-        Logger().write(2, "Metadata new size set to " + str(self.current_total_size) + " ( " + str(blocks) + " blocks )")
+        Logger().write(LogVerbosity.Info, "Metadata new size set to " + str(self.current_total_size) + " ( " + str(blocks) + " blocks )")
 
         for index in range(blocks):
             self.metadata_blocks.append(MetadataBlock(index, min(self.current_total_size - (index * self.metadata_block_size), self.metadata_block_size)))
@@ -63,20 +60,22 @@ class TorrentMetadataManager:
     def add_metadata_piece(self, index, data):
         with self.__lock:
             if self.metadata_done:
+                Logger().write(LogVerbosity.Debug, "Received metadata block which is already done: " + str(index))
                 return
 
             if index >= len(self.metadata_blocks) or index < 0:
-                Logger().write(2, 'Invalid metadata block index: ' + str(index))
+                Logger().write(LogVerbosity.Debug, 'Invalid metadata block index: ' + str(index))
                 return
 
             if data is None or len(data) == 0:
-                Logger().write(2, 'Invalid metadata block data')
+                Logger().write(LogVerbosity.Debug, 'Invalid metadata block data')
                 return
 
             self.metadata_blocks[index].write(data)
+            Logger().write(LogVerbosity.Debug, "Metadata blocks done: " + str(index))
 
             if len([x for x in self.metadata_blocks if not x.done]) == 0:
-                Logger().write(2, "Metadata done")
+                Logger().write(LogVerbosity.Info, "Metadata done")
                 self.metadata_done = True
 
                 data = bytearray(self.current_total_size)

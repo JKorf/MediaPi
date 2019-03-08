@@ -1,15 +1,11 @@
 import asyncio
-import os
-import urllib.parse
-import urllib.request
 
 import tornado
 from tornado import ioloop, web, websocket
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
-from Shared.Logger import Logger
-from Shared.Network import RequestFactory
-from Shared.Settings import Settings, SecureSettings
+from Shared.Logger import Logger, LogVerbosity
+from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Webserver.Controllers.AuthController import AuthController
 from Webserver.Controllers.DataController import DataController
@@ -68,7 +64,7 @@ class TornadoServer:
         MasterWebsocketController().start()
 
         self.application.listen(self.port)
-        Logger().write(2, "API running on port " + str(self.port))
+        Logger().write(LogVerbosity.Info, "API running on port " + str(self.port))
 
         tornado.ioloop.IOLoop.instance().start()
 
@@ -89,100 +85,3 @@ class MasterWebsocketHandler(websocket.WebSocketHandler):
 
     def on_close(self):
         MasterWebsocketController().closing_client(self)
-
-
-# class DatabaseHandler(BaseHandler):
-#
-#     async def post(self, url):
-#         if Settings.get_bool("slave"):
-#             await TornadoServer.notify_master_async(self.request.uri)
-#             return
-#
-#         if url == "add_watched_torrent_file":
-#             Logger().write(2, "Adding to watched torrent files")
-#             Database().add_watched_torrent_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("mediaFile"), self.get_argument("watchedAt"))
-#
-#         if url == "add_watched_file":
-#             Logger().write(2, "Adding to watched files")
-#             Database().add_watched_file(urllib.parse.unquote(self.get_argument("title")), urllib.parse.unquote(self.get_argument("url")), self.get_argument("watchedAt"), urllib.parse.unquote(self.get_argument("mediaFile")))
-#
-#         if url == "add_watched_youtube":
-#             Logger().write(2, "Adding to watched youtube")
-#             Database().add_watched_youtube(
-#                 self.get_argument("title"),
-#                 self.get_argument("watchedAt"),
-#                 self.get_argument("id"),
-#                 self.get_argument("url"))
-#
-#         if url == "add_watched_movie":
-#             Logger().write(2, "Adding to watched movie")
-#             Database().add_watched_movie(
-#                 self.get_argument("title"),
-#                 self.get_argument("movieId"),
-#                 self.get_argument("image"),
-#                 self.get_argument("watchedAt"),
-#                 self.get_argument("url"),
-#                 self.get_argument("mediaFile"))
-#
-#         if url == "add_watched_episode":
-#             Logger().write(2, "Adding to watched episodes")
-#             Database().add_watched_episode(
-#                 self.get_argument("title"),
-#                 self.get_argument("showId"),
-#                 self.get_argument("url"),
-#                 self.get_argument("mediaFile"),
-#                 self.get_argument("image"),
-#                 self.get_argument("episodeSeason"),
-#                 self.get_argument("episodeNumber"),
-#                 self.get_argument("watchedAt"))
-#
-#         if url == "add_watched_torrent":
-#             Logger().write(2, "Adding to watched episodes")
-#             Database().add_watched_torrent_file(
-#                 self.get_argument("title"),
-#                 self.get_argument("url"),
-#                 self.get_argument("mediaFile"),
-#                 self.get_argument("watchedAt"))
-#
-#         if url == "remove_watched":
-#             Logger().write(2, "Remove watched")
-#             Database().remove_watched(self.get_argument("id"))
-#
-#         if url == "add_favorite":
-#             Logger().write(2, "Adding to favorites")
-#             Database().add_favorite(self.get_argument("id"), self.get_argument("type"), self.get_argument("title"), self.get_argument("image"))
-#
-#         if url == "remove_favorite":
-#             Logger().write(2, "Removing from favorites")
-#             Database().remove_favorite(self.get_argument("id"))
-#
-#         if url == "remove_unfinished":
-#             Logger().write(2, "Removing unfinished")
-#             Database().remove_watching_item(
-#                 urllib.parse.unquote(self.get_argument("url")))
-#
-#         if url == "add_unfinished":
-#             Logger().write(2, "Adding unfinished")
-#
-#             media_file = self.get_argument("mediaFile")
-#             if media_file == "None" or media_file == "null":
-#                 media_file = None
-#             Database().add_watching_item(
-#                 self.get_argument("type"),
-#                 self.get_argument("name"),
-#                 urllib.parse.unquote(self.get_argument("url")),
-#                 self.get_argument("image"),
-#                 int(self.get_argument("length")),
-#                 self.get_argument("time"),
-#                 media_file)
-#
-#         if url == "update_unfinished":
-#             media_file = self.get_argument("mediaFile")
-#             if media_file == "None" or media_file == "null":
-#                 media_file = None
-#
-#             Database().update_watching_item(
-#                 urllib.parse.unquote(self.get_argument("url")),
-#                 int(self.get_argument("position")),
-#                 self.get_argument("watchedAt"),
-#                 media_file)

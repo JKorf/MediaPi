@@ -1,4 +1,4 @@
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import to_JSON
 from Webserver.BaseHandler import BaseHandler
 from Webserver.Models import BaseMedia
@@ -38,7 +38,7 @@ class RadioController(BaseHandler):
 
     def get(self, url):
         if url == "get_radios":
-            Logger().write(2, "Get radio list")
+            Logger().write(LogVerbosity.Debug, "Get radio list")
             self.write(to_JSON(self.get_list()))
 
     def get_list(self):

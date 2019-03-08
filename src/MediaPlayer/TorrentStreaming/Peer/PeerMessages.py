@@ -1,6 +1,6 @@
 import abc
 
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util import Network
 from MediaPlayer.Util.Enums import PeerMessageType, ExtensionProtocolMessageType, MetadataMessageType, ExtensionName
@@ -92,7 +92,7 @@ class BasePeerMessage:
             if extension_message_type == ExtensionProtocolMessageType.PeerExchange: return PeerExchangeMessage.from_bytes(data)
             if extension_message_type == ExtensionProtocolMessageType.Metadata: return MetadataMessage.from_bytes(data)
 
-        Logger().write(2, "Unknown message! type = " + str(type))
+        Logger().write(LogVerbosity.Info, "Unknown message! type = " + str(type))
 
 
 class KeepAliveMessage:

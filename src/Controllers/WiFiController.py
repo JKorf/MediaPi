@@ -1,7 +1,7 @@
 import subprocess
 
 from Shared.Engine import Engine
-from Shared.Events import EventManager, EventType
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Util import Singleton
 
@@ -10,7 +10,7 @@ class WiFiController(metaclass=Singleton):
 
     def __init__(self):
         self.engine = Engine("WiFi Manager")
-        self.engine.add_work_item("WiFi watcher", 5000, self.watch_wifi, False)
+        self.engine.add_work_item("WiFi watcher", 15000, self.watch_wifi, False)
         self.pi = Settings.get_bool("raspberry")
         self.quality = 0
 
@@ -46,6 +46,7 @@ class WiFiController(metaclass=Singleton):
                             if key_value[0] == "Quality":
                                 value_max = key_value[1].split("/")
                                 self.quality = float(value_max[0]) / float(value_max[1]) * 100
+                                Logger().write(LogVerbosity.Debug, "Wifi quality: " + str(self.quality))
 
         else:
             proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
@@ -55,4 +56,5 @@ class WiFiController(metaclass=Singleton):
                 if "Signal" in line:
                     split = line.split(":")
                     self.quality = float(split[1].replace("%", ""))
+                    Logger().write(LogVerbosity.Debug, "Wifi quality: " + str(self.quality))
         return True

@@ -1,6 +1,6 @@
 import time
 
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
@@ -26,7 +26,7 @@ class PendingMessagesHandler:
             check_time = current_time()
             invalid = [x for x in self.pending_messages if x.valid_till < check_time]
             for msg in invalid:
-                Logger().write(2, "Timing out message " + str(msg.id))
+                Logger().write(LogVerbosity.Info, "Timing out message " + str(msg.id))
                 self.pending_messages = [x for x in self.pending_messages if x.id != msg.id]
                 self.on_invalid_message(msg)
             time.sleep(1)

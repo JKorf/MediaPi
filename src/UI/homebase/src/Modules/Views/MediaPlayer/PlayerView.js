@@ -306,7 +306,7 @@ class PlayerView extends Component {
                 <div className="player-group-details">
                     <InfoRow name="CPU" value={this.state.stateData.cpu + "%"} />
                     <InfoRow name="Memory" value={this.state.stateData.memory + "%"} />
-                    <InfoRow name="Temperature" value={this.state.stateData.temperature + " C"} />
+                    <InfoRow name="Temperature" value={this.state.stateData.temperature} />
                     <InfoRow name="Threads" value={this.state.stateData.threads} />
                 </div>
             </InfoGroup>

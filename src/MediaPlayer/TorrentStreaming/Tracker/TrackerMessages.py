@@ -1,7 +1,7 @@
 from MediaPlayer.Util.Network import read_integer, read_long, write_long, write_int, write_bytes, write_uint, \
     write_ushort
 from MediaPlayer.Util.Util import check_bytes_length, check_minimal_bytes_length, uri_from_bytes
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 
 
 class TrackerConnectionMessage:
@@ -64,7 +64,7 @@ class TrackerResponseMessage:
             offset, msg.transaction_id = read_integer(data, offset)
             if msg.message_type == 3:
                 msg.error = str(data[offset: len(data)])
-                Logger().write(2, "Tracker error message: " + msg.error)
+                Logger().write(LogVerbosity.Important, "Tracker error message: " + msg.error)
             else:
                 offset, msg.interval = read_integer(data, offset)
                 offset, msg.leechers = read_integer(data, offset)
@@ -76,7 +76,7 @@ class TrackerResponseMessage:
                     msg.peers.append(uri_from_bytes(data[offset:offset + 6]))
                     offset += 6
         except Exception as e:
-            Logger().write(3, "Error in tacker message: " +str(e) + ". Message: " + str(data))
+            Logger().write(LogVerbosity.Important, "Error in tacker message: " +str(e) + ". Message: " + str(data))
             return None
 
         return msg

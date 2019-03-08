@@ -5,7 +5,7 @@ import urllib.parse
 import urllib.request
 
 from Database.Database import Database
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
 from Webserver.Models import FileStructure
@@ -42,7 +42,7 @@ class HDController(BaseHandler):
         if sys.platform == "win32":
             path = "C:" + path
 
-        Logger().write(2, path)
+        Logger().write(LogVerbosity.Debug, "Getting directory: " + path)
         directory = FileStructure(urllib.parse.unquote(path))
         history = Database().get_history()
         for file in directory.file_names:

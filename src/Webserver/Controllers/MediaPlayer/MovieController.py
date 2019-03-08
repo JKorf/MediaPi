@@ -3,7 +3,7 @@ import urllib.parse
 
 from Database.Database import Database
 from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
@@ -50,11 +50,11 @@ class MovieController(BaseHandler):
             return self.parse_movie_data(data.decode('utf-8'))
         else:
             EventManager.throw_event(EventType.Error, ["get_error", "Could not get movie data"])
-            Logger().write(2, "Error fetching movies")
+            Logger().write(LogVerbosity.Info, "Error fetching movies")
             return []
 
     async def get_by_id(self, id):
-        Logger().write(2, "Get movie by id " + id)
+        Logger().write(LogVerbosity.Debug, "Get movie by id " + id)
         response = await RequestFactory.make_request_async(MovieController.movies_api_path + "movie/" + id)
         data = json.loads(response.decode('utf-8'))
 

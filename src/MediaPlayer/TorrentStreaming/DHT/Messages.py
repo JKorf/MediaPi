@@ -3,7 +3,7 @@ import abc
 from MediaPlayer.TorrentStreaming.DHT.Util import TransactionIdManager
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 
 
 class QueryMessage:
@@ -38,10 +38,10 @@ class BaseDHTMessage:
         try:
             data = Bencode.bdecode(bytes)
         except BTFailure:
-            Logger().write(2, "DHT: Invalid dht message" + str(bytes))
+            Logger().write(LogVerbosity.Debug, "DHT: Invalid dht message" + str(bytes))
             return None
         if b'y' not in data:
-            Logger().write(2, "DHT: Unknown message: " + str(data))
+            Logger().write(LogVerbosity.Debug, "DHT: Unknown message: " + str(data))
             return None
 
         if data[b'y'] == b'r':

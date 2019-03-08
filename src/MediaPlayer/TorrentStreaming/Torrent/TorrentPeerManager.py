@@ -8,7 +8,7 @@ from MediaPlayer.TorrentStreaming.Peer.PeerMessages import HaveMessage
 from MediaPlayer.TorrentStreaming.Peer.Peer import Peer
 from MediaPlayer.Util.Enums import PeerSource, TorrentState, ConnectionState, PeerSpeed
 from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Stats import Stats
 from Shared.Util import current_time, write_size
@@ -45,7 +45,7 @@ class TorrentPeerManager:
 
     def check_size(self):
         for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
-            Logger().write(2, "       Size of " + str(key) + ": " + write_size(size))
+            Logger().write(LogVerbosity.Important, "       Size of " + str(key) + ": " + write_size(size))
 
     def unregister(self):
         EventManager.deregister_event(self.event_id_log)
@@ -54,13 +54,13 @@ class TorrentPeerManager:
         EventManager.deregister_event(self.event_id_peers_found)
 
     def log_peers(self):
-        Logger().write(3, "-- TorrentPeerManager state --")
-        Logger().write(3, "   Potential peers: " + str(len(self.potential_peers)))
-        Logger().write(3, "   Connected peers: " + str(len(self.connected_peers)))
-        Logger().write(3, "   Connecting peers: " + str(len(self.connecting_peers)))
-        Logger().write(3, "   CantConnect peers: " + str(len(self.cant_connect_peers)))
-        Logger().write(3, "   Disconnected peers: " + str(len(self.disconnected_peers)))
-        Logger().write(3, "   Complete list: " + str(len(self.complete_peer_list)))
+        Logger().write(LogVerbosity.Important, "-- TorrentPeerManager state --")
+        Logger().write(LogVerbosity.Important, "   Potential peers: " + str(len(self.potential_peers)))
+        Logger().write(LogVerbosity.Important, "   Connected peers: " + str(len(self.connected_peers)))
+        Logger().write(LogVerbosity.Important, "   Connecting peers: " + str(len(self.connecting_peers)))
+        Logger().write(LogVerbosity.Important, "   CantConnect peers: " + str(len(self.cant_connect_peers)))
+        Logger().write(LogVerbosity.Important, "   Disconnected peers: " + str(len(self.disconnected_peers)))
+        Logger().write(LogVerbosity.Important, "   Complete list: " + str(len(self.complete_peer_list)))
         for peer in self.connected_peers:
             peer.log()
 
@@ -73,9 +73,11 @@ class TorrentPeerManager:
             return
 
         if isinstance(uri, list):
+            Logger().write(LogVerbosity.Debug, "Adding " + str(len(uri)) + " potential peers from " + str(source))
             for u in uri:
                 self.add_potential_peer_item(u, source)
         else:
+            Logger().write(LogVerbosity.Debug, "Adding a potential peers from " + str(source))
             self.add_potential_peer_item(uri, source)
 
     def add_potential_peer_item(self, uri, source):
@@ -96,16 +98,10 @@ class TorrentPeerManager:
             Stats.add('peers_source_exchange', 1)
 
     def pieces_done(self, pieces):
-        for peer in list(self.connected_peers):
-            for piece in pieces:
-                Logger().write(1, str(peer.id) + " Sending have message for piece " + str(piece.index))
+        for piece in pieces:
+            Logger().write(LogVerbosity.Debug, "Sending have messages for piece " + str(piece.index))
+            for peer in list(self.connected_peers):
                 peer.connection_manager.send(HaveMessage(piece.index).to_bytes())
-
-    def get_peer_by_id(self, peer_id):
-        peers = [x for x in self.connected_peers if x.id == peer_id]
-        if len(peers) != 0:
-            return peers[0]
-        return None
 
     def update_new_peers(self):
         if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData and self.torrent.state != TorrentState.WaitingUserFileSelection:
@@ -116,7 +112,7 @@ class TorrentPeerManager:
 
         if current_time() - self.last_peer_request > self.peer_request_interval or \
                                 len(self.potential_peers) <= 10 and current_time() - self.last_peer_request > self.peer_request_interval_no_potential:
-            Logger().write(2, "Requesting peers")
+            Logger().write(LogVerbosity.Debug, "Requesting peers")
             EventManager.throw_event(EventType.RequestPeers, [self.torrent])
             self.last_peer_request = current_time()
 
@@ -126,7 +122,7 @@ class TorrentPeerManager:
             if len(self.potential_peers) == 0 and \
                             len(self.connecting_peers) == 0 and \
                             len(self.connected_peers) == 0:
-                Logger().write(2, "No peers found for torrent")
+                Logger().write(LogVerbosity.Important, "No peers found for torrent, stopping")
                 EventManager.throw_event(EventType.NoPeers, [])
                 return False
 
@@ -148,12 +144,12 @@ class TorrentPeerManager:
             if len(peer_list) == 0:
                 return True  # No peers available
 
+        Logger().write(LogVerbosity.Debug, 'starting ' + str(peers_to_connect) + ' new peers')
         for index in range(peers_to_connect):
             if len(peer_list) == 0:
                 # We probably stopped the torrent if this happens
                 return True
 
-            Logger().write(1, 'starting new peer')
             peer_to_connect = self.random.choice(peer_list)
 
             if peer_to_connect in self.potential_peers:
@@ -218,7 +214,7 @@ class TorrentPeerManager:
                 # If peer speed is more than 5kbps don't remove
                 break
 
-            Logger().write(2, "Stopping slowest peer to find a potential faster one. Peer speed last 5 seconds was " + str(write_size(peer.counter.value)) + ", total: " + str(write_size(peer.counter.total)))
+            Logger().write(LogVerbosity.Info, "Stopping slowest peer to find a potential faster one. Peer speed last 5 seconds was " + str(write_size(peer.counter.value)) + ", total: " + str(write_size(peer.counter.total)))
             peer.stop()
 
         return True
@@ -236,12 +232,12 @@ class TorrentPeerManager:
 
         for peer in [x for x in list(self.connected_peers) if x.connection_state == ConnectionState.Connected]:
             allowed_process_time = max(min(50, end_time - current_time()), 10)
-            Logger().write(1, str(peer.id) + " peer with speed " + str(peer.counter.value) + " allowed " + str(allowed_process_time) + "ms at index " + str(index))
+            Logger().write(LogVerbosity.All, str(peer.id) + " peer with speed " + write_size(peer.counter.value) + "ps allowed " + str(allowed_process_time) + "ms at index " + str(index))
             if not peer.message_handler.update(allowed_process_time):
-                Logger().write(1, str(peer.id) + " removing peer, update = false")
+                Logger().write(LogVerbosity.Info, str(peer.id) + " removing peer, update = false")
                 self.connected_peers.remove(peer)
             index += 1
-        Logger().write(1, "Total took " + str(current_time() - (end_time - 200)) + "ms")
+        Logger().write(LogVerbosity.All, "Total took " + str(current_time() - (end_time - 200)) + "ms")
 
         return True
 

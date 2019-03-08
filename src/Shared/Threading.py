@@ -1,7 +1,7 @@
 import threading
 import traceback
 
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import current_time
 
 
@@ -62,8 +62,8 @@ class CustomThread:
             ThreadManager.remove_thread(self)
         except Exception:
             excep = str(traceback.format_exc())
-            Logger().write(3, "Unhandled exception in thread " + self.thread_name)
-            Logger().write(3, excep, 'error')
+            Logger().write(LogVerbosity.Important, "Unhandled exception in thread " + self.thread_name)
+            Logger().write(LogVerbosity.Important, excep, 'error')
             ThreadManager.remove_thread(self)
 
     def join(self):

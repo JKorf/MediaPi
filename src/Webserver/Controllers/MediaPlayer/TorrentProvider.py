@@ -8,7 +8,7 @@ import time
 from urllib.request import urlopen
 from urllib.request import Request
 
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import headers
 
 unicode = str
@@ -43,7 +43,7 @@ class List(object):
         Request URL and parse response. Yield a ``Torrent`` for every torrent
         on page.
         """
-        Logger().write(2, "TPB requesting " + str(self.url))
+        Logger().write(LogVerbosity.Debug, "TPB requesting " + str(self.url))
         request = Request(str(self.url), data=None, headers=headers)
         request = urlopen(request, timeout=10)
 

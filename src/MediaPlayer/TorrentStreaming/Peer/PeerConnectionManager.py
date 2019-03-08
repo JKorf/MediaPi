@@ -3,7 +3,7 @@ from threading import Lock
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import KeepAliveMessage
 from MediaPlayer.Util.Enums import ConnectionState, ReceiveState
 from MediaPlayer.Util.Network import *
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import TcpClient
 from Shared.Settings import Settings
 from Shared.Stats import Stats
@@ -36,19 +36,19 @@ class PeerConnectionManager:
     def start(self):
         self.connection_state = ConnectionState.Connecting
         self.connected_on = 0
-        Logger().write(1, str(self.peer_id) + ' connecting to ' + str(self.uri.netloc))
+        Logger().write(LogVerbosity.All, str(self.peer_id) + ' connecting to ' + str(self.uri.netloc))
         Stats.add('peers_connect_try', 1)
 
         if not self.connection.connect():
             Stats.add('peers_connect_failed', 1)
-            Logger().write(1, str(self.peer_id) + ' could not connect to ' + str(self.uri.netloc))
+            Logger().write(LogVerbosity.All, str(self.peer_id) + ' could not connect to ' + str(self.uri.netloc))
             self.disconnect()
             return
 
         self.connected_on = current_time()
         self.on_connect()
         Stats.add('peers_connect_success', 1)
-        Logger().write(1, str(self.peer_id) + ' connected to ' + str(self.uri.netloc))
+        Logger().write(LogVerbosity.Debug, str(self.peer_id) + ' connected to ' + str(self.uri.netloc))
         self.connection_state = ConnectionState.Connected
         self.connection.socket.setblocking(0)
 
@@ -79,10 +79,8 @@ class PeerConnectionManager:
                 self.buffer.clear()
 
                 if self.next_message_length < 0 or self.next_message_length > 17000:
-                    Logger().write(2, "Invalid next message length: " + str(self.next_message_length))
+                    Logger().write(LogVerbosity.Info, "Invalid next message length: " + str(self.next_message_length))
                     self.disconnect()
-                else:
-                    Logger().write(1, "Next message length: " + str(self.next_message_length))
 
                 return data_length
             else:
@@ -105,7 +103,6 @@ class PeerConnectionManager:
         success = True
         with self.sendLock:
             if len(self.to_send_bytes) != 0:
-                Logger().write(1, str(self.peer_id) + ' Sending ' + str(len(self.to_send_bytes)) + " bytes of data")
                 success = self.connection.send(self.to_send_bytes)
                 self.to_send_bytes.clear()
                 self.last_communication = current_time()
@@ -132,22 +129,22 @@ class PeerConnectionManager:
         if self.connection_state == ConnectionState.Connected \
                 and self.last_communication < current_time() - self.peer_timeout \
                 and self.connected_on < current_time() - 30000:
-            Logger().write(1, "Sending keep alive")
+            Logger().write(LogVerbosity.Debug, "Sending keep alive")
             self.send(KeepAliveMessage().to_bytes())
         if self.connection_state == ConnectionState.Disconnected:
             return False
         return True
 
     def log(self):
-        Logger().write(3, "       Last communication: " + str(current_time() - self.last_communication) + "ms ago")
-        Logger().write(3, "       To send buffer length: " + str(len(self.to_send_bytes)))
-        Logger().write(3, "       Receive buffer length: " + str(len(self.received_bytes)))
+        Logger().write(LogVerbosity.Important, "       Last communication: " + str(current_time() - self.last_communication) + "ms ago")
+        Logger().write(LogVerbosity.Important, "       To send buffer length: " + str(len(self.to_send_bytes)))
+        Logger().write(LogVerbosity.Important, "       Receive buffer length: " + str(len(self.received_bytes)))
 
     def disconnect(self):
         if self.connection_state == ConnectionState.Disconnected:
             return
 
-        Logger().write(1, str(self.peer_id) + ' disconnected')
+        Logger().write(LogVerbosity.Debug, str(self.peer_id) + ' disconnected')
         self.connection_state = ConnectionState.Disconnected
 
         with self.sendLock:

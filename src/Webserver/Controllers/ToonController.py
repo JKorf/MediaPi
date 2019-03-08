@@ -1,5 +1,5 @@
 from Controllers.ToonManager import ToonManager
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import to_JSON
 from Webserver.BaseHandler import BaseHandler
 
@@ -47,11 +47,11 @@ class ToonController(BaseHandler):
 
     def set_temperature(self, temp):
         temp /= 100
-        Logger().write(2, "Setting toon temperature to " + str(temp))
+        Logger().write(LogVerbosity.Info, "Setting toon temperature to " + str(temp))
         ToonManager().set_temperature(temp)
 
     def set_active_state(self, state):
-        Logger().write(2, "Setting toon state to " + state)
+        Logger().write(LogVerbosity.Info, "Setting toon state to " + state)
         ToonManager().set_state(state)
 
 

@@ -1,6 +1,6 @@
 import subprocess
 
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import Singleton
 from Webserver.Models import CecDevice
 
@@ -95,11 +95,11 @@ class TVManager(metaclass=Singleton):
     @staticmethod
     def __request(command):
         try:
-            Logger().write(2, "TV manager sending command: " + command)
+            Logger().write(LogVerbosity.Debug, "TV manager sending command: " + command)
             result = subprocess.check_output(command + ' -d ' + TVManager.debug_level, shell=True).decode("utf8")
-            Logger().write(2, "TV manager result: " + str(result))
+            Logger().write(LogVerbosity.Debug, "TV manager result: " + str(result))
             return result
         except subprocess.TimeoutExpired:
-            Logger().write(2, "TV manager request failed by timeout")
+            Logger().write(LogVerbosity.Info, "TV manager request failed by timeout")
         except subprocess.CalledProcessError as err:
-            Logger().write(2, "TV manager request failed: {}".format(err))
+            Logger().write(LogVerbosity.Info, "TV manager request failed: {}".format(err))

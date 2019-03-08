@@ -3,7 +3,7 @@ import urllib.request
 
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import headers
 
 
@@ -102,7 +102,7 @@ class RequestFactory:
             http_response = await async_http_client.fetch(http_request)
             return http_response.body
         except Exception as e:
-            Logger().write(2, "Error requesting url " + url + ": " + str(e))
+            Logger().write(LogVerbosity.Important, "Error requesting url " + url + ": " + str(e))
             return None
 
     @staticmethod
@@ -120,5 +120,5 @@ class RequestFactory:
             request = urllib.request.Request(path, body, heads, method=method)
             return urllib.request.urlopen(request).read()
         except Exception as e:
-            Logger().write(2, "Error requesting url " + path + ": " + str(e))
+            Logger().write(LogVerbosity.Important, "Error requesting url " + path + ": " + str(e))
             return None

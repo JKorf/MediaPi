@@ -6,7 +6,7 @@ from enum import Enum
 from MediaPlayer.Player import vlc
 from MediaPlayer.Player.vlc import libvlc_get_version, EventType as VLCEventType, MediaSlaveType, MediaSlave, Media
 from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
@@ -42,16 +42,16 @@ class VLCPlayer(metaclass=Singleton):
 
     def instantiate_vlc(self):
         parameters = self.get_instance_parameters()
-        Logger().write(2, "VLC parameters: " + str(parameters))
+        Logger().write(LogVerbosity.Debug, "VLC parameters: " + str(parameters))
         self.__vlc_instance = vlc.Instance("cvlc", *parameters)
-        Logger().write(3, "VLC version " + libvlc_get_version().decode('utf8'))
+        Logger().write(LogVerbosity.Info, "VLC version " + libvlc_get_version().decode('utf8'))
 
     def play(self, url, time=0):
         parameters = self.get_play_parameters(url, time)
 
-        Logger().write(2, "VLC Play | Url: " + url)
-        Logger().write(2, "VLC Play | Time: " + str(time))
-        Logger().write(2, "VLC Play | Parameters: " + str(parameters))
+        Logger().write(LogVerbosity.Info, "VLC Play | Url: " + url)
+        Logger().write(LogVerbosity.Info, "VLC Play | Time: " + str(time))
+        Logger().write(LogVerbosity.Info, "VLC Play | Parameters: " + str(parameters))
 
         self.player_state.start_update()
         self.player_state.path = url
@@ -84,18 +84,15 @@ class VLCPlayer(metaclass=Singleton):
         return params
 
     def pause_resume(self):
+        Logger().write(LogVerbosity.All, "Player pause resume")
         self.__player.pause()
 
     def stop(self):
+        Logger().write(LogVerbosity.All, "Player stop")
         self.__player.stop()
 
-    def mute_on(self):
-        self.__player.audio_set_mute(True)
-
-    def mute_off(self):
-        self.__player.audio_set_mute(False)
-
     def set_volume(self, vol):
+        Logger().write(LogVerbosity.Debug, "Player set volume " + str(vol))
         self.__player.audio_set_volume(vol)
         self.player_state.start_update()
         self.player_state.volume = vol
@@ -110,19 +107,19 @@ class VLCPlayer(metaclass=Singleton):
     def get_length(self):
         return int(self.__player.get_length())
 
-    def get_length_ms(self):
-        return int(self.__player.get_length())
-
     def set_time(self, pos):
+        Logger().write(LogVerbosity.Debug, "Player set time " + str(pos))
         self.__player.set_time(pos)
         self.player_state.start_update()
         self.player_state.playing_for = pos
         self.player_state.stop_update()
 
     def set_position(self, pos):
+        Logger().write(LogVerbosity.Debug, "Player set position " + str(pos))
         self.__player.set_position(pos)
 
     def set_subtitle_delay(self, delay):
+        Logger().write(LogVerbosity.Debug, "Player set subtitle delay " + str(delay))
         self.__player.video_set_spu_delay(delay)
         self.player_state.start_update()
         self.player_state.sub_delay = delay
@@ -135,6 +132,7 @@ class VLCPlayer(metaclass=Singleton):
         return self.__player.audio_get_track()
 
     def set_audio_track(self, track_id):
+        Logger().write(LogVerbosity.Debug, "Player set audio track " + str(track_id))
         self.__player.audio_set_track(track_id)
         self.player_state.start_update()
         self.player_state.audio_track = track_id
@@ -148,7 +146,7 @@ class VLCPlayer(metaclass=Singleton):
         return result
 
     def set_subtitle_files(self, files):
-        Logger().write(2, "Adding " + str(len(files)) + " subtitle files")
+        Logger().write(LogVerbosity.Debug, "Adding " + str(len(files)) + " subtitle files")
         pi = Settings.get_bool("raspberry")
         for file in reversed(files):
             if not pi and file[1] != ":":
@@ -158,6 +156,7 @@ class VLCPlayer(metaclass=Singleton):
             self.__player.video_set_subtitle_file(file)
 
     def set_subtitle_track(self, id):
+        Logger().write(LogVerbosity.Debug, "Player set subtitle track " + str(id))
         self.__player.video_set_spu(id)
         self.player_state.start_update()
         self.player_state.sub_track = id
@@ -223,7 +222,7 @@ class VLCPlayer(metaclass=Singleton):
 
     def state_change_end_reached(self, event):
         if self.player_state.path is not None and "youtube" in self.player_state.path and not self.trying_subitems:
-            Logger().write(2, "Trying youtube sub items")
+            Logger().write(LogVerbosity.Debug, "Trying youtube sub items")
             self.trying_subitems = True
             thread = CustomThread(self.try_play_subitem, "Try play subitem")
             thread.start()
@@ -234,7 +233,7 @@ class VLCPlayer(metaclass=Singleton):
             self.change_state(PlayerState.Ended)
 
     def on_error(self, event):
-        Logger().write(2, "VLC error")
+        Logger().write(LogVerbosity.Info, "VLC error")
 
     def try_play_subitem(self):
         media = self.__player.get_media()

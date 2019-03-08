@@ -4,7 +4,6 @@ import time
 
 import itertools
 
-from Shared.Logger import Logger
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 

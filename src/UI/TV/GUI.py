@@ -11,7 +11,7 @@ from PIL import Image, ImageTk
 
 from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer, PlayerState
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
 from Shared.Threading import CustomThread
 
@@ -31,7 +31,7 @@ class App(tk.Frame):
 
     @state.setter
     def state(self, value):
-        Logger().write(2, "Setting UI state from " + str(self._state) + " to " + str(value))
+        Logger().write(LogVerbosity.Info, "Setting UI state from " + str(self._state) + " to " + str(value))
 
         self._state = value
         if value == UIState.Home:

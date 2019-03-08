@@ -5,7 +5,7 @@ from MediaPlayer.TorrentStreaming.DHT.Bucket import Bucket
 from MediaPlayer.TorrentStreaming.DHT.Tasks import PingTask
 
 from MediaPlayer.TorrentStreaming.DHT.Node import Node
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import current_time
 
 
@@ -81,7 +81,7 @@ class Table:
                 return
 
             if bucket.fits(self.dht_engine.own_node.int_id):
-                Logger().write(1, "DHT: Bucket is full, splitting")
+                Logger().write(LogVerbosity.All, "DHT: Bucket is full, splitting")
                 new_range = (bucket.end - bucket.start) // 2
                 new_bucket = Bucket(bucket.start, bucket.start + new_range)
                 split_nodes = bucket.split()
@@ -91,7 +91,7 @@ class Table:
                 self.buckets.append(new_bucket)
                 self.add_node(new_node)
             else:
-                Logger().write(1, "DHT: Skipping adding of node, bucket is full")
+                Logger().write(LogVerbosity.All, "DHT: Skipping adding of node, bucket is full")
         else:
             bucket.add_node(new_node)
-            Logger().write(1, "DHT: Node " + str(new_node.int_id) + " added to bucket")
+            Logger().write(LogVerbosity.All, "DHT: Node " + str(new_node.int_id) + " added to bucket")

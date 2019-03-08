@@ -8,7 +8,7 @@ from threading import Lock
 from MediaPlayer.Subtitles.SubtitlesOpenSubtitles import SubtitlesOpenSubtitles
 from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 
@@ -42,13 +42,14 @@ class SubtitleProvider:
         EventManager.register_event(EventType.SearchSubtitles, self.search_subtitles)
 
     def search_subtitles(self, name, size, length, first_64k, last_64k):
-        Logger().write(2, "Going to search subs: name: " + name + ", size: " + str(size) + ", length: " + str(length))
+        Logger().write(LogVerbosity.Info, "Going to search subs: name: " + name + ", size: " + str(size) + ", length: " + str(length))
         self.sub_files = []
         for source in self.subtitle_sources:
             thread = CustomThread(self.search_subtitles_thread, "Search subtitles", [source, size, length, name, first_64k, last_64k])
             thread.start()
 
     def search_subtitles_for_file(self, path):
+        Logger().write(LogVerbosity.Info, "Going to search subs for file: " + path)
         # check file location for files with same name
         file_name = os.path.basename(path)
         file_without_ext = os.path.splitext(file_name)
@@ -62,6 +63,7 @@ class SubtitleProvider:
         sub_files = []
         for source in self.subtitle_sources:
             sub_files += source.get_subtitles(size, 0, file_name, first, last)
+        Logger().write(LogVerbosity.Info, "Subtitles found for file " + path + ": " + str(len(sub_files)))
         return [self.get_sub_data(x) for x in sub_files]
 
     @staticmethod
@@ -86,6 +88,7 @@ class SubtitleProvider:
                 if len([x for x in self.sub_files if x.hash == file_hash]) == 0:
                     self.sub_files.append(Subtitle(file_hash, path))
 
+        Logger().write(LogVerbosity.Info, "Found " + str(len(sub_paths)) + " subtitle files")
         EventManager.throw_event(EventType.SetSubtitleFiles, [sub_paths])
 
     @staticmethod

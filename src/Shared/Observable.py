@@ -1,7 +1,7 @@
 import traceback
 from threading import Event
 from collections import namedtuple
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
@@ -65,6 +65,6 @@ class Observable:
                     try:
                         cb(self.__last_update_state or self, self)
                     except Exception as e:
-                        Logger().write(3, "Exception in observer thread: " + str(e))
-                        Logger().write(3, traceback.format_exc())
+                        Logger().write(LogVerbosity.Important, "Exception in observer thread: " + str(e))
+                        Logger().write(LogVerbosity.Important, traceback.format_exc())
                 self.__last_update_state = last_update

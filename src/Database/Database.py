@@ -4,7 +4,7 @@ import pathlib
 import sqlite3
 from threading import Lock
 
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Util import current_time, Singleton
 
@@ -18,10 +18,11 @@ class Database(metaclass=Singleton):
 
     def init_database(self):
         with self.lock:
-            Logger().write(2, "Opening database at " + str(self.path))
+            Logger().write(LogVerbosity.Info, "Opening database at " + str(self.path))
             database_exists = os.path.isfile(self.path)
 
             if not database_exists:
+                Logger().write(LogVerbosity.Info, "Database not found, creating new")
                 database, cursor = self.connect()
                 with open(str(pathlib.Path(__file__).parent) + '/Migrations/Create.sql', 'r') as script:
                     data = script.read().replace('\n', '')
@@ -29,6 +30,7 @@ class Database(metaclass=Singleton):
                 cursor.executescript(data)
                 database.commit()
                 database.close()
+                Logger().write(LogVerbosity.Info, "Database created")
 
             self.check_migration()
 
@@ -49,23 +51,23 @@ class Database(metaclass=Singleton):
             database.commit()
 
         if db_version > self.current_version:
-            Logger().write(2, "DB version higher than software, can't process")
+            Logger().write(LogVerbosity.Important, "DB version higher than software, can't process")
             raise Exception("DB version invalid")
 
         changed = False
         while db_version != self.current_version:
-            Logger().write(2, "Database version " + str(db_version) + ", latest is " + str(self.current_version) + ". Upgrading")
+            Logger().write(LogVerbosity.Info, "Database version " + str(db_version) + ", latest is " + str(self.current_version) + ". Upgrading")
             self.upgrade(database, cursor, db_version)
             db_version += 1
             changed = True
 
         database.close()
         if changed:
-            Logger().write(2, "Database upgrade completed")
+            Logger().write(LogVerbosity.Info, "Database upgrade completed")
 
     def upgrade(self, database, cursor, number):
         new_version = number + 1
-        Logger().write(2, "Upgrading database from " + str(number) + " to " + str(new_version))
+        Logger().write(LogVerbosity.Debug, "Upgrading database from " + str(number) + " to " + str(new_version))
 
         with open(str(pathlib.Path(__file__).parent) + '/Migrations/Upgrade_' + str(new_version) + '.sql', 'r') as script:
             data = script.read().replace('\n', '')
@@ -73,11 +75,13 @@ class Database(metaclass=Singleton):
         cursor.executescript(data)
         cursor.execute("UPDATE Version SET version_number=" + str(new_version))
         database.commit()
+        Logger().write(LogVerbosity.Debug, "Database upgrade from " + str(number) + " to " + str(new_version) + " completed")
 
     def get_history(self):
         if self.slave:
             raise PermissionError("Cant call get_watched_file on slave")
 
+        Logger().write(LogVerbosity.All, "Database get history")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute('SELECT * FROM History')
@@ -89,6 +93,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call get_watched_file on slave")
 
+        Logger().write(LogVerbosity.All, "Database get history for id " + str(id))
         with self.lock:
             database, cursor = self.connect()
             cursor.execute('SELECT * FROM History WHERE ImdbId = ?', [id])
@@ -100,6 +105,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call get_watched_file on slave")
 
+        Logger().write(LogVerbosity.All, "Database get history for url " + str(url))
         with self.lock:
             database, cursor = self.connect()
             cursor.execute('SELECT * FROM History WHERE URL = ?', [url])
@@ -111,6 +117,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call get_watched_file on slave")
 
+        Logger().write(LogVerbosity.All, "Database get watched torrent files")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute('SELECT * FROM History WHERE URL = ?', [uri])
@@ -122,6 +129,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call add_watched_file on slave")
 
+        Logger().write(LogVerbosity.Debug, "Database add watched file")
         sql = "INSERT INTO History (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
         parameters = ["File", url, url, watched_at]
 
@@ -136,6 +144,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call add_watched_url on slave")
 
+        Logger().write(LogVerbosity.Debug, "Database add watched url")
         sql = "INSERT INTO History (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
         parameters = ["Url", url, url, watched_at]
 
@@ -150,6 +159,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call add_watched_torrent on slave")
 
+        Logger().write(LogVerbosity.Debug, "Database add watched torrent")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("INSERT INTO History " +
@@ -161,8 +171,9 @@ class Database(metaclass=Singleton):
 
     def remove_watched(self, id):
         if self.slave:
-            raise PermissionError("Cant call add_watched_torrent_file on slave")
+            raise PermissionError("Cant call remove_watched on slave")
 
+        Logger().write(LogVerbosity.Debug, "Database remove watched")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("DELETE FROM History WHERE Id=?", [id])
@@ -174,6 +185,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call add_favorite on slave")
 
+        Logger().write(LogVerbosity.Debug, "Database add favorite")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("INSERT INTO Favorites (Id, Type, Title, Image) VALUES (?, ?, ?, ?)", [id, type, title, image])
@@ -185,6 +197,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call remove_favorite on slave")
 
+        Logger().write(LogVerbosity.Debug, "Database remove favorite")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("DELETE FROM Favorites WHERE Id = ?", [id])
@@ -196,6 +209,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call get_favorites on slave")
 
+        Logger().write(LogVerbosity.All, "Database get favorites")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute('SELECT * FROM Favorites')
@@ -207,6 +221,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call get_watching_item on slave")
 
+        Logger().write(LogVerbosity.All, "Database get watching item")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("SELECT * FROM UnfinishedItems WHERE Url=?", [url])
@@ -221,6 +236,7 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call get_watching_items on slave")
 
+        Logger().write(LogVerbosity.All, "Database get watching items")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("SELECT * FROM UnfinishedItems")
@@ -233,26 +249,16 @@ class Database(metaclass=Singleton):
         if self.slave:
             raise PermissionError("Cant call update_watching_item on slave")
 
+        Logger().write(LogVerbosity.All, "Database update watching items")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("UPDATE History SET PlayedFor=?, Length=?, WatchedAt=? WHERE Id=?", [playing_for, length, time, history_id])
             database.commit()
             database.close()
 
-    def remove_watching_item(self, url):
-        if self.slave:
-            raise PermissionError("Cant call remove_watching_item on slave")
-
-        with self.lock:
-            database, cursor = self.connect()
-            cursor.execute(
-                "DELETE FROM UnfinishedItems WHERE Url=?", [url])
-
-            database.commit()
-            database.close()
-
     def update_stat(self, key, value):
         with self.lock:
+            Logger().write(LogVerbosity.All, "Database update stat " + str(key))
             database, cursor = self.connect()
             cursor.execute("SELECT * FROM Stats WHERE Name=?", [key])
             data = cursor.fetchall()
@@ -267,6 +273,7 @@ class Database(metaclass=Singleton):
             database.close()
 
     def get_stats(self):
+        Logger().write(LogVerbosity.All, "Database get stats")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("SELECT * FROM Stats")
@@ -280,6 +287,7 @@ class Database(metaclass=Singleton):
         return data
 
     def get_stat(self, key):
+        Logger().write(LogVerbosity.All, "Database get stat " + str(key))
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("SELECT * FROM Stats WHERE Name=?", [key])
@@ -293,6 +301,7 @@ class Database(metaclass=Singleton):
         return float(data[0][1])
 
     def get_stat_string(self, key):
+        Logger().write(LogVerbosity.All, "Database get stat string " + str(key))
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("SELECT * FROM Stats WHERE Name=?", [key])
@@ -306,6 +315,7 @@ class Database(metaclass=Singleton):
         return str(data[0][1])
 
     def remove_stat(self, key):
+        Logger().write(LogVerbosity.Debug, "Database remove stat")
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("DELETE FROM Stats WHERE Name=?", [key])
@@ -313,6 +323,8 @@ class Database(metaclass=Singleton):
             database.close()
 
     def check_session_key(self, client_key, session_key):
+        Logger().write(LogVerbosity.All, "Database check session key")
+
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("SELECT ClientKey FROM Keys WHERE SessionKey=? AND ClientKey=?", [session_key, client_key])
@@ -322,6 +334,8 @@ class Database(metaclass=Singleton):
             return data is not None and len(data) > 0
 
     def check_client_key(self, client_key):
+        Logger().write(LogVerbosity.All, "Database check client key")
+
         with self.lock:
             database, cursor = self.connect()
             cursor.execute("SELECT ClientKey FROM Keys WHERE ClientKey=?", [client_key])
@@ -331,13 +345,16 @@ class Database(metaclass=Singleton):
             return data is not None and len(data) > 0
 
     def refresh_session_key(self, client_key, new_session_key):
+        Logger().write(LogVerbosity.All, "Database refresh session key")
         with self.lock:
             database, cursor = self.connect()
-            cursor.execute("UPDATE Keys SET SessionKey=? WHERE ClientKey=?", [new_session_key, client_key])
+            cursor.execute("UPDATE Keys SET SessionKey=?, LastSeen=? WHERE ClientKey=?", [new_session_key, current_time(), client_key])
             database.commit()
             database.close()
 
     def add_client(self, client_key, session_key):
+        Logger().write(LogVerbosity.Debug, "Database add client")
+
         with self.lock:
             database, cursor = self.connect()
             time = current_time()

@@ -1,13 +1,8 @@
 import math
 from threading import Lock
 
-import sys
-
-from pympler import asizeof
-
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
-from Shared.Util import write_size
 
 
 class Bitfield:
@@ -83,6 +78,7 @@ class Block:
         self.peers_downloading = []
 
     def _write_data(self, data):
+        Logger().write(LogVerbosity.All, "Writing block " + str(self.index) + " in piece " + str(self.piece_index))
         self.data = data
         self.done = True
 
@@ -129,6 +125,7 @@ class Piece:
         self.write_lock = Lock()
 
     def init_blocks(self):
+        Logger().write(LogVerbosity.Debug, "Initializing blocks for piece " + str(self.index))
         self._blocks = dict()
         partial_block = self.length % self.block_size
         whole_blocks = int(math.floor(self.length / self.block_size))
@@ -157,6 +154,8 @@ class Piece:
             if self.block_writes >= self.total_blocks:
                 if len([x for x in self.blocks.values() if not x.done]) == 0:
                     self.done = True
+                    Logger().write(LogVerbosity.Debug, "Piece " + str(self.index) + " done after writing block " + str(block.index))
+
                     self._data = bytearray()
                     for block in self.blocks.values():
                         if self._data is None or block.data is None:
@@ -182,6 +181,7 @@ class Piece:
         self._blocks = dict()
         self.cleared = True
         self._data = None
+        Logger().write(LogVerbosity.Debug, "Piece " + str(self.index) + " cleared")
 
     def reset(self):
         self.block_writes = 0
@@ -192,6 +192,7 @@ class Piece:
         self._data = None
         self.validated = False
         self.cleared = False
+        Logger().write(LogVerbosity.Debug, "Piece " + str(self.index) + " reset")
 
     def get_data_and_clear(self):
         data = self.get_data()

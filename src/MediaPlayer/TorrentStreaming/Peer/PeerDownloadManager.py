@@ -2,7 +2,7 @@ from threading import Lock
 
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import RequestMessage
 from MediaPlayer.Util.Enums import ConnectionState, PeerSpeed, PeerInterestedState, PeerChokeState
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Util import current_time, write_size
 
@@ -58,7 +58,7 @@ class PeerDownloadManager:
                 if len(to_download) == 0:
                     return True
 
-                Logger().write(1, str(self.peer.id) + " requesting " + str(len(to_download)) + " allowed fast blocks")
+                Logger().write(LogVerbosity.Debug, str(self.peer.id) + " requesting " + str(len(to_download)) + " allowed fast blocks")
                 self.request(to_download)
                 return True
 
@@ -76,10 +76,11 @@ class PeerDownloadManager:
         return True
 
     def request(self, to_download):
+        Logger().write(LogVerbosity.Debug, str(self.peer.id) + " going to request " + str(len(to_download)) + " blocks")
         for block in to_download:
             block.add_downloader(self.peer)
             request = RequestMessage(block.piece_index, block.start_byte_in_piece, block.length)
-            Logger().write(1, str(self.peer.id) + ' Sending request for piece ' + str(request.index) + ", block " + str(
+            Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending request for piece ' + str(request.index) + ", block " + str(
                 request.offset // 16384))
             self.peer.connection_manager.send(request.to_bytes())
 
@@ -114,7 +115,7 @@ class PeerDownloadManager:
                     self.blocks_done = [x for x in self.blocks_done if x not in done_copy]
 
         if canceled:
-            Logger().write(1, "Canceled " + str(canceled))
+            Logger().write(LogVerbosity.Debug, str(self.peer.id) + " canceled " + str(canceled) + " blocks")
 
     def get_priority_timeout(self, priority):
         if priority >= 100:
@@ -134,15 +135,15 @@ class PeerDownloadManager:
             peer_download = [x for x in self.downloading if x[0].piece_index == piece_index and x[0].start_byte_in_piece == offset]
             if len(peer_download) != 0:
                 peer_download[0][0].remove_downloader(self.peer)
-                Logger().write(1, "Removed a rejected request from peer download manager")
+                Logger().write(LogVerbosity.Debug, "Removed a rejected request from peer download manager")
                 self.downloading.remove(peer_download[0])
 
     def log(self):
         cur_downloading = [str(block.index) + ", " for block, request_time in self.downloading]
-        Logger().write(3, "       Currently downloading: " + str(len(self.downloading)))
-        Logger().write(3, "       Blocks: " + ''.join(str(e) for e in cur_downloading))
-        Logger().write(3, "       Done blocks: " + ','.join(str(x) for x in self.blocks_done))
-        Logger().write(3, "       Speed: " + write_size(self.peer.counter.value))
+        Logger().write(LogVerbosity.Important, "       Currently downloading: " + str(len(self.downloading)))
+        Logger().write(LogVerbosity.Important, "       Blocks: " + ''.join(str(e) for e in cur_downloading))
+        Logger().write(LogVerbosity.Important, "       Done blocks: " + ','.join(str(x) for x in self.blocks_done))
+        Logger().write(LogVerbosity.Important, "       Speed: " + write_size(self.peer.counter.value))
 
     def stop(self):
         self.stopped = True
