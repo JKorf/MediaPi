@@ -84,8 +84,9 @@ class TorrentNetworkManager:
                 download_speed = self.live_download_counter.value
                 if self.max_download_speed != 0 and download_speed > self.max_download_speed:
                     self.last_throttle = current_time()
-                    self.throttling = True
-                    Logger().write(LogVerbosity.Debug, "Start throttling at " + str(self.max_download_speed))
+                    if not self.throttling:
+                        self.throttling = True
+                        Logger().write(LogVerbosity.Debug, "Start throttling at " + str(self.max_download_speed))
                     sleep(0.05)
                     break
 

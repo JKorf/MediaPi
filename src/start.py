@@ -108,20 +108,11 @@ class Program:
 
     @staticmethod
     def handle_exception(exc_type, exc_value, exc_traceback):
-        if issubclass(exc_type, KeyboardInterrupt):
-            return
-
-        filename, line, dummy, dummy = traceback.extract_tb(exc_traceback).pop()
-        filename = os.path.basename(filename)
-
-        Logger().write(LogVerbosity.Important, "Unhandled exception on line " + str(line) + ", file " + filename)
-        Logger().write(LogVerbosity.Important, "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-
+        Logger().write_error(exc_value, "Unhandled exception")
         sys.exit(1)
 
 
 try:
     Program()
 except Exception as e:
-    Logger().write(LogVerbosity.Important, "Exception during startup: " + str(e))
-    Logger().write(LogVerbosity.Important, traceback.format_exc())
+    Logger().write_error(e, "Exception during startup")

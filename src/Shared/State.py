@@ -5,6 +5,7 @@ import time
 
 import sys
 
+from MediaPlayer.MediaManager import MediaManager
 from Shared.Events import EventManager, EventType
 from Shared.Observable import Observable
 from Shared.Settings import Settings
@@ -40,7 +41,11 @@ class StateManager(metaclass=Singleton):
         while True:
             if self.state_data.memory > 90:
                 EventManager.throw_event(EventType.Log, [])
-            time.sleep(15)
+
+            if MediaManager().torrent is not None and MediaManager().torrent.network_manager.average_download_counter.value < 20000:
+                EventManager.throw_event(EventType.Log, [])
+
+            time.sleep(10)
 
     def get_temperature(self):
         if not self.monitoring:

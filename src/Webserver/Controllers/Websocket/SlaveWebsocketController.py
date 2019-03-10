@@ -127,10 +127,7 @@ class SlaveWebsocketController:
 
 
         except Exception as e:
-            Logger().write(LogVerbosity.Important, "Error in Slave websocket controller: " + str(e))
-            stack_trace = traceback.format_exc().split('\n')
-            for stack_line in stack_trace:
-                Logger().write(LogVerbosity.Important, stack_line)
+            Logger().write_error(e, "Exception in Slave websocket controller")
 
     def broadcast_data(self, type, data):
         if not self.connected:

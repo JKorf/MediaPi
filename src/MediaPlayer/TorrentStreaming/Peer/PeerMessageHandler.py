@@ -153,7 +153,8 @@ class PeerMessageHandler:
 
             self.peer.extension_manager.parse_dictionary(dic)
             if b'metadata_size' in dic:
-                self.peer.torrent.metadata_manager.set_total_size(dic[b'metadata_size'])
+                if self.peer is not None:
+                    self.peer.torrent.metadata_manager.set_total_size(dic[b'metadata_size'])
 
             return
 

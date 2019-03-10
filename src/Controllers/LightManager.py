@@ -72,11 +72,8 @@ class LightManager(metaclass=Singleton):
                         Database().update_stat("LightingKey", key)  # Save the new key
                         Logger().write(LogVerbosity.Info, "Lighting: New key retrieved")
                         self.initialized = True
-                    except Exception:
-                        Logger().write(LogVerbosity.Important, "Failed to get key for lighting")
-                        stack_trace = traceback.format_exc().split('\n')
-                        for stack_line in stack_trace:
-                            Logger().write(LogVerbosity.Important, stack_line)
+                    except Exception as e:
+                        Logger().write_error(e, "Unhandled exception")
                         return
                 else:
                     Logger().write(LogVerbosity.Info, "Lighting: Previously saved key found")

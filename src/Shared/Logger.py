@@ -4,6 +4,7 @@ import inspect
 import ntpath
 import os
 import threading
+import traceback
 from enum import Enum
 from queue import Queue
 
@@ -41,7 +42,6 @@ class Logger(metaclass=Singleton):
         self.file_size = 0
         self.file = open(self.log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab',
                          buffering=0)
-        self.file.write("\r\n".encode('utf8'))
         self.file.write(("Time".ljust(14) + " | "
                          + "Thread".ljust(30) + " | "
                          + "File".ljust(25) + " | "
@@ -80,6 +80,18 @@ class Logger(metaclass=Singleton):
                        + message
 
             self.queue.put(str_info)
+
+    def write_error(self, e, additional_info=None):
+        with open(self.log_path + '/error_'+ type(e).__name__ + '_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab',
+                         buffering=0) as file:
+            file.write(b'Time:'.ljust(20) + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S').encode('utf-8') + b'\r\n')
+            file.write(b'Error:'.ljust(20) + type(e).__name__.encode('utf-8') + b'\r\n')
+            if additional_info is not None:
+                file.write(b'Info:'.ljust(20) + additional_info.encode('utf-8') + b'\r\n')
+            file.write(b'Call stack:'.ljust(20) + b'\r\n')
+            e_traceback = traceback.format_exception(e.__class__, e, e.__traceback__)
+            for line in e_traceback:
+                file.write(line.encode('utf-8') + b'\r\n')
 
     @staticmethod
     def get_log_files():

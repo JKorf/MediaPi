@@ -235,7 +235,6 @@ class TorrentPeerManager:
             Logger().write(LogVerbosity.All, str(peer.id) + " peer with speed " + write_size(peer.counter.value) + "ps allowed " + str(allowed_process_time) + "ms at index " + str(index))
             if not peer.message_handler.update(allowed_process_time):
                 Logger().write(LogVerbosity.Info, str(peer.id) + " removing peer, update = false")
-                self.connected_peers.remove(peer)
             index += 1
         Logger().write(LogVerbosity.All, "Total took " + str(current_time() - (end_time - 200)) + "ms")
 

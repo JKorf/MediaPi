@@ -65,6 +65,5 @@ class Observable:
                     try:
                         cb(self.__last_update_state or self, self)
                     except Exception as e:
-                        Logger().write(LogVerbosity.Important, "Exception in observer thread: " + str(e))
-                        Logger().write(LogVerbosity.Important, traceback.format_exc())
+                        Logger().write_error(e, "Exception in observer callback")
                 self.__last_update_state = last_update

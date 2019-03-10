@@ -32,10 +32,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self.set_header("Access-Control-Allow-Headers", "Client-ID, Session-Key")
 
     def _handle_request_exception(self, e):
-        Logger().write(LogVerbosity.Important, "Error in Tornado requests: " + str(e))
-        stack_trace = traceback.format_exc().split('\n')
-        for stack_line in stack_trace:
-            Logger().write(LogVerbosity.Important, stack_line)
+        Logger().write_error(e, "Exception in UI request")
         self.set_status(503)
         self.finish(str(e))
 
