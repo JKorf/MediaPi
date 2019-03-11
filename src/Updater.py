@@ -57,11 +57,6 @@ class Updater(metaclass=Singleton):
         #     Logger().write(LogVerbosity.Debug, "Cloning successful: " + stdout.decode('utf-8'))
 
         data_path = path + "/MediaPi/src/"
-        self.copied_files = 0
-        Logger().write(LogVerbosity.Info, "Starting copying of files")
-        start = current_time()
-        self.copy_directory(data_path, self.base_folder)
-        Logger().write(LogVerbosity.Info, "Successfully copied " + str(self.copied_files) + " files in " + str(current_time() - start) + "ms")
 
         # Can we automatically build UI?
         Logger().write(LogVerbosity.Info, "Starting package downloads for UI")
@@ -69,13 +64,29 @@ class Updater(metaclass=Singleton):
         start = current_time()
         process = subprocess.Popen(["npm", "install"], cwd=ui_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         stdout, stderr = process.communicate()
+        if stdout == b'':
+            Logger().write(LogVerbosity.Debug, "Package downloading failed: " + stderr.decode('utf-8'))
+            return
+        else:
+            Logger().write(LogVerbosity.Debug, "Package downloading successful: " + stdout.decode('utf-8'))
         Logger().write(LogVerbosity.Info, "UI package downloading done in " + str(current_time() - start) + "ms")
 
         Logger().write(LogVerbosity.Info, "Starting building of UI")
         start = current_time()
         process = subprocess.Popen(["npm", "run", "build"], cwd=ui_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         stdout, stderr = process.communicate()
+        if stdout == b'':
+            Logger().write(LogVerbosity.Debug, "UI building failed: " + stderr.decode('utf-8'))
+            return
+        else:
+            Logger().write(LogVerbosity.Debug, "UI building successful: " + stdout.decode('utf-8'))
         Logger().write(LogVerbosity.Info, "UI build done in " + str(current_time() - start) + "ms")
+
+        self.copied_files = 0
+        Logger().write(LogVerbosity.Info, "Starting copying of files")
+        start = current_time()
+        self.copy_directory(data_path, self.base_folder)
+        Logger().write(LogVerbosity.Info, "Successfully copied " + str(self.copied_files) + " files in " + str(current_time() - start) + "ms")
 
         Logger().write(LogVerbosity.Info, "Starting copying of UI")
         start = current_time()
@@ -87,6 +98,7 @@ class Updater(metaclass=Singleton):
 
         Logger().write(LogVerbosity.Important, "Update completed in " + str(current_time() - start_complete) + "ms")
         Logger().write(LogVerbosity.Important, "Restarting to complete update")
+        Database().update_stat("CurrentGitVersion", self.last_version)
         os.system('sudo reboot')
 
     def copy_directory(self, source_directory, target_directory):
