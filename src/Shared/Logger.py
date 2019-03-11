@@ -22,7 +22,7 @@ class Logger(metaclass=Singleton):
         self.log_thread = None
         self.queue = Queue()
         self.raspberry = sys.platform == "linux" or sys.platform == "linux2"
-        self.log_path = Settings.get_string("base_folder") + "/Logs"
+        self.log_path = Settings.get_string("base_folder") + "/Logs/" + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
         self.max_log_file_size = Settings.get_int("max_log_file_size")
 
         self.file_size = 0
@@ -40,8 +40,7 @@ class Logger(metaclass=Singleton):
 
     def create_log_file(self):
         self.file_size = 0
-        self.file = open(self.log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab',
-                         buffering=0)
+        self.file = open(self.log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab', buffering=0)
         self.file.write(("Time".ljust(14) + " | "
                          + "Thread".ljust(30) + " | "
                          + "File".ljust(25) + " | "
