@@ -6,6 +6,7 @@ from Shared.Events import EventType
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Threading import ThreadManager
 from Shared.Util import to_JSON, current_time, write_size
+from Updater import Updater
 from Webserver.BaseHandler import BaseHandler
 
 
@@ -16,6 +17,8 @@ class UtilController(BaseHandler):
             self.write(self.get_log_files())
         elif url == "get_log_file":
             self.write(self.get_log_file(urllib.parse.unquote(self.get_argument("file"))))
+        elif url == "check_update":
+            self.write(to_JSON(UpdateAvailable(Updater().check_version(), Updater().last_version)))
 
     def post(self, url):
         if url == "shutdown":
@@ -24,6 +27,8 @@ class UtilController(BaseHandler):
             self.restart_pi()
         elif url == "log":
             self.log()
+        elif url == "update":
+            Updater().update()
 
     def log(self):
         Logger().write(LogVerbosity.Important, "============== Test ===============")
@@ -48,3 +53,10 @@ class UtilController(BaseHandler):
     def restart_pi(self):
         Logger().write(LogVerbosity.Important, "Restart")
         os.system('sudo reboot')
+
+
+class UpdateAvailable:
+
+    def __init__(self, available, hash):
+        self.available = available
+        self.hash = hash

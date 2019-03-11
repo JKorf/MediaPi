@@ -81,6 +81,7 @@ class Logger(metaclass=Singleton):
             self.queue.put(str_info)
 
     def write_error(self, e, additional_info=None):
+        self.write(LogVerbosity.Important, "Error ocured: " + str(type(e).__name__)+ ", more information in the error log")
         with open(self.log_path + '/error_'+ type(e).__name__ + '_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab',
                          buffering=0) as file:
             file.write(b'Time:'.ljust(20) + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S').encode('utf-8') + b'\r\n')
@@ -92,9 +93,8 @@ class Logger(metaclass=Singleton):
             for line in e_traceback:
                 file.write(line.encode('utf-8') + b'\r\n')
 
-    @staticmethod
-    def get_log_files():
-        list_of_files = glob.glob(Settings.get_string("base_folder") + "/Logs/*.txt")
+    def get_log_files(self):
+        list_of_files = glob.glob(self.log_path + "/*.txt")
         latest_files = sorted(list_of_files, key=os.path.getctime, reverse=True)
         return [(os.path.basename(x), os.path.getsize(x)) for x in latest_files]
 

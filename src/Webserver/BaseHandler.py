@@ -34,7 +34,8 @@ class BaseHandler(tornado.web.RequestHandler):
     def _handle_request_exception(self, e):
         Logger().write_error(e, "Exception in UI request")
         self.set_status(503)
-        self.finish(str(e))
+        self.write(str(e))
+        self.finish()
 
     def options(self, *args, **kwargs):
         self.set_status(200)

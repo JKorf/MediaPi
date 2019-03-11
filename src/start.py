@@ -6,6 +6,8 @@ import sys
 import time
 import traceback
 
+from Updater import Updater
+
 os.chdir(os.path.dirname(__file__))
 
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
@@ -79,6 +81,7 @@ class Program:
         WiFiController()
         MediaManager()
         LightManager()
+        Updater()
 
     @staticmethod
     def init_sound():
