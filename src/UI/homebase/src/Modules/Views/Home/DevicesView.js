@@ -5,13 +5,13 @@ import Socket from './../../../Socket.js';
 
 import MediaProgress from './../../Components/MediaProgress';
 
-class PlayersView extends Component {
+class DevicesView extends Component {
   constructor(props) {
     super(props);
     this.state = {slaveData: []};
 
-    this.props.functions.changeBack({to: "/mediaplayer/" });
-    this.props.functions.changeTitle("Players");
+    this.props.functions.changeBack({to: "/home/" });
+    this.props.functions.changeTitle("Devices");
     this.props.functions.changeRightImage(null);
 
     this.slaveUpdate = this.slaveUpdate.bind(this);
@@ -33,7 +33,7 @@ class PlayersView extends Component {
     const slaves = this.state.slaveData;
 
     return (
-        slaves.map((slave, index) => <Link to={"/mediaplayer/player/" + slave.id} key={slave.id}>
+        slaves.map((slave, index) => <Link to={"/home/device/" + slave.id} key={slave.id}>
             <PlayerInstance instance={slave} />
         </Link>)
     );
@@ -97,4 +97,4 @@ class PlayerInstance extends Component {
   }
 };
 
-export default PlayersView;
+export default DevicesView;

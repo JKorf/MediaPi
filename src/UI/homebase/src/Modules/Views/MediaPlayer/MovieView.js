@@ -6,12 +6,13 @@ import MediaPlayerView from './MediaPlayerView.js'
 import Button from './../../Components/Button';
 import SelectInstancePopup from './../../Components/Popups/SelectInstancePopup'
 import Popup from './../../Components/Popups/Popup'
+import ViewLoader from './../../Components/ViewLoader/ViewLoader'
 
 class MovieView extends Component {
   constructor(props) {
     super(props);
     this.viewRef = React.createRef();
-    this.state = {movie: {images:[], rating: {}, torrents: {en: {}}}};
+    this.state = {movie: {images:[], rating: {}, torrents: {en: {}}}, loading: true};
     this.props.functions.changeBack({to: "/mediaplayer/movies/" });
     this.props.functions.changeRightImage(null);
 
@@ -25,7 +26,7 @@ class MovieView extends Component {
         if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         console.log(data.data);
         this.props.functions.changeTitle(data.data.title);
-        this.setState({movie: data.data});
+        this.setState({movie: data.data, loading: false});
     }, err =>{
         if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         console.log(err);
@@ -101,6 +102,7 @@ class MovieView extends Component {
 
     return (
         <MediaPlayerView ref={this.viewRef} playMedia={this.playMedia}>
+          <ViewLoader loading={this.state.loading}/>
           <div className="movie">
             <div className="movie-image">
                 <img alt="movie-poster" src={movie.images.poster} />

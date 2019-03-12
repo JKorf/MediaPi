@@ -44,7 +44,7 @@ class UtilController(BaseHandler):
         return to_JSON([(name, write_size(size)) for name, size in log_files])
 
     def get_log_file(self, file):
-        return Logger().get_log_file(file)
+        return Logger().get_log_file(urllib.parse.unquote(file))
 
     def shutdown(self):
         Logger().write(LogVerbosity.Important, "Shutdown")

@@ -17,13 +17,13 @@ import MovieView from './Modules/Views/MediaPlayer/MovieView.js'
 import HDView from './Modules/Views/MediaPlayer/HDView.js'
 import RadioView from './Modules/Views/MediaPlayer/RadioView.js'
 import TorrentView from './Modules/Views/MediaPlayer/TorrentView.js'
-import PlayersView from './Modules/Views/MediaPlayer/PlayersView.js'
-import PlayerView from './Modules/Views/MediaPlayer/PlayerView.js'
 import HistoryView from './Modules/Views/MediaPlayer/HistoryView.js'
 
 import HomeDashboardView from './Modules/Views/Home/HomeDashboardView.js'
 import HeatingView from './Modules/Views/Home/HeatingView.js'
 import LightingView from './Modules/Views/Home/LightingView.js'
+import DevicesView from './Modules/Views/Home/DevicesView.js'
+import DeviceView from './Modules/Views/Home/DeviceView.js'
 
 import SettingsView from './Modules/Views/SettingsView.js'
 
@@ -198,13 +198,14 @@ class App extends Component {
                     <Route path="/mediaplayer/hd" exact render={(props) => <HDView {...props} functions={this.functions}/>} />
                     <Route path="/mediaplayer/radio" exact render={(props) => <RadioView {...props} functions={this.functions}  />} />
                     <Route path="/mediaplayer/torrents" exact render={(props) => <TorrentView {...props} functions={this.functions}  />} />
-                    <Route path="/mediaplayer/players" exact render={(props) => <PlayersView {...props} functions={this.functions}/>} />
-                    <Route path="/mediaplayer/player/:id" exact render={(props) => <PlayerView {...props} functions={this.functions}  />} />
+
                     <Route path="/mediaplayer/history" exact render={(props) => <HistoryView {...props} functions={this.functions}  />} />
 
                     <Route path="/home/" exact render={(props) => <HomeDashboardView {...props} functions={this.functions}  />} />
                     <Route path="/home/heating" exact render={(props) => <HeatingView {...props} functions={this.functions}  />} />
                     <Route path="/home/lighting" exact render={(props) => <LightingView {...props} functions={this.functions}  />} />
+                    <Route path="/home/devices" exact render={(props) => <DevicesView {...props} functions={this.functions}/>} />
+                    <Route path="/home/device/:id" exact render={(props) => <DeviceView {...props} functions={this.functions}  />} />
 
                     <Route path="/settings" exact render={(props) => <SettingsView {...props} functions={this.functions}  />} />
                 </View>

@@ -30,7 +30,6 @@ class MediaPlayerDashboardView extends Component {
         <DashboardLink to="/mediaplayer/torrents" img={torrentImg} text="torrents"></DashboardLink>
         <DashboardLink to="/mediaplayer/radio" img={radioImg} text="radio"></DashboardLink>
         <DashboardLink to="/mediaplayer/youtube" img={youtubeImg} text="youtube"></DashboardLink>
-        <DashboardLink to="/mediaplayer/players" img={playImg} text="players"></DashboardLink>
         <DashboardLink to="/mediaplayer/history" img={historyImg} text="history"></DashboardLink>
     </div>
     );

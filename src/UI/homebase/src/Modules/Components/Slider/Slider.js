@@ -63,6 +63,7 @@ class Slider extends Component {
     let minStr = min;
     let maxStr = max;
     let valueStr = value;
+    let leftStr = max - value;
     let newValueStr = this.newValue;
     if(this.props.format){
         if (this.props.formatMinMax) minStr = this.props.formatMinMax(minStr);
@@ -70,6 +71,7 @@ class Slider extends Component {
         if (this.props.formatMinMax) maxStr = this.props.formatMinMax(maxStr);
         else maxStr = this.props.format(maxStr);
 
+        leftStr =  this.props.format(leftStr);
         valueStr = this.props.format(valueStr);
         newValueStr = this.props.format(newValueStr);
     }
@@ -105,7 +107,7 @@ class Slider extends Component {
                 <div className="slider-tooltip" style={toolTipStyle}>{newValueStr}</div>
                 <div className="slider-info">
                     <div className="slider-value">{(this.props.leftValue === "value" ? valueStr: minStr)}</div>
-                    <div className="slider-max">{maxStr}</div>
+                    <div className="slider-max">{(this.props.rightValue === "left" ? leftStr: maxStr)}</div>
                 </div>
                 <div className="slider-background" onTouchStart={this.touchStartBackground} onTouchMove={this.touchMove} onTouchEnd={this.touchEnd}></div>
                 <div className="slider-thumb" style={thumbStyle} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd}></div>

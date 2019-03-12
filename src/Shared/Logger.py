@@ -101,12 +101,11 @@ class Logger(metaclass=Singleton):
         latest_files = sorted(list_of_files, key=os.path.getctime, reverse=True)
         return [(os.path.basename(x), os.path.getsize(x)) for x in latest_files]
 
-    @staticmethod
-    def get_log_file(file):
+    def get_log_file(self, file):
         if not file.endswith(".txt"):
             raise Exception("Not a log file")
 
-        with open(Settings.get_string("base_folder") + "/Logs/" + file) as f:
+        with open(self.log_path + "/" + file) as f:
             return "\r\n".join(f.readlines())
 
 def path_leaf(path):

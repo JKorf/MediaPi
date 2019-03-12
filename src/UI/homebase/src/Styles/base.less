@@ -608,5 +608,25 @@ a {
             height: 18px;
         }
     }
+}
 
+.switch-box{
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid #colors[borders];
+
+    .switch-box-item{
+        border-left: 1px solid #colors[borders];
+        padding: 4px;
+        text-align: center;
+        flex: 1;
+
+        &.selected{
+            background: #colors[highlight];
+        }
+    }
+
+    .switch-box-item:first-child{
+        border-left: none;
+    }
 }

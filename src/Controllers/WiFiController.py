@@ -49,8 +49,9 @@ class WiFiController(metaclass=Singleton):
                                 value_max = key_value[1].split("/")
                                 new_val = float(value_max[0]) / float(value_max[1]) * 100
                                 if self.quality != new_val:
+                                    if self.quality == 0:
+                                        Logger().write(LogVerbosity.Debug, "Wifi quality: " + str(new_val))
                                     self.quality = new_val
-                                    Logger().write(LogVerbosity.Debug, "Wifi quality: " + str(self.quality))
 
         else:
             proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
@@ -61,6 +62,9 @@ class WiFiController(metaclass=Singleton):
                     split = line.split(":")
                     new_val = float(split[1].replace("%", ""))
                     if self.quality != new_val:
+                        if self.quality == 0:
+                            Logger().write(LogVerbosity.Debug, "Wifi quality: " + str(new_val))
+
                         self.quality = new_val
-                        Logger().write(LogVerbosity.Debug, "Wifi quality: " + str(self.quality))
+
         return True

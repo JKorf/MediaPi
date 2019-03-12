@@ -5,6 +5,7 @@ import MediaPlayerView from './MediaPlayerView.js';
 import Button from './../../Components/Button';
 import SvgImage from './../../Components/SvgImage';
 import ColorIndicator from './../../Components/ColorIndicator';
+import ViewLoader from './../../Components/ViewLoader/ViewLoader'
 
 import favoriteImage from './../../../Images/favorite.svg';
 import favoriteFullImage from './../../../Images/favorite-full.svg';
@@ -15,7 +16,7 @@ class ShowView extends Component {
     super(props);
     this.viewRef = React.createRef();
 
-    this.state = {show: {images:[], rating:{}, seasons:[]}, selectedSeason: -1, selectedEpisode: -1};
+    this.state = {show: {images:[], rating:{}, seasons:[]}, selectedSeason: -1, selectedEpisode: -1, loading: true};
     this.props.functions.changeBack({to: "/mediaplayer/shows/" });
     this.props.functions.changeRightImage({image: favoriteImage, click: this.toggleFavorite});
 
@@ -35,11 +36,12 @@ class ShowView extends Component {
           return seasons;
         }, {});
         data.data.seasons = seasonEpisodes;
-        this.setState({show: data.data});
+        this.setState({show: data.data, loading: false});
         this.props.functions.changeTitle(data.data.title);
         this.props.functions.changeRightImage({image: (data.data.favorite? favoriteFullImage: favoriteImage), click: this.toggleFavorite});
     }, err => {
         if(this.viewRef.current) { this.viewRef.current.changeState(0); }
+        this.setState({ loading: false});
         console.log(err);
     });
   }
@@ -126,6 +128,7 @@ class ShowView extends Component {
 
     return (
         <MediaPlayerView ref={this.viewRef} playMedia={this.playShow}>
+          <ViewLoader loading={this.state.loading}/>
           <div className="show">
             <div className="show-image">
                 <img alt="Show poster" src={show.images.poster} />

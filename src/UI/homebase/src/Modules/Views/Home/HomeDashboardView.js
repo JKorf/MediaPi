@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import DashboardLink from './../../Components/DashboardLink'
 import heatingImg from './../../../Images/heating.svg'
 import lightingImg from './../../../Images/bulb.svg'
+import deviceImg from './../../../Images/device.svg'
 
 class HomeDashboardView extends Component {
   constructor(props) {
@@ -20,6 +21,7 @@ class HomeDashboardView extends Component {
     <div className="mediaplayer-dashboard">
         <DashboardLink to="/home/heating" img={heatingImg} text="heating"></DashboardLink>
         <DashboardLink to="/home/lighting" img={lightingImg} text="lighting"></DashboardLink>
+        <DashboardLink to="/home/devices" img={deviceImg} text="devices"></DashboardLink>
     </div>
     );
   }

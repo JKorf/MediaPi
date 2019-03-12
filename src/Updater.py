@@ -21,25 +21,25 @@ class Updater(metaclass=Singleton):
         self.update_folder = Settings.get_string("base_folder") + "Updates/"
         self.ignore_directories = ("/Solution", "/UI/homebase", "/UI/Web")
         self.copied_files = 0
-        self.last_version = None
-        self.update_state = UpdateState()
+        self.last_version = Database().get_stat_string("CurrentGitVersion")
+        self.last_update = Database().get_stat("LastUpdate")
+        self.update_state = UpdateState(self.last_version, self.last_update)
 
     def check_version(self):
         Logger().write(LogVerbosity.Info, "Checking for new version on git")
-        self.last_version = Database().get_stat_string("CurrentGitVersion")
         sub = subprocess.Popen(["git", "ls-remote", self.git_repo, "refs/heads/" + self.git_branch], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = sub.communicate()
         if stdout == b'':
             Logger().write(LogVerbosity.Info, "Failed to get latest commit hash: " + stderr.decode('utf-8'))
             return False
 
-        last_hash = stdout.split(b"\t")[0]
+        last_hash = stdout.split(b"\t")[0].decode('utf-8')
         if last_hash == self.last_version:
             Logger().write(LogVerbosity.Info, "No need to update, already up to date")
             return False
         else:
-            Logger().write(LogVerbosity.Info, "New version available: " + last_hash.decode('utf-8'))
-            self.last_version = last_hash.decode('utf-8')
+            Logger().write(LogVerbosity.Info, "New version available: " + last_hash)
+            self.last_version = last_hash
             return True
 
     def update(self):
@@ -96,6 +96,7 @@ class Updater(metaclass=Singleton):
 
         Logger().write(LogVerbosity.Important, "Update completed in " + str(current_time() - start_time) + "ms")
         Database().update_stat("CurrentGitVersion", self.last_version)
+        Database().update_stat("LastUpdate", current_time())
 
         self.update_state.completed = True
         self.update_state.state = "Restarting"
@@ -156,11 +157,13 @@ class Updater(metaclass=Singleton):
 
 class UpdateState(Observable):
 
-    def __init__(self):
+    def __init__(self, current_version, last_update):
         super().__init__("UpdateState", 1)
         self.state = "Idle"
         self.completed = False
         self.error = None
+        self.current_version = current_version
+        self.last_update = last_update
 
     def start(self):
         self.completed = False

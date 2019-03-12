@@ -139,7 +139,7 @@ class Footer extends Component
 
                     return (
                     <div key={x.id} className={"mediaplayer-widget " + (x.mediaData.title ? "": "not-playing")} >
-                        <Link to={"/mediaplayer/player/" + x.id} >
+                        <Link to={"/home/device/" + x.id} >
                             <div className="mediaplayer-name">{x.name}</div>
                             <div className="mediaplayer-playing ">
                                  <div className="mediaplayer-widget-content">

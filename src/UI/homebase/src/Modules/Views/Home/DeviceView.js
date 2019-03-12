@@ -7,8 +7,9 @@ import SvgImage from './../../Components/SvgImage';
 import Slider from './../../Components/Slider';
 import StopPopup from './../../Components/Popups/StopPopup'
 import Popup from './../../Components/Popups/Popup'
-import PlayerSettingsPopup from './../../Components/Popups/PlayerSettingsPopup'
 import { InfoGroup, InfoRow } from './../../Components/InfoGroup'
+import { SwitchBox, SwitchBoxItem } from './../../Components/SwitchBox'
+import ViewLoader from './../../Components/ViewLoader';
 
 import videoFile from './../../../Images/video_file.png';
 import stopImage from './../../../Images/stop.svg';
@@ -19,16 +20,30 @@ import plusImage from './../../../Images/plus.svg';
 import minusImage from './../../../Images/minus.svg';
 import settingsImage from './../../../Images/settings.svg';
 import subtitleImage from './../../../Images/subtitle.svg';
+import cpuImage from './../../../Images/cpu.svg';
+import memoryImage from './../../../Images/memory.svg';
+import tempImage from './../../../Images/thermometer.svg';
 
-class PlayerView extends Component {
+class DeviceView extends Component {
   constructor(props) {
     super(props);
-    this.props.functions.changeBack({to: "/mediaplayer/players/" });
+    this.props.functions.changeBack({to: "/home/devices/" });
     this.props.functions.changeRightImage(null);
     this.states = ["loading", "nothing", "confirmStop"];
 
     this.changedTitle = false;
-    this.state = {playerData: { sub_tracks: [], audio_tracks: []}, mediaData: {}, torrentData: {}, stateData: {}, statData: {}, state: this.states[1], showPlayerSettings: false};
+    this.state = {
+        playerData: { sub_tracks: [], audio_tracks: []},
+        mediaData: {},
+        torrentData: {},
+        stateData: {},
+        statData: {},
+        state: this.states[1],
+        currentView: "Media",
+        logFiles: [],
+        updateState: "Idle",
+        currentVersion: "",
+        loading: false};
 
     this.playerUpdate = this.playerUpdate.bind(this);
     this.mediaUpdate = this.mediaUpdate.bind(this);
@@ -40,11 +55,13 @@ class PlayerView extends Component {
     this.confirmStop = this.confirmStop.bind(this);
     this.seek = this.seek.bind(this);
     this.volumeChange = this.volumeChange.bind(this);
-    this.showSettings = this.showSettings.bind(this);
 
     this.subChange = this.subChange.bind(this);
     this.audioChange = this.audioChange.bind(this);
     this.delayChange = this.delayChange.bind(this);
+
+    this.getLogFiles = this.getLogFiles.bind(this);
+    this.updateUpdate = this.updateUpdate.bind(this);
   }
 
   componentDidMount() {
@@ -53,6 +70,9 @@ class PlayerView extends Component {
     this.mediaSub = Socket.subscribe(this.props.match.params.id + ".media", this.mediaUpdate);
     this.torrentSub = Socket.subscribe(this.props.match.params.id + ".torrent", this.torrentUpdate);
     this.statSub = Socket.subscribe(this.props.match.params.id + ".stats", this.statUpdate);
+    this.updateSub = Socket.subscribe(this.props.match.params.id + ".update", this.updateUpdate);
+
+    this.getLogFiles();
   }
 
   componentWillUnmount(){
@@ -61,6 +81,56 @@ class PlayerView extends Component {
     Socket.unsubscribe(this.mediaSub);
     Socket.unsubscribe(this.torrentSub);
     Socket.unsubscribe(this.statSub);
+    Socket.unsubscribe(this.updateSub);
+  }
+
+  debugLogging(){
+    axios.post(window.vars.apiBase + 'util/log')
+  }
+
+  getLogFiles(){
+    axios.get(window.vars.apiBase + 'util/get_log_files').then((data) => {
+        this.setState({logFiles: data.data});
+    });
+  }
+
+  openLog(file)
+  {
+    this.setState({loading: true});
+    axios.get(window.vars.apiBase + 'util/get_log_file?file=' + encodeURIComponent(file)).then((data) => {
+        console.log(data);
+        var html = data.data.replace(/\r\n/g, '<br />');
+        var newWindow = window.open();
+        newWindow.document.write(html);
+        this.setState({loading: false});
+    });
+  }
+
+  updateUpdate(id, data)
+  {
+    this.setState({updateState: data.state, currentVersion: data.current_version, lastUpdate: data.last_update});
+    if (data.completed)
+    {
+        if (data.error)
+            alert("Update failed: " + data.error);
+    }
+  }
+
+  checkUpdates()
+  {
+    this.setState({loading: true});
+    axios.get(window.vars.apiBase + 'util/check_update?instance=' + this.props.match.params.id).then((data) => {
+        this.setState({loading: false});
+        if(data.data.available)
+        {
+            if(window.confirm("New update available, download now?")){
+                axios.post(window.vars.apiBase + 'util/update?instance=' + this.props.match.params.id);
+            }
+        }
+        else{
+            window.alert("Already up to date")
+        }
+    });
   }
 
   stateUpdate(subId, data){
@@ -213,9 +283,16 @@ class PlayerView extends Component {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
-  showSettings(){
-    this.setState({showPlayerSettings: true});
+  increaseSubDelay(){
+    var value = this.state.playerData.sub_delay + 0.2 * 1000 * 1000;
+    this.delayChange(value);
   }
+
+  decreaseSubDelay(){
+    var value = this.state.playerData.sub_delay - 0.2 * 1000 * 1000;
+    this.delayChange(value);
+  }
+
 
   render() {
 
@@ -241,22 +318,21 @@ class PlayerView extends Component {
     if (this.state.playerData.state === 4)
         playPauseButton = <SvgImage key={this.state.playerData.state} src={playImage} />
 
-    let subtitleClass= "both";
-    if(this.state.playerData.sub_tracks.length === 0 || this.state.playerData.audio_tracks.length <= 2)
-        subtitleClass = "single";
-
     return (
         <div className="player-details">
-            { this.state.showPlayerSettings &&
-                <PlayerSettingsPopup onClose={() => this.setState({showPlayerSettings: false})} playerData={this.state.playerData} onSubTrackChange={this.subChange} onSubDelayChange={this.delayChange} onAudioTrackChange={this.audioChange}/>
-            }
-            <InfoGroup title="Media">
+            <ViewLoader loading={this.state.loading || this.state.updateState != "Idle"} text={(this.state.updateState != "Idle" ? this.state.updateState: null)}/>
+
+            <SwitchBox>
+                <SwitchBoxItem selected={this.state.currentView == "Media"} text="Media" onClick={() => this.setState({currentView: "Media"})} />
+                <SwitchBoxItem selected={this.state.currentView == "Statistics"} text="Statistics" onClick={() => this.setState({currentView: "Statistics"})} />
+                <SwitchBoxItem selected={this.state.currentView == "Config"} text="Config" onClick={() => this.setState({currentView: "Config"})} />
+            </SwitchBox>
+
+            { this.state.currentView == "Media" &&
+
                 <div className="player-group-details">
                     { this.state.mediaData.title &&
                         <div>
-                            <div className="player-details-settings">
-                                <div className="player-details-settings-icon" onClick={this.showSettings} ><SvgImage src={settingsImage} /></div>
-                            </div>
                             <div className="player-details-top">
                                 <div className="player-details-img"><img alt="Media poster" src={(this.state.mediaData.image ? this.state.mediaData.image: videoFile)} /></div>
                                 <div className="player-details-media">
@@ -274,22 +350,60 @@ class PlayerView extends Component {
                                                 <Slider format={(e) => {return Math.round(e) + "%";}} iconLeft={speakerImage} min={0} max={100} value={this.state.playerData.volume} onChange={this.volumeChange} />
                                             </div>
                                         </div>
-                                        <div className="player-details-slider"><Slider leftValue="value" format={this.writeTimespan} min={0} max={this.state.playerData.length} value={this.state.playerData.playing_for} onChange={this.seek} />
+                                        <div className="player-details-slider">
+                                            <Slider leftValue="value" rightValue="left" format={this.writeTimespan} min={0} max={this.state.playerData.length} value={this.state.playerData.playing_for} onChange={this.seek} />
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     }
+                    {torrentComponent}
+                    { (this.state.playerData.sub_tracks.length > 0 || this.state.playerData.audio_tracks.length > 2) &&
+                        <div className="player-details-track-select">
+                            { this.state.playerData.sub_tracks.length > 0 &&
+                                <div className={"player-details-subtitle-select"}>
+                                    <InfoGroup title="Subtitles">
+                                        <div className="player-group-details">
+                                            { this.state.playerData.sub_tracks.map((o) => (
+                                                <div key={o[0]} className="selection-box-option" onClick={() => this.state.onSubTrackChange(o[0])}>
+                                                    <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.sub_track === o[0]} /></div>
+                                                    <div className="selection-box-option-title truncate">{o[1]}</div>
+                                                </div> )
+                                            ) }
+                                            <div className="player-details-delay-slider"><Slider formatMinMax={(e) => { return "";}} format={(e) => {return (e / 1000 / 1000 - 5).toFixed(1);}} min={0} max={10 * 1000 * 1000} value={this.state.playerData.sub_delay + 5 *1000 * 1000} onChange={(v) => this.delayChange(v - 5 * 1000 * 1000)} /></div>
+                                            <div className="player-details-sub-delay-controls">
+                                                <div className="player-details-sub-delay-min" onClick={this.decreaseSubDelay}><SvgImage src={minusImage} /></div>
+                                                <div className="player-details-sub-delay-plus" onClick={this.increaseSubDelay}><SvgImage src={plusImage} /></div>
+                                            </div>
+                                        </div>
+                                    </InfoGroup>
+                                </div>
+                             }
+                            { this.state.playerData.audio_tracks.length > 2 &&
+                                <div className={"player-details-subtitle-select"}>
+                                    <InfoGroup title="Audio">
+                                        <div className="player-group-details">
+                                        { this.state.playerData.audio_tracks.map((o) => (
+                                            <div  key={o[0]} className="selection-box-option" onClick={() => this.state.onAudioTrackChange(o[0])}>
+                                                <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.audio_track === o[0]} /></div>
+                                                <div className="selection-box-option-title truncate">{o[1]}</div>
+                                            </div> )
+                                        ) }
+                                        </div>
+                                    </InfoGroup>
+                                </div>
+                            }
+                       </div>
+                    }
+
                     { !this.state.mediaData.title &&
                         <div>Nothing playing</div>
                     }
                 </div>
+            }
 
-                 {torrentComponent}
-            </InfoGroup>
-
-             <InfoGroup title="System statistics">
+            { this.state.currentView == "Statistics" &&
                 <div className="player-group-details">
                  <InfoRow name="Max download speed" value={this.writeSpeed(this.state.statData["max_download_speed"])}></InfoRow>
                  <InfoRow name="Total downloaded" value={this.writeSize(this.state.statData["total_downloaded"])}></InfoRow>
@@ -300,16 +414,50 @@ class PlayerView extends Component {
                  <InfoRow name="UDP tracker peers" value={this.writeNumber(this.state.statData["peers_source_udp_tracker"])}></InfoRow>
                  <InfoRow name="Subtitles downloaded" value={this.writeNumber(this.state.statData["subs_downloaded"])}></InfoRow>
                 </div>
-             </InfoGroup>
+             }
 
-            <InfoGroup title="System state">
-                <div className="player-group-details">
-                    <InfoRow name="CPU" value={this.state.stateData.cpu + "%"} />
-                    <InfoRow name="Memory" value={this.state.stateData.memory + "%"} />
-                    <InfoRow name="Temperature" value={this.state.stateData.temperature} />
-                    <InfoRow name="Threads" value={this.state.stateData.threads} />
+             { this.state.currentView == "Config" &&
+                <div>
+                    <InfoGroup title="Log files">
+                        <div className="player-group-details">
+                            { this.state.logFiles.map(file =>
+                            <div key={file[0]} className="settings-log" onClick={() => this.openLog(file[0])}>
+                                <div className="settings-log-name">{file[0]}</div>
+                                <div className="settings-log-size">{file[1]}</div>
+                            </div>) }
+                            <br />
+
+                            <input type="button" value="Debug logging" onClick={() => this.debugLogging()}/>
+                        </div>
+                    </InfoGroup>
+                    <br />
+
+                    <InfoGroup title="Version">
+                        <div className="player-group-details">
+                             <InfoRow name="Current version" value={this.state.currentVersion}></InfoRow>
+                             <InfoRow name="Installed at" value={new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.state.lastUpdate))}></InfoRow><br />
+
+                            <input type="button" value="Check for updates" onClick={() => this.checkUpdates()}/>
+                        </div>
+                    </InfoGroup>
                 </div>
-            </InfoGroup>
+             }
+
+            <div className="system-state">
+                <div className="system-state-item">
+                    <div className="system-state-item-text">{this.state.stateData.cpu + "%"}</div>
+                    <div className="system-state-item-icon"><SvgImage src={cpuImage} /></div>
+                </div>
+                 <div className="system-state-item">
+                    <div className="system-state-item-text">{this.state.stateData.memory + "%"}</div>
+                    <div className="system-state-item-icon"><SvgImage src={memoryImage} /></div>
+                </div>
+                 <div className="system-state-item">
+                    <div className="system-state-item-text">{this.state.stateData.temperature}</div>
+                    <div className="system-state-item-icon"><SvgImage src={tempImage} /></div>
+                </div>
+            </div>
+
             { this.state.state === this.states[0] &&
                 <Popup loading={true} />
             }
@@ -321,4 +469,4 @@ class PlayerView extends Component {
   }
 };
 
-export default PlayerView;
+export default DeviceView;
