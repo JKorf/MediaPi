@@ -8,7 +8,13 @@ class ViewLoader extends Component {
     if(!this.props.loading)
         return null;
 
-    return <div className="view-loader-wrapper">{this.props.loading && <div className="view-loader"><SvgImage src={loaderImage} /></div> }</div>
+    return <div className="view-loader-wrapper">
+        { this.props.loading &&
+            <div className="view-loader">
+                <SvgImage src={loaderImage} />
+                { this.props.text && <div className="view-loader-details">{this.props.text}</div>}
+            </div>
+        }</div>
   }
 };
 

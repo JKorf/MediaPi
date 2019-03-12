@@ -20,7 +20,7 @@ class Logger(metaclass=Singleton):
         self.file = None
         self.log_level = 0
         self.log_thread = None
-        self.queue = Queue()
+        self.queue = Queue(maxsize=100)
         self.raspberry = sys.platform == "linux" or sys.platform == "linux2"
         self.log_path = Settings.get_string("base_folder") + "/Logs/" + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
         self.max_log_file_size = Settings.get_int("max_log_file_size")
@@ -53,13 +53,16 @@ class Logger(metaclass=Singleton):
     def process_queue(self):
         while True:
             item = self.queue.get()
-            if not self.raspberry:
-                print(item)
+            try:
+                if not self.raspberry:
+                    print(item)
 
-            byte_data = (item + "\r\n").encode('utf8')
-            self.file.write(byte_data)
-            self.file_size += len(byte_data)
-            self.check_file_size()
+                byte_data = (item + "\r\n").encode('utf8')
+                self.file.write(byte_data)
+                self.file_size += len(byte_data)
+                self.check_file_size()
+            except Exception as e:
+                self.write_error(e, "Exception during logging")
 
     def check_file_size(self):
         if self.file_size > self.max_log_file_size:

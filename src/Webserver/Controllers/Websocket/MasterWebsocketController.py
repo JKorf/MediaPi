@@ -14,6 +14,7 @@ from Shared.State import StateManager
 from Shared.Stats import Stats
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON, Singleton
+from Updater import Updater
 from Webserver.Controllers.AuthController import AuthController
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
 from Webserver.Models import WebSocketResponseMessage, WebSocketUpdateMessage, WebSocketSlaveCommand, WebSocketRequestMessage, WebSocketInvalidMessage, WebSocketSlaveResponse, \
@@ -41,6 +42,7 @@ class MasterWebsocketController(metaclass=Singleton):
         self.own_slave.update_data("torrent", MediaManager().torrent_data)
         self.own_slave.update_data("state", StateManager().state_data)
         self.own_slave.update_data("stats", Stats().cache)
+        self.own_slave.update_data("update", Updater().update_state)
         self.slaves.add_slave(self.own_slave)
 
         EventManager.register_event(EventType.ClientRequest, self.add_client_request)
@@ -54,6 +56,7 @@ class MasterWebsocketController(metaclass=Singleton):
         MediaManager().media_data.register_callback(lambda old, new: self.slave_update(self.own_slave, "media", new))
         MediaManager().torrent_data.register_callback(lambda old, new: self.slave_update(self.own_slave, "torrent", new))
         Stats().cache.register_callback(lambda old, new: self.slave_update(self.own_slave, "stats", new))
+        Updater().update_state.register_callback(lambda old, new: self.slave_update(self.own_slave, "update", new))
         self.slaves.register_callback(lambda old, new: self.update_slaves_data(new.data))
         LightManager().light_state.register_callback(lambda old, new: self.update_light_data(new))
 
@@ -263,6 +266,7 @@ class SlaveClient:
         self._data_registrations["torrent"] = DataRegistration()
         self._data_registrations["state"] = DataRegistration()
         self._data_registrations["stats"] = DataRegistration()
+        self._data_registrations["update"] = DataRegistration()
 
     def update_data(self, name, data):
         self._data_registrations[name].data = data

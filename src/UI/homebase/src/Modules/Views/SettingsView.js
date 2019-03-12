@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import Socket from './../../Socket.js';
 
 import { InfoGroup } from './../Components/InfoGroup'
 import ViewLoader from './../Components/ViewLoader';
@@ -8,13 +9,14 @@ class SettingsView extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { logFiles: [], loading: false };
+    this.state = { logFiles: [], loading: false, updateState: "Idle" };
 
     this.props.functions.changeBack({});
     this.props.functions.changeTitle("Settings");
     this.props.functions.changeRightImage(null);
 
     this.getLogFiles = this.getLogFiles.bind(this);
+    this.updateUpdate = this.updateUpdate.bind(this);
   }
 
   componentDidMount() {
@@ -46,6 +48,16 @@ class SettingsView extends Component {
     });
   }
 
+  updateUpdate(id, data)
+  {
+    this.setState({updateState: data.state});
+    if (data.completed)
+    {
+        if (data.error)
+            alert("Update failed: " + data.error);
+    }
+  }
+
   checkUpdates()
   {
     this.setState({loading: true});
@@ -54,14 +66,8 @@ class SettingsView extends Component {
         if(data.data.available)
         {
             if(window.confirm("New update available, download now?")){
-                this.setState({loading: true});
-                axios.post(window.vars.apiBase + 'util/update').then((data) => {
-                    this.setState({loading: false});
-                    alert("Successfully updated, going to restart to complete update");
-                },(err) =>{
-                    this.setState({loading: false});
-                    alert("Update failed: " + err.response.data);
-                });
+                axios.post(window.vars.apiBase + 'util/update');
+                this.updateSub = Socket.subscribe("1.update", this.updateUpdate);
             }
         }
     });
@@ -69,7 +75,7 @@ class SettingsView extends Component {
 
   render() {
     return <div className="settings-view">
-        <ViewLoader loading={this.state.loading}/>
+        <ViewLoader loading={this.state.loading || this.state.updateState != "Idle"} text={(this.state.updateState != "Idle" ? this.state.updateState: null)}/>
         <InfoGroup title="Appearance">
             Test
         </InfoGroup>

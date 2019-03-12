@@ -163,7 +163,6 @@ class MediaManager(metaclass=Singleton):
         if collect:
             gc.collect()
 
-
     def play_next_episode(self, should_play):
         if should_play:
             if self.next_episode_manager.next_type == "File":

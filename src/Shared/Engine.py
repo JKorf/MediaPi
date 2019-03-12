@@ -18,7 +18,6 @@ class Engine:
         self.running = False
         self.thread = None
         self.work_items = []
-        self.overtime = 0
 
         self.current_item = None
         self.start_time = 0
