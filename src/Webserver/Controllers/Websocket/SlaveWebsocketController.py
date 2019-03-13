@@ -15,6 +15,7 @@ from Shared.State import StateManager
 from Shared.Stats import Stats
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON
+from Updater import Updater
 from Webserver.Controllers.Websocket.PendingMessagesHandler import PendingMessagesHandler, ClientMessage
 from Webserver.Models import WebSocketInitMessage, WebSocketSlaveMessage, WebSocketRequestMessage, WebSocketInvalidMessage, WebSocketSlaveRequest
 
@@ -22,7 +23,7 @@ from Webserver.Models import WebSocketInitMessage, WebSocketSlaveMessage, WebSoc
 class SlaveWebsocketController:
 
     def __init__(self):
-        self.server_socket = websocket.WebSocketApp(Settings.get_string("master_ip").replace("http://", "ws://") + "/ws",
+        self.server_socket = websocket.WebSocketApp(Settings.get_string("master_ip").replace("http://", "ws://") + ":" + Settings.get_string("api_port") + "/ws",
                                                     on_message=self.on_master_message,
                                                     on_close=self.on_close)
         self.server_socket.on_open = self.on_open
@@ -46,6 +47,7 @@ class SlaveWebsocketController:
         MediaManager().torrent_data.register_callback(lambda old, new: self.broadcast_data("torrent", new))
         StateManager().state_data.register_callback(lambda old, new: self.broadcast_data("state", new))
         Stats().cache.register_callback(lambda old, new: self.broadcast_data("stats", new))
+        Updater().update_state.register_callback(lambda old, new: self.broadcast_data("update", new))
 
         self.server_connect_engine.start()
 
@@ -84,6 +86,7 @@ class SlaveWebsocketController:
         self.broadcast_data("torrent", MediaManager().torrent_data)
         self.broadcast_data("state", StateManager().state_data)
         self.broadcast_data("stats", Stats().cache)
+        self.broadcast_data("update", Updater().update_state)
 
         pending = self.pending_message_handler.get_pending_for_new_client()
         for msg in pending:
@@ -108,6 +111,9 @@ class SlaveWebsocketController:
                 method = None
                 if data['topic'] == 'media':
                     method = getattr(MediaManager(), data['method'])
+
+                if data['topic'] == 'updater':
+                    method = getattr(Updater(), data['method'])
 
                 if method is not None:
                     cb_thread = CustomThread(method, "Master command", data['parameters'])
@@ -138,7 +144,7 @@ class SlaveWebsocketController:
 
     def write(self, data):
         json = to_JSON(data)
-        Logger().write(LogVerbosity.Debug, "Sending to master: " + json)
+        Logger().write(LogVerbosity.All, "Sending to master: " + json)
         self.server_socket.send(json)
 
 

@@ -274,7 +274,7 @@ class MediaManager(metaclass=Singleton):
             if self.history_id == 0 or state.state != PlayerState.Playing or current_time() - self.last_tracking_update < 5000:
                 return
 
-            if state.playing_for > state.length - (state.length * 0.04):
+            if state.playing_for > state.length - (state.length * 0.04) or state.length - state.playing_for < 10000:
                 if Settings.get_bool("slave"):
                     EventManager.throw_event(EventType.DatabaseUpdate, ["update_watching_item", [self.history_id, state.length, state.length, current_time()]])
                 else:

@@ -8,16 +8,18 @@ from Shared.Threading import ThreadManager
 from Shared.Util import to_JSON, current_time, write_size
 from Updater import Updater
 from Webserver.BaseHandler import BaseHandler
+from Webserver.Controllers.Websocket.MasterWebsocketController import MasterWebsocketController
 
 
 class UtilController(BaseHandler):
 
-    async def get(self, url):
+    def get(self, url):
         if url == "get_log_files":
             self.write(self.get_log_files())
         elif url == "get_log_file":
             self.write(self.get_log_file(urllib.parse.unquote(self.get_argument("file"))))
         elif url == "check_update":
+            # should check slave version
             self.write(to_JSON(UpdateAvailable(Updater().check_version(), Updater().last_version)))
 
     def post(self, url):
@@ -28,7 +30,11 @@ class UtilController(BaseHandler):
         elif url == "log":
             self.log()
         elif url == "update":
-            Updater().update()
+            instance = int(self.get_argument("instance"))
+            if MasterWebsocketController().is_self(instance):
+                Updater().update()
+            else:
+                MasterWebsocketController().send_to_slave(instance, "updater", "update", [])
 
     def log(self):
         Logger().write(LogVerbosity.Important, "============== Test ===============")
@@ -41,7 +47,7 @@ class UtilController(BaseHandler):
 
     def get_log_files(self):
         log_files = Logger().get_log_files()
-        return to_JSON([(name, write_size(size)) for name, size in log_files])
+        return to_JSON([(name, path, write_size(size)) for name, path, size in log_files])
 
     def get_log_file(self, file):
         return Logger().get_log_file(urllib.parse.unquote(file))

@@ -44,6 +44,9 @@ class Updater(metaclass=Singleton):
 
     def update(self):
         Logger().write(LogVerbosity.Important, "Starting update")
+        if Settings.get_bool("slave"):
+            self.check_version()
+
         start_time = current_time()
         self.update_state.start()
         path = self.update_folder + self.last_version
@@ -64,17 +67,19 @@ class Updater(metaclass=Singleton):
         data_path = path + "/MediaPi/src/"
         ui_path = data_path + "UI/homebase"
 
-        self.update_state.set_state("Restoring UI packages")
-        success = self.execute_command("UI package restore", ["npm", "install"], cwd=ui_path, shell=True)
-        if not success:
-            self.update_state.set_complete(error="UI package restore failed")
-            return
+        if not Settings.get_bool("slave"):
+            # Only need to build UI when we're not slave
+            self.update_state.set_state("Restoring UI packages")
+            success = self.execute_command("UI package restore", ["npm", "install"], cwd=ui_path, shell=True)
+            if not success:
+                self.update_state.set_complete(error="UI package restore failed")
+                return
 
-        self.update_state.set_state("Building UI")
-        success = self.execute_command("UI build", ["npm", "run", "build"], cwd=ui_path, shell=True)
-        if not success:
-            self.update_state.set_complete(error="UI build failed")
-            return
+            self.update_state.set_state("Building UI")
+            success = self.execute_command("UI build", ["npm", "run", "build"], cwd=ui_path, shell=True)
+            if not success:
+                self.update_state.set_complete(error="UI build failed")
+                return
 
         self.copied_files = 0
         self.update_state.set_state("Copying files")
@@ -83,12 +88,13 @@ class Updater(metaclass=Singleton):
         self.copy_directory(data_path, self.base_folder)
         Logger().write(LogVerbosity.Info, "Copied " + str(self.copied_files) + " files in " + str(current_time() - start) + "ms")
 
-        self.update_state.set_state("Copying UI files")
-        Logger().write(LogVerbosity.Info, "Starting copying of UI files")
-        self.copied_files = 0
-        start = current_time()
-        self.copy_directory(ui_path + "/build/", self.base_folder + "UI/homebase/")
-        Logger().write(LogVerbosity.Info, "Copied " + str(self.copied_files) + " files in " + str(current_time() - start) + "ms")
+        if not Settings.get_bool("slave"):
+            self.update_state.set_state("Copying UI files")
+            Logger().write(LogVerbosity.Info, "Starting copying of UI files")
+            self.copied_files = 0
+            start = current_time()
+            self.copy_directory(ui_path + "/build/", self.base_folder + "UI/homebase/")
+            Logger().write(LogVerbosity.Info, "Copied " + str(self.copied_files) + " files in " + str(current_time() - start) + "ms")
 
         self.update_state.set_state("Removing temp directory")
         Logger().write(LogVerbosity.Info, "Removing temp directory")

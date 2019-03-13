@@ -4,6 +4,7 @@ import axios from 'axios';
 import Socket from './../../../Socket.js';
 
 import SvgImage from './../../Components/SvgImage';
+import Button from './../../Components/Button';
 import Slider from './../../Components/Slider';
 import StopPopup from './../../Components/Popups/StopPopup'
 import Popup from './../../Components/Popups/Popup'
@@ -101,7 +102,7 @@ class DeviceView extends Component {
         console.log(data);
         var html = data.data.replace(/\r\n/g, '<br />');
         var newWindow = window.open();
-        newWindow.document.write(html);
+        newWindow.document.write("<html><head><title>" + file + "</title></head><body>" + html + "</body></html>");
         this.setState({loading: false});
     });
   }
@@ -417,29 +418,27 @@ class DeviceView extends Component {
              }
 
              { this.state.currentView == "Config" &&
-                <div>
-                    <InfoGroup title="Log files">
-                        <div className="player-group-details">
+                <div className="player-group-details">
+                    <div className="device-config-subtitle">version</div>
+                    <div className="device-config-item">
+                         <InfoRow name="Current version" value={this.state.currentVersion}></InfoRow>
+                         <InfoRow name="Installed at" value={new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.state.lastUpdate))}></InfoRow>
+
+                        <div className="device-config-button"><Button text="Check for updates" onClick={() => this.checkUpdates()}/></div>
+                    </div>
+
+                    <div className="device-config-subtitle">logs</div>
+                    <div className="device-config-item">
+                        <div className="device-log-files">
                             { this.state.logFiles.map(file =>
-                            <div key={file[0]} className="settings-log" onClick={() => this.openLog(file[0])}>
+                            <div key={file[1]} className="settings-log" onClick={() => this.openLog(file[1])}>
                                 <div className="settings-log-name">{file[0]}</div>
-                                <div className="settings-log-size">{file[1]}</div>
+                                <div className="settings-log-size">{file[2]}</div>
                             </div>) }
-                            <br />
-
-                            <input type="button" value="Debug logging" onClick={() => this.debugLogging()}/>
                         </div>
-                    </InfoGroup>
-                    <br />
 
-                    <InfoGroup title="Version">
-                        <div className="player-group-details">
-                             <InfoRow name="Current version" value={this.state.currentVersion}></InfoRow>
-                             <InfoRow name="Installed at" value={new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.state.lastUpdate))}></InfoRow><br />
-
-                            <input type="button" value="Check for updates" onClick={() => this.checkUpdates()}/>
-                        </div>
-                    </InfoGroup>
+                        <div className="device-config-button"><Button text="Debug logging" classId="secondary" onClick={() => this.debugLogging()}/></div>
+                    </div>
                 </div>
              }
 

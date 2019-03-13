@@ -97,15 +97,15 @@ class Logger(metaclass=Singleton):
                 file.write(line.encode('utf-8') + b'\r\n')
 
     def get_log_files(self):
-        list_of_files = glob.glob(self.log_path + "/*.txt")
+        list_of_files = glob.glob(Settings.get_string("base_folder") + "/Logs/*/*.txt")
         latest_files = sorted(list_of_files, key=os.path.getctime, reverse=True)
-        return [(os.path.basename(x), os.path.getsize(x)) for x in latest_files]
+        return [(os.path.basename(x), x, os.path.getsize(x)) for x in latest_files]
 
     def get_log_file(self, file):
         if not file.endswith(".txt"):
             raise Exception("Not a log file")
 
-        with open(self.log_path + "/" + file) as f:
+        with open(file) as f:
             return "\r\n".join(f.readlines())
 
 def path_leaf(path):

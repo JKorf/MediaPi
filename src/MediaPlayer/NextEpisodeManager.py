@@ -112,7 +112,9 @@ class NextEpisodeManager(metaclass=Singleton):
 
         dir_name = os.path.dirname(media_data.url)
         if Settings.get_bool("slave"):
-            data = RequestFactory.make_request(Settings.get_string("master_ip") + "/hd/directory?path=" + dir_name, "GET")
+            data = RequestFactory.make_request(Settings.get_string("master_ip") + ":" + Settings.get_string("api_port") + "/hd/directory?path=" + dir_name, "GET")
+            if not data:
+                return
             result = json.loads(data.decode("utf8"))
             file_list = result["files"]
         else:

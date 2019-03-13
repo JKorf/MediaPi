@@ -11,7 +11,9 @@
 
     check if people are home
 
-    Player screen styling, more obvious buffer/download status
+    Can't request master API endpoints from slave
+        Use websockets with await?
+            Can also use this to request data from slave?
 
     Add a rule based task system for automation
         Do (x) when (x) == True
