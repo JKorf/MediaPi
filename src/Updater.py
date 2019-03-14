@@ -133,6 +133,9 @@ class Updater(metaclass=Singleton):
         Logger().write(LogVerbosity.Info, "Starting " + name)
         start = current_time()
         try:
+            if shell and sys.platform == "linux" or sys.platform == "linux2":
+                command = " ".join(command)
+
             result = subprocess.check_output(command, universal_newlines=True, cwd=cwd, shell=shell)
             Logger().write(LogVerbosity.Debug, name + " output: " + result)
             Logger().write(LogVerbosity.Info, name + " successful in " + str(current_time() - start) + "ms")
@@ -183,4 +186,5 @@ class UpdateState(Observable):
     def set_complete(self, error=None):
         self.completed = True
         self.error = error
+        self.state = "Idle"
         self.changed()
