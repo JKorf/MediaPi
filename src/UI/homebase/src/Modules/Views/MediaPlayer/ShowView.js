@@ -26,7 +26,7 @@ class ShowView extends Component {
   }
 
   componentDidMount() {
-    axios.get(window.vars.apiBase + 'shows/get_show?id=' + this.props.match.params.id).then(data => {
+    axios.get(window.vars.apiBase + 'show?id=' + this.props.match.params.id).then(data => {
         if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         console.log(data.data);
         const seasonEpisodes = data.data.episodes.reduce((seasons, epi) => {
@@ -61,9 +61,9 @@ class ShowView extends Component {
     this.props.functions.changeRightImage({image: (show.favorite? favoriteFullImage: favoriteImage), click: this.toggleFavorite});
 
     if(show.favorite)
-        axios.post(window.vars.apiBase + 'shows/add_favorite?id=' + this.props.match.params.id + "&title=" + encodeURIComponent(show.title) + "&image=" + encodeURIComponent(show.images.poster));
+        axios.post(window.vars.apiBase + 'show/favorite?id=' + this.props.match.params.id + "&title=" + encodeURIComponent(show.title) + "&image=" + encodeURIComponent(show.images.poster));
     else
-        axios.post(window.vars.apiBase + 'shows/remove_favorite?id=' + this.props.match.params.id);
+        axios.delete(window.vars.apiBase + 'show/favorite?id=' + this.props.match.params.id);
   }
 
   addLeadingZero(value)

@@ -15,6 +15,16 @@
         Use websockets with await?
             Can also use this to request data from slave?
 
+    Websockets:
+        Authentication
+        Support UI clients and slave clients, different endpoints?
+        Support waiting for response
+        Support callback for response
+        Support timing out of messages to UI
+
+        Subscribing/unsubscribing to topics
+            General topic and slave topics
+
     Add a rule based task system for automation
         Do (x) when (x) == True
         ie: Turn on lights at 18:00 and people are home

@@ -29,7 +29,7 @@ class VLCPlayer(metaclass=Singleton):
             self.__player.set_fullscreen(True)
 
         self.__event_manager = self.__player.event_manager()
-        self.hook_events()
+        #self.hook_events()
 
         self.set_volume(75)
 
@@ -41,6 +41,7 @@ class VLCPlayer(metaclass=Singleton):
 
         self.player_observer = CustomThread(self.observe_player, "Player observer")
         self.player_observer.start()
+        self.stop_player_thread = None
 
     def instantiate_vlc(self):
         parameters = self.get_instance_parameters()
@@ -104,7 +105,7 @@ class VLCPlayer(metaclass=Singleton):
         return self.__player.audio_get_volume()
 
     def get_position(self):
-        return int(self.__player.get_time() / 1000)
+        return self.__player.get_time()
 
     def get_length(self):
         return int(self.__player.get_length())
@@ -253,22 +254,25 @@ class VLCPlayer(metaclass=Singleton):
             self.__player.set_media(subs[0])
             self.__player.play()
 
-    def change_state(self, new):
-        self.player_state.start_update()
-        self.player_state.state = new
-        self.player_state.stop_update()
-
-        if new == PlayerState.Ended:
-            thread = CustomThread(self.stop, "Stopping player")
-            thread.start()
-
     def observe_player(self):
         while True:
-            if self.player_state.state == PlayerState.Nothing:
-                time.sleep(0.5)
-                continue
+            # if self.player_state.state == PlayerState.Nothing:
+            #     time.sleep(0.5)
+            #     continue
+
+            state = self.get_state().value
+            if state in [5, 6, 7]:
+                state = 0
+
+            new_state = PlayerState(state)
+            if new_state == PlayerState.Nothing and self.player_state.state != PlayerState.Nothing:
+                self.stop_player_thread = CustomThread(self.stop, "Stopping player")
+                self.stop_player_thread.start()
 
             self.player_state.start_update()
+            self.player_state.state = new_state
+            self.player_state.playing_for = self.get_position()
+            self.player_state.length = self.get_length()
             self.player_state.audio_tracks = self.get_audio_tracks()
             self.player_state.audio_track = self.get_audio_track()
             self.player_state.sub_delay = self.get_subtitle_delay()
@@ -276,6 +280,8 @@ class VLCPlayer(metaclass=Singleton):
             self.player_state.sub_tracks = self.get_subtitle_tracks()
             self.player_state.volume = self.get_volume()
             self.player_state.stop_update()
+
+
 
             time.sleep(0.5)
 
@@ -286,7 +292,6 @@ class PlayerState(Enum):
     Buffering = 2
     Playing = 3
     Paused = 4
-    Ended = 5
 
 
 class PlayerData(Observable):

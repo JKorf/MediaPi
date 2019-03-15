@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from "react-router-dom";
 
-import Socket from './../../../Socket.js';
+import Socket from './../../../Socket2.js';
 
 import MediaProgress from './../../Components/MediaProgress';
 

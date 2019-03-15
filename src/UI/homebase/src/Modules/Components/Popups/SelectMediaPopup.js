@@ -94,7 +94,7 @@ class SelectMediaPopup extends Component {
     return (
     <Popup title="Select a file" loading={false} buttons={buttons} classId="select-media-popup">
         { this.orderedFiles.map((episodeList, index) =>
-            <div className="media-file-select-season">
+            <div key={index} className="media-file-select-season">
                 { this.orderedFiles.length > 1 && <div className="media-file-select-season-title">Season {episodeList[0].season}</div> }
                 { episodeList.map((file, index) =>
                     <div className={"media-file-select " + (this.state.selectedFile === file.path ? "selected" : "")} key={file.path}>

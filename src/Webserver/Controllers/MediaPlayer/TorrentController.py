@@ -1,20 +1,19 @@
 import urllib.parse
 
+from flask import request
+
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
-from Webserver.BaseHandler import BaseHandler
+from Webserver.APIController import app
 from Webserver.Controllers.MediaPlayer.TorrentProvider import TPB
 from Webserver.Models import TorrentModel
 
 
-class TorrentController(BaseHandler):
-    def get(self, url):
-        if url == "top":
-            self.write(self.top())
-        elif url == "search":
-            self.write(self.search(self.get_argument("keywords")))
+class TorrentController:
 
-    def top(self, ):
+    @staticmethod
+    @app.route('/torrents/top', methods=['GET'])
+    def top():
         t = TPB(Settings.get_string("tpb_api"))
         result = []
         for torrent in t.top(200):
@@ -22,7 +21,10 @@ class TorrentController(BaseHandler):
 
         return to_JSON(result)
 
-    def search(self, keywords):
+    @staticmethod
+    @app.route('/torrents', methods=['GET'])
+    def search():
+        keywords = request.args.get('keywords')
         t = TPB(Settings.get_string("tpb_api"))
         result = []
         for torrent in t.search(urllib.parse.unquote(keywords)):

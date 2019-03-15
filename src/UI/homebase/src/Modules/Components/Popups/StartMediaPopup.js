@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import ConfirmPopup from "./ConfirmPopup.js"
 
-import Socket from "./../../../Socket.js"
+import Socket from "./../../../Socket2.js"
 
 class StartMediaPopup extends Component {
   constructor(props) {

@@ -10,6 +10,7 @@ from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import Singleton
 from Webserver.Controllers.MediaPlayer.ShowController import ShowController
+from Webserver.Controllers.Websocket2.WebsocketController import WebsocketController
 from Webserver.Models import FileStructure
 
 
@@ -36,10 +37,10 @@ class NextEpisodeManager(metaclass=Singleton):
         self.next_season = 0
         self.next_episode = 0
 
-    def notify_next_episode(self, callback, callback_no_answer):
+    def notify_next_episode(self, callback):
         if self.next_type is not None:
             Logger().write(LogVerbosity.Info, "Can continue with next episode: " + self.next_title)
-            EventManager.throw_event(EventType.ClientRequest, [callback, callback_no_answer, 1000 * 60 * 1, "SelectNextEpisode", [self.next_title]])
+            WebsocketController.request_cb("SelectNextEpisode", callback, 1000 * 60, self.next_title)
 
     def check_next_episode(self, media_data, torrent):
         if media_data.type == "Radio" or media_data.type == "YouTube":
@@ -65,7 +66,6 @@ class NextEpisodeManager(metaclass=Singleton):
         if raw_data is None:
             Logger().write(LogVerbosity.Debug, "No next episode of show, request failed")
             return
-
 
         show = json.loads(raw_data.decode("utf-8"))
         next_epi = [x for x in show["episodes"] if x["season"] == season and x["episode"] == epi + 1]

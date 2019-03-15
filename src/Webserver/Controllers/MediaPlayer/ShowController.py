@@ -1,36 +1,30 @@
 import json
 import urllib.parse
 
+from flask import request
+
 from Database.Database import Database
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
+from Webserver.APIController import app
 from Webserver.Models import BaseMedia
 from Webserver.BaseHandler import BaseHandler
 
-class ShowController(BaseHandler):
+class ShowController:
 
     shows_api_path = Settings.get_string("serie_api")
     server_uri = "http://localhost:50009/torrent"
 
-    async def get(self, url):
-        if url == "get_shows":
-            data = await self.get_shows(int(self.get_argument("page")), self.get_argument("orderby"), self.get_argument("keywords"), self.get_argument("include_previous") == "true")
-            self.write(data)
-        elif url == "get_show":
-            show = await self.get_by_id(self.get_argument("id"))
-            self.write(show)
-
-    async def post(self, url):
-        if url == "add_favorite":
-            await self.add_favorite(self.get_argument("id"), self.get_argument("title"),self.get_argument("image"))
-        elif url == "remove_favorite":
-            await self.remove_favorite(self.get_argument("id"))
-
     @staticmethod
-    async def get_shows(page, order_by, keywords, include_previous_pages):
+    @app.route('/shows', methods=['GET'])
+    def get_shows():
+        page = int(request.args.get('page'))
+        order_by = request.args.get('orderby')
+        keywords = request.args.get('keywords')
+        include_previous_pages = request.args.get('page') == "true"
         search_string = ""
         if keywords:
             search_string = "&keywords=" + urllib.parse.quote(keywords)
@@ -40,18 +34,18 @@ class ShowController(BaseHandler):
             current_page = 0
             while current_page != page:
                 current_page+= 1
-                data += await ShowController.request_shows(
+                data += ShowController.request_shows(
                     ShowController.shows_api_path + "shows/" + str(current_page) + "?sort=" + urllib.parse.quote(
                         order_by) + search_string)
 
         else:
-            data = await ShowController.request_shows(ShowController.shows_api_path + "shows/" + str(page) + "?sort=" + urllib.parse.quote(order_by) + search_string)
+            data = ShowController.request_shows(ShowController.shows_api_path + "shows/" + str(page) + "?sort=" + urllib.parse.quote(order_by) + search_string)
 
         return to_JSON(data).encode()
 
     @staticmethod
-    async def request_shows(url):
-        data = await RequestFactory.make_request_async(url)
+    def request_shows(url):
+        data = RequestFactory.make_request(url)
 
         if data is not None:
             return ShowController.parse_show_data(data.decode('utf-8'))
@@ -61,9 +55,11 @@ class ShowController(BaseHandler):
             return []
 
     @staticmethod
-    async def get_by_id(id):
+    @app.route('/show', methods=['GET'])
+    def get_by_id():
+        id = request.args.get('id')
         Logger().write(LogVerbosity.Debug, "Get show by id " + id)
-        response = await RequestFactory.make_request_async(ShowController.shows_api_path + "show/" + id)
+        response = RequestFactory.make_request(ShowController.shows_api_path + "show/" + id)
         data = json.loads(response.decode('utf-8'))
 
         seen_episodes = Database().get_history_for_id(id)
@@ -80,14 +76,24 @@ class ShowController(BaseHandler):
         return json.dumps(data).encode('utf-8')
 
     @staticmethod
-    async def add_favorite(id, title, image):
+    @app.route('/show/favorite', methods=['POST'])
+    def add_favorite():
+        id = request.args.get('id')
+        title = urllib.parse.unquote(request.args.get('title'))
+        image = urllib.parse.unquote(request.args.get('image'))
+
         Logger().write(LogVerbosity.Info, "Add show favorite: " + id)
         Database().add_favorite(id, "Show", title, image)
+        return "OK"
 
     @staticmethod
-    async def remove_favorite(id):
+    @app.route('/show/favorite', methods=['DELETE'])
+    def remove_favorite():
+        id = request.args.get('id')
+
         Logger().write(LogVerbosity.Info, "Remove show favorite: " + id)
         Database().remove_favorite(id)
+        return "OK"
 
     @staticmethod
     def parse_show_data(data):

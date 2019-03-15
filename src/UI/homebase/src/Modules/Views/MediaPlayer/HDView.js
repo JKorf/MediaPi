@@ -82,7 +82,7 @@ class HDView extends Component {
 
   loadFolder(){
       this.setState({loading: true});
-      axios.get(window.vars.apiBase + 'hd/directory?path=' + this.path).then(data => {
+      axios.get(window.vars.apiBase + 'hd?path=' + this.path).then(data => {
             this.setState({loading: false});
             console.log(data.data);
             this.setState({structure: data.data});

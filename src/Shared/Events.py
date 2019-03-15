@@ -21,7 +21,6 @@ class EventType(Enum):
     NoPeers = 38
     PeersFound = 40
     RequestPeers = 41
-    ClientRequest = 44
     DatabaseUpdate = 45
     RequestSubtitles = 46
 

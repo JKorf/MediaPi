@@ -18,7 +18,7 @@ class LightWidget extends Component {
   }
 
   componentDidMount() {
-    axios.get(window.vars.apiBase + 'lighting/get_groups').then(
+    axios.get(window.vars.apiBase + 'lighting/groups').then(
         (data) => {
             this.setState({lightData: data.data});
             console.log(data.data);
@@ -45,7 +45,7 @@ class LightWidget extends Component {
         lightData,
       };
     });
-    axios.post(window.vars.apiBase + 'lighting/set_group_state?group='+group.id+'&state=' + value);
+    axios.post(window.vars.apiBase + 'lighting/group_state?group='+group.id+'&state=' + value);
   }
 
   render() {

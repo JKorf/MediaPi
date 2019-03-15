@@ -28,6 +28,7 @@ class LightManager(metaclass=Singleton):
         self.light_state = LightState()
         self.observing_end = 0
         self.observing = False
+        self.observe_thread = None
 
     def init(self):
         if self.initialized:
@@ -101,10 +102,10 @@ class LightManager(metaclass=Singleton):
 
     def observe_group(self, group):
         Logger().write(LogVerbosity.All, "Starting observe for group " + group.name)
-        observe_thread = CustomThread(lambda: self.api(group.observe(
+        self.observe_thread = CustomThread(lambda: self.api(group.observe(
             self.light_state.update_group,
             lambda x: self.check_observe(group), duration=30)), "Light group observer", [])
-        observe_thread.start()
+        self.observe_thread.start()
 
     def check_observe(self, group):
         if self.observing:

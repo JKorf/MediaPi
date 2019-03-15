@@ -1,7 +1,9 @@
+from flask import request
+
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import to_JSON
-from Webserver.BaseHandler import BaseHandler
 from Webserver.Models import BaseMedia
+from Webserver.APIController import app
 
 
 class Radio(BaseMedia):
@@ -10,8 +12,7 @@ class Radio(BaseMedia):
         super().__init__(id, poster, title)
         self.url = url
 
-
-class RadioController(BaseHandler):
+class RadioController:
     radios = [
         Radio(9, "Radio 1", "http://icecast.omroep.nl:80/radio1-bb-mp3",
               "radio1"),
@@ -36,14 +37,14 @@ class RadioController(BaseHandler):
               "slam")
     ]
 
-    def get(self, url):
-        if url == "get_radios":
-            Logger().write(LogVerbosity.Debug, "Get radio list")
-            self.write(to_JSON(self.get_list()))
-
-    def get_list(self):
-        return self.radios
+    @staticmethod
+    @app.route('/radios', methods=['GET'])
+    def get():
+        Logger().write(LogVerbosity.Debug, "Get radio list")
+        return to_JSON(RadioController.radios)
 
     @staticmethod
-    def get_by_id(id):
+    @app.route('/radio', methods=['GET'])
+    def get_radio_by_id():
+        id = int(request.args.get('id'))
         return [x for x in RadioController.radios if x.id == id][0]

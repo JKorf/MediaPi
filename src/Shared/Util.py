@@ -7,9 +7,9 @@ def current_time():
     return int(round(time.time() * 1000))
 
 
-def to_JSON(obj):
+def to_JSON(obj, sort_keys=True):
     return json.dumps(obj, default=default_serializer,
-                      sort_keys=True, indent=4)
+                      sort_keys=sort_keys, indent=4)
 
 
 def default_serializer(obj):

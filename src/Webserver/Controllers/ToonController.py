@@ -1,23 +1,16 @@
+from flask import request
+
 from Controllers.ToonManager import ToonManager
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import to_JSON
-from Webserver.BaseHandler import BaseHandler
+from Webserver.APIController import app
 
 
-class ToonController(BaseHandler):
-    def get(self, url):
-        if url == "get_status":
-            self.write(self.get_toon_status())
-        elif url == "get_details":
-            self.write(self.get_toon_details())
+class ToonController:
 
-    def post(self, url):
-        if url == "set_temperature":
-            self.set_temperature(int(self.get_argument("temperature")))
-        elif url == "set_active_state":
-            self.set_active_state(self.get_argument("state"))
-
-    def get_toon_status(self):
+    @staticmethod
+    @app.route('/toon', methods=['GET'])
+    def get_toon_status():
         status = ToonManager().get_status()
         result = ThermostatInfo(
             status.active_state,
@@ -26,7 +19,9 @@ class ToonController(BaseHandler):
 
         return to_JSON(result)
 
-    def get_toon_details(self):
+    @staticmethod
+    @app.route('/toon/details', methods=['GET'])
+    def get_toon_details():
         status = ToonManager().get_status()
         states = ToonManager().get_states()
 
@@ -45,14 +40,24 @@ class ToonController(BaseHandler):
 
         return to_JSON(result)
 
-    def set_temperature(self, temp):
+    @staticmethod
+    @app.route('/toon/temperature', methods=['POST'])
+    def set_temperature():
+        temp = int(request.args.get('temp'))
+
         temp /= 100
         Logger().write(LogVerbosity.Info, "Setting toon temperature to " + str(temp))
         ToonManager().set_temperature(temp)
+        return "OK"
 
-    def set_active_state(self, state):
+    @staticmethod
+    @app.route('/toon/state', methods=['POST'])
+    def set_active_state():
+        state = request.args.get('state')
+
         Logger().write(LogVerbosity.Info, "Setting toon state to " + state)
         ToonManager().set_state(state)
+        return "OK"
 
 
 class ThermostatDetails:

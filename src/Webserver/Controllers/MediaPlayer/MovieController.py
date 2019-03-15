@@ -1,30 +1,30 @@
 import json
 import urllib.parse
 
+from flask import request
+
 from Database.Database import Database
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
+from Webserver.APIController import app
 from Webserver.Models import BaseMedia
-from Webserver.BaseHandler import BaseHandler
 
 
-class MovieController(BaseHandler):
+class MovieController:
 
     movies_api_path = Settings.get_string("movie_api")
     server_uri = "http://localhost:50009/torrent"
 
-    async def get(self, url):
-        if url == "get_movies":
-            data = await self.get_movies(int(self.get_argument("page")), self.get_argument("orderby"), self.get_argument("keywords"), self.get_argument("include_previous") == "true")
-            self.write(data)
-        elif url == "get_movie":
-            show = await self.get_by_id(self.get_argument("id"))
-            self.write(show)
-
-    async def get_movies(self, page, order_by, keywords, include_previous_pages):
+    @staticmethod
+    @app.route('/movies', methods=['GET'])
+    def get_movies():
+        page = int(request.args.get('page'))
+        order_by = request.args.get('orderby')
+        keywords = request.args.get('keywords')
+        include_previous_pages = request.args.get('page') == "true"
         search_string = ""
         if keywords:
             search_string = "&keywords=" + urllib.parse.quote(keywords)
@@ -34,28 +34,32 @@ class MovieController(BaseHandler):
             current_page = 0
             while current_page != page:
                 current_page+= 1
-                data += await self.request_movies(
+                data += MovieController.request_movies(
                     MovieController.movies_api_path + "movies/" + str(current_page) + "?sort=" + urllib.parse.quote(
                         order_by) + search_string)
 
         else:
-            data = await self.request_movies(MovieController.movies_api_path + "movies/" + str(page) + "?sort=" + urllib.parse.quote(order_by) + search_string)
+            data = MovieController.request_movies(MovieController.movies_api_path + "movies/" + str(page) + "?sort=" + urllib.parse.quote(order_by) + search_string)
 
         return to_JSON(data).encode()
 
-    async def request_movies(self, url):
-        data = await RequestFactory.make_request_async(url)
+    @staticmethod
+    def request_movies(url):
+        data = RequestFactory.make_request(url)
 
         if data is not None:
-            return self.parse_movie_data(data.decode('utf-8'))
+            return MovieController.parse_movie_data(data.decode('utf-8'))
         else:
             EventManager.throw_event(EventType.Error, ["get_error", "Could not get movie data"])
             Logger().write(LogVerbosity.Info, "Error fetching movies")
             return []
 
-    async def get_by_id(self, id):
+    @staticmethod
+    @app.route('/movie', methods=['GET'])
+    def get_movie_by_id():
+        id = request.args.get('id')
         Logger().write(LogVerbosity.Debug, "Get movie by id " + id)
-        response = await RequestFactory.make_request_async(MovieController.movies_api_path + "movie/" + id)
+        response = RequestFactory.make_request(MovieController.movies_api_path + "movie/" + id)
         data = json.loads(response.decode('utf-8'))
 
         seen = Database().get_history_for_id(id)

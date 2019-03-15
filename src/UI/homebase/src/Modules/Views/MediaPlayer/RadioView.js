@@ -36,7 +36,7 @@ class RadioView extends Component {
   }
 
   componentDidMount() {
-    axios.get(window.vars.apiBase + 'radio/get_radios').then(data => {
+    axios.get(window.vars.apiBase + 'radios').then(data => {
         console.log(data.data);
         this.setState({radios: data.data});
         if(this.viewRef.current) { this.viewRef.current.changeState(0); }

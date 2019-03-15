@@ -6,7 +6,6 @@ from Database.Database import Database
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
-from Webserver.Controllers.AuthController import AuthController
 
 
 class BaseHandler(tornado.web.RequestHandler):

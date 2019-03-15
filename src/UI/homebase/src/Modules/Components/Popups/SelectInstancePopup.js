@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Popup from "./Popup.js"
 import Button from "./../Button"
 
-import Socket from "./../../../Socket.js"
+import Socket from "./../../../Socket2.js"
 
 class SelectInstancePopup extends Component {
   constructor(props) {
@@ -24,6 +24,7 @@ class SelectInstancePopup extends Component {
   }
 
   slaveUpdate(subId, data){
+    console.log(data);
     this.setState({slaveData: data});
     if (!this.state.instance)
         this.setState({instance: data[0].id});

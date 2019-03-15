@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import axios from 'axios';
 
 import FooterLink from "./FooterLink.js";
-import Socket from './../../Socket.js';
+import Socket from './../../Socket2.js';
 
 import SvgImage from './../Components/SvgImage';
 import MediaProgress from './../Components/MediaProgress';
@@ -101,7 +101,7 @@ class Footer extends Component
     }
 
     pausePlayClick(instance, e){
-        axios.post(window.vars.apiBase + 'play/pause_resume_player?instance=' + instance.id);
+        axios.post(window.vars.apiBase + 'player/pause_resume?instance=' + instance.id);
         e.preventDefault();
       }
 
@@ -117,7 +117,7 @@ class Footer extends Component
 
       confirmStop(instance){
         this.props.functions.closePopup(this.stopPopup);
-        axios.post(window.vars.apiBase + 'play/stop_player?instance=' + instance.id );
+        axios.post(window.vars.apiBase + 'player/stop?instance=' + instance.id );
       }
 
     render () {

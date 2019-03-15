@@ -4,41 +4,44 @@ import sys
 import urllib.parse
 import urllib.request
 
+from flask import request
+
 from Database.Database import Database
 from Shared.Logger import Logger, LogVerbosity
+from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import to_JSON
 from Webserver.Models import FileStructure
-from Webserver.BaseHandler import BaseHandler
+from Webserver.APIController import app
 
 
-class HDController(BaseHandler):
+class HDController:
 
-    async def get(self, url):
+    # def get_drives(self):
+    #     if 'win' in sys.platform:
+    #         drive_list_command = subprocess.Popen('wmic logicaldisk get name,description', shell=True, stdout=subprocess.PIPE)
+    #         drive_list_request, err = drive_list_command.communicate()
+    #         drive_lines = drive_list_request.split(b'\n')
+    #         drives = []
+    #         for line in drive_lines:
+    #             line = line.decode('utf8')
+    #             index = line.find(':')
+    #             if index == -1:
+    #                 continue
+    #             drives.append(line[index - 1] + ":/")
+    #         return json.dumps(drives)
+    #     elif 'linux' in sys.platform:
+    #         return json.dumps(["/"])
+
+    @staticmethod
+    @app.route('/hd', methods=['GET'])
+    def get_directory():
+        path = request.args.get('path')
         if Settings.get_bool("slave"):
-            self.write(await self.request_master_async(self.request.uri))
-        elif url == "drives":
-            self.write(self.get_drives())
-        elif url == "directory":
-            self.write(self.get_directory(self.get_argument("path")))
+            reroute = str(Settings.get_string("master_ip")) + '/hd?path='+path
+            Logger().write(LogVerbosity.Debug, "Sending request to master at " + reroute)
+            return RequestFactory.make_request(reroute, "GET")
 
-    def get_drives(self):
-        if 'win' in sys.platform:
-            drive_list_command = subprocess.Popen('wmic logicaldisk get name,description', shell=True, stdout=subprocess.PIPE)
-            drive_list_request, err = drive_list_command.communicate()
-            drive_lines = drive_list_request.split(b'\n')
-            drives = []
-            for line in drive_lines:
-                line = line.decode('utf8')
-                index = line.find(':')
-                if index == -1:
-                    continue
-                drives.append(line[index - 1] + ":/")
-            return json.dumps(drives)
-        elif 'linux' in sys.platform:
-            return json.dumps(["/"])
-
-    def get_directory(self, path):
         if sys.platform == "win32":
             path = "C:" + path
 

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import Socket from './../../../Socket.js';
+import Socket from './../../../Socket2.js';
 
 import { InfoGroup } from './../../Components/InfoGroup';
 import ViewLoader from './../../Components/ViewLoader';
@@ -55,14 +55,14 @@ class LightingView extends Component {
     value = Math.round(value);
     console.log("Change " + group.name + " to " + value);
     this.updateGroup(group.id, "dimmer", value);
-    axios.post(window.vars.apiBase + 'lighting/set_group_dimmer?group='+group.id+'&dimmer=' + value);
+    axios.post(window.vars.apiBase + 'lighting/group_dimmer?group='+group.id+'&dimmer=' + value);
   }
 
   toggleGroup(group, value)
   {
     console.log("Change " + group.name + " to " + value);
     this.updateGroup(group.id, "state", value);
-    axios.post(window.vars.apiBase + 'lighting/set_group_state?group='+group.id+'&state=' + value);
+    axios.post(window.vars.apiBase + 'lighting/group_state?group='+group.id+'&state=' + value);
   }
 
   lightDimmerChange(group, light, value)
@@ -70,7 +70,7 @@ class LightingView extends Component {
     value = Math.round(value);
     console.log("Change " + light.name + " dimmer to " + value);
     this.updateLight(group.id, light.id, "dimmer", value);
-    axios.post(window.vars.apiBase + 'lighting/set_light_dimmer?light='+light.id+'&dimmer=' + value);
+    axios.post(window.vars.apiBase + 'lighting/light_dimmer?light='+light.id+'&dimmer=' + value);
   }
 
   lightWarmthChange(group, light, value)
@@ -78,14 +78,14 @@ class LightingView extends Component {
     value = Math.round(value);
     console.log("Change " + light.name + " warmth to " + value);
     this.updateLight(group.id, light.id, "color_temp", value);
-    axios.post(window.vars.apiBase + 'lighting/set_light_warmth?light='+light.id+'&warmth=' + value);
+    axios.post(window.vars.apiBase + 'lighting/light_warmth?light='+light.id+'&warmth=' + value);
   }
 
   toggleLight(group, light, value)
   {
     console.log("Change " + light.name + " to " + value);
     this.updateLight(group.id, light.id, "state", value);
-    axios.post(window.vars.apiBase + 'lighting/set_light_state?light='+light.id+'&state=' + value);
+    axios.post(window.vars.apiBase + 'lighting/light_state?light='+light.id+'&state=' + value);
   }
 
   groupTitleChange(group, newTitle)
@@ -95,7 +95,7 @@ class LightingView extends Component {
 
   groupTitleSave(group, newTitle)
   {
-      axios.post(window.vars.apiBase + 'lighting/set_group_name?group='+group.id+'&name=' + encodeURIComponent(newTitle));
+      axios.post(window.vars.apiBase + 'lighting/group_name?group='+group.id+'&name=' + encodeURIComponent(newTitle));
   }
 
   lightTitleChange(group, light, newTitle)
@@ -118,7 +118,7 @@ class LightingView extends Component {
 
   lightTitleSave(light, newTitle)
   {
-      axios.post(window.vars.apiBase + 'lighting/set_light_name?light='+light.id+'&name=' + encodeURIComponent(newTitle));
+      axios.post(window.vars.apiBase + 'lighting/light_name?light='+light.id+'&name=' + encodeURIComponent(newTitle));
   }
 
   toggleGroupDetails(group)
@@ -128,7 +128,7 @@ class LightingView extends Component {
 
     if(group.showDetails){
         console.log("request light data for group " + group.name);
-        axios.get(window.vars.apiBase + 'lighting/get_group_lights?group='+group.id).then(
+        axios.get(window.vars.apiBase + 'lighting/group_lights?group='+group.id).then(
             (data) => { console.log(data.data); return this.updateGroup(group.id, "lights", data.data); },
             (err) => { console.log (err) }
         )

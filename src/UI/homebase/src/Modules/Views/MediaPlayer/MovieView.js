@@ -22,7 +22,7 @@ class MovieView extends Component {
   }
 
   componentDidMount() {
-    axios.get(window.vars.apiBase + 'movies/get_movie?id=' + this.props.match.params.id).then(data => {
+    axios.get(window.vars.apiBase + 'movie?id=' + this.props.match.params.id).then(data => {
         if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         console.log(data.data);
         this.props.functions.changeTitle(data.data.title);

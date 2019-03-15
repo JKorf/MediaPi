@@ -4,15 +4,13 @@ from datetime import datetime
 from subprocess import call
 import sys
 import time
-import traceback
-
-from Updater import Updater
 
 os.chdir(os.path.dirname(__file__))
 
+from Updater import Updater
+from Webserver.APIController import APIController
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
-from Webserver.TornadoServer import TornadoServer
 from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Streaming.StreamListener import StreamListener
 
@@ -47,8 +45,9 @@ class Program:
         self.init_sound()
         self.init_folders()
 
-        self.server = TornadoServer()
-        self.server.start()
+        APIController().start()
+        # self.server = TornadoServer()
+        # self.server.start()
         self.version = datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S")
 
         LightManager().init()
@@ -112,6 +111,7 @@ class Program:
     @staticmethod
     def handle_exception(exc_type, exc_value, exc_traceback):
         Logger().write_error(exc_value, "Unhandled exception")
+        Logger().stop()
         sys.exit(1)
 
 
@@ -119,3 +119,5 @@ try:
     Program()
 except Exception as e:
     Logger().write_error(e, "Exception during startup")
+    Logger().stop()
+

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 
 import SelectMediaPopup from './Components/Popups/SelectMediaPopup.js';
 import ContinueNextEpisodePopup from './Components/Popups/ContinueNextEpisodePopup.js';
-import Socket from './../Socket.js';
+import Socket from './../Socket2.js';
 
 class PopupController extends Component {
   constructor(props) {
@@ -16,51 +16,58 @@ class PopupController extends Component {
     this.cancelMediaSelect = this.cancelMediaSelect.bind(this);
 
     this.continueNextEpisode = this.continueNextEpisode.bind(this);
-    this.cancelNextEpisode = this.cancelNextEpisode.bind(this);
   }
 
   componentDidMount() {
     Socket.addRequestHandler("SelectMediaFile", this.showSelectMediaFile);
     Socket.addRequestHandler("SelectNextEpisode", this.showContinueNextEpisode);
     Socket.addRequestHandler("Test", this.test);
+    Socket.addRequestHandler("Test2", this.test2);
+    Socket.addRequestHandler("Test3", this.test3);
+    Socket.getCurrentRequests();
   }
 
   componentWillUnmount(){
   }
 
-  test(id, show, instance_id, data)
+  test(id, instance_id, data)
   {
-      Socket.response(id, instance_id, false);
+      Socket.respond(id, false);
   }
 
-  showSelectMediaFile(id, show, instance_id, files){
-    this.setState({mediaSelect: {show: show, files: files[0], id: id, instanceId: instance_id}});
+  test2(id, instance_id, data)
+  {
+  }
+
+  test3(id, instance_id, data)
+  {
+      Socket.respond(id, {result: "Test"});
+  }
+
+  showSelectMediaFile(id, files){
+    console.log(files);
+    this.setState({mediaSelect: {show: true, files: files, id: id}});
   }
 
   selectMediaFile(file, start_from){
     this.setState({mediaSelect: {show: false}});
-    Socket.response(this.state.mediaSelect.id, this.state.mediaSelect.instanceId, [file.path, start_from]);
+    Socket.respond(this.state.mediaSelect.id, [file.path, start_from]);
   }
 
   cancelMediaSelect(){
     this.setState({mediaSelect: {show: false}});
-    Socket.response(this.state.mediaSelect.id, this.state.mediaSelect.instanceId, [null, 0])
+    Socket.respond(this.state.mediaSelect.id, [null, 0])
   }
 
-  showContinueNextEpisode(id, show, instance_id, title){
-    this.setState({continueNextEpisode: {show: show, title: title, id: id, instanceId: instance_id}});
+  showContinueNextEpisode(id, title){
+    console.log(title)
+    this.setState({continueNextEpisode: {show: true, title: title, id: id}});
   }
 
-  continueNextEpisode()
+  continueNextEpisode(continue_next)
   {
     this.setState({continueNextEpisode: {show: false}});
-    Socket.response(this.state.continueNextEpisode.id, this.state.continueNextEpisode.instanceId, [true])
-  }
-
-  cancelNextEpisode()
-  {
-      this.setState({continueNextEpisode: {show: false}});
-      Socket.response(this.state.continueNextEpisode.id, this.state.continueNextEpisode.instanceId, [false])
+    Socket.respond(this.state.continueNextEpisode.id, continue_next)
   }
 
   showPopup(popup)
@@ -112,7 +119,7 @@ class PopupController extends Component {
         }
 
         { this.state.continueNextEpisode.show === true &&
-            <ContinueNextEpisodePopup title={this.state.continueNextEpisode.title} onSelect={this.continueNextEpisode} onCancel={this.cancelNextEpisode} />
+            <ContinueNextEpisodePopup title={this.state.continueNextEpisode.title} onSelect={() => this.continueNextEpisode(true)} onCancel={() => this.continueNextEpisode(false)} />
         }
         {  this.state.currentPopup &&
             this.state.currentPopup

@@ -23,6 +23,7 @@ from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import current_time, Singleton, write_size
+from Webserver.Controllers.Websocket2.WebsocketController import WebsocketController
 
 
 class MediaManager(metaclass=Singleton):
@@ -53,6 +54,7 @@ class MediaManager(metaclass=Singleton):
         VLCPlayer().player_state.register_callback(self.player_state_change)
         self.torrent_observer = CustomThread(self.observe_torrent, "Torrent observer")
         self.torrent_observer.start()
+        self.next_epi_thread = None
 
     def check_size(self):
         if self.torrent is not None:
@@ -163,8 +165,8 @@ class MediaManager(metaclass=Singleton):
         if collect:
             gc.collect()
 
-    def play_next_episode(self, should_play):
-        if should_play:
+    def play_next_episode(self, continue_next):
+        if continue_next:
             if self.next_episode_manager.next_type == "File":
                 self.start_file(self.next_episode_manager.next_path, 0)
             elif self.next_episode_manager.next_type == "Show":
@@ -193,7 +195,7 @@ class MediaManager(metaclass=Singleton):
                 file.played_for = seen.played_for
                 file.play_length = seen.length
 
-        EventManager.throw_event(EventType.ClientRequest, [self.set_media_file, self.stop_play, 1000 * 60 * 30, "SelectMediaFile", [files]])
+        WebsocketController.request_cb("SelectMediaFile", self.set_media_file, 1000 * 60 * 30, files)
 
     def set_media_file(self, file, position):
         if not file:
@@ -240,15 +242,15 @@ class MediaManager(metaclass=Singleton):
 
         if old_state.state != new_state.state and new_state.state == PlayerState.Playing:
             self.update_subtitles(new_state)
-            next_episode_thread = CustomThread(lambda: self.next_episode_manager.check_next_episode(self.media_data, self.torrent), "Check next episode", [])
-            next_episode_thread.start()
+            self.next_epi_thread = CustomThread(lambda: self.next_episode_manager.check_next_episode(self.media_data, self.torrent), "Check next episode", [])
+            self.next_epi_thread.start()
 
         if old_state.state != new_state.state and new_state.state == PlayerState.Nothing:
             self.history_id = 0
             self.media_data.reset()
             self.stop_torrent()
             if self.play_length != 0 and self.play_position / self.play_length > 0.9:
-                self.next_episode_manager.notify_next_episode(self.play_next_episode, self.next_episode_manager.reset)
+                self.next_episode_manager.notify_next_episode(self.play_next_episode)
             else:
                 self.next_episode_manager.reset()
             self.play_position = 0

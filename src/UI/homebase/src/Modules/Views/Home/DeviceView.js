@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import Socket from './../../../Socket.js';
+import Socket from './../../../Socket2.js';
 
 import SvgImage from './../../Components/SvgImage';
 import Button from './../../Components/Button';
@@ -90,7 +90,7 @@ class DeviceView extends Component {
   }
 
   getLogFiles(){
-    axios.get(window.vars.apiBase + 'util/get_log_files').then((data) => {
+    axios.get(window.vars.apiBase + 'util/logs').then((data) => {
         this.setState({logFiles: data.data});
     });
   }
@@ -98,7 +98,7 @@ class DeviceView extends Component {
   openLog(file)
   {
     this.setState({loading: true});
-    axios.get(window.vars.apiBase + 'util/get_log_file?file=' + encodeURIComponent(file)).then((data) => {
+    axios.get(window.vars.apiBase + 'util/log_file?file=' + encodeURIComponent(file)).then((data) => {
         console.log(data);
         var html = data.data.replace(/\r\n/g, '<br />');
         var newWindow = window.open();
@@ -120,7 +120,7 @@ class DeviceView extends Component {
   checkUpdates()
   {
     this.setState({loading: true});
-    axios.get(window.vars.apiBase + 'util/check_update?instance=' + this.props.match.params.id).then((data) => {
+    axios.get(window.vars.apiBase + 'util/update?instance=' + this.props.match.params.id).then((data) => {
         this.setState({loading: false});
         if(data.data.available)
         {
@@ -159,7 +159,7 @@ class DeviceView extends Component {
     this.setState({state: this.states[0]});
     e.preventDefault();
 
-    axios.post(window.vars.apiBase + 'play/pause_resume_player?instance=' + this.props.match.params.id)
+    axios.post(window.vars.apiBase + 'player/pause_resume?instance=' + this.props.match.params.id)
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -176,7 +176,7 @@ class DeviceView extends Component {
 
   confirmStop(e){
     this.setState({state: this.states[0]});
-    axios.post(window.vars.apiBase + 'play/stop_player?instance=' + this.props.match.params.id)
+    axios.post(window.vars.apiBase + 'player/stop?instance=' + this.props.match.params.id)
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -188,7 +188,7 @@ class DeviceView extends Component {
     var playerData = this.state.playerData;
     playerData.playing_for = newValue;
     this.setState({state: this.states[0], playerData: playerData});
-    axios.post(window.vars.apiBase + 'play/seek?instance=' + this.props.match.params.id + "&position=" + Math.round(newValue))
+    axios.post(window.vars.apiBase + 'player/seek?instance=' + this.props.match.params.id + "&position=" + Math.round(newValue))
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -200,7 +200,7 @@ class DeviceView extends Component {
     var playerData = this.state.playerData;
     playerData.volume = value;
     this.setState({state: this.states[0], playerData: playerData});
-    axios.post(window.vars.apiBase + 'play/change_volume?instance=' + this.props.match.params.id + "&volume=" + Math.round(value))
+    axios.post(window.vars.apiBase + 'player/volume?instance=' + this.props.match.params.id + "&volume=" + Math.round(value))
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -212,7 +212,7 @@ class DeviceView extends Component {
     var playerData = this.state.playerData;
     playerData.sub_track = value;
     this.setState({state: this.states[0], playerData: playerData});
-    axios.post(window.vars.apiBase + 'play/change_subtitle?instance=' + this.props.match.params.id + "&track=" + value)
+    axios.post(window.vars.apiBase + 'player/subtitle?instance=' + this.props.match.params.id + "&track=" + value)
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -224,7 +224,7 @@ class DeviceView extends Component {
     var playerData = this.state.playerData;
     playerData.audio_track = value;
     this.setState({state: this.states[0], playerData: playerData});
-    axios.post(window.vars.apiBase + 'play/change_audio?instance=' + this.props.match.params.id + "&track=" + value)
+    axios.post(window.vars.apiBase + 'player/audio?instance=' + this.props.match.params.id + "&track=" + value)
     .then(
         () => this.setState({state: this.states[1]}),
         ()=> this.setState({state: this.states[1]})
@@ -236,7 +236,7 @@ class DeviceView extends Component {
     var playerData = this.state.playerData;
     playerData.sub_delay = value;
     this.setState({playerData: playerData});
-    axios.post(window.vars.apiBase + 'play/change_sub_delay?instance=' + this.props.match.params.id + "&delay=" + Math.round(value));
+    axios.post(window.vars.apiBase + 'player/sub_delay?instance=' + this.props.match.params.id + "&delay=" + Math.round(value));
   }
 
   writeSize(value){
