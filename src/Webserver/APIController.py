@@ -57,7 +57,7 @@ class APIController(metaclass=Singleton):
         WebsocketController.init()
         APIController.slaves.add_slave(SlaveClient(1, Settings.get_string("name"), None))
 
-        socketio.run(app, port=int(Settings.get_string("api_port")))
+        socketio.run(app, host= '0.0.0.0', port=int(Settings.get_string("api_port")))
 
     @staticmethod
     @app.before_request
