@@ -8,10 +8,10 @@ from Database.Database import Database
 from Shared.Logger import LogVerbosity, Logger
 from Shared.Threading import CustomThread
 from Shared.Util import current_time, to_JSON
-from Webserver.APIController import socketio, APIController
+from Webserver.APIController import socketio, APIController, WebsocketClient
 
 
-class WebsocketController:
+class UIWebsocketController:
     clients = []
     last_data = dict()
     requests = []
@@ -25,14 +25,14 @@ class WebsocketController:
         from Shared.State import StateManager
         from Shared.Stats import Stats
 
-        APIController.slaves.register_callback(lambda old, new: WebsocketController.broadcast("slaves", new.data))
-        LightManager().light_state.register_callback(lambda old, new: WebsocketController.broadcast("lights", new))
-        StateManager().state_data.register_callback(lambda old, new: WebsocketController.broadcast("1.state", new))
-        VLCPlayer().player_state.register_callback(lambda old, new: WebsocketController.broadcast("1.player", new))
-        MediaManager().media_data.register_callback(lambda old, new: WebsocketController.broadcast("1.media", new))
-        MediaManager().torrent_data.register_callback(lambda old, new: WebsocketController.broadcast("1.torrent", new))
-        Stats().cache.register_callback(lambda old, new: WebsocketController.broadcast("1.stats", new))
-        Updater().update_state.register_callback(lambda old, new: WebsocketController.broadcast("1.update", new))
+        APIController.slaves.register_callback(lambda old, new: UIWebsocketController.broadcast("slaves", new.data))
+        LightManager().light_state.register_callback(lambda old, new: UIWebsocketController.broadcast("lights", new))
+        StateManager().state_data.register_callback(lambda old, new: UIWebsocketController.broadcast("1.state", new))
+        VLCPlayer().player_state.register_callback(lambda old, new: UIWebsocketController.broadcast("1.player", new))
+        MediaManager().media_data.register_callback(lambda old, new: UIWebsocketController.broadcast("1.media", new))
+        MediaManager().torrent_data.register_callback(lambda old, new: UIWebsocketController.broadcast("1.torrent", new))
+        Stats().cache.register_callback(lambda old, new: UIWebsocketController.broadcast("1.stats", new))
+        Updater().update_state.register_callback(lambda old, new: UIWebsocketController.broadcast("1.update", new))
 
         # t = CustomThread(WebsocketController.test, "test", [])
         # t.start()
@@ -41,18 +41,18 @@ class WebsocketController:
     def test():
         time.sleep(3)
         start = current_time()
-        request = WebsocketController.request("Test", [])
+        request = UIWebsocketController.request("Test", [])
         response = request.wait(10)
         t = current_time() - start
         Logger().write(LogVerbosity.Debug, "Test 1 completed in " + str(t) + "ms, data: " + str(response))
 
         start = current_time()
-        request = WebsocketController.request("Test2", [])
+        request = UIWebsocketController.request("Test2", [])
         response = request.wait(10)
         t = current_time() - start
         Logger().write(LogVerbosity.Debug, "Test 2 completed in " + str(t) + "ms, data: " + str(response))
 
-        WebsocketController.request_cb("Test3", WebsocketController.test_result, 10, [])
+        UIWebsocketController.request_cb("Test3", UIWebsocketController.test_result, 10, [])
 
     @staticmethod
     def test_result(response):
@@ -61,21 +61,21 @@ class WebsocketController:
     @staticmethod
     @socketio.on('connect', namespace="/UI")
     def connected():
-        WebsocketController.clients.append(UIClient(request.sid, current_time()))
+        UIWebsocketController.clients.append(WebsocketClient(request.sid, current_time()))
         Logger().write(LogVerbosity.Info, "UI client connected")
 
     @staticmethod
     @socketio.on('disconnect', namespace="/UI")
     def disconnected():
-        client = [x for x in WebsocketController.clients if x.sid == request.sid][0]
-        WebsocketController.clients.remove(client)
+        client = [x for x in UIWebsocketController.clients if x.sid == request.sid][0]
+        UIWebsocketController.clients.remove(client)
         Logger().write(LogVerbosity.Info, "UI client disconnected")
 
     @staticmethod
     @socketio.on('init', namespace="/UI")
     def init_client(client_id, session_key):
-        Logger().write(LogVerbosity.Info, "Init: " + client_id + ", " + session_key)
-        client = [x for x in WebsocketController.clients if x.sid == request.sid][0]
+        Logger().write(LogVerbosity.Info, "Init UI: " + client_id + ", " + session_key)
+        client = [x for x in UIWebsocketController.clients if x.sid == request.sid][0]
 
         client_key = APIController.get_salted(client_id)
         client.authenticated = Database().check_session_key(client_key, session_key)
@@ -85,7 +85,7 @@ class WebsocketController:
     @staticmethod
     @socketio.on('get_current_requests', namespace="/UI")
     def get_current_requests():
-        for client_request in WebsocketController.requests:
+        for client_request in UIWebsocketController.requests:
             socketio.emit("request", (client_request.request_id, client_request.topic, client_request.data), namespace="/UI", room=request.sid)
 
     @staticmethod
@@ -93,8 +93,8 @@ class WebsocketController:
     def subscribe(topic):
         Logger().write(LogVerbosity.Info, "UI client subscribing to " + topic)
         join_room(topic)
-        if topic in WebsocketController.last_data:
-            emit("update", (topic, WebsocketController.last_data[topic]), namespace="/UI", room=request.sid)
+        if topic in UIWebsocketController.last_data:
+            emit("update", (topic, UIWebsocketController.last_data[topic]), namespace="/UI", room=request.sid)
 
     @staticmethod
     @socketio.on('unsubscribe', namespace="/UI")
@@ -106,7 +106,7 @@ class WebsocketController:
     @socketio.on('response', namespace="/UI")
     def response(request_id, args):
         Logger().write(LogVerbosity.Debug, "UI client response for id " + str(request_id) + ": " + str(args))
-        requests = [x for x in WebsocketController.requests if x.request_id == request_id]
+        requests = [x for x in UIWebsocketController.requests if x.request_id == request_id]
         if len(requests) == 0:
             Logger().write(LogVerbosity.Debug, "No pending request found for id " + str(request_id))
             return
@@ -116,20 +116,20 @@ class WebsocketController:
     @staticmethod
     def broadcast(topic, data):
         data = to_JSON(data)
-        WebsocketController.last_data[topic] = data
+        UIWebsocketController.last_data[topic] = data
         Logger().write(LogVerbosity.All, "Sending update: " + topic)
         socketio.emit("update", (topic, data), namespace="/UI", room=topic)
 
     @staticmethod
     def request(topic, *args):
         data = to_JSON(args)
-        return WebsocketController._send_request(topic, data)
+        return UIWebsocketController._send_request(topic, data)
 
     @staticmethod
     def request_cb(topic, callback, timeout, *args):
         data = to_JSON(args)
-        request = WebsocketController._send_request(topic, data)
-        thread = CustomThread(WebsocketController.wait_for_request_response, "Request callback " + topic, [request, timeout, callback])
+        request = UIWebsocketController._send_request(topic, data)
+        thread = CustomThread(UIWebsocketController.wait_for_request_response, "Request callback " + topic, [request, timeout, callback])
         thread.start()
 
     @staticmethod
@@ -146,15 +146,15 @@ class WebsocketController:
     def _send_request(topic, data):
         Logger().write(LogVerbosity.Debug, "Sending request: " + topic +", data: " + str(data))
         request_id = APIController().next_id()
-        request = Request(request_id, topic, data, WebsocketController._complete_request)
-        WebsocketController.requests.append(request)
+        request = Request(request_id, topic, data, UIWebsocketController._complete_request)
+        UIWebsocketController.requests.append(request)
         socketio.emit("request", (request_id, topic, data), namespace="/UI")
         return request
 
     @staticmethod
     def _complete_request(request):
-        WebsocketController.requests.remove(request)
-        Logger().write(LogVerbosity.Debug, "Request done, now " + str(len(WebsocketController.requests)) + " requests open")
+        UIWebsocketController.requests.remove(request)
+        Logger().write(LogVerbosity.Debug, "Request done, now " + str(len(UIWebsocketController.requests)) + " requests open")
 
 
 class Request:
@@ -176,13 +176,3 @@ class Request:
         self.response = data
         self.on_complete(self)
         self.evnt.set()
-
-
-class UIClient:
-
-    def __init__(self, sid, connect_time):
-        self.sid = sid
-        self.connect_time = connect_time
-        self.authenticated = False
-
-

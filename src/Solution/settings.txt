@@ -7,7 +7,7 @@ serie_api=https://tv-v2.api-fetch.website/
 movie_api=https://tv-v2.api-fetch.website/
 base_folder=C:/home/pi/Scripts/
 tpb_api=https://uktpb.net/
-master_ip=http://127.0.0.1
+master_ip=127.0.0.1
 api_port=50021
 tradfri_hub_ip=192.168.2.73
 

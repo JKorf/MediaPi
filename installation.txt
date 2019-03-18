@@ -16,7 +16,7 @@
 
 *  Install dependencies:
 sudo apt-get install vlc libxml2-dev libxslt-dev cec-utils pillow (nginx for master)
-sudo pip3 install flask flask_cors flask_socketio psutil lxml purl pytradfri toonapilib websocket
+sudo pip3 install flask flask_cors flask_socketio socketIO-client psutil lxml purl pytradfri toonapilib websocket
 
 *  Adjust boot config: sudo nano /boot/config.txt
 	hdmi_group=1

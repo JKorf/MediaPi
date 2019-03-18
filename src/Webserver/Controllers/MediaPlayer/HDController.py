@@ -38,7 +38,7 @@ class HDController:
     def get_directory():
         path = request.args.get('path')
         if Settings.get_bool("slave"):
-            reroute = str(Settings.get_string("master_ip")) + '/hd?path='+path
+            reroute = str("http://" + Settings.get_string("master_ip")) + '/hd?path='+path
             Logger().write(LogVerbosity.Debug, "Sending request to master at " + reroute)
             return RequestFactory.make_request(reroute, "GET")
 

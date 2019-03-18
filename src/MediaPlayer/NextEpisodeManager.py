@@ -10,7 +10,7 @@ from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import Singleton
 from Webserver.Controllers.MediaPlayer.ShowController import ShowController
-from Webserver.Controllers.Websocket2.WebsocketController import WebsocketController
+from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
 from Webserver.Models import FileStructure
 
 
@@ -40,7 +40,7 @@ class NextEpisodeManager(metaclass=Singleton):
     def notify_next_episode(self, callback):
         if self.next_type is not None:
             Logger().write(LogVerbosity.Info, "Can continue with next episode: " + self.next_title)
-            WebsocketController.request_cb("SelectNextEpisode", callback, 1000 * 60, self.next_title)
+            UIWebsocketController.request_cb("SelectNextEpisode", callback, 1000 * 60, self.next_title)
 
     def check_next_episode(self, media_data, torrent):
         if media_data.type == "Radio" or media_data.type == "YouTube":
@@ -112,7 +112,7 @@ class NextEpisodeManager(metaclass=Singleton):
 
         dir_name = os.path.dirname(media_data.url)
         if Settings.get_bool("slave"):
-            data = RequestFactory.make_request(Settings.get_string("master_ip") + ":" + Settings.get_string("api_port") + "/hd/directory?path=" + dir_name, "GET")
+            data = RequestFactory.make_request("http://" + Settings.get_string("master_ip") + ":" + Settings.get_string("api_port") + "/hd/directory?path=" + dir_name, "GET")
             if not data:
                 return
             result = json.loads(data.decode("utf8"))

@@ -23,7 +23,7 @@ from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import current_time, Singleton, write_size
-from Webserver.Controllers.Websocket2.WebsocketController import WebsocketController
+from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
 
 
 class MediaManager(metaclass=Singleton):
@@ -65,7 +65,7 @@ class MediaManager(metaclass=Singleton):
     def start_file(self, url, time):
         actual_url = url
         if Settings.get_bool("slave"):
-            actual_url = Settings.get_string("master_ip") + ":50015/file/" + urllib.parse.quote(url)
+            actual_url = "http://" + Settings.get_string("master_ip") + ":50015/file/" + urllib.parse.quote(url)
 
         self.stop_play()
         VLCPlayer().play(actual_url, time)
@@ -195,7 +195,7 @@ class MediaManager(metaclass=Singleton):
                 file.played_for = seen.played_for
                 file.play_length = seen.length
 
-        WebsocketController.request_cb("SelectMediaFile", self.set_media_file, 1000 * 60 * 30, files)
+        UIWebsocketController.request_cb("SelectMediaFile", self.set_media_file, 1000 * 60 * 30, files)
 
     def set_media_file(self, file, position):
         if not file:
@@ -299,7 +299,7 @@ class MediaManager(metaclass=Singleton):
         return loop.run_until_complete(self.request_master_async(url))
 
     async def request_master_async(self, url):
-        reroute = str(Settings.get_string("master_ip")) + url
+        reroute = "http://" + Settings.get_string("master_ip") + url
         Logger().write(LogVerbosity.Debug, "Sending request to master at " + reroute)
         return await RequestFactory.make_request_async(reroute, "GET")
 

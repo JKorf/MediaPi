@@ -37,10 +37,14 @@ class APIController(metaclass=Singleton):
             flask_logger = logging.getLogger('werkzeug')
             flask_logger.setLevel(logging.INFO)
 
-        thread = CustomThread(self.internal_start, "API controller", [])
-        thread.start()
+        if Settings.get_bool("slave"):
+            thread = CustomThread(self.internal_start_slave, "API controller", [])
+            thread.start()
+        else:
+            thread = CustomThread(self.internal_start_master, "API controller", [])
+            thread.start()
 
-    def internal_start(self):
+    def internal_start_master(self):
         from Webserver.Controllers.AuthController import AuthController
         from Webserver.Controllers.MediaPlayer.MovieController import MovieController
         from Webserver.Controllers.MediaPlayer.ShowController import ShowController
@@ -52,17 +56,28 @@ class APIController(metaclass=Singleton):
         from Webserver.Controllers.LightController import LightController
         from Webserver.Controllers.ToonController import ToonController
         from Webserver.Controllers.UtilController import UtilController
-        from Webserver.Controllers.Websocket2.WebsocketController import WebsocketController
+        from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
+        from Webserver.Controllers.Websocket2.SlaveWebsocketController import SlaveWebsocketController
 
-        WebsocketController.init()
+        UIWebsocketController.init()
+        SlaveWebsocketController.init()
         APIController.slaves.add_slave(SlaveClient(1, Settings.get_string("name"), None))
 
-        socketio.run(app, host='0.0.0.0', port=int(Settings.get_string("api_port")))
+        socketio.run(app, host='0.0.0.0', port=int(Settings.get_string("api_port")), log_output=True)
+
+    def internal_start_slave(self):
+        from Webserver.Controllers.Websocket2.SlaveClientController import SlaveClientController
+
+        SlaveClientController.init()
+        SlaveClientController.connect()
 
     @staticmethod
     @app.before_request
     def before_req():
-        if request.method == "OPTIONS" or request.path == "/auth/login" or request.path.startswith("/ws"):
+        if request.method == "OPTIONS" \
+                or request.path == "/auth/login" \
+                or request.path.startswith("/ws")\
+                or request.path.startswith("/Slave"):
             return
 
         session_key = request.headers.get('Session-Key', None)
@@ -122,6 +137,7 @@ class SlaveClient:
     def get_data(self, name):
         return self._data_registrations[name].data
 
+
 class SlaveCollection(Observable):
 
     def __init__(self):
@@ -147,3 +163,12 @@ class SlaveCollection(Observable):
         if len(slave) > 0:
             return slave[0]
         return None
+
+
+class WebsocketClient:
+
+    def __init__(self, sid, connect_time):
+        self.sid = sid
+        self.connect_time = connect_time
+        self.authenticated = False
+
