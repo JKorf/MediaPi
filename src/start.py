@@ -68,7 +68,7 @@ class Program:
         Logger().write(LogVerbosity.Info, "Pi: " + str(sys.platform == "linux" or sys.platform == "linux2"))
 
         Logger().write(LogVerbosity.Important, "Started")
-        if sys.platform == "linux" or sys.platform == "linux2":
+        if Settings.get_bool("UI"):
             self.gui = App.initialize()
 
         else:

@@ -1,6 +1,7 @@
 # Instance config
 name=Woonkamer
 slave=False
+UI=False
 
 # Paths
 serie_api=https://tv-v2.api-fetch.website/
