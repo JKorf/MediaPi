@@ -12,7 +12,7 @@ export default class WS {
     }
 
     static connect(){
-        this.socket = openSocket(window.vars.websocketBase);
+        this.socket = openSocket(window.vars.websocketBase, { transports: ['websocket'] });
         this.socket.on('connect', () => {
             console.log("Websocket connected");
             this.socket.emit('init', localStorage.getItem('Client-ID'), sessionStorage.getItem('Session-Key'), (data) => this.processAuthResult(data));

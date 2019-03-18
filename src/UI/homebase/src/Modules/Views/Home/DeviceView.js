@@ -98,7 +98,7 @@ class DeviceView extends Component {
   openLog(file)
   {
     this.setState({loading: true});
-    axios.get(window.vars.apiBase + 'util/log_file?file=' + encodeURIComponent(file)).then((data) => {
+    axios.get(window.vars.apiBase + 'util/log?file=' + encodeURIComponent(file)).then((data) => {
         console.log(data);
         var html = data.data.replace(/\r\n/g, '<br />');
         var newWindow = window.open();

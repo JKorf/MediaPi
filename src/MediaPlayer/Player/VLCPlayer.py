@@ -92,7 +92,8 @@ class VLCPlayer(metaclass=Singleton):
 
     def stop(self):
         Logger().write(LogVerbosity.All, "Player stop")
-        self.__player.stop()
+        thread = CustomThread(lambda: self.__player.stop(), "Stopping VLC player")
+        thread.start()
 
     def set_volume(self, vol):
         Logger().write(LogVerbosity.Debug, "Player set volume " + str(vol))

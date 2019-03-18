@@ -4,6 +4,8 @@ import sys
 import urllib.parse
 from threading import Lock
 
+import time
+
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
@@ -222,13 +224,15 @@ class StreamListener:
             if data is None:
                 try:
                     socket.settimeout(self.wait_for_data)
-                    socket.recv(1)
+                    recd = socket.recv(1)
                 except OSError as e:
                     if e.args[0] != 'timed out':
                         Logger().write(LogVerbosity.Debug, self.name + " socket no longer open 3: " + str(type(e)) + "" + str(requested_byte) + ", " + str(length))
                         socket.close()
                         self.sockets_writing_data.remove(data_writer)
                         return
+
+                time.sleep(0.1)
                 continue
 
             socket.settimeout(None)
