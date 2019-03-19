@@ -61,7 +61,9 @@ class App(tk.Frame):
         App.root = tk.Tk()
         App.root.config(cursor="none")
         App(App.root).pack(side="top", fill="both", expand=True)
-        App.root.mainloop()
+        while True:
+            App.root.update()
+            time.sleep(0.01)
 
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent)
