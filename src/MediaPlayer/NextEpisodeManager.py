@@ -1,11 +1,8 @@
 import json
 import os
 
-import asyncio
-
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared.Logger import Logger, LogVerbosity
-from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import Singleton
 from Webserver.APIController import APIController
@@ -60,14 +57,7 @@ class NextEpisodeManager(metaclass=Singleton):
             Logger().write(LogVerbosity.Debug, "No next episode of show, season/epi not parsed")
             return
 
-        loop = asyncio.get_event_loop()
-        raw_data = loop.run_until_complete(ShowController.get_by_id(media_data.id))
-
-        if raw_data is None:
-            Logger().write(LogVerbosity.Debug, "No next episode of show, request failed")
-            return
-
-        show = json.loads(raw_data.decode("utf-8"))
+        show = ShowController.get_by_id_internal(media_data.id)
         next_epi = [x for x in show["episodes"] if x["season"] == season and x["episode"] == epi + 1]
         if len(next_epi) == 0:
             Logger().write(LogVerbosity.Debug, "No next episode of show, request returned no results for next epi")

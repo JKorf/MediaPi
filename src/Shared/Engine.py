@@ -1,4 +1,3 @@
-import asyncio
 import inspect
 from time import sleep
 
@@ -47,8 +46,7 @@ class Engine:
         self.thread.start()
 
     def add_work_item(self, name, interval, work_item, initial_invoke=True):
-        is_async = inspect.iscoroutinefunction(work_item)
-        self.work_items.append(EngineWorkItem(name, interval, work_item, initial_invoke, is_async))
+        self.work_items.append(EngineWorkItem(name, interval, work_item, initial_invoke))
 
     def stop(self):
         self.running = False
@@ -67,10 +65,7 @@ class Engine:
                 if not self.running:
                     return
 
-                if work_item.is_async:
-                    result = asyncio.run(work_item.action())
-                else:
-                    result = work_item.action()
+                result = work_item.action()
                 self.current_item = None
                 test_time = current_time()
                 work_item.last_run_time = test_time
@@ -101,12 +96,11 @@ class Engine:
 
 class EngineWorkItem:
 
-    def __init__(self, name, interval, action, initial_invoke, is_async):
+    def __init__(self, name, interval, action, initial_invoke):
         self.name = name
         self.interval = interval
         self.action = action
         self.last_run_time = 0
-        self.is_async = is_async
         if not initial_invoke:
             self.last_run_time = current_time()
         self.last_run_duration = 0

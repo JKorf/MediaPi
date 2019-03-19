@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 import time
@@ -18,7 +17,6 @@ from MediaPlayer.TorrentStreaming.DHT.Engine import DHTEngine
 from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger, LogVerbosity
-from Shared.Network import RequestFactory
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
@@ -171,7 +169,7 @@ class MediaManager(metaclass=Singleton):
             if self.next_episode_manager.next_type == "File":
                 self.start_file(self.next_episode_manager.next_path, 0)
             elif self.next_episode_manager.next_type == "Show":
-                self.start_episode(self.next_episode_manager.next_id, self.next_episode_manager.next_season, self.next_episode_manager.next_episode, self.next_episode_manager.next_title, self.next_episode_manager.next_path, self.next_episode_manager.next_img)
+                self.start_episode(self.next_episode_manager.next_id, self.next_episode_manager.next_season, self.next_episode_manager.next_episode, self.next_episode_manager.next_title, self.next_episode_manager.next_path, self.next_episode_manager.next_img, 0)
             else:
                 self.start_torrent(self.next_episode_manager.next_title, self.next_episode_manager.next_path, self.next_episode_manager.next_media_file)
 
@@ -294,15 +292,6 @@ class MediaManager(metaclass=Singleton):
         if self.torrent:
             self.torrent.stop()
             self.torrent = None
-
-    def request_master(self, url):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self.request_master_async(url))
-
-    async def request_master_async(self, url):
-        reroute = "http://" + Settings.get_string("master_ip") + url
-        Logger().write(LogVerbosity.Debug, "Sending request to master at " + reroute)
-        return await RequestFactory.make_request_async(reroute, "GET")
 
     def observe_torrent(self):
         while True:

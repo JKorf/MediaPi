@@ -11,7 +11,6 @@ from Shared.Settings import Settings
 from Shared.Util import to_JSON
 from Webserver.APIController import app
 from Webserver.Models import BaseMedia
-from Webserver.BaseHandler import BaseHandler
 
 class ShowController:
 
@@ -58,6 +57,11 @@ class ShowController:
     @app.route('/show', methods=['GET'])
     def get_by_id():
         id = request.args.get('id')
+        data = ShowController.get_by_id_internal(id)
+        return json.dumps(data).encode('utf-8')
+
+    @staticmethod
+    def get_by_id_internal(id):
         Logger().write(LogVerbosity.Debug, "Get show by id " + id)
         response = RequestFactory.make_request(ShowController.shows_api_path + "show/" + id)
         data = json.loads(response.decode('utf-8'))
@@ -73,7 +77,7 @@ class ShowController:
             episode['seen'] = True
             episode['played_for'] = seen.played_for
             episode['length'] = seen.length
-        return json.dumps(data).encode('utf-8')
+        return data
 
     @staticmethod
     @app.route('/show/favorite', methods=['POST'])

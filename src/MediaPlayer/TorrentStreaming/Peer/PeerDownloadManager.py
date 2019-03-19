@@ -76,7 +76,8 @@ class PeerDownloadManager:
         return True
 
     def request(self, to_download):
-        Logger().write(LogVerbosity.Debug, str(self.peer.id) + " going to request " + str(len(to_download)) + " blocks")
+        if len(to_download) > 0:
+            Logger().write(LogVerbosity.Debug, str(self.peer.id) + " going to request " + str(len(to_download)) + " blocks")
         for block in to_download:
             block.add_downloader(self.peer)
             request = RequestMessage(block.piece_index, block.start_byte_in_piece, block.length)

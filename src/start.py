@@ -49,8 +49,6 @@ class Program:
         self.init_folders()
 
         APIController().start()
-        # self.server = TornadoServer()
-        # self.server.start()
         self.version = datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S")
 
         LightManager().init()
