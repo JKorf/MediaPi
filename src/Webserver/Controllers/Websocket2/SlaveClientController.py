@@ -67,6 +67,19 @@ class SlaveClientController:
         return request.wait(timeout)
 
     @staticmethod
+    def request_master_cb(topic, callback, timeout, *args):
+        data = to_JSON(args)
+        request = SlaveClientController._send_request(topic, data)
+        thread = CustomThread(SlaveClientController.wait_for_request_response, "Request callback " + topic, [request, timeout, callback])
+        thread.start()
+
+    @staticmethod
+    def notify_master(topic, *args):
+        data = to_JSON(args)
+        Logger().write(LogVerbosity.Debug, "Sending notification: " + topic + ", data: " + str(data))
+        SlaveClientController.slave_ns.emit("notify", topic, data)
+
+    @staticmethod
     def wait_for_request_response(request, timeout, callback=None):
         response = request.wait(timeout)
         if callback is not None:
@@ -126,9 +139,6 @@ class SlaveClientController:
 
 class Handler(BaseNamespace):
 
-    def on_connect(self, *args):
-        self.initialize()
-
     def on_reconnect(self, *args):
         self.initialize()
 
@@ -136,7 +146,7 @@ class Handler(BaseNamespace):
         Logger().write(LogVerbosity.Info, "Connected to master")
         self.emit("init", Settings.get_string("name"))
         for k, v in SlaveClientController.last_data.items():
-            SlaveClientController.broadcast(k, v)
+            self.emit("update", k, v)
 
     def on_response(self, request_id, *args):
         SlaveClientController.on_response(request_id, args)

@@ -66,8 +66,11 @@ class ShowController:
         response = RequestFactory.make_request(ShowController.shows_api_path + "show/" + id)
         data = json.loads(response.decode('utf-8'))
 
-        seen_episodes = Database().get_history_for_id(id)
-        data['favorite'] = id in [x.id for x in Database().get_favorites()]
+        seen_episodes = []
+        data['favorite'] = False
+        if not Settings.get_bool("slave"):
+            seen_episodes = Database().get_history_for_id(id)
+            data['favorite'] = id in [x.id for x in Database().get_favorites()]
         for episode in data['episodes']:
             seen = [x for x in seen_episodes if episode['season'] == x.season and episode['episode'] == x.episode]
             episode['seen'] = len(seen) != 0

@@ -27,7 +27,6 @@ import DeviceView from './Modules/Views/Home/DeviceView.js'
 
 import SettingsView from './Modules/Views/SettingsView.js'
 
-import Socket from './Socket.js'
 import Socket2 from './Socket2.js'
 import PopupController from './Modules/PopupController.js'
 
@@ -74,7 +73,6 @@ class App extends Component {
         apiBase: "http://" + location + "/"
     };
 
-    Socket.init();
     Socket2.init();
     this.authenticate();
   }
@@ -163,7 +161,6 @@ class App extends Component {
 
   setSessionKey(key){
     sessionStorage.setItem('Session-Key', key);
-    //Socket.connect();
     Socket2.connect();
     this.setState({auth: true});
   }

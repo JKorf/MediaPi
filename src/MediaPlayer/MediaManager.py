@@ -69,7 +69,7 @@ class MediaManager(metaclass=Singleton):
         self.stop_play()
         VLCPlayer().play(actual_url, time)
         if Settings.get_bool("slave"):
-            EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_file", [url, current_time()]])
+            self.history_id, = SlaveClientController.request_master("add_watched_file", 5, url, current_time())
         else:
             self.history_id = Database().add_watched_file(url, current_time())
         self.media_data.start_update()
@@ -125,7 +125,7 @@ class MediaManager(metaclass=Singleton):
         self.stop_play()
         VLCPlayer().play(url, 0)
         if Settings.get_bool("slave"):
-            EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_url", [url, current_time()]])
+            self.history_id, = SlaveClientController.request_master("add_watched_url", 5, url, current_time())
         else:
             self.history_id = Database().add_watched_url(url, current_time())
         self.media_data.start_update()
@@ -205,7 +205,7 @@ class MediaManager(metaclass=Singleton):
 
     def _start_playing_torrent(self):
         if Settings.get_bool("slave"):
-            EventManager.throw_event(EventType.DatabaseUpdate, ["add_watched_torrent", [self.media_data.type, self.media_data.title, self.media_data.id, self.torrent.uri, self.torrent.media_file.path, self.media_data.image, self.media_data.season, self.media_data.episode, current_time()]])
+            self.history_id, = SlaveClientController.request_master("add_watched_torrent", 5, self.media_data.type, self.media_data.title, self.media_data.id, self.torrent.uri, self.torrent.media_file.path, self.media_data.image, self.media_data.season, self.media_data.episode, current_time())
         else:
             self.history_id = Database().add_watched_torrent(self.media_data.type, self.media_data.title, self.media_data.id, self.torrent.uri, self.torrent.media_file.path, self.media_data.image, self.media_data.season, self.media_data.episode, current_time())
         VLCPlayer().play("http://localhost:50009/torrent", self.media_data.start_from)
@@ -261,7 +261,9 @@ class MediaManager(metaclass=Singleton):
         media_type = self.media_data.type
         if media_type == "File":
             if Settings.get_bool("slave"):
-                EventManager.throw_event(EventType.RequestSubtitles, [self.media_data.url])
+                #  SlaveClientController.request_master_cb("get_subtitles", 5, url, current_time())
+                #  TODO slave request subtitles
+                pass
             else:
                 size, first_64k, last_64k = get_file_info(self.media_data.url)
                 EventManager.throw_event(EventType.SearchSubtitles, [self.media_data.title, size, VLCPlayer().get_length(), first_64k, last_64k])
@@ -277,16 +279,15 @@ class MediaManager(metaclass=Singleton):
 
             if state.playing_for > state.length - (state.length * 0.04) or state.length - state.playing_for < 10000:
                 if Settings.get_bool("slave"):
-                    EventManager.throw_event(EventType.DatabaseUpdate, ["update_watching_item", [self.history_id, state.length, state.length, current_time()]])
+                    SlaveClientController.notify_master("update_watching_item", self.history_id, state.length, state.length, current_time())
                 else:
                     Database().update_watching_item(self.history_id, state.length, state.length, current_time())
-                self.last_tracking_update = current_time()
             else:
                 if Settings.get_bool("slave"):
-                    EventManager.throw_event(EventType.DatabaseUpdate, ["update_watching_item", [self.history_id, state.playing_for, state.length, current_time()]])
+                    SlaveClientController.notify_master("update_watching_item", self.history_id, state.playing_for, state.length, current_time())
                 else:
                     Database().update_watching_item(self.history_id, state.playing_for, state.length, current_time())
-                self.last_tracking_update = current_time()
+            self.last_tracking_update = current_time()
 
     def stop_torrent(self):
         if self.torrent:

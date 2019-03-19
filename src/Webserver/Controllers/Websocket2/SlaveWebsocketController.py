@@ -41,13 +41,23 @@ class SlaveWebsocketController:
     @staticmethod
     @socketio.on('update', namespace="/Slave")
     def slave_update(topic, data):
-        Logger().write(LogVerbosity.All, "Slave update " + topic + ": " + data)
         slave = APIController.slaves.get_slave_by_sid(request.sid)
         if slave is None:
+            Logger().write(LogVerbosity.Debug, "Slave update for not initialized slave")
             return
+
+        Logger().write(LogVerbosity.Debug, "Slave update " + topic + ": " + data)
 
         slave_topic = str(slave.id) + "." + topic
         UIWebsocketController.broadcast(slave_topic, data)
+
+    @staticmethod
+    @socketio.on('notify', namespace="/Slave")
+    def slave_request(topic, data):
+        data = json.loads(data)
+        Logger().write(LogVerbosity.Debug, "Slave notification " + topic + ": " + str(data))
+        if topic == "update_watching_item":
+            Database().update_watching_item(*data)
 
     @staticmethod
     @socketio.on('request', namespace="/Slave")
@@ -62,6 +72,18 @@ class SlaveWebsocketController:
             history = to_JSON(Database().get_history_for_url(*data))
             Logger().write(LogVerbosity.Debug, "Slave response: " + str(history))
             socketio.emit("response", (request_id, history), namespace="/Slave", room=request.sid)
+        elif topic == "add_watched_torrent":
+            history_id = Database().add_watched_torrent(*data)
+            Logger().write(LogVerbosity.Debug, "Slave response: " + str(history_id))
+            socketio.emit("response", (request_id, history_id), namespace="/Slave", room=request.sid)
+        elif topic == "add_watched_file":
+            history_id = Database().add_watched_file(*data)
+            Logger().write(LogVerbosity.Debug, "Slave response: " + str(history_id))
+            socketio.emit("response", (request_id, history_id), namespace="/Slave", room=request.sid)
+        elif topic == "add_watched_url":
+            history_id = Database().add_watched_url(*data)
+            Logger().write(LogVerbosity.Debug, "Slave response: " + str(history_id))
+            socketio.emit("response", (request_id, history_id), namespace="/Slave", room=request.sid)
 
     @staticmethod
     @socketio.on('ui_request', namespace="/Slave")
