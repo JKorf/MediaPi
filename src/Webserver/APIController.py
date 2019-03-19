@@ -1,7 +1,7 @@
 import base64
 import hashlib
 import hmac
-from threading import Lock
+from threading import Lock, Event
 
 from flask import Flask
 from flask import request
@@ -28,6 +28,10 @@ class APIController(metaclass=Singleton):
     slaves = None
     last_id = 1
     last_id_lock = Lock()
+    last_data = dict()
+
+    def __init__(self):
+        self.slave = Settings.get_bool("slave")
 
     def start(self):
         APIController.slaves = SlaveCollection()
@@ -115,6 +119,15 @@ class APIController(metaclass=Singleton):
             APIController.last_id += 1
             return APIController.last_id
 
+    def ui_request(self, topic, callback, timeout, args):
+        from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
+        from Webserver.Controllers.Websocket2.SlaveClientController import SlaveClientController
+
+        if self.slave:
+            SlaveClientController.request_ui_cb(topic, callback, timeout, args)
+        else:
+            UIWebsocketController.request_cb(topic, callback, timeout, args)
+
 
 class SlaveClient:
 
@@ -164,6 +177,12 @@ class SlaveCollection(Observable):
             return slave[0]
         return None
 
+    def get_slave_by_sid(self, sid):
+        slave = [x for x in self.data if x._client is not None and x._client.sid == sid]
+        if len(slave) > 0:
+            return slave[0]
+        return None
+
 
 class WebsocketClient:
 
@@ -172,3 +191,23 @@ class WebsocketClient:
         self.connect_time = connect_time
         self.authenticated = False
 
+
+class Request:
+
+    def __init__(self, request_id, topic, data, on_complete):
+        self.evnt = Event()
+        self.request_id = request_id
+        self.topic = topic
+        self.data = data
+        self.response = None
+        self.on_complete = on_complete
+
+    def wait(self, timeout):
+        if not self.evnt.wait(timeout):
+            self.on_complete(self)
+        return self.response
+
+    def set(self, data):
+        self.response = data
+        self.on_complete(self)
+        self.evnt.set()

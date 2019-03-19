@@ -1,6 +1,3 @@
-from threading import Event
-
-import time
 from flask import request
 from flask_socketio import join_room, leave_room, emit
 
@@ -8,12 +5,11 @@ from Database.Database import Database
 from Shared.Logger import LogVerbosity, Logger
 from Shared.Threading import CustomThread
 from Shared.Util import current_time, to_JSON
-from Webserver.APIController import socketio, APIController, WebsocketClient
+from Webserver.APIController import socketio, APIController, WebsocketClient, Request
 
 
 class UIWebsocketController:
     clients = []
-    last_data = dict()
     requests = []
 
     @staticmethod
@@ -33,30 +29,6 @@ class UIWebsocketController:
         MediaManager().torrent_data.register_callback(lambda old, new: UIWebsocketController.broadcast("1.torrent", new))
         Stats().cache.register_callback(lambda old, new: UIWebsocketController.broadcast("1.stats", new))
         Updater().update_state.register_callback(lambda old, new: UIWebsocketController.broadcast("1.update", new))
-
-        # t = CustomThread(WebsocketController.test, "test", [])
-        # t.start()
-
-    @staticmethod
-    def test():
-        time.sleep(3)
-        start = current_time()
-        request = UIWebsocketController.request("Test", [])
-        response = request.wait(10)
-        t = current_time() - start
-        Logger().write(LogVerbosity.Debug, "Test 1 completed in " + str(t) + "ms, data: " + str(response))
-
-        start = current_time()
-        request = UIWebsocketController.request("Test2", [])
-        response = request.wait(10)
-        t = current_time() - start
-        Logger().write(LogVerbosity.Debug, "Test 2 completed in " + str(t) + "ms, data: " + str(response))
-
-        UIWebsocketController.request_cb("Test3", UIWebsocketController.test_result, 10, [])
-
-    @staticmethod
-    def test_result(response):
-        Logger().write(LogVerbosity.Debug, "Test 3 completed, data: " + str(response))
 
     @staticmethod
     @socketio.on('connect', namespace="/UI")
@@ -93,8 +65,8 @@ class UIWebsocketController:
     def subscribe(topic):
         Logger().write(LogVerbosity.Info, "UI client subscribing to " + topic)
         join_room(topic)
-        if topic in UIWebsocketController.last_data:
-            emit("update", (topic, UIWebsocketController.last_data[topic]), namespace="/UI", room=request.sid)
+        if topic in APIController.last_data:
+            emit("update", (topic, APIController.last_data[topic]), namespace="/UI", room=request.sid)
 
     @staticmethod
     @socketio.on('unsubscribe', namespace="/UI")
@@ -115,15 +87,11 @@ class UIWebsocketController:
 
     @staticmethod
     def broadcast(topic, data):
-        data = to_JSON(data)
-        UIWebsocketController.last_data[topic] = data
+        if not isinstance(data, str):
+            data = to_JSON(data)
+        APIController.last_data[topic] = data
         Logger().write(LogVerbosity.All, "Sending update: " + topic)
         socketio.emit("update", (topic, data), namespace="/UI", room=topic)
-
-    @staticmethod
-    def request(topic, *args):
-        data = to_JSON(args)
-        return UIWebsocketController._send_request(topic, data)
 
     @staticmethod
     def request_cb(topic, callback, timeout, *args):
@@ -136,10 +104,7 @@ class UIWebsocketController:
     def wait_for_request_response(request, timeout, callback=None):
         response = request.wait(timeout)
         if callback is not None:
-            if isinstance(response, list):
-                callback(*response)
-            else:
-                callback(response)
+            callback(*response)
         return response
 
     @staticmethod
@@ -155,24 +120,3 @@ class UIWebsocketController:
     def _complete_request(request):
         UIWebsocketController.requests.remove(request)
         Logger().write(LogVerbosity.Debug, "Request done, now " + str(len(UIWebsocketController.requests)) + " requests open")
-
-
-class Request:
-
-    def __init__(self, request_id, topic, data, on_complete):
-        self.evnt = Event()
-        self.request_id = request_id
-        self.topic = topic
-        self.data = data
-        self.response = None
-        self.on_complete = on_complete
-
-    def wait(self, timeout):
-        if not self.evnt.wait(timeout):
-            self.on_complete(self)
-        return self.response
-
-    def set(self, data):
-        self.response = data
-        self.on_complete(self)
-        self.evnt.set()

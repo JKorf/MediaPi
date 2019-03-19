@@ -4,13 +4,13 @@ import os
 import asyncio
 
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
-from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
 from Shared.Settings import Settings
 from Shared.Util import Singleton
+from Webserver.APIController import APIController
 from Webserver.Controllers.MediaPlayer.ShowController import ShowController
-from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
+from Webserver.Controllers.Websocket2.SlaveClientController import SlaveClientController
 from Webserver.Models import FileStructure
 
 
@@ -40,7 +40,7 @@ class NextEpisodeManager(metaclass=Singleton):
     def notify_next_episode(self, callback):
         if self.next_type is not None:
             Logger().write(LogVerbosity.Info, "Can continue with next episode: " + self.next_title)
-            UIWebsocketController.request_cb("SelectNextEpisode", callback, 1000 * 60, self.next_title)
+            APIController().ui_request("SelectNextEpisode", callback, 1000 * 60, self.next_title)
 
     def check_next_episode(self, media_data, torrent):
         if media_data.type == "Radio" or media_data.type == "YouTube":
@@ -112,11 +112,11 @@ class NextEpisodeManager(metaclass=Singleton):
 
         dir_name = os.path.dirname(media_data.url)
         if Settings.get_bool("slave"):
-            data = RequestFactory.make_request("http://" + Settings.get_string("master_ip") + ":" + Settings.get_string("api_port") + "/hd/directory?path=" + dir_name, "GET")
+            data, = SlaveClientController.request_master("get_directory", 5, dir_name)
             if not data:
                 return
-            result = json.loads(data.decode("utf8"))
-            file_list = result["files"]
+            data = json.loads(data)
+            file_list = data["file_names"]
         else:
             file_list = FileStructure(dir_name).file_names
 

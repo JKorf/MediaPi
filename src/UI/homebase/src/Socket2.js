@@ -110,7 +110,7 @@ export default class WS {
         this.socket.emit('get_current_requests');
     }
 
-    static respond(request_id, data)
+    static respond(request_id, ...data)
     {
         this.socket.emit('response', request_id, data);
     }

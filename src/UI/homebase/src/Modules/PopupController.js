@@ -51,12 +51,12 @@ class PopupController extends Component {
 
   selectMediaFile(file, start_from){
     this.setState({mediaSelect: {show: false}});
-    Socket.respond(this.state.mediaSelect.id, [file.path, start_from]);
+    Socket.respond(this.state.mediaSelect.id, file.path, start_from);
   }
 
   cancelMediaSelect(){
     this.setState({mediaSelect: {show: false}});
-    Socket.respond(this.state.mediaSelect.id, [null, 0])
+    Socket.respond(this.state.mediaSelect.id, null, 0)
   }
 
   showContinueNextEpisode(id, title){
