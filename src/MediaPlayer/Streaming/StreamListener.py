@@ -6,6 +6,8 @@ from threading import Lock
 
 import time
 
+import select
+
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
@@ -14,7 +16,7 @@ from Shared.Util import current_time
 
 class StreamListener:
 
-    wait_for_data = 0.5
+    wait_for_data = 0.1
 
     mime_mapping = {
         ".mp4": "video/mp4",
@@ -49,7 +51,7 @@ class StreamListener:
         self.thread.start()
 
     def handle_request(self, socket):
-        Logger().write(LogVerbosity.Debug, self.name + " new request")
+        Logger().write(LogVerbosity.Info, self.name + " new request")
 
         # Read headers
         total_message = self.read_headers(socket)
@@ -76,14 +78,15 @@ class StreamListener:
                 if len(rec) == 0:
                     break
                 total_message += rec
+                time.sleep(0)
         except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
             socket.close()
-            Logger().write(LogVerbosity.Debug, self.name + " error reading http header")
+            Logger().write(LogVerbosity.Info, self.name + " error reading http header")
             return
 
         if not total_message.endswith(b'\r\n\r\n'):
             socket.close()
-            Logger().write(LogVerbosity.Debug, self.name + " invalid http header, closing")
+            Logger().write(LogVerbosity.Info, self.name + " invalid http header, closing")
             return
         return total_message
 
@@ -160,13 +163,13 @@ class StreamListener:
         response_header = HttpHeader()
         response_header.status_code = status
 
-        Logger().write(LogVerbosity.Debug, self.name + " return header: " + response_header.to_string())
+        Logger().write(LogVerbosity.Info, self.name + " return header: " + response_header.to_string())
 
         try:
             socket.send(response_header.to_string().encode())
             return True
         except (ConnectionAbortedError, ConnectionResetError, OSError):
-            Logger().write(LogVerbosity.Debug, "Connection closed 2")
+            Logger().write(LogVerbosity.Info, "Connection closed 2 during sending of response header")
             socket.close()
             return False
 
@@ -179,18 +182,18 @@ class StreamListener:
         response_header.set_range(start, end, length)
         filename, file_extension = os.path.splitext(path.lower())
         if file_extension not in StreamListener.mime_mapping:
-            Logger().write(LogVerbosity.Debug, self.name + " unknown video type: " + str(file_extension) + ", defaulting to mp4")
+            Logger().write(LogVerbosity.Info, self.name + " unknown video type: " + str(file_extension) + ", defaulting to mp4")
             response_header.mime_type = StreamListener.mime_mapping[".mp4"]
         else:
             response_header.mime_type = StreamListener.mime_mapping[file_extension]
 
-        Logger().write(LogVerbosity.Debug, self.name + " return header: " + response_header.to_string())
+        Logger().write(LogVerbosity.Info, self.name + " return header: " + response_header.to_string())
 
         try:
             socket.send(response_header.to_string().encode())
             return True
         except (ConnectionAbortedError, ConnectionResetError, OSError):
-            Logger().write(LogVerbosity.Debug, "Connection closed 2")
+            Logger().write(LogVerbosity.Info, "Connection closed 2 during sending of response header")
             socket.close()
             return False
 
@@ -209,34 +212,28 @@ class StreamListener:
         while written < length:
             part_length = min(length - written, self.chunk_length)
             if not self.running:
-                Logger().write(LogVerbosity.Debug, self.name + " canceling retrieved data because we are no longer running 1")
+                Logger().write(LogVerbosity.Debug, self.name + ' writer ' + str(data_writer.id) + " canceling retrieved data because we are no longer running 1")
                 socket.close()
+                self.sockets_writing_data.remove(data_writer)
+                return
+
+            if not self.wait_writable(socket):
+                Logger().write(LogVerbosity.Debug, self.name + ' writer ' + str(data_writer.id) + " closed")
                 self.sockets_writing_data.remove(data_writer)
                 return
 
             data = data_delegate(requested_byte + written, part_length)
             if not self.running:
-                Logger().write(LogVerbosity.Debug, self.name + " canceling retrieved data because we are no longer running 2")
+                Logger().write(LogVerbosity.Debug, self.name + ' writer ' + str(data_writer.id) + " canceling retrieved data because we are no longer running 2")
                 socket.close()
                 self.sockets_writing_data.remove(data_writer)
                 return
 
             if data is None:
-                try:
-                    socket.settimeout(self.wait_for_data)
-                    recd = socket.recv(1)
-                except OSError as e:
-                    if e.args[0] != 'timed out':
-                        Logger().write(LogVerbosity.Debug, self.name + " socket no longer open 3: " + str(type(e)) + "" + str(requested_byte) + ", " + str(length))
-                        socket.close()
-                        self.sockets_writing_data.remove(data_writer)
-                        return
-
-                time.sleep(0.1)
+                time.sleep(self.wait_for_data)
                 continue
 
-            socket.settimeout(None)
-            Logger().write(LogVerbosity.Debug, self.name + ' data retrieved for writer ' + str(data_writer.id) + ': ' + str(requested_byte + written) + " - " + str(requested_byte + written + part_length))
+            Logger().write(LogVerbosity.Info, self.name + ' writer ' + str(data_writer.id) + ' data retrieved: ' + str(requested_byte + written) + " - " + str(requested_byte + written + part_length))
             send = 0
             try:
                 while send < len(data):
@@ -247,9 +244,10 @@ class StreamListener:
                     send += data_length
                     self.bytes_send += data_length
                     data_writer.streamed += data_length
-                    Logger().write(LogVerbosity.All, self.name + " " + str(data_length) + " bytes streamed")
+                    Logger().write(LogVerbosity.All, self.name + ' writer ' + str(data_writer.id) + " send " + str(data_length) + " bytes")
+                    time.sleep(0)  # give other threads some time
             except (ConnectionAbortedError, ConnectionResetError, OSError) as e:
-                Logger().write(LogVerbosity.Debug, self.name + " connection closed during sending of data: " + str(e))
+                Logger().write(LogVerbosity.Info, self.name + " writer " + str(data_writer.id) + " connection closed during sending of data: " + str(e))
                 socket.close()
                 self.sockets_writing_data.remove(data_writer)
                 return
@@ -257,6 +255,29 @@ class StreamListener:
         Logger().write(LogVerbosity.Info, "Completed request: " + str(data_writer))
         socket.close()
         self.sockets_writing_data.remove(data_writer)
+
+    def wait_writable(self, socket):
+        while True:
+            if not self.running:
+                return False
+
+            # check if socket is still open
+            readable, writeable, exceptional = select.select([socket], [socket], [socket], 0)
+            if len(readable) == 1:
+                read = socket.recv(1)
+                if len(read) == 0:
+                    Logger().write(LogVerbosity.Info, self.name + " socket no longer open 3")
+                    socket.close()
+                    return False
+                else:
+                    Logger().write(LogVerbosity.Info, self.name + " recv received data??")
+
+            if len(writeable) == 0:
+                # not currently writeable, wait for it to become available again
+                time.sleep(0.1)
+                continue
+
+            return True
 
     def stop(self):
         self.running = False
@@ -358,7 +379,7 @@ class HttpHeader:
     @classmethod
     def from_string(cls, header):
         header = header.decode('utf8')
-        Logger().write(LogVerbosity.Debug, "Received header: " + header)
+        Logger().write(LogVerbosity.Info, "Received header: " + header)
         result = cls()
         split = header.splitlines(False)
         request = split[0].split(" ")

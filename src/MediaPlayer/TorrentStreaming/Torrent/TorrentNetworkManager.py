@@ -57,18 +57,22 @@ class TorrentNetworkManager:
         while self.running:
             if self.throttling and current_time() - self.last_throttle > 2000:
                 Logger().write(LogVerbosity.Debug, "No longer throttling")
-                self.throttling = False # has not throttled in last 2 seconds
+                self.throttling = False  # has not throttled in last 2 seconds
 
             try:
                 # Select in/outputs
                 input_peers, output_peers = self.torrent.peer_manager.get_peers_for_io()
 
                 if not input_peers and not output_peers:
-                    sleep(0.05)
+                    sleep(0.05)  # no peers to read/write
                     continue
 
                 input_sockets = [x.connection_manager.connection.socket for x in input_peers]
                 output_sockets = [x.connection_manager.connection.socket for x in output_peers]
+
+                if not input_sockets and not output_sockets:
+                    sleep(0.01)  # no sockets available to read/write
+                    continue
 
                 self.last_inputs = len(input_sockets)
                 self.last_outputs = len(output_sockets)
@@ -100,6 +104,8 @@ class TorrentNetworkManager:
                 peer = [x for x in output_peers if x.connection_manager.connection.socket == client]
                 if len(peer) > 0:
                     peer[0].connection_manager.handle_write()
+
+            sleep(0)
 
     def stop(self):
         self.running = False

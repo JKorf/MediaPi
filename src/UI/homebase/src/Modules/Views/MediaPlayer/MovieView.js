@@ -23,12 +23,10 @@ class MovieView extends Component {
 
   componentDidMount() {
     axios.get(window.vars.apiBase + 'movie?id=' + this.props.match.params.id).then(data => {
-        if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         console.log(data.data);
         this.props.functions.changeTitle(data.data.title);
         this.setState({movie: data.data, loading: false});
     }, err =>{
-        if(this.viewRef.current) { this.viewRef.current.changeState(0); }
         console.log(err);
         this.setState({loading: false});
     });
@@ -60,15 +58,14 @@ class MovieView extends Component {
 
   playMedia(instance, media)
   {
+    this.setState({loading: true});
     if(media.type === "trailer"){
         axios.post(window.vars.apiBase + 'play/url?instance=' + instance
             + "&url=" + encodeURIComponent(media.url)
             + "&title=" + encodeURIComponent(this.state.movie.title + " Trailer"))
             .then(
-                () => {
-                    if(this.viewRef.current) { this.viewRef.current.changeState(0); }
-                 },
-                () => { if(this.viewRef.current) { this.viewRef.current.changeState(0); } }
+                () => this.setState({loading: false}),
+                () => this.setState({loading: false})
             );
     }else{
         if(media.played_for > 0)
@@ -81,11 +78,8 @@ class MovieView extends Component {
             + "&img=" + encodeURIComponent(this.state.movie.images.poster)
             + "&position=" + media.played_for)
             .then(
-                () =>
-                {
-                    if(this.viewRef.current) { this.viewRef.current.changeState(0); }
-                },
-                () => { if(this.viewRef.current) { this.viewRef.current.changeState(0); } }
+                () => this.setState({loading: false}),
+                () => this.setState({loading: false})
             );
     }
   }

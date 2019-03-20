@@ -1,9 +1,6 @@
 import React, { Component } from 'react';
-import axios from 'axios';
-import Socket from './../../Socket2.js';
 
 import { InfoGroup } from './../Components/InfoGroup'
-import ViewLoader from './../Components/ViewLoader';
 
 class SettingsView extends Component {
   constructor(props) {

@@ -15,10 +15,6 @@ class MediaPlayerView extends Component {
     this.play = this.play.bind(this);
   }
 
-  changeState(state){
-    this.setState({state: this.states[state]});
-  }
-
   play(item)
   {
     console.log(item);

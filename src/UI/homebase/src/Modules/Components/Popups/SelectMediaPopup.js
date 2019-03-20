@@ -99,7 +99,7 @@ class SelectMediaPopup extends Component {
                 { episodeList.map((file, index) =>
                     <div className={"media-file-select " + (this.state.selectedFile === file.path ? "selected" : "")} key={file.path}>
                         <div className="media-file-select-file">
-                            <div className={"media-file-select-title " + (this.state.selectedFile === file.path ? "" : "truncate")} onClick={(e) => this.selectionChange(file.path)}>{(file.episode != 0 ? ("[E" + this.addLeadingZero(file.episode) + "] "): "") +  file.path.replace(/^.*[\\\/]/, '')}</div>
+                            <div className={"media-file-select-title " + (this.state.selectedFile === file.path ? "" : "truncate")} onClick={(e) => this.selectionChange(file.path)}>{(file.episode !== 0 ? ("[E" + this.addLeadingZero(file.episode) + "] "): "") +  file.path.replace(/^.*[\\/]/, '')}</div>
                             { this.state.selectedFile === file.path &&
                                 <div className="media-file-select-details">
                                     <div className="media-file-select-size">{this.writeSize(file.length)}</div>

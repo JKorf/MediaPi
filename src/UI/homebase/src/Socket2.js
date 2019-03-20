@@ -47,7 +47,7 @@ export default class WS {
     static processAuthResult(data){
         console.log("Auth result: " + data);
         this.authenticated = data;
-        if (data == false)
+        if (data === false)
             this.socket.close();
 
         for (var i = 0; i < this.subscriptions.length; i++){
@@ -61,10 +61,10 @@ export default class WS {
         if (existingSubscription != null)
         {
             // Already subscribed to this topic, just aa a callback
-            id = existingSubscription.addCallback(callback);
+            var newId = existingSubscription.addCallback(callback);
             if (existingSubscription.lastData)
-                callback(id, existingSubscription.lastData); // Trigger initial update with last data since we aren't subbing on server
-            return id;
+                callback(newId, existingSubscription.lastData); // Trigger initial update with last data since we aren't subbing on server
+            return newId;
         }
         else
         {

@@ -19,8 +19,6 @@ import playImage from './../../../Images/play.svg';
 import speakerImage from './../../../Images/speaker.svg';
 import plusImage from './../../../Images/plus.svg';
 import minusImage from './../../../Images/minus.svg';
-import settingsImage from './../../../Images/settings.svg';
-import subtitleImage from './../../../Images/subtitle.svg';
 import cpuImage from './../../../Images/cpu.svg';
 import memoryImage from './../../../Images/memory.svg';
 import tempImage from './../../../Images/thermometer.svg';
@@ -321,15 +319,15 @@ class DeviceView extends Component {
 
     return (
         <div className="player-details">
-            <ViewLoader loading={this.state.loading || this.state.updateState != "Idle"} text={(this.state.updateState != "Idle" ? this.state.updateState: null)}/>
+            <ViewLoader loading={this.state.loading || this.state.updateState !== "Idle"} text={(this.state.updateState !== "Idle" ? this.state.updateState: null)}/>
 
             <SwitchBox>
-                <SwitchBoxItem selected={this.state.currentView == "Media"} text="Media" onClick={() => this.setState({currentView: "Media"})} />
-                <SwitchBoxItem selected={this.state.currentView == "Statistics"} text="Statistics" onClick={() => this.setState({currentView: "Statistics"})} />
-                <SwitchBoxItem selected={this.state.currentView == "Config"} text="Config" onClick={() => this.setState({currentView: "Config"})} />
+                <SwitchBoxItem selected={this.state.currentView === "Media"} text="Media" onClick={() => this.setState({currentView: "Media"})} />
+                <SwitchBoxItem selected={this.state.currentView === "Statistics"} text="Statistics" onClick={() => this.setState({currentView: "Statistics"})} />
+                <SwitchBoxItem selected={this.state.currentView === "Config"} text="Config" onClick={() => this.setState({currentView: "Config"})} />
             </SwitchBox>
 
-            { this.state.currentView == "Media" &&
+            { this.state.currentView === "Media" &&
 
                 <div className="player-group-details">
                     { this.state.mediaData.title &&
@@ -404,7 +402,7 @@ class DeviceView extends Component {
                 </div>
             }
 
-            { this.state.currentView == "Statistics" &&
+            { this.state.currentView === "Statistics" &&
                 <div className="player-group-details">
                  <InfoRow name="Max download speed" value={this.writeSpeed(this.state.statData["max_download_speed"])}></InfoRow>
                  <InfoRow name="Total downloaded" value={this.writeSize(this.state.statData["total_downloaded"])}></InfoRow>
@@ -417,7 +415,7 @@ class DeviceView extends Component {
                 </div>
              }
 
-             { this.state.currentView == "Config" &&
+             { this.state.currentView === "Config" &&
                 <div className="player-group-details">
                     <div className="device-config-subtitle">version</div>
                     <div className="device-config-item">

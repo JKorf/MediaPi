@@ -7,7 +7,6 @@ import hdImg from './../../../Images/hd.svg'
 import torrentImg from './../../../Images/link.svg'
 import radioImg from './../../../Images/radio.svg'
 import youtubeImg from './../../../Images/youtube.svg'
-import playImg from './../../../Images/play.svg'
 import historyImg from './../../../Images/history.svg'
 
 class MediaPlayerDashboardView extends Component {

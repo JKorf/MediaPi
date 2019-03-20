@@ -9,6 +9,7 @@ from urllib.request import urlopen
 from urllib.request import Request
 
 from Shared.Logger import Logger, LogVerbosity
+from Shared.Network import RequestFactory
 from Shared.Util import headers
 
 unicode = str
@@ -44,11 +45,11 @@ class List(object):
         on page.
         """
         Logger().write(LogVerbosity.Debug, "TPB requesting " + str(self.url))
-        request = Request(str(self.url), data=None, headers=headers)
-        request = urlopen(request, timeout=10)
+        result = RequestFactory.make_request(str(self.url))
+        if result is None:
+            return
 
-        document = html.parse(request)
-        root = document.getroot()
+        root = html.fromstring(result)
         items = [self._build_torrent(row) for row in
                 self._get_torrent_rows(root)]
         for item in [x for x in items if x is not None]:
@@ -189,15 +190,15 @@ class Search(Paginated):
     """
     Paginated search featuring query, category and order management.
     """
-    base_path = 's/'
+    base_path = '/search'
 
     def __init__(self, base_url, query, page='0', order='7', category='0'):
         super(Search, self).__init__()
-        self.url = URL(base_url, self.base_path + "?q=" + query + "&page=0&orderby=99")
-        # self.url = URL(base_url, self.base_path,
-        #                 segments=['query', 'page', 'order', 'category'],
-        #                 defaults=[query, str(page), str(order), str(category)],
-        #                 )
+        # self.url = URL(base_url, self.base_path + "?q=" + query + "&page=0&orderby=99")
+        self.url = URL(base_url, self.base_path,
+                        segments=['query', 'page', 'order', 'category'],
+                        defaults=[query, str(page), str(order), str(category)],
+                        )
 
     @self_if_parameters
     def query(self, query=None):

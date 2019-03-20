@@ -1,3 +1,5 @@
+import time
+
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import ChokeMessage, BasePeerMessage, UnchokeMessage, InterestedMessage, \
     UninterestedMessage, HaveMessage, RequestMessage, PieceMessage, CancelMessage, PortMessage, BitfieldMessage, \
     ExtensionHandshakeMessage, PeerExchangeMessage, MetadataMessage, KeepAliveMessage, HaveAllMessage, HaveNoneMessage, \
@@ -61,6 +63,7 @@ class PeerMessageHandler:
             # Handle messages
             self.handle_message(message)
             processed_messages += 1
+            time.sleep(0)
         return True
 
     def handle_message(self, message):

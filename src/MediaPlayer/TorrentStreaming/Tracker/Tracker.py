@@ -148,14 +148,6 @@ class TrackerManager:
         else:
             Logger().write(LogVerbosity.Debug, 'Tracker ok: ' + tracker.host)
 
-    def sleep(self, t):
-        slept = 0
-        while slept < t:
-            time.sleep(1)
-            slept += 1
-            if not self.running:
-                return
-
     def stop(self):
         self.running = False
         EventManager.deregister_event(self.request_peers_id)

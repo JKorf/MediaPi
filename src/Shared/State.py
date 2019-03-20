@@ -7,6 +7,7 @@ import sys
 
 from MediaPlayer.MediaManager import MediaManager
 from Shared.Events import EventManager, EventType
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread, ThreadManager
@@ -40,9 +41,7 @@ class StateManager(metaclass=Singleton):
 
         while True:
             if self.state_data.memory > 90:
-                EventManager.throw_event(EventType.Log, [])
-
-            if MediaManager().torrent is not None and MediaManager().torrent.network_manager.average_download_counter.value < 20000:
+                Logger().write(LogVerbosity.Info, "Memory high ( " + str(self.state_data.memory) + "% ), logging")
                 EventManager.throw_event(EventType.Log, [])
 
             time.sleep(10)

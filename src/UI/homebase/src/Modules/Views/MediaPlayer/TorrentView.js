@@ -99,12 +99,10 @@ class TorrentView extends Component {
     this.setState({loading: true});
     axios.post(window.vars.apiBase + 'play/torrent?instance=' + instance
     + "&title=" + encodeURIComponent(torrent.title)
-    + "&url=" + encodeURIComponent(torrent.url)).then(() => {
-            this.setState({loading: false});
-        }, err =>{
-            console.log(err);
-            this.setState({loading: false});
-        });
+    + "&url=" + encodeURIComponent(torrent.url)).then(
+        () => this.setState({loading: false}),
+        () => this.setState({loading: false})
+        );
   }
 
   render() {

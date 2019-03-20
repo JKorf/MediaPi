@@ -229,8 +229,6 @@ class MediaManager(metaclass=Singleton):
                 self.torrent.stop()
                 self.torrent = None
 
-            time.sleep(1)
-
     def player_state_change(self, old_state, new_state):
         if old_state.state != new_state.state:
             Logger().write(LogVerbosity.Info, "Player state changed from " + str(old_state.state) + " to " + str(new_state.state))
@@ -303,9 +301,10 @@ class MediaManager(metaclass=Singleton):
 
             self.torrent_data.start_update()
             self.torrent_data.title = self.torrent.name
+            self.torrent_data.size = self.torrent.total_size
             if self.torrent.media_file is not None:
                 self.torrent_data.media_file = self.torrent.media_file.name
-            self.torrent_data.size = self.torrent.total_size
+                self.torrent_data.size = self.torrent.media_file.length
             self.torrent_data.downloaded = self.torrent.network_manager.average_download_counter.total
             self.torrent_data.left = self.torrent.left
             self.torrent_data.overhead = self.torrent.overhead
@@ -328,6 +327,7 @@ class MediaManager(metaclass=Singleton):
 
             self.torrent_data.stop_update()
             time.sleep(0.5)
+
 
 class TorrentData(Observable):
 

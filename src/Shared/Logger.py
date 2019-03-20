@@ -91,6 +91,7 @@ class Logger(metaclass=Singleton):
                 self.file.write(byte_data)
                 self.file_size += len(byte_data)
                 self.check_file_size()
+                time.sleep(0)
             except Exception as e:
                 self.write_error(e, "Exception during logging")
 

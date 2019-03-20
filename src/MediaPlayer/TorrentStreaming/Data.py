@@ -192,7 +192,6 @@ class Piece:
         self._data = None
         self.validated = False
         self.cleared = False
-        Logger().write(LogVerbosity.Debug, "Piece " + str(self.index) + " reset")
 
     def get_data_and_clear(self):
         data = self.get_data()

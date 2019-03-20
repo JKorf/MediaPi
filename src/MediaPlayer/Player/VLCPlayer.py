@@ -257,10 +257,6 @@ class VLCPlayer(metaclass=Singleton):
 
     def observe_player(self):
         while True:
-            # if self.player_state.state == PlayerState.Nothing:
-            #     time.sleep(0.5)
-            #     continue
-
             state = self.get_state().value
             if state in [5, 6, 7]:
                 state = 0
@@ -281,8 +277,6 @@ class VLCPlayer(metaclass=Singleton):
             self.player_state.sub_tracks = self.get_subtitle_tracks()
             self.player_state.volume = self.get_volume()
             self.player_state.stop_update()
-
-
 
             time.sleep(0.5)
 
