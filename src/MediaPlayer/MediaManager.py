@@ -367,7 +367,7 @@ class MediaData(Observable):
         self.title = None
         self.url = None
         self.image = None
-        self.season = 0
-        self.episode = 0
-        self.id = 0
+        self.season = None
+        self.episode = None
+        self.id = None
         self.start_from = 0

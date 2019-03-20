@@ -1,5 +1,7 @@
 from threading import Lock
 
+import time
+
 from Database.Database import Database
 from Shared.Observable import Observable
 from Shared.Threading import CustomThread
@@ -50,7 +52,8 @@ class Stats(metaclass=Singleton):
 
         for key, val in copy.items():
             Database().update_stat(key, val)
-        return True
+
+        time.sleep(15)
 
     @staticmethod
     def add(name, value):
