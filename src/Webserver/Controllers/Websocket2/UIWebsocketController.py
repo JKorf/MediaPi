@@ -96,27 +96,27 @@ class UIWebsocketController:
     @staticmethod
     def request_cb(topic, callback, timeout, *args):
         data = to_JSON(args)
-        request = UIWebsocketController._send_request(topic, data)
-        thread = CustomThread(UIWebsocketController.wait_for_request_response, "Request callback " + topic, [request, timeout, callback])
+        request_message = UIWebsocketController._send_request(topic, data)
+        thread = CustomThread(UIWebsocketController.wait_for_request_response, "Request callback " + topic, [request_message, timeout, callback])
         thread.start()
 
     @staticmethod
-    def wait_for_request_response(request, timeout, callback=None):
-        response = request.wait(timeout)
+    def wait_for_request_response(request_message, timeout, callback=None):
+        response = request_message.wait(timeout)
         if callback is not None:
             callback(*response)
         return response
 
     @staticmethod
     def _send_request(topic, data):
-        Logger().write(LogVerbosity.Debug, "Sending request: " + topic +", data: " + str(data))
+        Logger().write(LogVerbosity.Debug, "Sending request: " + topic + ", data: " + str(data))
         request_id = APIController().next_id()
-        request = Request(request_id, topic, data, UIWebsocketController._complete_request)
-        UIWebsocketController.requests.append(request)
+        request_message = Request(request_id, topic, data, UIWebsocketController._complete_request)
+        UIWebsocketController.requests.append(request_message)
         socketio.emit("request", (request_id, topic, data), namespace="/UI")
         return request
 
     @staticmethod
-    def _complete_request(request):
-        UIWebsocketController.requests.remove(request)
+    def _complete_request(request_message):
+        UIWebsocketController.requests.remove(request_message)
         Logger().write(LogVerbosity.Debug, "Request done, now " + str(len(UIWebsocketController.requests)) + " requests open")

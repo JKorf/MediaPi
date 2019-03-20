@@ -1,7 +1,6 @@
-import traceback
 from threading import Event
 from collections import namedtuple
-from Shared.Logger import Logger, LogVerbosity
+from Shared.Logger import Logger
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 

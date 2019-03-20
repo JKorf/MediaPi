@@ -33,7 +33,7 @@ class MovieController:
             data = []
             current_page = 0
             while current_page != page:
-                current_page+= 1
+                current_page += 1
                 data += MovieController.request_movies(
                     MovieController.movies_api_path + "movies/" + str(current_page) + "?sort=" + urllib.parse.quote(
                         order_by) + search_string)
@@ -57,12 +57,12 @@ class MovieController:
     @staticmethod
     @app.route('/movie', methods=['GET'])
     def get_movie_by_id():
-        id = request.args.get('id')
-        Logger().write(LogVerbosity.Debug, "Get movie by id " + id)
-        response = RequestFactory.make_request(MovieController.movies_api_path + "movie/" + id)
+        movie_id = request.args.get('id')
+        Logger().write(LogVerbosity.Debug, "Get movie by id " + movie_id)
+        response = RequestFactory.make_request(MovieController.movies_api_path + "movie/" + movie_id)
         data = json.loads(response.decode('utf-8'))
 
-        seen = Database().get_history_for_id(id)
+        seen = Database().get_history_for_id(movie_id)
         data['seen'] = len(seen) > 0
         if len(seen) > 0:
             seen = seen[-1]
@@ -92,8 +92,8 @@ class Torrent:
 
 class Movie(BaseMedia):
 
-    def __init__(self, id, poster, title):
-        super().__init__(id, poster, title)
+    def __init__(self, movie_id, poster, title):
+        super().__init__(movie_id, poster, title)
         self.year = None
         self.rating = 0
         self.runtime = None

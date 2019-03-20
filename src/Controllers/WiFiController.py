@@ -4,7 +4,6 @@ import sys
 
 from Shared.Engine import Engine
 from Shared.Logger import Logger, LogVerbosity
-from Shared.Settings import Settings
 from Shared.Util import Singleton
 
 

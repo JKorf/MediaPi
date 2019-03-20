@@ -32,7 +32,7 @@ class ShowController:
             data = []
             current_page = 0
             while current_page != page:
-                current_page+= 1
+                current_page += 1
                 data += ShowController.request_shows(
                     ShowController.shows_api_path + "shows/" + str(current_page) + "?sort=" + urllib.parse.quote(
                         order_by) + search_string)
@@ -56,20 +56,20 @@ class ShowController:
     @staticmethod
     @app.route('/show', methods=['GET'])
     def get_by_id():
-        id = request.args.get('id')
-        data = ShowController.get_by_id_internal(id)
+        show_id = request.args.get('id')
+        data = ShowController.get_by_id_internal(show_id)
         return json.dumps(data).encode('utf-8')
 
     @staticmethod
-    def get_by_id_internal(id):
-        Logger().write(LogVerbosity.Debug, "Get show by id " + id)
-        response = RequestFactory.make_request(ShowController.shows_api_path + "show/" + id)
+    def get_by_id_internal(show_id):
+        Logger().write(LogVerbosity.Debug, "Get show by id " + show_id)
+        response = RequestFactory.make_request(ShowController.shows_api_path + "show/" + show_id)
         data = json.loads(response.decode('utf-8'))
 
         seen_episodes = []
         data['favorite'] = False
         if not Settings.get_bool("slave"):
-            seen_episodes = Database().get_history_for_id(id)
+            seen_episodes = Database().get_history_for_id(show_id)
             data['favorite'] = id in [x.id for x in Database().get_favorites()]
         for episode in data['episodes']:
             seen = [x for x in seen_episodes if episode['season'] == x.season and episode['episode'] == x.episode]
@@ -85,20 +85,20 @@ class ShowController:
     @staticmethod
     @app.route('/show/favorite', methods=['POST'])
     def add_favorite():
-        id = request.args.get('id')
+        show_id = request.args.get('id')
         title = urllib.parse.unquote(request.args.get('title'))
         image = urllib.parse.unquote(request.args.get('image'))
 
-        Logger().write(LogVerbosity.Info, "Add show favorite: " + id)
+        Logger().write(LogVerbosity.Info, "Add show favorite: " + show_id)
         Database().add_favorite(id, "Show", title, image)
         return "OK"
 
     @staticmethod
     @app.route('/show/favorite', methods=['DELETE'])
     def remove_favorite():
-        id = request.args.get('id')
+        show_id = request.args.get('id')
 
-        Logger().write(LogVerbosity.Info, "Remove show favorite: " + id)
+        Logger().write(LogVerbosity.Info, "Remove show favorite: " + show_id)
         Database().remove_favorite(id)
         return "OK"
 
@@ -120,8 +120,9 @@ class ShowController:
                 poster = show['images'][0]
         return poster
 
+
 class Show(BaseMedia):
 
-    def __init__(self, id, poster, title, rating):
-        super().__init__(id, poster, title)
+    def __init__(self, show_id, poster, title, rating):
+        super().__init__(show_id, poster, title)
         self.rating = rating

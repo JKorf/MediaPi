@@ -65,7 +65,8 @@ class Database(metaclass=Singleton):
         if changed:
             Logger().write(LogVerbosity.Info, "Database upgrade completed")
 
-    def upgrade(self, database, cursor, number):
+    @staticmethod
+    def upgrade(database, cursor, number):
         new_version = number + 1
         Logger().write(LogVerbosity.Debug, "Upgrading database from " + str(number) + " to " + str(new_version))
 
@@ -89,14 +90,14 @@ class Database(metaclass=Singleton):
             database.close()
         return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]) for x in data]
 
-    def get_history_for_id(self, id):
+    def get_history_for_id(self, item_id):
         if self.slave:
             raise PermissionError("Cant call get_watched_file on slave")
 
-        Logger().write(LogVerbosity.All, "Database get history for id " + str(id))
+        Logger().write(LogVerbosity.All, "Database get history for id " + str(item_id))
         with self.lock:
             database, cursor = self.connect()
-            cursor.execute('SELECT * FROM History WHERE ImdbId = ?', [id])
+            cursor.execute('SELECT * FROM History WHERE ImdbId = ?', [item_id])
             data = cursor.fetchall()
             database.close()
         return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]) for x in data]
@@ -155,52 +156,51 @@ class Database(metaclass=Singleton):
             database.close()
             return cursor.lastrowid
 
-    def add_watched_torrent(self, type, title, show_id, url, media_file, image, season, episode, watched_at):
+    def add_watched_torrent(self, media_type, title, show_id, url, media_file, image, season, episode, watched_at):
         if self.slave:
             raise PermissionError("Cant call add_watched_torrent on slave")
 
         Logger().write(LogVerbosity.Debug, "Database add watched torrent")
         with self.lock:
             database, cursor = self.connect()
-            cursor.execute("INSERT INTO History " +
-                                    "(Type, ImdbId, Title, Image, URL, MediaFile, Season, Episode, WatchedAt)" +
-                                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [type, show_id, title, image, url, media_file, season, episode, watched_at])
+            cursor.execute("INSERT INTO History (Type, ImdbId, Title, Image, URL, MediaFile, Season, Episode, WatchedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                           [media_type, show_id, title, image, url, media_file, season, episode, watched_at])
             database.commit()
             database.close()
             return cursor.lastrowid
 
-    def remove_watched(self, id):
+    def remove_watched(self, item_id):
         if self.slave:
             raise PermissionError("Cant call remove_watched on slave")
 
         Logger().write(LogVerbosity.Debug, "Database remove watched")
         with self.lock:
             database, cursor = self.connect()
-            cursor.execute("DELETE FROM History WHERE Id=?", [id])
+            cursor.execute("DELETE FROM History WHERE Id=?", [item_id])
 
             database.commit()
             database.close()
 
-    def add_favorite(self, id, type, title, image):
+    def add_favorite(self, item_id, media_type, title, image):
         if self.slave:
             raise PermissionError("Cant call add_favorite on slave")
 
         Logger().write(LogVerbosity.Debug, "Database add favorite")
         with self.lock:
             database, cursor = self.connect()
-            cursor.execute("INSERT INTO Favorites (Id, Type, Title, Image) VALUES (?, ?, ?, ?)", [id, type, title, image])
+            cursor.execute("INSERT INTO Favorites (Id, Type, Title, Image) VALUES (?, ?, ?, ?)", [item_id, media_type, title, image])
 
             database.commit()
             database.close()
 
-    def remove_favorite(self, id):
+    def remove_favorite(self, item_id):
         if self.slave:
             raise PermissionError("Cant call remove_favorite on slave")
 
         Logger().write(LogVerbosity.Debug, "Database remove favorite")
         with self.lock:
             database, cursor = self.connect()
-            cursor.execute("DELETE FROM Favorites WHERE Id = ?", [id])
+            cursor.execute("DELETE FROM Favorites WHERE Id = ?", [item_id])
 
             database.commit()
             database.close()
@@ -263,9 +263,7 @@ class Database(metaclass=Singleton):
             cursor.execute("SELECT * FROM Stats WHERE Name=?", [key])
             data = cursor.fetchall()
             if not data:
-                cursor.execute("INSERT INTO Stats " +
-                                        "(Name, Val, LastUpdate)" +
-                                        " VALUES (?, ?, ?)", [key, value, current_time()])
+                cursor.execute("INSERT INTO Stats (Name, Val, LastUpdate) VALUES (?, ?, ?)", [key, value, current_time()])
             else:
                 cursor.execute("UPDATE Stats SET Val=?, LastUpdate=? WHERE Name=?", [value, current_time(), key])
 
@@ -362,18 +360,20 @@ class Database(metaclass=Singleton):
             database.commit()
             database.close()
 
+
 class Favorite:
-    def __init__(self, id, image, type, title):
-        self.id = id
+    def __init__(self, item_id, image, media_type, title):
+        self.id = item_id
         self.image = image
-        self.type = type
+        self.type = media_type
         self.title = title
 
+
 class History:
-    def __init__(self, id, imdb_id, type, title, image, watched_at, season, episode, url, media_file, played_for, length):
-        self.id = id
+    def __init__(self, item_id, imdb_id, media_type, title, image, watched_at, season, episode, url, media_file, played_for, length):
+        self.id = item_id
         self.imdb_id = imdb_id
-        self.type = type
+        self.type = media_type
         self.title = title
         self.image = image
         self.watched_at = int(watched_at)
@@ -382,7 +382,7 @@ class History:
         try:
             self.season = int(season)
             self.episode = int(episode)
-        except:
+        except ValueError:
             pass
         self.url = url
         self.media_file = media_file

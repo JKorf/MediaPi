@@ -8,9 +8,10 @@ from Webserver.APIController import app
 
 class Radio(BaseMedia):
 
-    def __init__(self, id, title, url, poster):
-        super().__init__(id, poster, title)
+    def __init__(self, radio_id, title, url, poster):
+        super().__init__(radio_id, poster, title)
         self.url = url
+
 
 class RadioController:
     radios = [
@@ -46,5 +47,5 @@ class RadioController:
     @staticmethod
     @app.route('/radio', methods=['GET'])
     def get_radio_by_id():
-        id = int(request.args.get('id'))
-        return [x for x in RadioController.radios if x.id == id][0]
+        radio_id = int(request.args.get('id'))
+        return [x for x in RadioController.radios if x.id == radio_id][0]

@@ -14,6 +14,9 @@
     Websockets:
         Slave authentication
 
+    Fix slave requesting subtitles
+    Fix slave updating
+
     Add a rule based task system for automation
         Do (x) when (x) == True
         ie: Turn on lights at 18:00 and people are home

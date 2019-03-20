@@ -40,7 +40,7 @@ class EventManager:
         with EventManager.lock:
             to_handle = [x for x in EventManager.registered_events if x[1] == event_type]
 
-        for id, event_type, handler in to_handle:
+        for item_id, event_type, handler in to_handle:
             handler(*args)
 
     @staticmethod
@@ -51,6 +51,6 @@ class EventManager:
         return EventManager.last_registered_id
 
     @staticmethod
-    def deregister_event(id):
+    def deregister_event(item_id):
         with EventManager.lock:
-            EventManager.registered_events = [x for x in EventManager.registered_events if x[0] != id]
+            EventManager.registered_events = [x for x in EventManager.registered_events if x[0] != item_id]

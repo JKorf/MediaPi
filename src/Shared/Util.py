@@ -35,10 +35,6 @@ def write_size(data):
         return str(round(data / 1000000000, 2)) + 'tb'
 
 
-def write_time_from_seconds(t):
-    return time.strftime('%H:%M:%S', time.gmtime(t))
-
-
 class Singleton(type):
     _instances = {}
 

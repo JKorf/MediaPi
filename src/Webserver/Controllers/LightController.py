@@ -10,7 +10,6 @@ from Webserver.Models import LightControl, LightDevice, LightGroup
 
 
 class LightController:
-
     @staticmethod
     @app.route('/lighting/lights', methods=['GET'])
     def get_lights():
@@ -117,86 +116,76 @@ class LightController:
 
     @staticmethod
     def create_test_data():
-        result = []
-
-        result.append(LightControl(1,
-                     "Test led",
-                     "Type",
-                     123,
-                     True,
-                     True,
-                     True,
-                     True,
-                     [
-                         LightDevice(
-                             True,
-                             200,
-                             260,
-                             "4a418a")
-                     ]))
-
-        result.append(LightControl(2,
-                                   "Test led 2",
-                                   "Type",
-                                   123,
-                                   True,
-                                   True,
-                                   False,
-                                   False,
-                                   [
-                                       LightDevice(
-                                           False,
-                                           200,
-                                           0,
-                                           "")
-                                   ]))
-
-        result.append(LightControl(3,
-                                   "Test led 3",
-                                   "Type",
-                                   123,
-                                   True,
-                                   True,
-                                   False,
-                                   False,
-                                   [
-                                       LightDevice(
-                                           False,
-                                           200,
-                                           0,
-                                           "")
-                                   ]))
-
-        result.append(LightControl(4,
-                                   "Test led 4",
-                                   "Type",
-                                   123,
-                                   True,
-                                   True,
-                                   False,
-                                   False,
-                                   [
-                                       LightDevice(
-                                           False,
-                                           200,
-                                           0,
-                                           "")
-                                   ]))
-
-        result.append(LightControl(5,
-                                   "Test led 5",
-                                   "Type",
-                                   123,
-                                   True,
-                                   True,
-                                   False,
-                                   False,
-                                   [
-                                       LightDevice(
-                                           False,
-                                           200,
-                                           0,
-                                           "")
-                                   ]))
+        result = [LightControl(1,
+                               "Test led",
+                               "Type",
+                               123,
+                               True,
+                               True,
+                               True,
+                               True,
+                               [
+                                   LightDevice(
+                                       True,
+                                       200,
+                                       260,
+                                       "4a418a")
+                               ]), LightControl(2,
+                                                "Test led 2",
+                                                "Type",
+                                                123,
+                                                True,
+                                                True,
+                                                False,
+                                                False,
+                                                [
+                                                    LightDevice(
+                                                        False,
+                                                        200,
+                                                        0,
+                                                        "")
+                                                ]), LightControl(3,
+                                                                 "Test led 3",
+                                                                 "Type",
+                                                                 123,
+                                                                 True,
+                                                                 True,
+                                                                 False,
+                                                                 False,
+                                                                 [
+                                                                     LightDevice(
+                                                                         False,
+                                                                         200,
+                                                                         0,
+                                                                         "")
+                                                                 ]), LightControl(4,
+                                                                                  "Test led 4",
+                                                                                  "Type",
+                                                                                  123,
+                                                                                  True,
+                                                                                  True,
+                                                                                  False,
+                                                                                  False,
+                                                                                  [
+                                                                                      LightDevice(
+                                                                                          False,
+                                                                                          200,
+                                                                                          0,
+                                                                                          "")
+                                                                                  ]), LightControl(5,
+                                                                                                   "Test led 5",
+                                                                                                   "Type",
+                                                                                                   123,
+                                                                                                   True,
+                                                                                                   True,
+                                                                                                   False,
+                                                                                                   False,
+                                                                                                   [
+                                                                                                       LightDevice(
+                                                                                                           False,
+                                                                                                           200,
+                                                                                                           0,
+                                                                                                           "")
+                                                                                                   ])]
 
         return result

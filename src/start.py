@@ -3,12 +3,12 @@ import eventlet
 eventlet.monkey_patch()
 
 import os
+os.chdir(os.path.dirname(__file__))
+
 from datetime import datetime
 from subprocess import call
 import sys
 import time
-
-os.chdir(os.path.dirname(__file__))
 
 from Updater import Updater
 from Webserver.APIController import APIController

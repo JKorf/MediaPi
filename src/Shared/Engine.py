@@ -1,4 +1,3 @@
-import inspect
 from time import sleep
 
 from Shared.Events import EventManager

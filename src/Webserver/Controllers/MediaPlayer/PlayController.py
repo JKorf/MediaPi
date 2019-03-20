@@ -19,16 +19,16 @@ class PlayController:
     def play_movie():
         instance = int(request.args.get("instance"))
         title = urllib.parse.unquote(request.args.get("title"))
-        id = request.args.get("id")
+        movie_id = request.args.get("id")
         url = urllib.parse.unquote(request.args.get("url"))
         img = urllib.parse.unquote(request.args.get("img"))
         position = int(request.args.get("position"))
 
         Logger().write(LogVerbosity.Info, "Play movie " + title + " on " + str(instance))
         if instance == 1:
-            MediaManager().start_movie(id, title, url, img, position)
+            MediaManager().start_movie(movie_id, title, url, img, position)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "start_movie", [id, title, url, img, position])
+            SlaveWebsocketController.slave_command(instance, "media", "start_movie", [movie_id, title, url, img, position])
         return "OK"
 
     @staticmethod
@@ -36,7 +36,7 @@ class PlayController:
     def play_episode():
         instance = int(request.args.get("instance"))
         title = urllib.parse.unquote(request.args.get("title"))
-        id = request.args.get("id")
+        movie_id = request.args.get("id")
         url = urllib.parse.unquote(request.args.get("url"))
         img = urllib.parse.unquote(request.args.get("img"))
         position = int(request.args.get("position"))
@@ -45,9 +45,9 @@ class PlayController:
 
         Logger().write(LogVerbosity.Info, "Play episode " + title + " on " + str(instance))
         if instance == 1:
-            MediaManager().start_episode(id, season, episode, title, url, img, position)
+            MediaManager().start_episode(movie_id, season, episode, title, url, img, position)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "start_episode", [id, season, episode, title, url, img, position])
+            SlaveWebsocketController.slave_command(instance, "media", "start_episode", [movie_id, season, episode, title, url, img, position])
         return "OK"
 
     @staticmethod
@@ -67,8 +67,8 @@ class PlayController:
     @staticmethod
     @app.route('/play/radio', methods=['POST'])
     def play_radio():
-        id = int(request.args.get("id"))
-        radio = RadioController.radios([x for x in RadioController.radios if x.id == id][0])
+        radio_id = int(request.args.get("id"))
+        radio = RadioController.radios([x for x in RadioController.radios if x.id == radio_id][0])
         instance = int(request.args.get("instance"))
 
         Logger().write(LogVerbosity.Info, "Play radio " + radio.title + " on " + str(instance))

@@ -129,7 +129,8 @@ class Updater(metaclass=Singleton):
                 continue
             self.copy_directory(new_source + "/", target_directory + directory + "/")
 
-    def execute_command(self, name, command, cwd=None, shell=False):
+    @staticmethod
+    def execute_command(name, command, cwd=None, shell=False):
         Logger().write(LogVerbosity.Info, "Starting " + name)
         start = current_time()
         try:
@@ -159,8 +160,7 @@ class Updater(metaclass=Singleton):
             # fix for Windows 260 char limit
             relative_levels = len([directory for directory in path.split(os.sep) if directory == '..'])
             cwd = [directory for directory in os.getcwd().split(os.sep)] if ':' not in path else []
-            path = '\\\\?\\' + os.sep.join(cwd[:len(cwd) - relative_levels] \
-                                           + [directory for directory in path.split(os.sep) if directory != ''][relative_levels:])
+            path = '\\\\?\\' + os.sep.join(cwd[:len(cwd) - relative_levels] + [directory for directory in path.split(os.sep) if directory != ''][relative_levels:])
         return path
 
 

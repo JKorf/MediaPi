@@ -69,7 +69,8 @@ class APIController(metaclass=Singleton):
 
         socketio.run(app, host='0.0.0.0', port=int(Settings.get_string("api_port")), log_output=True)
 
-    def internal_start_slave(self):
+    @staticmethod
+    def internal_start_slave():
         from Webserver.Controllers.Websocket2.SlaveClientController import SlaveClientController
 
         SlaveClientController.init()
@@ -96,7 +97,7 @@ class APIController(metaclass=Singleton):
             Logger().write(LogVerbosity.Info, "Request with invalid client id / session key")
             return "Auth failed", 401
 
-
+    @staticmethod
     @app.errorhandler(500)
     def handle_internal_server_error(e):
         Logger().write_error(e, "Error in API request")
@@ -131,8 +132,8 @@ class APIController(metaclass=Singleton):
 
 class SlaveClient:
 
-    def __init__(self, id, name, client):
-        self.id = id
+    def __init__(self, slave_id, name, client):
+        self.id = slave_id
         self.name = name
         self._client = client
         self.last_seen = 0
@@ -171,8 +172,8 @@ class SlaveCollection(Observable):
             return slave[0]
         return None
 
-    def get_slave_by_id(self, id):
-        slave = [x for x in self.data if x.id == id]
+    def get_slave_by_id(self, slave_id):
+        slave = [x for x in self.data if x.id == slave_id]
         if len(slave) > 0:
             return slave[0]
         return None

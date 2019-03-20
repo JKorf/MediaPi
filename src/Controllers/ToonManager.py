@@ -24,4 +24,4 @@ class ToonManager(metaclass=Singleton):
 
     def set_state(self, state):
         Logger().write(LogVerbosity.Debug, "Set toon state:" + str(state))
-        self.api.thermostat_state  = state
+        self.api.thermostat_state = state

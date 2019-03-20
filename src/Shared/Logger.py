@@ -60,10 +60,9 @@ class Logger(metaclass=Singleton):
         self.file = open(self.log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab', buffering=0)
         self.file.write(("Time".ljust(14) + " | "
                          + "Thread".ljust(30) + " | "
-                         + "File".ljust(25) + " | "
-                         + "Function".ljust(30) + " | #"
-                         + "Line".ljust(5) + " | "
-                         + "Type".ljust(7) + " | "
+                         + "File/Line number".ljust(35) + " | "
+                         + "Function".ljust(25) + " | "
+                         + "Priority".ljust(9) + " | "
                          + "Message\r\n").encode("utf8"))
         self.file.write(("-" * 140 + "\r\n").encode("utf8"))
 
@@ -132,9 +131,8 @@ class Logger(metaclass=Singleton):
 
     def write_error(self, e, additional_info=None):
         with self.exception_lock:
-            self.write(LogVerbosity.Important, "Error ocured: " + str(type(e).__name__)+ ", more information in the error log")
-            with open(self.log_path + '/error_'+ type(e).__name__ + '_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab',
-                             buffering=0) as file:
+            self.write(LogVerbosity.Important, "Error occurred: " + str(type(e).__name__) + ", more information in the error log")
+            with open(self.log_path + '/error_' + type(e).__name__ + '_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab', buffering=0) as file:
                 file.write(b'Time:'.ljust(20) + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S').encode('utf-8') + b'\r\n')
                 file.write(b'Error:'.ljust(20) + type(e).__name__.encode('utf-8') + b'\r\n')
                 if additional_info is not None:
@@ -146,25 +144,29 @@ class Logger(metaclass=Singleton):
                     if not self.raspberry:
                         print(e_traceback)
 
-    def format_item(self, time, thread_name, file_name, line, function, priority, message):
-        return time.strftime('%H:%M:%S.%f')[:-3].ljust(14) + " | " \
+    @staticmethod
+    def format_item(item_time, thread_name, file_name, line, function, priority, message):
+        return item_time.strftime('%H:%M:%S.%f')[:-3].ljust(14) + " | " \
             + thread_name.ljust(30) + " | " \
             + (file_name + " #" + str(line)).ljust(35) + " | " \
             + function.ljust(25) + " | " \
             + str(priority)[13:].ljust(9) + " | " \
             + message
 
-    def get_log_files(self):
+    @staticmethod
+    def get_log_files():
         list_of_files = glob.glob(Settings.get_string("base_folder") + "/Logs/*/*.txt")
         latest_files = sorted(list_of_files, key=os.path.getctime, reverse=True)
         return [(os.path.basename(x), x, os.path.getsize(x)) for x in latest_files]
 
-    def get_log_file(self, file):
+    @staticmethod
+    def get_log_file(file):
         if not file.endswith(".txt"):
             raise Exception("Not a log file")
 
         with open(file) as f:
             return "\r\n".join(f.readlines())
+
 
 def path_leaf(path):
     head, tail = ntpath.split(path)

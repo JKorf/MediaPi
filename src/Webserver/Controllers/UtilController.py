@@ -1,4 +1,3 @@
-import os
 import urllib.parse
 
 from flask import request
@@ -44,18 +43,18 @@ class UtilController:
     @staticmethod
     @app.route('/util/logs', methods=['GET'])
     def get_log_files():
-        log_files = Logger().get_log_files()
+        log_files = Logger.get_log_files()
         return to_JSON([(name, path, write_size(size)) for name, path, size in log_files])
 
     @staticmethod
     @app.route('/util/log', methods=['GET'])
     def get_log_file():
         file = urllib.parse.unquote(request.args.get('file'))
-        return Logger().get_log_file(file)
+        return Logger.get_log_file(file)
 
 
 class UpdateAvailable:
 
-    def __init__(self, available, hash):
+    def __init__(self, available, commit_hash):
         self.available = available
-        self.hash = hash
+        self.hash = commit_hash

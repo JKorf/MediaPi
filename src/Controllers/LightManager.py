@@ -1,5 +1,4 @@
 import sys
-import traceback
 import uuid
 from threading import Lock
 
@@ -89,7 +88,7 @@ class LightManager(metaclass=Singleton):
         self.observing = True
         if self.observing_end > current_time():
             Logger().write(LogVerbosity.All, "Still observing, not starting again")
-            return # still observing, the check observing thread will renew
+            return  # still observing, the check observing thread will renew
 
         if not self.check_state():
             return
@@ -212,7 +211,8 @@ class LightManager(metaclass=Singleton):
                 return False  # init failed
         return True
 
-    def parse_light_control(self, data):
+    @staticmethod
+    def parse_light_control(data):
         lights = []
         for light in data.light_control.lights:
             lights.append(LightDevice(
@@ -231,6 +231,7 @@ class LightManager(metaclass=Singleton):
                             data.light_control.can_set_color,
                             lights)
 
+
 class LightState(Observable):
 
     def __init__(self):
@@ -242,7 +243,7 @@ class LightState(Observable):
         if hasattr(group, 'raw'):
             Logger().write(LogVerbosity.Debug, "Light update: " + str(group.raw))
         with self._update_lock:
-            if not group.id in [x.id for x in self.groups]:
+            if group.id not in [x.id for x in self.groups]:
                 self.groups.append(LightGroup(group.id, group.name, group.state, group.dimmer))
             else:
                 g = [x for x in self.groups if x.id == group.id][0]

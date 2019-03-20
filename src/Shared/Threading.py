@@ -1,7 +1,6 @@
 import threading
-import traceback
 
-from Shared.Logger import Logger, LogVerbosity
+from Shared.Logger import Logger
 from Shared.Util import current_time
 
 

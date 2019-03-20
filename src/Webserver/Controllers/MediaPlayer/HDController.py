@@ -1,5 +1,3 @@
-import json
-import subprocess
 import sys
 import urllib.parse
 import urllib.request

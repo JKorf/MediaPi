@@ -101,6 +101,7 @@ class DeviceView extends Component {
         var html = data.data.replace(/\r\n/g, '<br />');
         var newWindow = window.open();
         newWindow.document.write("<html><head><title>" + file + "</title></head><body>" + html + "</body></html>");
+        newWindow.document.close();
         this.setState({loading: false});
     });
   }

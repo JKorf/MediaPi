@@ -44,9 +44,9 @@ class AuthController:
         return to_JSON(AuthResult(True, session_key)), 200
 
     @staticmethod
-    def validate(id, p):
+    def validate(client_id, p):
         if APIController.get_salted(p) == SecureSettings.get_string("api_password"):
-            client_key = APIController.get_salted(id)
+            client_key = APIController.get_salted(client_id)
             session_key = AuthController.generate_session_key()
             Database().add_client(client_key, session_key)
             return True, session_key

@@ -76,9 +76,9 @@ class ThermostatDetails:
 
 
 class ThermostatState:
-    def __init__(self, name, id, temp, dhw):
+    def __init__(self, name, state_id, temp, dhw):
         self.name = name
-        self.id = id
+        self.id = state_id
         self.temp = temp
         self.dhw = dhw
 

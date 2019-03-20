@@ -33,4 +33,3 @@ class DataController:
     def get_unfinished_items():
         Logger().write(LogVerbosity.Debug, "Getting unfinished items")
         return to_JSON(Database().get_watching_items())
-
