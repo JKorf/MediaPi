@@ -199,7 +199,7 @@ class TorrentPeerManager:
             return True
 
         if self.torrent.network_manager.throttling:
-            return True # currently throttling, don't stop slow peers because they might just be throttled
+            return True  # currently throttling, don't stop slow peers because they might just be throttled
 
         if len(self.connected_peers) < self.max_peers_connected ** 0.66:
             return True  # Don't stop any peers if we have less than 66% of the max amount of peers

@@ -382,7 +382,7 @@ class History:
         try:
             self.season = int(season)
             self.episode = int(episode)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
         self.url = url
         self.media_file = media_file

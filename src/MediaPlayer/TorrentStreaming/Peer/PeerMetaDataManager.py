@@ -23,6 +23,9 @@ class PeerMetaDataManager:
         self.port_send = False
         self.last_peer_exchange = current_time()
 
+        self.low_peer_max_speed = Settings.get_int("low_peer_max_download_buffer") / 3
+        self.medium_peer_max_speed = Settings.get_int("medium_peer_max_download_buffer") / 3
+
     def update(self):
         if self.peer.connection_manager.connection_state != ConnectionState.Connected:
             return True
@@ -106,9 +109,9 @@ class PeerMetaDataManager:
         if self.peer.extension_manager.peer_supports(ExtensionName.PeerExchange):
             pass
 
-        if self.peer.counter.value < self.peer.low_max_download_speed:
+        if self.peer.counter.value < self.low_peer_max_speed:
             self.peer.peer_speed = PeerSpeed.Low
-        elif self.peer.counter.value < self.peer.medium_max_download_speed:
+        elif self.peer.counter.value < self.medium_peer_max_speed:
             self.peer.peer_speed = PeerSpeed.Medium
         else:
             self.peer.peer_speed = PeerSpeed.High

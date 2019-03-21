@@ -8,15 +8,12 @@ from MediaPlayer.TorrentStreaming.Peer.PeerMessageHandler import PeerMessageHand
 from MediaPlayer.Util.Counter import AverageCounter
 from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState, PeerSource
 from Shared import Engine
+from Shared.LogObject import LogObject, log_wrapper
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Stats import Stats
 
 
-class Peer:
-
-    low_max_download_speed = 100000
-    medium_max_download_speed = 250000
-
+class Peer(LogObject):
     @property
     def bitfield(self):
         # Only create a new bitfield when we actually have metadata for it
@@ -29,6 +26,7 @@ class Peer:
         return self.connection_manager.connection_state
 
     def __init__(self, id, torrent, uri, source):
+        super().__init__(torrent, "Peer " + str(id))
         self.id = id
         self.torrent = torrent
         self.uri = uri
@@ -63,6 +61,7 @@ class Peer:
         self.engine.add_work_item("connection_manager", 30000, self.connection_manager.update)
         self.engine.add_work_item("metadata_manager", 1000, self.metadata_manager.update)
         self.engine.add_work_item("download_manager", 200, self.download_manager.update)
+        self.update_log("state", "connecting")
 
         self.counter.start()
         self.engine.start()
@@ -75,6 +74,7 @@ class Peer:
         self.download_manager.log()
 
     def on_connect(self):
+        self.update_log("state", "connected")
         self.add_connected_peer_stat(self.source)
 
     def on_disconnect(self):
@@ -95,6 +95,7 @@ class Peer:
         if not self.running:
             return
 
+        self.update_log("state", "stopping")
         Logger().write(LogVerbosity.All, str(self.id) + ' Peer stopping')
         self.running = False
 
@@ -107,6 +108,7 @@ class Peer:
         self.counter.stop()
 
         self.torrent = None
+        self.update_log("state", "stopped")
         Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer stopped')
 
 

@@ -20,25 +20,25 @@ from MediaPlayer.Util.Enums import TorrentState
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared import Engine
 from Shared.Events import EventManager, EventType
+from Shared.LogObject import LogObject, log_wrapper
 from Shared.Logger import Logger, LogVerbosity
-from Shared.Settings import Settings
 from Shared.Stats import Stats
-from Shared.Util import headers, write_size, current_time
+from Shared.Util import headers, write_size
 
 
-class Torrent:
+class Torrent(LogObject):
+    @property
+    def left(self):
+        return self._left
+
+    @left.setter
+    def left(self, value):
+        self.update_log("left", value)
+        self._left = value
 
     @property
     def stream_speed(self):
         return self.output_manager.stream_manager.stream_speed
-
-    @property
-    def left(self):
-        return self.to_download_bytes
-
-    @left.setter
-    def left(self, value):
-        self.to_download_bytes = value
 
     @property
     def bytes_ready_in_buffer(self):
@@ -90,6 +90,11 @@ class Torrent:
                or self.__state == TorrentState.WaitingUserFileSelection
 
     def __init__(self, id, uri):
+        super().__init__(None, "Torrent")
+
+        self._left = 0
+        self.overhead = 0
+
         self.name = None
         self.id = id
         self.uri = uri
@@ -107,8 +112,6 @@ class Torrent:
         self.selected_media_file = None
 
         self.stream_file_hash = None
-        self.to_download_bytes = 0
-        self.overhead = 0
 
         self.user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
         self.log_id = EventManager.register_event(EventType.Log, self.log)
@@ -297,8 +300,8 @@ class Torrent:
 
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
         self.__set_state(TorrentState.Downloading)
-        self.to_download_bytes = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
-        Logger().write(LogVerbosity.Info, "To download: " + str(self.to_download_bytes) + " (" + str(self.to_download_bytes - self.media_file.length) + " overhead), piece length: " + str(self.piece_length))
+        self.left = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
+        Logger().write(LogVerbosity.Info, "To download: " + str(self.left) + " (" + str(self.left - self.media_file.length) + " overhead), piece length: " + str(self.piece_length))
         EventManager.throw_event(EventType.TorrentMediaFileSet, [self.media_file.name])
 
     def user_file_selected(self, file_path):
@@ -345,7 +348,7 @@ class Torrent:
     def torrent_done(self):
         Logger().write(LogVerbosity.Important, 'Torrent is done')
         self.output_manager.flush()
-        self.to_download_bytes = 0
+        self.left = 0
         self.__set_state(TorrentState.Done)
 
     def __set_state(self, value):

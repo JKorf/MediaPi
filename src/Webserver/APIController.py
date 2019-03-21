@@ -80,7 +80,7 @@ class APIController(metaclass=Singleton):
     @app.before_request
     def before_req():
         if request.method == "OPTIONS" \
-                or request.path == "/auth/" \
+                or request.path.startswith("/auth/") \
                 or request.path.startswith("/ws")\
                 or request.path.startswith("/Slave"):
             return

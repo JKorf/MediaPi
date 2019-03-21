@@ -17,101 +17,48 @@ from Shared.Util import Singleton
 class Logger(metaclass=Singleton):
 
     def __init__(self):
-        self.file = None
         self.log_level = 0
-        self.log_thread = None
-
-        self.queue = []
-        self.queue_event = threading.Event()
-        self.queue_lock = threading.Lock()
+        self.log_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
 
         self.raspberry = sys.platform == "linux" or sys.platform == "linux2"
         self.log_path = Settings.get_string("base_folder") + "/Logs/" + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
-        self.max_log_file_size = Settings.get_int("max_log_file_size")
 
         self.file_size = 0
         self.exception_lock = threading.Lock()
         self.running = False
 
+        self.last_id = 1
+        self.last_id_lock = threading.Lock()
+
+        self.log_processor = LogProcessor(self.raspberry, self.log_path, 'log_' + self.log_time + ".txt", True)
+        self.state_log_processor = LogProcessor(self.raspberry, self.log_path, 'state_' + self.log_time + ".txt", False)
+
     def start(self, log_level):
-        self.log_level = log_level
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
+
+        print("Log path: " + self.log_path)
 
         if self.raspberry:
             sys.stdout = StdOutWriter(self.write_print)
             sys.stderr = StdOutWriter(self.write_print)
 
-        self.create_log_file()
-        self.running = True
+        self.log_level = log_level
 
-        self.log_thread = threading.Thread(name="Logger thread", target=self.process_queue, daemon=False)
-        self.log_thread.start()
+        self.log_processor.start()
+        self.state_log_processor.start()
 
-        print("Log location: " + self.log_path)
+        self.log_processor.enqueue("Time".ljust(14) + " | "
+                    + "Thread".ljust(30) + " | "
+                    + "File/Line number".ljust(35) + " | "
+                    + "Function".ljust(25) + " | "
+                    + "Priority".ljust(9) + " | "
+                    + "Message\r\n"
+                    + "-" * 140 + "\r\n")
 
     def stop(self):
-        self.running = False
-        self.queue_event.set()
-        self.log_thread.join()
-
-    def create_log_file(self):
-        self.file_size = 0
-        self.file = open(self.log_path + '/log_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab', buffering=0)
-        self.file.write(("Time".ljust(14) + " | "
-                         + "Thread".ljust(30) + " | "
-                         + "File/Line number".ljust(35) + " | "
-                         + "Function".ljust(25) + " | "
-                         + "Priority".ljust(9) + " | "
-                         + "Message\r\n").encode("utf8"))
-        self.file.write(("-" * 140 + "\r\n").encode("utf8"))
-
-    def process_queue(self):
-        while True:
-            self.queue_event.wait(0.1)
-            with self.queue_lock:
-                self.queue_event.clear()
-                items = list(self.queue)
-                item_count = len(items)
-                if item_count == 0:
-                    continue
-
-                if item_count > 50:
-                    items.append(self.format_item(datetime.datetime.utcnow(), "-", "-", 0, "-", LogVerbosity.Debug, "Processed " + str(item_count) + " log items this round"))
-
-                self.queue.clear()
-
-            total = "\r\n".join(items)
-            try:
-                if not self.raspberry:
-                    print(total)
-
-                byte_data = (total + "\r\n").encode('utf8')
-                self.file.write(byte_data)
-                self.file_size += len(byte_data)
-                self.check_file_size()
-                time.sleep(0)
-            except Exception as e:
-                self.write_error(e, "Exception during logging")
-
-            if not self.running:
-                # If stopped, wait for 100 ms and if nothing gets added stop
-                time.sleep(0.1)
-                with self.queue_lock:
-                    if len(self.queue) == 0:
-                        break
-
-    def check_file_size(self):
-        if self.file_size > self.max_log_file_size:
-            self.file.write(b"Max file size reached, continue in new file")
-            self.file.close()
-            self.create_log_file()
-            self.file.write(b"Continue after max file size was reached\r\n")
-
-    def write_print(self, message):
-        with self.queue_lock:
-            self.queue.append(message)
-            self.queue_event.set()
+        self.log_processor.stop()
+        self.state_log_processor.stop()
 
     def write(self, log_priority, message):
         if self.log_level <= log_priority.value:
@@ -125,9 +72,16 @@ class Logger(metaclass=Singleton):
                 log_priority,
                 message)
 
-            with self.queue_lock:
-                self.queue.append(str_info)
-                self.queue_event.set()
+            self.log_processor.enqueue(str_info)
+
+    def write_print(self, message):
+        self.log_processor.enqueue(message)
+
+    def create_state_object(self, parent_id, id, name):
+        self.state_log_processor.enqueue("{}|{}|{}|{}".format(datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3], parent_id, id, name))
+
+    def update_state(self, id, property, value):
+        self.state_log_processor.enqueue("{}|{}|{}|{}".format(datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3], id, property, str(value)))
 
     def write_error(self, e, additional_info=None):
         with self.exception_lock:
@@ -167,6 +121,11 @@ class Logger(metaclass=Singleton):
         with open(file) as f:
             return "\r\n".join(f.readlines())
 
+    def next_id(self):
+        with self.last_id_lock:
+            self.last_id += 1
+            return self.last_id
+
 
 def path_leaf(path):
     head, tail = ntpath.split(path)
@@ -200,3 +159,101 @@ class StdOutWriter:
 
     def flush(self):
         pass
+
+
+class LogProcessor:
+
+    def __init__(self, raspberry, base_path, file_name, print_to_output):
+        self.raspberry = raspberry
+        self.base_path = base_path
+        self.base_file_name = file_name
+        self.print_to_output = print_to_output
+        self.file = None
+        self.file_size = 0
+        self.file_number = 1
+        self.max_log_file_size = Settings.get_int("max_log_file_size")
+
+        self.running = True
+
+        self.process_thread = None
+        self.queue = []
+        self.queue_event = threading.Event()
+        self.queue_lock = threading.Lock()
+
+    def start(self):
+        self.create_log_file('log_' + self.base_file_name + ".txt")
+        self.running = True
+
+        self.process_thread = threading.Thread(name="Logger thread", target=self.process, daemon=False)
+        self.process_thread.start()
+
+    def create_log_file(self, file_name):
+        self.file_size = 0
+        self.file = open(self.base_path + '/' + file_name, 'ab', buffering=0)
+
+    def stop(self):
+        self.running = False
+        self.process_thread.join()
+        self.file.close()
+
+    def enqueue(self, item):
+        with self.queue_lock:
+            self.queue.append(item)
+            self.queue_event.set()
+
+    def process(self):
+        while True:
+            self.queue_event.wait(0.1)
+            with self.queue_lock:
+                self.queue_event.clear()
+                items = list(self.queue)
+                item_count = len(items)
+                if item_count == 0:
+                    continue
+
+                self.queue.clear()
+
+            total = "\r\n".join(items)
+            try:
+                if self.print_to_output:
+                    print(total)
+
+                byte_data = (total + "\r\n").encode('utf8')
+                self.file.write(byte_data)
+                self.file_size += len(byte_data)
+                self.check_file_size()
+                time.sleep(0)
+            except Exception as e:
+                Logger().write_error(e, "Exception during logging")
+
+            if not self.running:
+                # If stopped, wait for 100 ms and if nothing gets added stop
+                time.sleep(0.1)
+                with self.queue_lock:
+                    if len(self.queue) == 0:
+                        break
+
+    def check_file_size(self):
+        if self.file_size > self.max_log_file_size:
+            self.file.write(b"Max file size reached, continue in new file")
+            self.file.close()
+            self.file_number += 1
+            file_name = self.base_file_name
+            if self.file_number > 1:
+                file_name += " #" + str(self.file_number)
+
+            self.create_log_file(file_name)
+            self.file.write(b"Continue after max file size was reached\r\n")
+
+
+class LogItemTracker:
+
+    def __init__(self, parent_id, name):
+        self.id = Logger().next_id()
+        self.parent_id = parent_id
+        self.name = name
+
+        Logger().create_state_object(self.parent_id, self.id, self.name)
+
+    def update(self, property, value):
+        Logger().update_state(self.id, property, value)

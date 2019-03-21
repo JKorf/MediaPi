@@ -1,10 +1,8 @@
-import os
 from threading import Lock
 
 from pympler import asizeof
 
 from MediaPlayer.Streaming.StreamManager import StreamManager
-from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import write_size
 
