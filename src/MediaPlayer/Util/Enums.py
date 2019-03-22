@@ -62,7 +62,7 @@ class ExtensionType:
     Extension = 2
 
 
-class ExtensionName:
+class ExtensionName(Enum):
     FastExtension = 1
     ExtensionProtocol = 2
     PeerExchange = 3

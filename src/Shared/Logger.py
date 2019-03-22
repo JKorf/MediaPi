@@ -77,11 +77,11 @@ class Logger(metaclass=Singleton):
     def write_print(self, message):
         self.log_processor.enqueue(message)
 
-    def create_state_object(self, parent_id, id, name):
-        self.state_log_processor.enqueue("{}|{}|{}|{}".format(datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3], parent_id, id, name))
+    def create_state_object(self, id, name):
+        self.state_log_processor.enqueue("{}|{}|{}|{}".format(1, datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3], id, name))
 
     def update_state(self, id, property, value):
-        self.state_log_processor.enqueue("{}|{}|{}|{}".format(datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3], id, property, str(value)))
+        self.state_log_processor.enqueue("{}|{}|{}|{}|{}".format(2, datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3], id, property, str(value)))
 
     def write_error(self, e, additional_info=None):
         with self.exception_lock:
@@ -253,7 +253,10 @@ class LogItemTracker:
         self.parent_id = parent_id
         self.name = name
 
-        Logger().create_state_object(self.parent_id, self.id, self.name)
+        if self.parent_id != 0:
+            self.id = str(self.parent_id) + ";" + str(self.id)
+
+        Logger().create_state_object(self.id, self.name)
 
     def update(self, prop, value):
         Logger().update_state(self.id, prop, value)

@@ -51,7 +51,7 @@ class Peer(LogObject):
         Logger().write(LogVerbosity.All, str(self.id) + ' Starting peer')
         self.running = True
 
-        self.connection_manager = PeerConnectionManager(self.id, self.uri, self.on_connect, self.on_disconnect)
+        self.connection_manager = PeerConnectionManager(self, self.uri, self.on_connect, self.on_disconnect)
         self.download_manager = PeerDownloadManager(self)
         self.metadata_manager = PeerMetaDataManager(self)
         self.message_handler = PeerMessageHandler(self)

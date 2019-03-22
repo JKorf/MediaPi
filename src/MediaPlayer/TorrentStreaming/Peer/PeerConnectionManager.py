@@ -12,8 +12,8 @@ from Shared.Util import current_time
 
 class PeerConnectionManager:
 
-    def __init__(self, peer_id, uri, on_connect, on_disconnect):
-        self.peer_id = peer_id
+    def __init__(self, peer, uri, on_connect, on_disconnect):
+        self.peer = peer
         self.uri = uri
         self.received_bytes = []
         self.to_send_bytes = bytearray()
@@ -36,19 +36,19 @@ class PeerConnectionManager:
     def start(self):
         self.connection_state = ConnectionState.Connecting
         self.connected_on = 0
-        Logger().write(LogVerbosity.All, str(self.peer_id) + ' connecting to ' + str(self.uri.netloc))
+        Logger().write(LogVerbosity.All, str(self.peer.id) + ' connecting to ' + str(self.uri.netloc))
         Stats.add('peers_connect_try', 1)
 
         if not self.connection.connect():
             Stats.add('peers_connect_failed', 1)
-            Logger().write(LogVerbosity.All, str(self.peer_id) + ' could not connect to ' + str(self.uri.netloc))
+            Logger().write(LogVerbosity.All, str(self.peer.id) + ' could not connect to ' + str(self.uri.netloc))
             self.disconnect()
             return
 
         self.connected_on = current_time()
         self.on_connect()
         Stats.add('peers_connect_success', 1)
-        Logger().write(LogVerbosity.Debug, str(self.peer_id) + ' connected to ' + str(self.uri.netloc))
+        Logger().write(LogVerbosity.Debug, str(self.peer.id) + ' connected to ' + str(self.uri.netloc))
         self.connection_state = ConnectionState.Connected
         self.connection.socket.setblocking(0)
 
@@ -63,6 +63,7 @@ class PeerConnectionManager:
 
         self.buffer[self.buffer_position:] = data
         self.last_communication = current_time()
+        self.peer.update_log("last com", self.last_communication)
 
         data_length = len(data)
         if data_length < self.next_message_length:
@@ -106,6 +107,7 @@ class PeerConnectionManager:
                 success = self.connection.send(self.to_send_bytes)
                 self.to_send_bytes.clear()
                 self.last_communication = current_time()
+                self.peer.update_log("downloading", self.last_communication)
 
         if not success:
             self.disconnect()
@@ -144,7 +146,7 @@ class PeerConnectionManager:
         if self.connection_state == ConnectionState.Disconnected:
             return
 
-        Logger().write(LogVerbosity.Debug, str(self.peer_id) + ' disconnected')
+        Logger().write(LogVerbosity.Debug, str(self.peer.id) + ' disconnected')
         self.connection_state = ConnectionState.Disconnected
 
         with self.sendLock:

@@ -20,7 +20,7 @@ from MediaPlayer.Util.Enums import TorrentState
 from MediaPlayer.Util.Util import try_parse_season_episode, is_media_file
 from Shared import Engine
 from Shared.Events import EventManager, EventType
-from Shared.LogObject import LogObject, log_wrapper
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Stats import Stats
 from Shared.Util import headers, write_size
@@ -352,6 +352,7 @@ class Torrent(LogObject):
         self.__set_state(TorrentState.Done)
 
     def __set_state(self, value):
+        self.update_log("state", TorrentState.get_str(value))
         Logger().write(LogVerbosity.Info, "Setting torrent state from " + TorrentState.get_str(self.__state) + " to " + TorrentState.get_str(value))
         old = self.__state
         self.__state = value

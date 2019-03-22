@@ -8,7 +8,7 @@ from Shared.Settings import Settings
 from Shared.Util import current_time, write_size
 
 
-class PeerDownloadManager(LogObject):
+class PeerDownloadManager:
     @property
     def max_blocks(self):
         max = self.fast_peer_max_blocks
@@ -25,8 +25,6 @@ class PeerDownloadManager(LogObject):
         return min(max_download_speed_blocks, max)
 
     def __init__(self, peer):
-        super().__init__(peer, "Download manager")
-
         self.peer = peer
         self.stopped = False
         self.downloading = []
@@ -101,7 +99,7 @@ class PeerDownloadManager(LogObject):
             Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending request for piece ' + str(request.index) + ", block " + str(
                 request.offset // 16384))
             self.peer.connection_manager.send(request.to_bytes())
-        self.update_log("downloading", download_count)
+        self.peer.update_log("downloading", download_count)
 
     def block_done(self, block_offset):
         with self.blocks_done_lock:
@@ -141,7 +139,7 @@ class PeerDownloadManager(LogObject):
         if canceled:
             Logger().write(LogVerbosity.Debug, str(self.peer.id) + " canceled " + str(canceled) + " blocks")
             self.timed_out_blocks = current_time()
-        self.update_log("downloading", len(self.downloading))
+        self.peer.update_log("downloading", len(self.downloading))
 
     def get_priority_timeout(self, priority):
         if priority >= 100:
@@ -163,6 +161,7 @@ class PeerDownloadManager(LogObject):
                 peer_download[0][0].remove_downloader(self.peer)
                 Logger().write(LogVerbosity.Debug, "Removed a rejected request from peer download manager")
                 self.downloading.remove(peer_download[0])
+            self.peer.update_log("downloading", len(self.downloading))
 
     def log(self):
         cur_downloading = [str(block.index) + ", " for block, request_time in self.downloading]
@@ -178,4 +177,5 @@ class PeerDownloadManager(LogObject):
                 block.remove_downloader(self.peer)
             self.downloading.clear()
             self.blocks_done.clear()
+            self.peer.update_log("downloading", len(self.downloading))
 
