@@ -9,8 +9,14 @@ class LogObject:
             parent_id = parent.log_tracker.id
         self.log_tracker = LogItemTracker(parent_id, name)
 
-    def update_log(self, name, value):
-        self.log_tracker.update(name, value)
+    def __setattr__(self, name, value):
+        if hasattr(self, "log_tracker"):
+            if not name.startswith("_") and isinstance(value, (str, int, float, bool)):
+                self.log_tracker.update(name, value)
+        super().__setattr__(name, value)
+
+    def finish(self):
+        self.log_tracker.finish()
 
 
 def log_wrapper(prop):

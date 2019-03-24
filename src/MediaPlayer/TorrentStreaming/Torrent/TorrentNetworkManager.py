@@ -3,13 +3,14 @@ from time import sleep
 
 from MediaPlayer.Util.Counter import LiveCounter, AverageCounter
 from Shared.Events import EventManager, EventType
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
 
-class TorrentNetworkManager:
+class TorrentNetworkManager(LogObject):
 
     @property
     def max_download_speed(self):
@@ -19,6 +20,8 @@ class TorrentNetworkManager:
             return 0
 
     def __init__(self, torrent):
+        super().__init__(torrent, "network")
+
         self.running = True
 
         self.throttle_limit = Settings.get_int("start_throttling_buffer_size")

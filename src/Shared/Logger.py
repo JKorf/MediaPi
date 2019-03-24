@@ -83,6 +83,9 @@ class Logger(metaclass=Singleton):
     def update_state(self, id, property, value):
         self.state_log_processor.enqueue("{}|{}|{}|{}|{}".format(2, datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3], id, property, str(value)))
 
+    def finish_state_object(self, id):
+        self.state_log_processor.enqueue("{}|{}|{}".format(3, datetime.datetime.utcnow().strftime('%H:%M:%S.%f')[:-3], id))
+
     def write_error(self, e, additional_info=None):
         with self.exception_lock:
             self.write(LogVerbosity.Important, "Error occurred: " + str(type(e).__name__) + ", more information in the error log")
@@ -260,3 +263,6 @@ class LogItemTracker:
 
     def update(self, prop, value):
         Logger().update_state(self.id, prop, value)
+
+    def finish(self):
+        Logger().finish_state_object(self.id)

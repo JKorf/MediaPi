@@ -5,13 +5,16 @@ from pympler import asizeof
 from MediaPlayer.TorrentStreaming.Torrent.Prioritizer import StreamPrioritizer
 from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 from Shared.Events import EventManager, EventType
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import current_time, write_size
 
 
-class TorrentDownloadManager:
+class TorrentDownloadManager(LogObject):
 
     def __init__(self, torrent):
+        super().__init__(torrent, "download")
+
         self.torrent = torrent
         self.prioritizer = StreamPrioritizer(self.torrent)
 

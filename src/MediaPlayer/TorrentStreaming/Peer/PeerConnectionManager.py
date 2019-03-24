@@ -63,7 +63,6 @@ class PeerConnectionManager:
 
         self.buffer[self.buffer_position:] = data
         self.last_communication = current_time()
-        self.peer.update_log("last com", self.last_communication)
 
         data_length = len(data)
         if data_length < self.next_message_length:
@@ -107,7 +106,6 @@ class PeerConnectionManager:
                 success = self.connection.send(self.to_send_bytes)
                 self.to_send_bytes.clear()
                 self.last_communication = current_time()
-                self.peer.update_log("downloading", self.last_communication)
 
         if not success:
             self.disconnect()

@@ -61,7 +61,6 @@ class Peer(LogObject):
         self.engine.add_work_item("connection_manager", 30000, self.connection_manager.update)
         self.engine.add_work_item("metadata_manager", 1000, self.metadata_manager.update)
         self.engine.add_work_item("download_manager", 200, self.download_manager.update)
-        self.update_log("state", "connecting")
 
         self.counter.start()
         self.engine.start()
@@ -74,7 +73,6 @@ class Peer(LogObject):
         self.download_manager.log()
 
     def on_connect(self):
-        self.update_log("state", "connected")
         self.add_connected_peer_stat(self.source)
 
     def on_disconnect(self):
@@ -95,7 +93,6 @@ class Peer(LogObject):
         if not self.running:
             return
 
-        self.update_log("state", "stopping")
         Logger().write(LogVerbosity.All, str(self.id) + ' Peer stopping')
         self.running = False
 
@@ -108,7 +105,7 @@ class Peer(LogObject):
         self.counter.stop()
 
         self.torrent = None
-        self.update_log("state", "stopped")
+        self.finish()
         Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer stopped')
 
 

@@ -27,14 +27,6 @@ from Shared.Util import headers, write_size
 
 
 class Torrent(LogObject):
-    @property
-    def left(self):
-        return self._left
-
-    @left.setter
-    def left(self, value):
-        self.update_log("left", value)
-        self._left = value
 
     @property
     def stream_speed(self):
@@ -92,7 +84,7 @@ class Torrent(LogObject):
     def __init__(self, id, uri):
         super().__init__(None, "Torrent")
 
-        self._left = 0
+        self.left = 0
         self.overhead = 0
 
         self.name = None
@@ -352,7 +344,6 @@ class Torrent(LogObject):
         self.__set_state(TorrentState.Done)
 
     def __set_state(self, value):
-        self.update_log("state", TorrentState.get_str(value))
         Logger().write(LogVerbosity.Info, "Setting torrent state from " + TorrentState.get_str(self.__state) + " to " + TorrentState.get_str(value))
         old = self.__state
         self.__state = value

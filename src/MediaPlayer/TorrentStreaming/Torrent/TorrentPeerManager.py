@@ -8,16 +8,19 @@ from MediaPlayer.TorrentStreaming.Peer.PeerMessages import HaveMessage
 from MediaPlayer.TorrentStreaming.Peer.Peer import Peer
 from MediaPlayer.Util.Enums import PeerSource, TorrentState, ConnectionState, PeerSpeed
 from Shared.Events import EventManager, EventType
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Stats import Stats
 from Shared.Util import current_time, write_size
 
 
-class TorrentPeerManager:
+class TorrentPeerManager(LogObject):
     __peer_id = 0
 
     def __init__(self, torrent):
+        super().__init__(torrent, "peers")
+
         self.torrent = torrent
         self.potential_peers = []
         self.connecting_peers = []

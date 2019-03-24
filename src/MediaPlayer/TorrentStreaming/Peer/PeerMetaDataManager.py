@@ -5,14 +5,16 @@ from MediaPlayer.TorrentStreaming.Peer.PeerMessages import BitfieldMessage, Inte
     UninterestedMessage, MetadataMessage, PortMessage, HaveNoneMessage
 from MediaPlayer.Util.Enums import ConnectionState, ExtensionName, MetadataMessageType, TorrentState, PeerInterestedState, \
     PeerSpeed
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Util import current_time
 
 
-class PeerMetaDataManager:
+class PeerMetaDataManager(LogObject):
 
     def __init__(self, peer):
+        super().__init__(peer, "meta")
         self.peer = peer
 
         self.handshake_done = False
@@ -76,7 +78,6 @@ class PeerMetaDataManager:
 
                 if self.peer.communication_state.out_interest == PeerInterestedState.Interested:
                     Logger().write(LogVerbosity.Debug, "Paused, sending uninterested")
-                    self.peer.update_log("interest out", False)
                     self.peer.communication_state.out_interest = PeerInterestedState.Uninterested
                     self.peer.connection_manager.send(UninterestedMessage().to_bytes())
 
@@ -104,7 +105,6 @@ class PeerMetaDataManager:
 
         if self.peer.communication_state.out_interest == PeerInterestedState.Uninterested and self.peer.download_manager.has_interesting_pieces():
             Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending interested message')
-            self.peer.update_log("interest out", True)
             self.peer.communication_state.out_interest = PeerInterestedState.Interested
             self.peer.connection_manager.send(InterestedMessage().to_bytes())
 
@@ -113,12 +113,9 @@ class PeerMetaDataManager:
 
         if self.peer.counter.value < self.low_peer_max_speed:
             self.peer.peer_speed = PeerSpeed.Low
-            self.peer.update_log("speed", "low")
         elif self.peer.counter.value < self.medium_peer_max_speed:
-            self.peer.update_log("speed", "medium")
             self.peer.peer_speed = PeerSpeed.Medium
         else:
-            self.peer.update_log("speed", "high")
             self.peer.peer_speed = PeerSpeed.High
 
         return True
@@ -129,7 +126,6 @@ class PeerMetaDataManager:
 
         Logger().write(LogVerbosity.All, "Sending handshake")
         self.peer.connection_manager.send(message.to_bytes())
-        self.peer.update_log("handshake", "send")
 
         answer = None
         start_time = current_time()
@@ -144,7 +140,6 @@ class PeerMetaDataManager:
                 sleep(0.2)
 
         if answer is None or len(answer) == 0:
-            self.peer.update_log("handshake", "no response")
             Logger().write(LogVerbosity.All, str(self.peer.id) + ' did not receive handshake response')
             return False
 
@@ -159,7 +154,6 @@ class PeerMetaDataManager:
 
         self.peer.extension_manager.parse_extension_bytes(response.reserved)
         Logger().write(LogVerbosity.All, "Received valid handshake response")
-        self.peer.update_log("handshake", "done")
         self.handshake_successful = True
         return True
 

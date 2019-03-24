@@ -3,13 +3,16 @@ from threading import Lock
 from pympler import asizeof
 
 from MediaPlayer.Streaming.StreamManager import StreamManager
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import write_size
 
 
-class TorrentOutputManager:
+class TorrentOutputManager(LogObject):
 
     def __init__(self, torrent):
+        super().__init__(torrent, "output")
+
         self.torrent = torrent
         self.pieces_to_output = []
         self.__lock = Lock()

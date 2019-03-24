@@ -17,8 +17,6 @@ from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Streaming.StreamListener import StreamListener
 
-from UI.TV.GUI import App
-
 from Controllers.WiFiController import WiFiController
 from Controllers.LightManager import LightManager
 
@@ -67,6 +65,7 @@ class Program:
 
         Logger().write(LogVerbosity.Important, "Started")
         if Settings.get_bool("UI"):
+            from UI.TV.GUI import App
             self.gui = App.initialize()
 
         else:
@@ -114,7 +113,6 @@ class Program:
         Logger().write_error(exc_value, "Unhandled exception")
         Logger().stop()
         sys.exit(1)
-
 
 try:
     Program()

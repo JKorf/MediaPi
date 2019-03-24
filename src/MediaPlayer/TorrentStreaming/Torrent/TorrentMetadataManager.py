@@ -1,14 +1,17 @@
 import math
 from threading import Lock
 
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from MediaPlayer.Util.Bencode import bdecode
 
 
-class TorrentMetadataManager:
+class TorrentMetadataManager(LogObject):
 
     def __init__(self, torrent):
+        super().__init__(torrent, "meta")
+
         self.torrent = torrent
 
         self.current_total_size = 0
