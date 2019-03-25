@@ -30,8 +30,8 @@ class Logger(metaclass=Singleton):
         self.last_id = 1
         self.last_id_lock = threading.Lock()
 
-        self.log_processor = LogProcessor(self.raspberry, self.log_path, 'log_' + self.log_time, True)
-        self.state_log_processor = LogProcessor(self.raspberry, self.log_path, 'state_' + self.log_time, False)
+        self.log_processor = LogProcessor(self.log_path, 'log_' + self.log_time, True and not self.raspberry)
+        self.state_log_processor = LogProcessor(self.log_path, 'state_' + self.log_time, False)
 
     def start(self, log_level):
         if not os.path.exists(self.log_path):
@@ -166,8 +166,7 @@ class StdOutWriter:
 
 class LogProcessor:
 
-    def __init__(self, raspberry, base_path, file_name, print_to_output):
-        self.raspberry = raspberry
+    def __init__(self, base_path, file_name, print_to_output):
         self.base_path = base_path
         self.base_file_name = file_name
         self.print_to_output = print_to_output

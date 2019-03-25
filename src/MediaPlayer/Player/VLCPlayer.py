@@ -73,7 +73,7 @@ class VLCPlayer(metaclass=Singleton):
 
         if sys.platform == "linux" or sys.platform == "linux2":
             log_path = Settings.get_string("base_folder") + "/Logs"
-            params.append("--logfile=" + log_path + '/vlclog_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt")
+            params.append("--logfile=" + log_path + '/vlc_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt")
             params.append("--file-logging")
             params.append("--file-caching=5000")
 
