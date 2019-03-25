@@ -4,18 +4,20 @@ import time
 
 import itertools
 
+from Shared.LogObject import LogObject
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
 
-class AverageCounter:
+class AverageCounter(LogObject):
 
-    def __init__(self, name, seconds_average, caching_time):
-        self.last_seconds = list(itertools.repeat(0, seconds_average))
-        self.loop_number = 0
-        self.current_counter_value = 0
+    def __init__(self, parent, name, seconds_average, caching_time):
+        super().__init__(parent, "speed")
+
+        self._last_seconds = list(itertools.repeat(0, seconds_average))
+        self._loop_number = 0
         self.total = 0
-        self.last_result_time = 0
+        self._last_result_time = 0
         self.last_result = 0
         self.max = 0
         self.caching_time = caching_time
@@ -23,7 +25,7 @@ class AverageCounter:
         self.seconds_average = seconds_average
         self.thread = None
         self.running = False
-        self.current_second = 0
+        self._current_second = 0
         self.__lock = Lock()
         self.wait_event = Event()
 
@@ -39,11 +41,11 @@ class AverageCounter:
 
     @property
     def value(self):
-        if current_time() - self.last_result_time < self.caching_time:
+        if current_time() - self._last_result_time < self.caching_time:
             return self.last_result
 
-        self.last_result_time = current_time()
-        self.last_result = sum(self.last_seconds) / self.seconds_average
+        self._last_result_time = current_time()
+        self.last_result = sum(self._last_seconds) / self.seconds_average
 
         if self.last_result > self.max:
             self.max = self.last_result
@@ -53,17 +55,17 @@ class AverageCounter:
     def add_value(self, val):
         with self.__lock:
             self.total += val
-            self.current_second += val
+            self._current_second += val
 
     def update(self):
         while self.running:
             start_time = current_time()
             with self.__lock:
-                self.loop_number += 1
-                if self.loop_number == self.seconds_average:
-                    self.loop_number = 0
-                self.last_seconds[self.loop_number] = self.current_second
-                self.current_second = 0
+                self._loop_number += 1
+                if self._loop_number == self.seconds_average:
+                    self._loop_number = 0
+                self._last_seconds[self._loop_number] = self._current_second
+                self._current_second = 0
 
             self.wait_event.wait(max(1 - ((current_time() - start_time) / 1000), 0))
 

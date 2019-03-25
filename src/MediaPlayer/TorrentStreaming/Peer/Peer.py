@@ -56,7 +56,7 @@ class Peer(LogObject):
         self.metadata_manager = PeerMetaDataManager(self)
         self.message_handler = PeerMessageHandler(self)
         self.extension_manager = PeerExtensionManager(self)
-        self.counter = AverageCounter("Peerspeed counter", 3, 200)
+        self.counter = AverageCounter(self, "Peerspeed counter", 3, 200)
 
         self.engine.add_work_item("connection_manager", 30000, self.connection_manager.update)
         self.engine.add_work_item("metadata_manager", 1000, self.metadata_manager.update)

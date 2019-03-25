@@ -8,15 +8,21 @@ from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 from MediaPlayer.Util.Enums import ConnectionState, PeerSource, TorrentState, PeerChokeState, PeerInterestedState
 from Shared.Events import EventManager, EventType
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import current_time
 
 
-class PeerMessageHandler:
+class PeerMessageHandler(LogObject):
 
     def __init__(self, peer):
+        super().__init__(peer, "messages")
+
         self.peer = peer
         self.metadata_wait_list = []
+
+        # Logging props
+        self.metadata_wait_list_log = 0
 
     def update(self, allowed_process_time):
         if self.peer is None:
@@ -40,6 +46,7 @@ class PeerMessageHandler:
                     self.handle_message(message)
 
                 self.metadata_wait_list.clear()
+                self.metadata_wait_list_log = 0
 
             msg_bytes = self.peer.connection_manager.get_message()
             if msg_bytes is None:
@@ -58,6 +65,7 @@ class PeerMessageHandler:
                 if not isinstance(message, MetadataMessage) and not isinstance(message, ExtensionHandshakeMessage):
                     Logger().write(LogVerbosity.All, str(self.peer.id) + " Adding " + str(message.__class__.__name__) + " to metadata wait list")
                     self.metadata_wait_list.append(message)
+                    self.metadata_wait_list_log = len(self.metadata_wait_list)
                     continue
 
             # Handle messages

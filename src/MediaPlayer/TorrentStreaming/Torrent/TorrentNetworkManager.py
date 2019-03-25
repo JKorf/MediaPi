@@ -35,19 +35,19 @@ class TorrentNetworkManager(LogObject):
         self.last_throttle = 0
 
         self.live_download_counter = LiveCounter("Network speed live counter", 50)
-        self.average_download_counter = AverageCounter("Network speed average counter", 3, 1000)
+        self.average_download_counter = AverageCounter(self, "Network speed average counter", 3, 1000)
 
         self.thread = None
-        self.event_id_log = EventManager.register_event(EventType.Log, self.log)
-        self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
+        self._event_id_log = EventManager.register_event(EventType.Log, self.log)
+        self._event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
 
     def log(self):
         Logger().write(LogVerbosity.Important, "-- TorrentNetworkManager state --")
         Logger().write(LogVerbosity.Important, "     Network manager: last run input sockets: " + str(self.last_inputs) + ", output: " + str(self.last_outputs))
 
     def unregister(self):
-        EventManager.deregister_event(self.event_id_stopped)
-        EventManager.deregister_event(self.event_id_log)
+        EventManager.deregister_event(self._event_id_stopped)
+        EventManager.deregister_event(self._event_id_log)
 
     def start(self):
         Logger().write(LogVerbosity.Info, "Starting network manager")

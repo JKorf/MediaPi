@@ -27,7 +27,7 @@ class TorrentDownloadManager(LogObject):
         self.queue = []
         self.queue_lock = Lock()
         self.slow_peer_block_offset = 0
-        self.ticks = 0
+        self._ticks = 0
 
         self.download_mode = DownloadMode.Full
         self.peers_per_piece = [
@@ -36,12 +36,14 @@ class TorrentDownloadManager(LogObject):
             (0, 1, 1)
         ]
 
-        self.event_id_log = EventManager.register_event(EventType.Log, self.log_queue)
-        self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
+        self._event_id_log = EventManager.register_event(EventType.Log, self.log_queue)
+        self._event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
+
+        self.queue_log = ""
 
     def unregister(self):
-        EventManager.deregister_event(self.event_id_stopped)
-        EventManager.deregister_event(self.event_id_log)
+        EventManager.deregister_event(self._event_id_stopped)
+        EventManager.deregister_event(self._event_id_log)
 
     def check_size(self):
         for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
@@ -79,6 +81,7 @@ class TorrentDownloadManager(LogObject):
         if self.torrent.state == TorrentState.Done:
             if self.queue:
                 self.queue = []
+                self.queue_log = ""
 
             if lock:
                 self.queue_lock.release()
@@ -99,6 +102,7 @@ class TorrentDownloadManager(LogObject):
             piece.priority = self.prioritizer.prioritize_piece_index(piece.index)
         if full:
             self.queue = sorted(self.queue, key=lambda x: x.priority, reverse=True)
+            self.queue_log = ", ".join([str(x.index) for x in self.queue[0: 5]])
 
         if self.queue:
             piece = self.queue[0]
@@ -128,6 +132,7 @@ class TorrentDownloadManager(LogObject):
             self.queue.append(piece)
             left += piece.length
 
+        self.queue_log = ", ".join([str(x.index) for x in self.queue[0: 5]])
         self.slow_peer_block_offset = 15000000 // self.torrent.data_manager.piece_length # TODO Setting
         Logger().write(LogVerbosity.Debug, "Queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
         self.torrent.left = left
@@ -243,17 +248,18 @@ class TorrentDownloadManager(LogObject):
 
             for piece in to_remove:
                 self.queue.remove(piece)
+            self.queue_log = ", ".join([str(x.index) for x in self.queue[0: 5]])
 
             Logger().write(LogVerbosity.All,
                            "Removed " + str(removed) + ", skipped " + str(skipped) + ", retrieved " + str(
                                len(result)) + ", queue length: " + str(len(self.queue)) + " took " + str(
                                current_time() - start) + "ms")
 
-            if self.ticks == 100:
-                self.ticks = 0
+            if self._ticks == 100:
+                self._ticks = 0
                 Logger().write(LogVerbosity.Debug, "Removed " + str(removed) + ", skipped " + str(skipped) + ", retrieved " + str(len(result)) + ", queue length: " + str(len(self.queue)) + " took " + str(current_time() - start) + "ms")
 
-            self.ticks += 1
+            self._ticks += 1
             self.last_get_result = amount, len(result)
             self.last_get_time = current_time()
         return result
@@ -294,6 +300,7 @@ class TorrentDownloadManager(LogObject):
         Logger().write(LogVerbosity.Info, "Seeking " + str(old_index) + " to " + str(new_piece_index) + ", pre-seek queue has " + str(len(self.queue)) + " items")
         with self.queue_lock:
             self.queue = []
+            self.queue_log = ", ".join([str(x.index) for x in self.queue[0: 5]])
 
             if self.torrent.state == TorrentState.Done:
                 self.torrent.restart_downloading()
@@ -306,6 +313,7 @@ class TorrentDownloadManager(LogObject):
         with self.queue_lock:
             self.torrent.left += piece.length
             self.queue.insert(0, piece)
+            self.queue_log = ", ".join([str(x.index) for x in self.queue[0: 5]])
 
     def stop(self):
         self.prioritizer.stop()

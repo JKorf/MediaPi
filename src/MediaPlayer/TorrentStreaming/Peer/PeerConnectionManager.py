@@ -3,6 +3,7 @@ from threading import Lock
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import KeepAliveMessage
 from MediaPlayer.Util.Enums import ConnectionState, ReceiveState
 from MediaPlayer.Util.Network import *
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import TcpClient
 from Shared.Settings import Settings
@@ -10,9 +11,11 @@ from Shared.Stats import Stats
 from Shared.Util import current_time
 
 
-class PeerConnectionManager:
+class PeerConnectionManager(LogObject):
 
     def __init__(self, peer, uri, on_connect, on_disconnect):
+        super().__init__(peer, "Connection manager")
+
         self.peer = peer
         self.uri = uri
         self.received_bytes = []
@@ -22,16 +25,21 @@ class PeerConnectionManager:
         self.last_communication = 0
         self.sendLock = Lock()
         self.receiveLock = Lock()
-        self.peer_timeout = Settings.get_int("peer_timeout")
-        self.connection_timeout = Settings.get_int("connection_timeout") / 1000
+        self._peer_timeout = Settings.get_int("peer_timeout")
+        self._connection_timeout = Settings.get_int("connection_timeout") / 1000
         self.on_connect = on_connect
         self.on_disconnect = on_disconnect
 
-        self.connection = TcpClient(uri.hostname, uri.port, self.connection_timeout)
+        self.connection = TcpClient(uri.hostname, uri.port, self._connection_timeout)
         self.buffer = bytearray()
         self.next_message_length = 68
         self.buffer_position = 0
         self.receive_state = ReceiveState.ReceiveMessage
+
+        # Logging props
+        self.to_send_bytes_log = 0
+        self.received_messages_log = 0
+        self.receive_buffer_log = 0
 
     def start(self):
         self.connection_state = ConnectionState.Connecting
@@ -68,6 +76,7 @@ class PeerConnectionManager:
         if data_length < self.next_message_length:
             # incomplete message
             self.next_message_length -= data_length
+            self.receive_buffer_log = len(self.buffer)
             self.buffer_position += data_length
             return data_length
         else:
@@ -77,6 +86,7 @@ class PeerConnectionManager:
                 self.buffer_position = 0
                 self.receive_state = ReceiveState.ReceiveMessage
                 self.buffer.clear()
+                self.receive_buffer_log = 0
 
                 if self.next_message_length < 0 or self.next_message_length > 17000:
                     Logger().write(LogVerbosity.Info, "Invalid next message length: " + str(self.next_message_length))
@@ -87,12 +97,14 @@ class PeerConnectionManager:
                 total_data = data_length + self.buffer_position
                 message = bytes(self.buffer[0: total_data])
                 self.buffer.clear()
+                self.receive_buffer_log = 0
                 self.next_message_length = 4
                 self.buffer_position = 0
                 self.receive_state = ReceiveState.ReceiveLength
 
                 with self.receiveLock:
                     self.received_bytes.append(message)
+                    self.received_messages_log = len(self.received_bytes)
 
                 return data_length
 
@@ -105,6 +117,7 @@ class PeerConnectionManager:
             if len(self.to_send_bytes) != 0:
                 success = self.connection.send(self.to_send_bytes)
                 self.to_send_bytes.clear()
+                self.to_send_bytes_log = 0
                 self.last_communication = current_time()
 
         if not success:
@@ -113,6 +126,7 @@ class PeerConnectionManager:
     def send(self, data):
         with self.sendLock:
             self.to_send_bytes.extend(data)
+            self.to_send_bytes_log = len(data)
 
     def get_message(self):
         if len(self.received_bytes) == 0:
@@ -120,6 +134,7 @@ class PeerConnectionManager:
 
         with self.receiveLock:
             data = self.received_bytes.pop(0)
+            self.received_messages_log = len(self.received_bytes)
 
         return data
 
@@ -127,7 +142,7 @@ class PeerConnectionManager:
         if self.connection_state == ConnectionState.Initial:
             self.start()
         if self.connection_state == ConnectionState.Connected \
-                and self.last_communication < current_time() - self.peer_timeout \
+                and self.last_communication < current_time() - self._peer_timeout \
                 and self.connected_on < current_time() - 30000:
             Logger().write(LogVerbosity.Debug, "Sending keep alive")
             self.send(KeepAliveMessage().to_bytes())
@@ -149,9 +164,13 @@ class PeerConnectionManager:
 
         with self.sendLock:
             self.to_send_bytes.clear()
+            self.to_send_bytes_log = 0
 
         with self.receiveLock:
             self.received_bytes.clear()
+            self.received_messages_log = 0
 
         self.connection.disconnect()
+        self.buffer.clear()
+        self.receive_buffer_log = 0
         self.on_disconnect()

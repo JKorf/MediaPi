@@ -8,23 +8,28 @@ from Shared.Settings import Settings
 from Shared.Util import current_time, write_size
 
 
-class PeerDownloadManager:
+class PeerDownloadManager(LogObject):
     @property
     def max_blocks(self):
-        max = self.fast_peer_max_blocks
+        max = self._fast_peer_max_blocks
         if self.peer.peer_speed == PeerSpeed.Low:
-            max = self.low_peer_max_blocks
+            max = self._low_peer_max_blocks
         elif self.peer.peer_speed == PeerSpeed.Medium:
-            max = self.medium_peer_max_blocks
+            max = self._medium_peer_max_blocks
 
         max_download_speed = self.peer.torrent.network_manager.max_download_speed
         if max_download_speed == 0:
+            self.max_blocks_log = max
             return max
 
-        max_download_speed_blocks = self.peer.torrent.network_manager.max_download_speed // self.block_size
-        return min(max_download_speed_blocks, max)
+        max_download_speed_blocks = self.peer.torrent.network_manager.max_download_speed // self._block_size
+        result = min(max_download_speed_blocks, max)
+        self.max_blocks_log = result
+        return result
 
     def __init__(self, peer):
+        super().__init__(peer, "download")
+
         self.peer = peer
         self.stopped = False
         self.downloading = []
@@ -32,12 +37,17 @@ class PeerDownloadManager:
         self.blocks_done_lock = Lock()
         self.blocks_done = []
 
-        self.block_size = Settings.get_int("block_size")
-        self.low_peer_max_blocks = Settings.get_int("low_peer_max_download_buffer") // self.block_size
-        self.medium_peer_max_blocks = Settings.get_int("medium_peer_max_download_buffer") // self.block_size
-        self.fast_peer_max_blocks = Settings.get_int("fast_peer_max_download_buffer") // self.block_size
+        self._block_size = Settings.get_int("block_size")
+        self._low_peer_max_blocks = Settings.get_int("low_peer_max_download_buffer") // self._block_size
+        self._medium_peer_max_blocks = Settings.get_int("medium_peer_max_download_buffer") // self._block_size
+        self._fast_peer_max_blocks = Settings.get_int("fast_peer_max_download_buffer") // self._block_size
 
         self.timed_out_blocks = 0
+
+        # Logging props
+        self.downloading_log = ""
+        self.done_log = ""
+        self.max_blocks_log = self.max_blocks
 
     def update(self):
         if self.peer.connection_state != ConnectionState.Connected:
@@ -84,7 +94,6 @@ class PeerDownloadManager:
             to_download = self.peer.torrent.download_manager.get_blocks_to_download(self.peer, new_blocks)
             for block in to_download:
                 self.downloading.append((block, current_time()))
-
             self.request(to_download)
 
         return True
@@ -99,10 +108,12 @@ class PeerDownloadManager:
             Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending request for piece ' + str(request.index) + ", block " + str(
                 request.offset // 16384))
             self.peer.connection_manager.send(request.to_bytes())
+        self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
 
     def block_done(self, block_offset):
         with self.blocks_done_lock:
             self.blocks_done.append(block_offset)
+            self.done_log = ", ".join([str(x) for x in self.blocks_done])
 
     def check_current_downloading(self):
         canceled = 0
@@ -115,6 +126,7 @@ class PeerDownloadManager:
             for block, request_time in list(self.downloading):
                 if block.start_byte_total in done_copy:  # Peer downloaded this block; it's done
                     self.downloading = [x for x in self.downloading if not x[0].index == block.index]
+                    self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
                     block.remove_downloader(self.peer)
                     done_copy.remove(block.start_byte_total)
                     continue
@@ -124,6 +136,7 @@ class PeerDownloadManager:
                 passed_time = current_time() - request_time
                 if prio_timeout != 0 and passed_time > prio_timeout:
                     self.downloading = [x for x in self.downloading if not x[0].index == block.index]
+                    self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
 
                     cancel_msg = CancelMessage(block.piece_index, block.start_byte_in_piece, block.length)
                     Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending cancel for piece ' + str(block.piece_index) + ", block " + str(cancel_msg.offset // 16384))
@@ -134,6 +147,7 @@ class PeerDownloadManager:
 
                 with self.blocks_done_lock:
                     self.blocks_done = [x for x in self.blocks_done if x not in done_copy]
+                    self.done_log = ", ".join([str(x) for x in self.blocks_done])
 
         if canceled:
             Logger().write(LogVerbosity.Debug, str(self.peer.id) + " canceled " + str(canceled) + " blocks")
@@ -159,6 +173,7 @@ class PeerDownloadManager:
                 peer_download[0][0].remove_downloader(self.peer)
                 Logger().write(LogVerbosity.Debug, "Removed a rejected request from peer download manager")
                 self.downloading.remove(peer_download[0])
+                self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
 
     def log(self):
         cur_downloading = [str(block.index) + ", " for block, request_time in self.downloading]
@@ -174,4 +189,6 @@ class PeerDownloadManager:
                 block.remove_downloader(self.peer)
             self.downloading.clear()
             self.blocks_done.clear()
+            self.downloading_log = ""
+            self.done_log = ""
 

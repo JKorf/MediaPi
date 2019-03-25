@@ -35,8 +35,12 @@ class TorrentDataManager(LogObject):
         self.piece_hash_validator.on_piece_accept = self.piece_hash_valid
         self.piece_hash_validator.on_piece_reject = self.piece_hash_invalid
 
-        self.event_id_log = EventManager.register_event(EventType.Log, self.log_queue)
-        self.event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
+        self._event_id_log = EventManager.register_event(EventType.Log, self.log_queue)
+        self._event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
+
+        # Logging props
+        self.blocks_done_log = ""
+        self.persistent_pieces_log = ""
 
     def check_size(self):
         for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
@@ -73,8 +77,8 @@ class TorrentDataManager(LogObject):
         Logger().write(LogVerbosity.Important, "     Data status: first unfinished=" + first + ", first unfinished after stream pos: " + first_next + ", total unfinished=" + str(len(unfinished)) + " pieces")
 
     def unregister(self):
-        EventManager.deregister_event(self.event_id_log)
-        EventManager.deregister_event(self.event_id_stopped)
+        EventManager.deregister_event(self._event_id_log)
+        EventManager.deregister_event(self._event_id_stopped)
 
     def set_piece_info(self, piece_length, piece_hashes):
         self.piece_hash_validator.update_hashes(piece_hashes)
@@ -100,6 +104,7 @@ class TorrentDataManager(LogObject):
             persistent = relative_current_byte < stream_start_buffer or current_byte + self.piece_length > self.torrent.media_file.end_byte - stream_end_buffer
             if persistent:
                 self.persistent_pieces.append(piece_index)
+                self.persistent_pieces_log = ", ".join([str(x) for x in self.persistent_pieces])
                 pers_pieces += str(piece_index) + ", "
 
             if current_byte + self.piece_length > self.torrent.total_size:
@@ -133,6 +138,7 @@ class TorrentDataManager(LogObject):
         with self.blocks_done_lock:
             blocks = list(self.blocks_done)
             self.blocks_done.clear()
+            self.blocks_done_log = ""
 
         for peer, piece_index, offset, data in blocks:
             block_count += 1
@@ -201,6 +207,7 @@ class TorrentDataManager(LogObject):
     def block_done(self, peer, piece_index, offset, data):
         with self.blocks_done_lock:
             self.blocks_done.append((peer, piece_index, offset, data))
+            self.blocks_done_log = ", ".join([str(x[1]) + "." + str(x[2] // 16384) for x in self.blocks_done])
 
     def write_block(self, piece, block, data):
         if piece.done or piece.validated:

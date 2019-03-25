@@ -105,8 +105,8 @@ class Torrent(LogObject):
 
         self.stream_file_hash = None
 
-        self.user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
-        self.log_id = EventManager.register_event(EventType.Log, self.log)
+        self._user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
+        self._log_id = EventManager.register_event(EventType.Log, self.log)
 
         self.engine = Engine.Engine('Main Engine', 500)
         self.message_engine = Engine.Engine('Peer Message Engine', 200)
@@ -238,7 +238,7 @@ class Torrent(LogObject):
                     path += "/" + path_part.decode('utf8')
                     last_path = path_part.decode('utf8')
 
-                fi = TorrentDownloadFile(file_length, total_length, last_path, path, is_media_file(path))
+                fi = TorrentDownloadFile(self, file_length, total_length, last_path, path, is_media_file(path))
                 self.files.append(fi)
 
                 total_length += file_length
@@ -246,7 +246,7 @@ class Torrent(LogObject):
         else:
             # Singlefile
             total_length = info_dict[b'length']
-            file = TorrentDownloadFile(total_length, 0, self.name, self.name, is_media_file(self.name))
+            file = TorrentDownloadFile(self, total_length, 0, self.name, self.name, is_media_file(self.name))
             self.files.append(file)
             Logger().write(LogVerbosity.Info, "File: " + file.path)
 
@@ -371,8 +371,8 @@ class Torrent(LogObject):
 
         Logger().write(LogVerbosity.Info, 'Torrent stopping')
         self.__set_state(TorrentState.Stopping)
-        EventManager.deregister_event(self.user_file_selected_id)
-        EventManager.deregister_event(self.log_id)
+        EventManager.deregister_event(self._user_file_selected_id)
+        EventManager.deregister_event(self._log_id)
 
         self.engine.stop()
         self.message_engine.stop()
@@ -429,9 +429,11 @@ class InfoHash:
         return infohash
 
 
-class TorrentDownloadFile:
+class TorrentDownloadFile(LogObject):
 
-    def __init__(self, length, start_byte, name, path, is_media):
+    def __init__(self, torrent, length, start_byte, name, path, is_media):
+        super().__init__(torrent, "File: " + name)
+
         self.length = length
         self.start_byte = start_byte
         self.end_byte = start_byte + length
@@ -442,11 +444,6 @@ class TorrentDownloadFile:
         self.is_media = is_media
         self.first_64k = None
         self.last_64k = None
-        self.played_for = 0
-        self.play_length = 0
-
-        self.season = 0
-        self.episode = 0
 
         self.__lock = Lock()
 

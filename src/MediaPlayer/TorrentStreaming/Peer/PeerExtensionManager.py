@@ -1,16 +1,22 @@
 from MediaPlayer.TorrentStreaming.ExtensionManager import ProtocolExtensionManager
 from MediaPlayer.Util.Enums import ExtensionType
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 
 
-class PeerExtensionManager:
+class PeerExtensionManager(LogObject):
 
     def __init__(self, peer):
+        super().__init__(peer, "extensions")
+
         self.peer = peer
         self.supported_peer_extensions = dict()
         self.extension_bytes = None
         self.extension_dict = None
         self.original_data = None
+
+        # Logging props
+        self.supported_log = ""
 
     def parse_extension_bytes(self, data):
         self.original_data = data
@@ -18,6 +24,7 @@ class PeerExtensionManager:
         for extension in [x for x in known_extensions if x.extension_type == ExtensionType.Basic]:
             if data[extension.reserved_id] & extension.bit_mask != 0:
                 self.supported_peer_extensions[extension.extension_name] = 0
+        self.supported_log = [str(x) for x in self.supported_peer_extensions]
 
     def parse_dictionary(self, data):
         dic = data[b'm']
@@ -29,6 +36,7 @@ class PeerExtensionManager:
                 self.supported_peer_extensions[extension.extension_name] = value
             else:
                 Logger().write(LogVerbosity.Debug, str(self.peer.id) + ' Unknown peer extension: ' + key.decode('utf8'))
+        self.supported_log = [str(x) for x in self.supported_peer_extensions]
 
     def peer_supports(self, name):
         return name in self.supported_peer_extensions

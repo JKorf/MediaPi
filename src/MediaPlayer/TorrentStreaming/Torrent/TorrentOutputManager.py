@@ -20,6 +20,8 @@ class TorrentOutputManager(LogObject):
         self.stream_manager = StreamManager(self.torrent)
         self.broadcasted_hash_data = False
 
+        self.output_log = ""
+
     def check_size(self):
         for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
             Logger().write(LogVerbosity.Important, "       Size of " + str(key) + ": " + write_size(size))
@@ -27,6 +29,7 @@ class TorrentOutputManager(LogObject):
     def add_piece_to_output(self, piece):
         with self.__lock:
             self.pieces_to_output.append(piece)
+            self.output_log = ", ".join([str(x.index) for x in self.pieces_to_output])
 
     def flush(self):
         self.update()
@@ -38,6 +41,7 @@ class TorrentOutputManager(LogObject):
                 return True
 
             self.pieces_to_output.clear()
+            self.output_log = ""
 
         Logger().write(LogVerbosity.Info, str(len(to_write)) + ' pieces done')
 

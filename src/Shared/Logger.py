@@ -31,7 +31,7 @@ class Logger(metaclass=Singleton):
         self.last_id_lock = threading.Lock()
 
         self.log_processor = LogProcessor(self.raspberry, self.log_path, 'log_' + self.log_time, True)
-        self.state_log_processor = LogProcessor(self.raspberry, self.log_path, 'state_' + self.log_time , False)
+        self.state_log_processor = LogProcessor(self.raspberry, self.log_path, 'state_' + self.log_time, False)
 
     def start(self, log_level):
         if not os.path.exists(self.log_path):
@@ -242,8 +242,7 @@ class LogProcessor:
             self.file.close()
             self.file_number += 1
             file_name = self.base_file_name
-            if self.file_number > 1:
-                file_name += " #" + str(self.file_number) + ".txt"
+            file_name += " #" + str(self.file_number) + ".txt"
 
             self.create_log_file(file_name)
             self.file.write(b"Continue after max file size was reached\r\n")
