@@ -184,7 +184,7 @@ class LogProcessor:
         self.queue_lock = threading.Lock()
 
     def start(self):
-        self.create_log_file(self.base_file_name + ".txt")
+        self.create_log_file(self.base_file_name + " #1.txt")
         self.running = True
 
         self.process_thread = threading.Thread(name="Logger thread", target=self.process, daemon=False)
@@ -254,9 +254,7 @@ class LogItemTracker:
         self.id = Logger().next_id()
         self.parent_id = parent_id
         self.name = name
-
-        if self.parent_id != 0:
-            self.id = str(self.parent_id) + ";" + str(self.id)
+        self.id = str(self.parent_id) + ";" + str(self.id)
 
         Logger().create_state_object(self.id, self.name)
 

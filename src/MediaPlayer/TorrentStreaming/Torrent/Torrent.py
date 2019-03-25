@@ -109,7 +109,7 @@ class Torrent(LogObject):
         self._log_id = EventManager.register_event(EventType.Log, self.log)
 
         self.engine = Engine.Engine('Main Engine', 500)
-        self.message_engine = Engine.Engine('Peer Message Engine', 200)
+        self.message_engine = Engine.Engine('Peer Message Engine', 50)
 
         self.tracker_manager = TrackerManager()
         self.peer_manager = TorrentPeerManager(self)
@@ -215,7 +215,7 @@ class Torrent(LogObject):
         self.engine.add_work_item("cleanup_used_pieces", 5000, self.data_manager.cleanup_used_pieces)
 
         self.message_engine.add_work_item("data_manager", 200, self.data_manager.update_write_blocks)
-        self.message_engine.add_work_item("peer_messages", 200, self.peer_manager.process_peer_messages)
+        self.message_engine.add_work_item("peer_messages", 50, self.peer_manager.process_peer_messages)
 
         self.engine.start()
         self.message_engine.start()
@@ -400,6 +400,7 @@ class Torrent(LogObject):
         self.metadata_manager = None
         self.network_manager = None
 
+        self.finish()
         EventManager.throw_event(EventType.TorrentStopped, [])
         Logger().write(LogVerbosity.Important, 'Torrent stopped')
 
