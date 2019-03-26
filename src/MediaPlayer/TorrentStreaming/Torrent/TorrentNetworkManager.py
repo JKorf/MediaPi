@@ -86,6 +86,7 @@ class TorrentNetworkManager(LogObject):
                     select.select(input_sockets, output_sockets, [], 0.2)
             except Exception as e:
                 Logger().write(LogVerbosity.Important, "Select error: " + str(e))
+                sleep(0.01)
                 continue
 
             for client in readable:
