@@ -1,13 +1,17 @@
 from threading import Event
 from collections import namedtuple
+
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
 
-class Observable:
+class Observable(LogObject):
 
     def __init__(self, name, update_interval):
+        super().__init__(None, name)
+
         self.__name = name
         self.__update_interval = update_interval
         self.__callbacks = []

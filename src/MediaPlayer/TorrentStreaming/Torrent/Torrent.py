@@ -108,8 +108,8 @@ class Torrent(LogObject):
         self._user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
         self._log_id = EventManager.register_event(EventType.Log, self.log)
 
-        self.engine = Engine.Engine('Main Engine', 500)
-        self.message_engine = Engine.Engine('Peer Message Engine', 50)
+        self.engine = Engine.Engine('Main processor', 500, self)
+        self.message_engine = Engine.Engine('Main Message processor', 50, self)
 
         self.tracker_manager = TrackerManager()
         self.peer_manager = TorrentPeerManager(self)

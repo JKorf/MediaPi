@@ -1,4 +1,5 @@
 import select
+from threading import Lock
 from time import sleep
 
 from MediaPlayer.Util.Counter import LiveCounter, AverageCounter
@@ -33,6 +34,9 @@ class TorrentNetworkManager(LogObject):
 
         self.throttling = False
         self.last_throttle = 0
+
+        #self.message_queue = []
+        #self.message_queue_lock = Lock()
 
         self.live_download_counter = LiveCounter("Network speed live counter", 50)
         self.average_download_counter = AverageCounter(self, "Network speed average counter", 3, 1000)

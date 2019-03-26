@@ -29,7 +29,6 @@ class VLCPlayer(metaclass=Singleton):
             self.__player.set_fullscreen(True)
 
         self.__event_manager = self.__player.event_manager()
-        #self.hook_events()
 
         self.set_volume(75)
 

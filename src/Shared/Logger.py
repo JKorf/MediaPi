@@ -89,7 +89,7 @@ class Logger(metaclass=Singleton):
     def write_error(self, e, additional_info=None):
         with self.exception_lock:
             self.write(LogVerbosity.Important, "Error occurred: " + str(type(e).__name__) + ", more information in the error log")
-            with open(self.log_path + '/error_' + type(e).__name__ + '_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt", 'ab', buffering=0) as file:
+            with open(self.log_path + '/error_' + type(e).__name__ + '_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S.%f')[:-3] + ".txt", 'ab', buffering=0) as file:
                 file.write(b'Time:'.ljust(20) + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S').encode('utf-8') + b'\r\n')
                 file.write(b'Error:'.ljust(20) + type(e).__name__.encode('utf-8') + b'\r\n')
                 if additional_info is not None:

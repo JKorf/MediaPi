@@ -30,7 +30,7 @@ class Peer(LogObject):
         self.id = id
         self.torrent = torrent
         self.uri = uri
-        self.engine = Engine.Engine('Peer Engine', 200)
+        self.engine = Engine.Engine('Peer processor', 200, self)
         self.running = False
         self.source = source
 

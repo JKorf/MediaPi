@@ -17,7 +17,7 @@ class LogObject:
         super().__setattr__(name, value)
 
     def process_update(self, name, value):
-        if not hasattr(self, "log_tracker"):
+        if not hasattr(self, "log_tracker") or self.log_tracker is None:
             return
 
         if name.startswith("_"):

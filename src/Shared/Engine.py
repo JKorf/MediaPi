@@ -2,14 +2,17 @@ from time import sleep
 
 from Shared.Events import EventManager
 from Shared.Events import EventType
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
 
-class Engine:
+class Engine(LogObject):
 
-    def __init__(self, name, tick_time=1000):
+    def __init__(self, name, tick_time=1000, parent=None):
+        super().__init__(parent, "Engine:" + name)
+
         self.name = name
         self.tick_time = tick_time
         self.last_tick = 0
@@ -23,7 +26,10 @@ class Engine:
         self.timing = dict()
         self.own_time = TimingObject(self.name)
 
-        self.event_id = EventManager.register_event(EventType.Log, self.log)
+        self._event_id = EventManager.register_event(EventType.Log, self.log)
+
+        # Log props
+        self.current_item_log = ""
 
     def runner(self):
         while self.running:
@@ -49,7 +55,7 @@ class Engine:
 
     def stop(self):
         self.running = False
-        EventManager.deregister_event(self.event_id)
+        EventManager.deregister_event(self._event_id)
         self.thread.join()
 
     def tick(self):
@@ -60,12 +66,14 @@ class Engine:
 
             if work_item.last_run_time + work_item.interval < tick_time:
                 self.current_item = work_item
+                self.current_item_log = work_item.name
                 self.start_time = current_time()
                 if not self.running:
                     return
 
                 result = work_item.action()
                 self.current_item = None
+                self.current_item_log = ""
                 test_time = current_time()
                 work_item.last_run_time = test_time
 
@@ -93,9 +101,11 @@ class Engine:
                 Logger().write(LogVerbosity.Important, "     " + value.print())
 
 
-class EngineWorkItem:
+class EngineWorkItem(LogObject):
 
-    def __init__(self, name, interval, action, initial_invoke):
+    def __init__(self, parent, name, interval, action, initial_invoke):
+        super().__init__(parent, name)
+
         self.name = name
         self.interval = interval
         self.action = action

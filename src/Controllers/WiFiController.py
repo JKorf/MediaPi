@@ -3,19 +3,20 @@ import subprocess
 import sys
 
 from Shared.Engine import Engine
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import Singleton
 
 
-class WiFiController(metaclass=Singleton):
+class WiFiController(metaclass=Singleton, LogObject):
 
     def __init__(self):
-        self.engine = Engine("WiFi Manager")
+        super().__init__(None, "WIFI")
+
+        self.engine = Engine("WiFi processor")
         self.engine.add_work_item("WiFi watcher", 15000, self.watch_wifi, False)
         self.pi = sys.platform == "linux" or sys.platform == "linux2"
         self.quality = 0
-
-        self.connected = False
 
     def start(self):
         self.engine.start()

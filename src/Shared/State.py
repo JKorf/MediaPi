@@ -7,6 +7,7 @@ import sys
 
 from MediaPlayer.MediaManager import MediaManager
 from Shared.Events import EventManager, EventType
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Observable import Observable
 from Shared.Settings import Settings
