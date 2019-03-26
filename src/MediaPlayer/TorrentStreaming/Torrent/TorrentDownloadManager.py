@@ -102,7 +102,11 @@ class TorrentDownloadManager(LogObject):
             piece.priority = self.prioritizer.prioritize_piece_index(piece.index)
         if full:
             self.queue = sorted(self.queue, key=lambda x: x.priority, reverse=True)
-            self.queue_log = ", ".join([str(x.index) for x in self.queue[0: 5]])
+            first = "none"
+            length = len(self.queue)
+            if length > 0:
+                first = str(self.queue[0].index)
+            self.queue_log = "length: " + str(length) + ", first: " + first
 
         if self.queue:
             piece = self.queue[0]
@@ -132,7 +136,12 @@ class TorrentDownloadManager(LogObject):
             self.queue.append(piece)
             left += piece.length
 
-        self.queue_log = ", ".join([str(x.index) for x in self.queue[0: 5]])
+        first = "none"
+        length = len(self.queue)
+        if length > 0:
+            first = str(self.queue[0].index)
+        self.queue_log = "length: " + str(length) + ", first: " + first
+
         self.slow_peer_block_offset = 15000000 // self.torrent.data_manager.piece_length # TODO Setting
         Logger().write(LogVerbosity.Debug, "Queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
         self.torrent.left = left
@@ -248,7 +257,12 @@ class TorrentDownloadManager(LogObject):
 
             for piece in to_remove:
                 self.queue.remove(piece)
-            self.queue_log = ", ".join([str(x.index) for x in self.queue[0: 5]])
+
+            first = "none"
+            length = len(self.queue)
+            if length > 0:
+                first = str(self.queue[0].index)
+            self.queue_log = "length: " + str(length) + ", first: " + first
 
             Logger().write(LogVerbosity.All,
                            "Removed " + str(removed) + ", skipped " + str(skipped) + ", retrieved " + str(
@@ -300,7 +314,11 @@ class TorrentDownloadManager(LogObject):
         Logger().write(LogVerbosity.Info, "Seeking " + str(old_index) + " to " + str(new_piece_index) + ", pre-seek queue has " + str(len(self.queue)) + " items")
         with self.queue_lock:
             self.queue = []
-            self.queue_log = ", ".join([str(x.index) for x in self.queue[0: 5]])
+            first = "none"
+            length = len(self.queue)
+            if length > 0:
+                first = str(self.queue[0].index)
+            self.queue_log = "length: " + str(length) + ", first: " + first
 
             if self.torrent.state == TorrentState.Done:
                 self.torrent.restart_downloading()
@@ -313,7 +331,9 @@ class TorrentDownloadManager(LogObject):
         with self.queue_lock:
             self.torrent.left += piece.length
             self.queue.insert(0, piece)
-            self.queue_log = ", ".join([str(x.index) for x in self.queue[0: 5]])
+            length = len(self.queue)
+            first = str(self.queue[0].index)
+            self.queue_log = "length: " + str(length) + ", first: " + first
 
     def stop(self):
         self.prioritizer.stop()

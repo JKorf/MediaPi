@@ -4,13 +4,13 @@ from MediaPlayer.TorrentStreaming.Peer.PeerExtensionManager import PeerExtension
 from MediaPlayer.TorrentStreaming.Peer.PeerMetaDataManager import PeerMetaDataManager
 
 from MediaPlayer.TorrentStreaming.Data import Bitfield
-from MediaPlayer.TorrentStreaming.Peer.PeerMessageHandler import PeerMessageHandler
 from MediaPlayer.Util.Counter import AverageCounter
 from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState, PeerSource
 from Shared import Engine
 from Shared.LogObject import LogObject, log_wrapper
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Stats import Stats
+from Shared.Threading import CustomThread
 
 
 class Peer(LogObject):
@@ -36,7 +36,6 @@ class Peer(LogObject):
 
         self.connection_manager = None
         self.download_manager = None
-        self.message_handler = None
         self.metadata_manager = None
         self.extension_manager = None
 
@@ -51,10 +50,9 @@ class Peer(LogObject):
         Logger().write(LogVerbosity.All, str(self.id) + ' Starting peer')
         self.running = True
 
-        self.connection_manager = PeerConnectionManager(self, self.uri, self.on_connect, self.on_disconnect)
+        self.connection_manager = PeerConnectionManager(self, self.uri, self.on_connect)
         self.download_manager = PeerDownloadManager(self)
         self.metadata_manager = PeerMetaDataManager(self)
-        self.message_handler = PeerMessageHandler(self)
         self.extension_manager = PeerExtensionManager(self)
         self.counter = AverageCounter(self, "Peerspeed counter", 3, 200)
 
@@ -75,9 +73,6 @@ class Peer(LogObject):
     def on_connect(self):
         self.add_connected_peer_stat(self.source)
 
-    def on_disconnect(self):
-        self.stop()
-
     @staticmethod
     def add_connected_peer_stat(source):
         if source == PeerSource.DHT:
@@ -89,6 +84,9 @@ class Peer(LogObject):
         elif source == PeerSource.PeerExchange:
             Stats.add('peers_source_exchange_connected', 1)
 
+    def stop_async(self):
+        CustomThread(self.stop, "Peer stopper " + str(self.id), []).start()
+
     def stop(self):
         if not self.running:
             return
@@ -97,7 +95,6 @@ class Peer(LogObject):
         self.running = False
 
         self.engine.stop()
-        self.message_handler.stop()
         self.metadata_manager.stop()
         self.download_manager.stop()
         self.connection_manager.disconnect()

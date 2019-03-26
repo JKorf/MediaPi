@@ -13,7 +13,7 @@ class Socket:
         self.port = port
         self.socket = socket(AF_INET, SOCK_DGRAM)
         self.socket.settimeout(0.1)
-        self.message_thread = CustomThread(self.message_thread_action, "DHT message thread", [])
+        self.message_thread = CustomThread(self.message_thread_action, "DHT message", [])
         self.running = False
 
         self.node_seen_handler = on_node_seen

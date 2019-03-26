@@ -17,8 +17,9 @@ class PeerMetaDataManager(LogObject):
         super().__init__(peer, "meta")
         self.peer = peer
 
-        self.handshake_done = False
+        self.handshake_send = False
         self.handshake_successful = False
+        self.extension_handshake_send = False
         self.bitfield_done = False
         self.metadata_requested = False
         self.pause_handled = False
@@ -32,19 +33,26 @@ class PeerMetaDataManager(LogObject):
         if self.peer.connection_manager.connection_state != ConnectionState.Connected:
             return True
 
-        if not self.handshake_done:
+        if not self.handshake_send:
             Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending handshake')
-            self.handshake_done = True
-            if not self.handshake():
-                self.peer.stop()
+            self.handshake_send = True
+            self.send_handshake()
+            return True
+
+        if not self.handshake_successful:
+            if current_time() - self.peer.connection_manager.connected_on > 5000:
+                # No handshake received
+                self.peer.stop_async()
                 return False
+            return True
 
-            if self.peer.extension_manager.peer_supports(ExtensionName.ExtensionProtocol):
-                Logger().write(LogVerbosity.All, str(self.peer.id) + ' sending extended handshake')
+        if self.peer.extension_manager.peer_supports(ExtensionName.ExtensionProtocol) and not self.extension_handshake_send:
+            Logger().write(LogVerbosity.All, str(self.peer.id) + ' sending extended handshake')
 
-                dic = ProtocolExtensionManager.create_extension_dictionary()
-                handshake = ExtensionHandshakeMessage(dic)
-                self.peer.connection_manager.send(handshake.to_bytes())
+            dic = ProtocolExtensionManager.create_extension_dictionary()
+            handshake = ExtensionHandshakeMessage(dic)
+            self.peer.connection_manager.send(handshake.to_bytes())
+            self.extension_handshake_send = True
 
         if self.peer.torrent.state == TorrentState.DownloadingMetaData:
             if self.metadata_requested:
@@ -120,42 +128,12 @@ class PeerMetaDataManager(LogObject):
 
         return True
 
-    def handshake(self):
+    def send_handshake(self):
         message = HandshakeMessage(self.peer.torrent.info_hash.sha1_hashed_bytes)
         message.reserved = ProtocolExtensionManager.add_extensions_to_handshake(message.reserved)
 
         Logger().write(LogVerbosity.All, "Sending handshake")
         self.peer.connection_manager.send(message.to_bytes())
-
-        answer = None
-        start_time = current_time()
-        while not answer:
-            if self.peer.connection_manager.connection_state == ConnectionState.Disconnected:
-                break
-
-            answer = self.peer.connection_manager.get_message()
-            if current_time() - start_time > 5000:
-                break
-            if not answer:
-                sleep(0.2)
-
-        if answer is None or len(answer) == 0:
-            Logger().write(LogVerbosity.All, str(self.peer.id) + ' did not receive handshake response')
-            return False
-
-        response = HandshakeMessage.from_bytes(answer)
-        if response is None:
-            Logger().write(LogVerbosity.All, str(self.peer.id) + ' invalid handshake response')
-            return False
-
-        if response.protocol != b'BitTorrent protocol':
-            Logger().write(LogVerbosity.Debug, 'Unknown bittorrent protocol, disconnecting. ' + str(response.protocol))
-            return False
-
-        self.peer.extension_manager.parse_extension_bytes(response.reserved)
-        Logger().write(LogVerbosity.All, "Received valid handshake response")
-        self.handshake_successful = True
-        return True
 
     def stop(self):
         self.peer = None

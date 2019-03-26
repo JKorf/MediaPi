@@ -64,7 +64,7 @@ class BasePeerMessage:
         return
 
     @staticmethod
-    def from_bytes(peer, data):
+    def from_bytes(data):
         length = len(data)
         if length == 0:
             return KeepAliveMessage()

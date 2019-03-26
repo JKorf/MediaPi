@@ -8,6 +8,7 @@ from pympler import asizeof
 
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDataManager import TorrentDataManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDownloadManager import TorrentDownloadManager
+from MediaPlayer.TorrentStreaming.Torrent.TorrentMessageProcessor import TorrentMessageProcessor
 from MediaPlayer.TorrentStreaming.Torrent.TorrentMetadataManager import TorrentMetadataManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentNetworkManager import TorrentNetworkManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentOutputManager import TorrentOutputManager
@@ -109,7 +110,6 @@ class Torrent(LogObject):
         self._log_id = EventManager.register_event(EventType.Log, self.log)
 
         self.engine = Engine.Engine('Main processor', 500, self)
-        self.message_engine = Engine.Engine('Main Message processor', 50, self)
 
         self.tracker_manager = TrackerManager()
         self.peer_manager = TorrentPeerManager(self)
@@ -118,6 +118,7 @@ class Torrent(LogObject):
         self.output_manager = TorrentOutputManager(self)
         self.metadata_manager = TorrentMetadataManager(self)
         self.network_manager = TorrentNetworkManager(self)
+        self.message_processor = TorrentMessageProcessor(self)
 
     def check_size(self):
         for key, value, size in sorted([(key, value, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[2], reverse=True):
@@ -214,11 +215,9 @@ class Torrent(LogObject):
         self.engine.add_work_item("check_download_speed", 1000, self.check_download_speed)
         self.engine.add_work_item("cleanup_used_pieces", 5000, self.data_manager.cleanup_used_pieces)
 
-        self.message_engine.add_work_item("data_manager", 200, self.data_manager.update_write_blocks)
-        self.message_engine.add_work_item("peer_messages", 50, self.peer_manager.process_peer_messages)
-
         self.engine.start()
-        self.message_engine.start()
+        self.data_manager.start()
+        self.message_processor.start()
         self.network_manager.start()
         Logger().write(LogVerbosity.Important, "Torrent started")
 
@@ -375,9 +374,10 @@ class Torrent(LogObject):
         EventManager.deregister_event(self._log_id)
 
         self.engine.stop()
-        self.message_engine.stop()
         Logger().write(LogVerbosity.Debug, 'Torrent engines stopped')
 
+        self.message_processor.stop()
+        self.data_manager.stop()
         self.output_manager.stop()
         self.peer_manager.stop()
         self.tracker_manager.stop()
@@ -391,7 +391,6 @@ class Torrent(LogObject):
             file.close()
 
         self.engine = None
-        self.message_engine = None
         self.tracker_manager = None
         self.peer_manager = None
         self.data_manager = None
@@ -399,6 +398,8 @@ class Torrent(LogObject):
         self.output_manager = None
         self.metadata_manager = None
         self.network_manager = None
+        self.message_processor = None
+        self.data_manager = None
 
         self.finish()
         EventManager.throw_event(EventType.TorrentStopped, [])

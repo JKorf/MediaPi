@@ -24,7 +24,7 @@ class PeerExtensionManager(LogObject):
         for extension in [x for x in known_extensions if x.extension_type == ExtensionType.Basic]:
             if data[extension.reserved_id] & extension.bit_mask != 0:
                 self.supported_peer_extensions[extension.extension_name] = 0
-        self.supported_log = [str(x) for x in self.supported_peer_extensions]
+        self.supported_log = ", ".join([str(k) for k, v in self.supported_peer_extensions.items()])
 
     def parse_dictionary(self, data):
         dic = data[b'm']
@@ -36,7 +36,7 @@ class PeerExtensionManager(LogObject):
                 self.supported_peer_extensions[extension.extension_name] = value
             else:
                 Logger().write(LogVerbosity.Debug, str(self.peer.id) + ' Unknown peer extension: ' + key.decode('utf8'))
-        self.supported_log = [str(x) for x in self.supported_peer_extensions]
+        self.supported_log = ", ".join([str(k) for k, v in self.supported_peer_extensions.items()])
 
     def peer_supports(self, name):
         return name in self.supported_peer_extensions

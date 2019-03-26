@@ -31,7 +31,7 @@ class StateManager(metaclass=Singleton):
             self.state_data.start_update()
             self.state_data.memory = psutil.virtual_memory().percent
             self.state_data.cpu = psutil.cpu_percent()
-            self.state_data.threads = ThreadManager.thread_count()
+            self.state_data.threads = ThreadManager().thread_count
             self.state_data.temperature = self.get_temperature()
             self.state_data.stop_update()
             time.sleep(1)

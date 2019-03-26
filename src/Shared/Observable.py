@@ -23,7 +23,7 @@ class Observable(LogObject):
 
         self.__wait_event = Event()
 
-        self.__update_thread = CustomThread(self.__check_update, name + " update")
+        self.__update_thread = CustomThread(self.__check_update, name + " observer")
         self.__update_thread.start()
 
     def register_callback(self, cb):

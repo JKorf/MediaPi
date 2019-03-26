@@ -1,6 +1,7 @@
 import math
 from threading import Lock
 
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 
@@ -94,7 +95,7 @@ class Block:
             self.peers_downloading.remove(peer)
 
 
-class Piece:
+class Piece(LogObject):
     @property
     def blocks(self):
         if not self.initialized:
@@ -102,7 +103,9 @@ class Piece:
             self.initialized = True
         return self._blocks
 
-    def __init__(self, index, block_start_index, start_byte, length, persistent):
+    def __init__(self, parent, index, block_start_index, start_byte, length, persistent):
+        super().__init__(parent, "piece " + str(index))
+
         self.index = index
         self.block_start_index = block_start_index
         self.start_byte = start_byte

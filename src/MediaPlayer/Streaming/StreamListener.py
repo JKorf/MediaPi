@@ -318,7 +318,7 @@ class StreamServer:
                     break
                 ip, port = str(addr[0]), str(addr[1])
                 Logger().write(LogVerbosity.Debug, 'New connection from ' + ip + ':' + port)
-                thread = CustomThread(self.client_thread, "Stream thread", [conn])
+                thread = CustomThread(self.client_thread, "Stream request", [conn])
                 thread.start()
         except Exception as e:
             Logger().write(LogVerbosity.Important, "Unexpected error in StreamServer " + self.name + ": " + str(e))

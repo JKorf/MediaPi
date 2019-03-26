@@ -10,6 +10,7 @@ from subprocess import call
 import sys
 import time
 
+from Shared.Threading import ThreadManager
 from Updater import Updater
 from Webserver.APIController import APIController
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
@@ -81,6 +82,7 @@ class Program:
         MediaManager()
         LightManager()
         Updater()
+        ThreadManager()
 
     @staticmethod
     def init_sound():

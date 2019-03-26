@@ -35,9 +35,6 @@ class TorrentNetworkManager(LogObject):
         self.throttling = False
         self.last_throttle = 0
 
-        #self.message_queue = []
-        #self.message_queue_lock = Lock()
-
         self.live_download_counter = LiveCounter("Network speed live counter", 50)
         self.average_download_counter = AverageCounter(self, "Network speed average counter", 3, 1000)
 
@@ -57,7 +54,7 @@ class TorrentNetworkManager(LogObject):
         Logger().write(LogVerbosity.Info, "Starting network manager")
         self.live_download_counter.start()
         self.average_download_counter.start()
-        self.thread = CustomThread(self.execute, "Torrent network thread")
+        self.thread = CustomThread(self.execute, "Network IO")
         self.thread.start()
 
     def execute(self):
@@ -66,24 +63,24 @@ class TorrentNetworkManager(LogObject):
                 Logger().write(LogVerbosity.Debug, "No longer throttling")
                 self.throttling = False  # has not throttled in last 2 seconds
 
+            # Select in/outputs
+            input_peers, output_peers = self.torrent.peer_manager.get_peers_for_io()
+
+            if not input_peers and not output_peers:
+                sleep(0.05)  # no peers to read/write
+                continue
+
+            input_sockets = [x.connection_manager.connection.socket for x in input_peers]
+            output_sockets = [x.connection_manager.connection.socket for x in output_peers]
+
+            if not input_sockets and not output_sockets:
+                sleep(0.01)  # no sockets available to read/write
+                continue
+
+            self.last_inputs = len(input_sockets)
+            self.last_outputs = len(output_sockets)
+
             try:
-                # Select in/outputs
-                input_peers, output_peers = self.torrent.peer_manager.get_peers_for_io()
-
-                if not input_peers and not output_peers:
-                    sleep(0.05)  # no peers to read/write
-                    continue
-
-                input_sockets = [x.connection_manager.connection.socket for x in input_peers]
-                output_sockets = [x.connection_manager.connection.socket for x in output_peers]
-
-                if not input_sockets and not output_sockets:
-                    sleep(0.01)  # no sockets available to read/write
-                    continue
-
-                self.last_inputs = len(input_sockets)
-                self.last_outputs = len(output_sockets)
-
                 # Check which ones can read/write
                 readable, writeable, exceptional = \
                     select.select(input_sockets, output_sockets, [], 0.2)
@@ -103,9 +100,13 @@ class TorrentNetworkManager(LogObject):
 
                 peer = [x for x in input_peers if x.connection_manager.connection.socket == client]
                 if len(peer) > 0:
-                    bytes_read = peer[0].connection_manager.handle_read()
-                    self.live_download_counter.add_value(bytes_read)
-                    self.average_download_counter.add_value(bytes_read)
+                    peer = peer[0]
+                    message = peer.connection_manager.handle_read()
+                    if message is not None:
+                        msg_length = len(message)
+                        self.torrent.message_processor.add_message(peer, message)
+                        self.live_download_counter.add_value(msg_length)
+                        self.average_download_counter.add_value(msg_length)
 
             for client in writeable:
                 peer = [x for x in output_peers if x.connection_manager.connection.socket == client]

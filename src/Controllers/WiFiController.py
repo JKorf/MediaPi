@@ -8,7 +8,7 @@ from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import Singleton
 
 
-class WiFiController(metaclass=Singleton, LogObject):
+class WiFiController(LogObject, metaclass=Singleton):
 
     def __init__(self):
         super().__init__(None, "WIFI")

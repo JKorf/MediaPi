@@ -46,7 +46,6 @@ class PeerDownloadManager(LogObject):
 
         # Logging props
         self.downloading_log = ""
-        self.done_log = ""
         self.max_blocks_log = self.max_blocks
 
     def update(self):
@@ -86,7 +85,7 @@ class PeerDownloadManager(LogObject):
                 return False
 
             currently_downloading = len(self.downloading)
-            if currently_downloading > 0 and current_time() - self.timed_out_blocks < 5000:
+            if current_time() - self.timed_out_blocks < 5000:
                 # We have timed out on block we previously requested, don't request new for some time
                 return True
 
@@ -113,7 +112,6 @@ class PeerDownloadManager(LogObject):
     def block_done(self, block_offset):
         with self.blocks_done_lock:
             self.blocks_done.append(block_offset)
-            self.done_log = ", ".join([str(x) for x in self.blocks_done])
 
     def check_current_downloading(self):
         canceled = 0
@@ -147,7 +145,6 @@ class PeerDownloadManager(LogObject):
 
                 with self.blocks_done_lock:
                     self.blocks_done = [x for x in self.blocks_done if x not in done_copy]
-                    self.done_log = ", ".join([str(x) for x in self.blocks_done])
 
         if canceled:
             Logger().write(LogVerbosity.Debug, str(self.peer.id) + " canceled " + str(canceled) + " blocks")
@@ -190,5 +187,4 @@ class PeerDownloadManager(LogObject):
             self.downloading.clear()
             self.blocks_done.clear()
             self.downloading_log = ""
-            self.done_log = ""
 

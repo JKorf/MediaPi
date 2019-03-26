@@ -234,37 +234,23 @@ class TorrentPeerManager(LogObject):
                 break
 
             Logger().write(LogVerbosity.Info, "Stopping slowest peer to find a potential faster one. Peer speed last 5 seconds was " + str(write_size(peer.counter.value)) + ", total: " + str(write_size(peer.counter.total)))
-            peer.stop()
+            peer.stop_async()
 
         return True
 
     def get_peers_for_io(self):
-        return list(sorted([x for x in self.connected_peers if x.connection_manager.connection_state == ConnectionState.Connected], key=lambda p: p.connection_manager.last_communication)), \
+        return list(sorted([x for x in self.connected_peers if x.connection_manager.connection_state == ConnectionState.Connected], key=lambda p: p.connection_manager._last_communication)), \
                list([x for x in self.connected_peers if len(x.connection_manager.to_send_bytes) > 0 and x.connection_manager.connection_state == ConnectionState.Connected])
 
     def are_fast_peers_available(self):
         return self.high_speed_peers > 0 or self.medium_speed_peers > 1
 
-    def process_peer_messages(self):
-        end_time = current_time() + 50
-        index = 1
-
-        for peer in [x for x in list(self.connected_peers) if x.connection_state == ConnectionState.Connected]:
-            allowed_process_time = max(min(25, end_time - current_time()), 10)
-            Logger().write(LogVerbosity.All, str(peer.id) + " peer with speed " + write_size(peer.counter.value) + "ps allowed " + str(allowed_process_time) + "ms at index " + str(index))
-            if not peer.message_handler.update(allowed_process_time):
-                Logger().write(LogVerbosity.Info, str(peer.id) + " removing peer, update = false")
-            index += 1
-        Logger().write(LogVerbosity.All, "Total took " + str(current_time() - (end_time - 200)) + "ms")
-
-        return True
-
     def stop(self):
         for peer in self.connecting_peers:
-            peer.stop()
+            peer.stop_async()
 
         for peer in self.connected_peers:
-            peer.stop()
+            peer.stop_async()
 
         self.complete_peer_list.clear()
         self.potential_peers.clear()

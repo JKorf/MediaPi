@@ -97,9 +97,9 @@ class Logger(metaclass=Singleton):
                 file.write(b'Call stack:'.ljust(20) + b'\r\n')
                 e_traceback = traceback.format_exception(e.__class__, e, e.__traceback__)
                 for line in e_traceback:
-                    file.write(line.encode('utf-8') + b'\r\n')
+                    file.write(line.encode('utf-8'))
                     if not self.raspberry:
-                        print(e_traceback)
+                        print(line.rstrip())
 
     @staticmethod
     def format_item(item_time, thread_name, file_name, line, function, priority, message):

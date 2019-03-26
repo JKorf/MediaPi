@@ -51,7 +51,7 @@ class Engine(LogObject):
         self.thread.start()
 
     def add_work_item(self, name, interval, work_item, initial_invoke=True):
-        self.work_items.append(EngineWorkItem(name, interval, work_item, initial_invoke))
+        self.work_items.append(EngineWorkItem(self, name, interval, work_item, initial_invoke))
 
     def stop(self):
         self.running = False
@@ -76,6 +76,7 @@ class Engine(LogObject):
                 self.current_item_log = ""
                 test_time = current_time()
                 work_item.last_run_time = test_time
+                work_item.last_run_duration = test_time - self.start_time
 
                 if work_item.interval == -1:
                     self.work_items.remove(work_item)
