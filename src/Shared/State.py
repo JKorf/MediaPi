@@ -5,6 +5,9 @@ import time
 
 import sys
 
+from eventlet import greenio
+from eventlet.green import subprocess
+
 from MediaPlayer.MediaManager import MediaManager
 from Shared.Events import EventManager, EventType
 from Shared.LogObject import LogObject
@@ -50,8 +53,9 @@ class StateManager(metaclass=Singleton):
     def get_temperature(self):
         if not self.monitoring:
             return "-"
-        temp = os.popen("vcgencmd measure_temp").readline()
-        return temp.replace("temp=", "")
+        proc = subprocess.Popen(["vcgencmd", "measure_temp"], stdout=greenio.GreenPipe, universal_newlines=True)
+        out, err = proc.communicate()
+        return out.replace("temp=", "")
 
 
 class StateData(Observable):

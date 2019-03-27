@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 import eventlet
+from eventlet.green.subprocess import call
+
 eventlet.monkey_patch()
 
 import os
 os.chdir(os.path.dirname(__file__))
 
+from eventlet import debug
 from datetime import datetime
-from subprocess import call
 import sys
 import time
 
@@ -36,6 +38,10 @@ class Program:
         Logger().write(LogVerbosity.Info, "Starting")
         sys.excepthook = self.handle_exception
 
+        self.pi = sys.platform == "linux" or sys.platform == "linux2"
+        if self.pi:
+            eventlet.debug.hub_blocking_detection(state=True, resolution=5)
+
         self.is_slave = Settings.get_bool("slave")
 
         Database().init_database()
@@ -62,7 +68,7 @@ class Program:
         Logger().write(LogVerbosity.Info, "Slave: " + str(self.is_slave))
         if self.is_slave:
             Logger().write(LogVerbosity.Info, "Master ip: " + str(Settings.get_string("master_ip")))
-        Logger().write(LogVerbosity.Info, "Pi: " + str(sys.platform == "linux" or sys.platform == "linux2"))
+        Logger().write(LogVerbosity.Info, "Pi: " + str(self.pi))
 
         Logger().write(LogVerbosity.Important, "Started")
         if Settings.get_bool("UI"):

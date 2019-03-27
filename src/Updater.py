@@ -1,9 +1,11 @@
 import os
 import shutil
-import subprocess
 import stat
 
 import sys
+
+from eventlet import greenio
+from eventlet.green import subprocess
 
 from Database.Database import Database
 from Shared.Logger import Logger, LogVerbosity
@@ -27,7 +29,7 @@ class Updater(metaclass=Singleton):
 
     def check_version(self):
         Logger().write(LogVerbosity.Info, "Checking for new version on git")
-        sub = subprocess.Popen(["git", "ls-remote", self.git_repo, "refs/heads/" + self.git_branch], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sub = subprocess.Popen(["git", "ls-remote", self.git_repo, "refs/heads/" + self.git_branch], stdout=greenio.GreenPipe, stderr=greenio.GreenPipe)
         stdout, stderr = sub.communicate()
         if stdout == b'':
             Logger().write(LogVerbosity.Info, "Failed to get latest commit hash: " + stderr.decode('utf-8'))

@@ -54,7 +54,6 @@ class PeerConnectionManager(LogObject):
         Stats.add('peers_connect_success', 1)
         Logger().write(LogVerbosity.Debug, str(self.peer.id) + ' connected to ' + str(self.uri.netloc))
         self.connection_state = ConnectionState.Connected
-        self.connection.socket.setblocking(0)
 
     def handle_read(self):
         if self.connection_state != ConnectionState.Connected:

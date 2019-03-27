@@ -1,4 +1,5 @@
-import subprocess
+from eventlet import greenio
+from eventlet.green import subprocess
 
 import sys
 
@@ -23,11 +24,11 @@ class WiFiController(LogObject, metaclass=Singleton):
 
     def watch_wifi(self):
         if self.pi:
-            proc = subprocess.Popen(["iwgetid"], stdout=subprocess.PIPE, universal_newlines=True)
+            proc = subprocess.Popen(["iwgetid"], stdout=greenio.GreenPipe, universal_newlines=True)
             out, err = proc.communicate()
             network_ssid = out.split(":")[1]
 
-            proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
+            proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=greenio.GreenPipe, universal_newlines=True)
             out, err = proc.communicate()
             cells = out.split("Cell ")
             cell_lines = [x for x in cells if network_ssid in x]
@@ -54,7 +55,7 @@ class WiFiController(LogObject, metaclass=Singleton):
                                     self.quality = new_val
 
         else:
-            proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
+            proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=greenio.GreenPipe, universal_newlines=True)
             out, err = proc.communicate()
             lines = out.split("\n")
             for line in lines:
