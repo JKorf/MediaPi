@@ -39,8 +39,8 @@ class Program:
         sys.excepthook = self.handle_exception
 
         self.pi = sys.platform == "linux" or sys.platform == "linux2"
-        if self.pi:
-            eventlet.debug.hub_blocking_detection(state=True, resolution=5)
+        # if self.pi:
+        #     eventlet.debug.hub_blocking_detection(state=True, resolution=5)
 
         self.is_slave = Settings.get_bool("slave")
 

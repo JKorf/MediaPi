@@ -82,35 +82,42 @@ class TorrentNetworkManager(LogObject):
             try:
                 # Check which ones can read/write
                 readable, writeable, exceptional = \
-                    select.select(input_sockets, output_sockets, [], 0.2)
+                    select.select(input_sockets, output_sockets, input_sockets + output_sockets, 0.2)
             except Exception as e:
                 Logger().write(LogVerbosity.Important, "Select error: " + str(e))
                 sleep(0.01)
                 continue
 
             for client in readable:
-                download_speed = self.average_download_counter.get_speed()
-                if self.max_download_speed != 0 and download_speed > self.max_download_speed:
-                    self.last_throttle = current_time()
-                    if not self.throttling:
-                        self.throttling = True
-                        Logger().write(LogVerbosity.Debug, "Start throttling at " + str(self.max_download_speed))
-                    sleep(0.05)
-                    break
+                try:
+                    download_speed = self.average_download_counter.get_speed()
+                    if self.max_download_speed != 0 and download_speed > self.max_download_speed:
+                        self.last_throttle = current_time()
+                        if not self.throttling:
+                            self.throttling = True
+                            Logger().write(LogVerbosity.Debug, "Start throttling at " + str(self.max_download_speed))
+                        sleep(0.05)
+                        break
 
-                peer = [x for x in input_peers if x.connection_manager.connection.socket == client]
-                if len(peer) > 0:
-                    peer = peer[0]
-                    message = peer.connection_manager.handle_read()
-                    if message is not None:
-                        msg_length = len(message)
-                        self.torrent.message_processor.add_message(peer, message, current_time())
-                        self.average_download_counter.add_value(msg_length)
-
+                    peer = [x for x in input_peers if x.connection_manager.connection.socket == client]
+                    if len(peer) > 0:
+                        peer = peer[0]
+                        message = peer.connection_manager.handle_read()
+                        if message is not None:
+                            msg_length = len(message)
+                            self.torrent.message_processor.add_message(peer, message, current_time())
+                            self.average_download_counter.add_value(msg_length)
+                except Exception as e:
+                    Logger().write(LogVerbosity.Info, "Error reading from client: " + str(e))
+                    continue
             for client in writeable:
-                peer = [x for x in output_peers if x.connection_manager.connection.socket == client]
-                if len(peer) > 0:
-                    peer[0].connection_manager.handle_write()
+                try:
+                    peer = [x for x in output_peers if x.connection_manager.connection.socket == client]
+                    if len(peer) > 0:
+                        peer[0].connection_manager.handle_write()
+                except Exception as e:
+                    Logger().write(LogVerbosity.Info, "Error reading from client: " + str(e))
+                    continue
 
             Timing().stop_timing("IO")
             sleep(0)
