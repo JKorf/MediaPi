@@ -28,7 +28,6 @@ class Logger(metaclass=Singleton):
         self.running = False
 
         self.last_id = 1
-        self.last_id_lock = threading.Lock()
 
         self.log_processor = LogProcessor(self.log_path, 'log_' + self.log_time, True and not self.raspberry)
         self.state_log_processor = LogProcessor(self.log_path, 'state_' + self.log_time, False)
@@ -54,7 +53,7 @@ class Logger(metaclass=Singleton):
                     + "Function".ljust(25) + " | "
                     + "Priority".ljust(9) + " | "
                     + "Message\r\n"
-                    + "-" * 140 + "\r\n")
+                    + "-" * 140)
 
     def stop(self):
         self.log_processor.stop()
@@ -125,9 +124,8 @@ class Logger(metaclass=Singleton):
             return "\r\n".join(f.readlines())
 
     def next_id(self):
-        with self.last_id_lock:
-            self.last_id += 1
-            return self.last_id
+        self.last_id += 1
+        return self.last_id
 
 
 def path_leaf(path):
@@ -180,7 +178,6 @@ class LogProcessor:
         self.process_thread = None
         self.queue = []
         self.queue_event = threading.Event()
-        self.queue_lock = threading.Lock()
 
     def start(self):
         self.create_log_file(self.base_file_name + " #1.txt")
@@ -199,21 +196,17 @@ class LogProcessor:
         self.file.close()
 
     def enqueue(self, item):
-        with self.queue_lock:
-            self.queue.append(item)
-            self.queue_event.set()
+        self.queue.append(item)
+        self.queue_event.set()
 
     def process(self):
         while True:
-            self.queue_event.wait(0.1)
-            with self.queue_lock:
-                self.queue_event.clear()
-                items = list(self.queue)
-                item_count = len(items)
-                if item_count == 0:
-                    continue
+            time.sleep(0.01)
+            if len(self.queue) == 0:
+                continue
 
-                self.queue.clear()
+            items = list(self.queue)
+            self.queue.clear()
 
             total = "\r\n".join(items)
             try:
@@ -224,16 +217,14 @@ class LogProcessor:
                 self.file.write(byte_data)
                 self.file_size += len(byte_data)
                 self.check_file_size()
-                time.sleep(0)
             except Exception as e:
                 Logger().write_error(e, "Exception during logging")
 
             if not self.running:
                 # If stopped, wait for 100 ms and if nothing gets added stop
                 time.sleep(0.1)
-                with self.queue_lock:
-                    if len(self.queue) == 0:
-                        break
+                if len(self.queue) == 0:
+                    break
 
     def check_file_size(self):
         if self.file_size > self.max_log_file_size:

@@ -18,7 +18,6 @@ class TorrentMetadataManager(LogObject):
         self.total_size_sets = dict()
 
         self.total_blocks = 0
-        self.__lock = Lock()
         self.metadata_done = False
         self.metadata_blocks = []
         self.metadata_block_size = Settings.get_int("metadata_block_size")
@@ -61,33 +60,32 @@ class TorrentMetadataManager(LogObject):
         return int(max_size[0])
 
     def add_metadata_piece(self, index, data):
-        with self.__lock:
-            if self.metadata_done:
-                Logger().write(LogVerbosity.Debug, "Received metadata block which is already done: " + str(index))
-                return
+        if self.metadata_done:
+            Logger().write(LogVerbosity.Debug, "Received metadata block which is already done: " + str(index))
+            return
 
-            if index >= len(self.metadata_blocks) or index < 0:
-                Logger().write(LogVerbosity.Debug, 'Invalid metadata block index: ' + str(index))
-                return
+        if index >= len(self.metadata_blocks) or index < 0:
+            Logger().write(LogVerbosity.Debug, 'Invalid metadata block index: ' + str(index))
+            return
 
-            if data is None or len(data) == 0:
-                Logger().write(LogVerbosity.Debug, 'Invalid metadata block data')
-                return
+        if data is None or len(data) == 0:
+            Logger().write(LogVerbosity.Debug, 'Invalid metadata block data')
+            return
 
-            self.metadata_blocks[index].write(data)
-            Logger().write(LogVerbosity.Debug, "Metadata blocks done: " + str(index))
+        self.metadata_blocks[index].write(data)
+        Logger().write(LogVerbosity.Debug, "Metadata blocks done: " + str(index))
 
-            if len([x for x in self.metadata_blocks if not x.done]) == 0:
-                Logger().write(LogVerbosity.Info, "Metadata done")
-                self.metadata_done = True
+        if len([x for x in self.metadata_blocks if not x.done]) == 0:
+            Logger().write(LogVerbosity.Info, "Metadata done")
+            self.metadata_done = True
 
-                data = bytearray(self.current_total_size)
-                for block in self.metadata_blocks:
-                    data[self.metadata_block_size * block.index:] = block.data
+            data = bytearray(self.current_total_size)
+            for block in self.metadata_blocks:
+                data[self.metadata_block_size * block.index:] = block.data
 
-                data = bdecode(bytes(data))
-                self.torrent.parse_info_dictionary(data)
-                self.metadata_blocks.clear()
+            data = bdecode(bytes(data))
+            self.torrent.parse_info_dictionary(data)
+            self.metadata_blocks.clear()
 
     def get_pieces_to_do(self):
         return [x for x in self.metadata_blocks if not x.done]

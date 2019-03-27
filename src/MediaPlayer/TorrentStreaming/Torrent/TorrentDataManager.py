@@ -1,4 +1,6 @@
 import math
+
+import time
 from pympler import asizeof
 
 from MediaPlayer.TorrentStreaming.Data import Bitfield, Piece
@@ -10,6 +12,7 @@ from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Stats import Stats
+from Shared.Timing import Timing
 from Shared.Util import current_time, write_size
 
 
@@ -122,26 +125,25 @@ class TorrentDataManager(LogObject):
         Logger().write(LogVerbosity.Info, "Pieces initialized, " + str(len(self._pieces)) + " pieces created in " + str(current_time() - start_time) + "ms")
         Logger().write(LogVerbosity.Debug, "Persistent pieces: " + pers_pieces)
 
-    def cleanup_used_pieces(self):
-        stream_pos = self.torrent.stream_position
+    def clear_pieces(self, from_index, to_index):
         cleared = 0
         cleared_size = 0
-        for piece in [x for x in self._pieces.values() if x.index < stream_pos and not x.cleared and not x.persistent]:
-            piece.clear()
-            self.total_cleared += piece.length
-            cleared += 1
-            cleared_size += piece.length
-        if cleared > 0:
-            Logger().write(LogVerbosity.Debug, "Cleared " + str(cleared) + " piece(s): " + str(write_size(cleared_size)) + ". Total cleared: " + str(write_size(self.total_cleared)))
-        return True
+        for index in range(from_index, to_index):
+            piece = self._pieces[index]
+            if not piece.cleared and not piece.persistent:
+                piece.clear()
+                self.total_cleared += piece.length
+
+        Logger().write(LogVerbosity.Debug, "Cleared " + str(cleared) + " piece(s): " + str(write_size(cleared_size)) + ". Total cleared: " + str(write_size(self.total_cleared)))
 
     def process_done_blocks(self, done_items):
+        Timing().start_timing("done_blocks")
         self.blocks_done_length = len(self.done_queue.queue)
-        for peer, piece_index, offset, data in done_items:
+        for peer, piece_index, offset, data, timestamp in done_items:
             piece = self._pieces[piece_index]
             Logger().write(LogVerbosity.All, str(peer.id) + ' Received piece message: ' + str(piece.index) + ', block offset: ' + str(offset))
 
-            peer.download_manager.block_done(piece_index * self.piece_length + offset)
+            peer.download_manager.block_done(piece_index * self.piece_length + offset, timestamp)
             if self.torrent.state == TorrentState.Done:
                 Logger().write(LogVerbosity.All, 'Received a block but torrent already done')
                 self.torrent.overhead += len(data)
@@ -173,6 +175,8 @@ class TorrentDataManager(LogObject):
                 if len([x for x in self._pieces.values() if x.index >= self.torrent.stream_position and not x.done]) == 0:
                     self.torrent.torrent_done()
 
+        Timing().stop_timing("done_blocks")
+
     def piece_hash_valid(self, piece):
         Logger().write(LogVerbosity.All, "Piece " + str(piece.index) + " has valid hash")
         piece.validated = True
@@ -198,8 +202,8 @@ class TorrentDataManager(LogObject):
     def get_piece_by_index(self, index):
         return self._pieces.get(index)
 
-    def block_done(self, peer, piece_index, offset, data):
-        self.done_queue.add_item((peer, piece_index, offset, data))
+    def block_done(self, peer, piece_index, offset, data, timestamp):
+        self.done_queue.add_item((peer, piece_index, offset, data, timestamp))
         self.blocks_done_length = len(self.done_queue.queue)
 
     def write_block(self, piece, block, data):

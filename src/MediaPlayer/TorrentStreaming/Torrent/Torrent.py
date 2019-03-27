@@ -100,7 +100,6 @@ class Torrent(LogObject):
         self.info_hash = None
         self.files = []
         self.__state = TorrentState.Initial
-        self.__lock = Lock()
 
         self.media_file = None
         self.selected_media_file = None
@@ -215,7 +214,6 @@ class Torrent(LogObject):
         self.engine.add_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
         self.engine.add_work_item("stream_manager", 3000, self.output_manager.stream_manager.update)
         self.engine.add_work_item("check_download_speed", 1000, self.check_download_speed)
-        self.engine.add_work_item("cleanup_used_pieces", 5000, self.data_manager.cleanup_used_pieces)
 
         self.engine.start()
         self.data_manager.start()
@@ -451,8 +449,6 @@ class TorrentDownloadFile(LogObject):
         self.first_64k = None
         self.last_64k = None
 
-        self.__lock = Lock()
-
     def open(self):
         if self.stream is None:
             self.stream = open(self.path, 'wb')
@@ -477,15 +473,14 @@ class TorrentDownloadFile(LogObject):
         Logger().write(LogVerbosity.Important, "File " + self.name + " done")
 
     def write(self, offset_in_file, data):
-        with self.__lock:
-            self.open()
+        self.open()
 
-            self.stream.seek(offset_in_file)
-            can_write = len(data)
-            if self.length - offset_in_file < can_write:
-                can_write = self.length - offset_in_file
+        self.stream.seek(offset_in_file)
+        can_write = len(data)
+        if self.length - offset_in_file < can_write:
+            can_write = self.length - offset_in_file
 
-            self.stream.write(data[0:can_write])
-            self.stream.flush()
+        self.stream.write(data[0:can_write])
+        self.stream.flush()
 
         return can_write

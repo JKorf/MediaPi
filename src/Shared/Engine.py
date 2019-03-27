@@ -5,6 +5,7 @@ from Shared.Events import EventType
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Threading import CustomThread
+from Shared.Timing import Timing
 from Shared.Util import current_time
 
 
@@ -33,16 +34,11 @@ class Engine(LogObject):
 
     def runner(self):
         while self.running:
-            test_time = current_time()
-            remaining_time = self.tick_time - (test_time - self.last_tick)
-
-            if remaining_time < 0:
-                remaining_time = 0
-            sleep(remaining_time / 1000)
-            self.last_tick = current_time()
+            sleep(0.01)
             if not self.running:
                 break
 
+            self.last_tick = current_time()
             self.tick()
 
     def start(self):
@@ -65,6 +61,7 @@ class Engine(LogObject):
             work_item = cur_list[i]
 
             if work_item.last_run_time + work_item.interval < tick_time:
+                Timing().start_timing("Engine item " + work_item.name)
                 self.current_item = work_item
                 self.current_item_log = work_item.name
                 self.start_time = current_time()
@@ -87,6 +84,8 @@ class Engine(LogObject):
                 if work_item.name not in self.timing:
                     self.timing[work_item.name] = TimingObject(work_item.name)
                 self.timing[work_item.name].add_time(current_time() - self.start_time)
+                Timing().stop_timing("Engine item " + work_item.name)
+                sleep(0)
 
         self.own_time.add_time(current_time() - tick_time)
 

@@ -22,7 +22,6 @@ class SubtitleProvider:
 
         self.sub_file_directory = Settings.get_string("base_folder") + "/subs/"
         self.sub_files = []
-        self.sub_files_lock = Lock()
 
         self.file_size = 0
         self.file_length = 0
@@ -82,11 +81,10 @@ class SubtitleProvider:
 
     def search_subtitles_thread(self, source, size, file_length, file_name, first_64k, last_64k):
         sub_paths = source.get_subtitles(size, file_length, file_name, first_64k, last_64k)
-        with self.sub_files_lock:
-            for path in sub_paths:
-                file_hash = self.get_sub_hash(path)
-                if len([x for x in self.sub_files if x.hash == file_hash]) == 0:
-                    self.sub_files.append(Subtitle(file_hash, path))
+        for path in sub_paths:
+            file_hash = self.get_sub_hash(path)
+            if len([x for x in self.sub_files if x.hash == file_hash]) == 0:
+                self.sub_files.append(Subtitle(file_hash, path))
 
         Logger().write(LogVerbosity.Info, "Found " + str(len(sub_paths)) + " subtitle files")
         EventManager.throw_event(EventType.SetSubtitleFiles, [sub_paths])

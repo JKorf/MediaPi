@@ -5,6 +5,7 @@ from pympler import asizeof
 from MediaPlayer.Streaming.StreamManager import StreamManager
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
+from Shared.Timing import Timing
 from Shared.Util import write_size
 
 
@@ -15,7 +16,6 @@ class TorrentOutputManager(LogObject):
 
         self.torrent = torrent
         self.pieces_to_output = []
-        self.__lock = Lock()
         self.file_writer = DiskWriter(self.torrent)
         self.stream_manager = StreamManager(self.torrent)
         self.broadcasted_hash_data = False
@@ -27,21 +27,20 @@ class TorrentOutputManager(LogObject):
             Logger().write(LogVerbosity.Important, "       Size of " + str(key) + ": " + write_size(size))
 
     def add_piece_to_output(self, piece):
-        with self.__lock:
-            self.pieces_to_output.append(piece)
-            self.output_log = ", ".join([str(x.index) for x in self.pieces_to_output])
+        self.pieces_to_output.append(piece)
+        self.output_log = ", ".join([str(x.index) for x in self.pieces_to_output])
 
     def flush(self):
         self.update()
 
     def update(self):
-        with self.__lock:
-            to_write = list(self.pieces_to_output)
-            if len(to_write) == 0:
-                return True
+        to_write = list(self.pieces_to_output)
+        if len(to_write) == 0:
+            return True
+        Timing().start_timing("output")
 
-            self.pieces_to_output.clear()
-            self.output_log = ""
+        self.pieces_to_output.clear()
+        self.output_log = ""
 
         Logger().write(LogVerbosity.Info, str(len(to_write)) + ' pieces done')
 
@@ -52,6 +51,7 @@ class TorrentOutputManager(LogObject):
             # Check if first and last piece(s) are done to calculate the hash
             self.check_stream_file_hash()
 
+        Timing().stop_timing("output")
         return True
 
     def check_stream_file_hash(self):

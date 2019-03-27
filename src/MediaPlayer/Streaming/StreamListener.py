@@ -245,7 +245,7 @@ class StreamListener:
                     self.bytes_send += data_length
                     data_writer.streamed += data_length
                     Logger().write(LogVerbosity.All, self.name + ' writer ' + str(data_writer.id) + " send " + str(data_length) + " bytes")
-                    time.sleep(0)  # give other threads some time
+                    time.sleep(0.005)  # give other threads some time
             except (ConnectionAbortedError, ConnectionResetError, OSError) as e:
                 Logger().write(LogVerbosity.Info, self.name + " writer " + str(data_writer.id) + " connection closed during sending of data: " + str(e))
                 socket.close()
@@ -339,7 +339,6 @@ class ReadFile:
     def __init__(self, path):
         self.path = path
         self.size = os.path.getsize(path)
-        self.read_lock = Lock()
         self.location = 0
         self.file = None
 
@@ -348,12 +347,11 @@ class ReadFile:
         self.location = 0
 
     def get_bytes(self, start, length):
-        with self.read_lock:
-            if self.location != start:
-                Logger().write(LogVerbosity.Info, "Seeking file to " + str(start))
-                self.file.seek(start)
-            data = self.file.read(length)
-            self.location = start + len(data)
+        if self.location != start:
+            Logger().write(LogVerbosity.Info, "Seeking file to " + str(start))
+            self.file.seek(start)
+        data = self.file.read(length)
+        self.location = start + len(data)
         return data
 
     def close(self):

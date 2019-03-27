@@ -21,7 +21,6 @@ class LightManager(metaclass=Singleton):
     gateway = None
     enabled = False
     initialized = False
-    init_lock = Lock()
 
     def __init__(self):
         self.light_state = LightState()
@@ -34,54 +33,53 @@ class LightManager(metaclass=Singleton):
             Logger().write(LogVerbosity.Info, "already init")
             return
 
-        with self.init_lock:
-            if sys.platform != "linux" and sys.platform != "linux2":
-                Logger().write(LogVerbosity.Info, "Lighting: Not initializing, no coap client available on windows")
-                self.initialized = True
-                self.light_state.update_group(LightGroup(1, "Test group", True, 128))
-                self.light_state.update_group(LightGroup(2, "Test group 2", False, 18))
-                return
+        if sys.platform != "linux" and sys.platform != "linux2":
+            Logger().write(LogVerbosity.Info, "Lighting: Not initializing, no coap client available on windows")
+            self.initialized = True
+            self.light_state.update_group(LightGroup(1, "Test group", True, 128))
+            self.light_state.update_group(LightGroup(2, "Test group 2", False, 18))
+            return
 
-            Logger().write(LogVerbosity.All, "Start LightManager init")
-            self.enabled = True
-            if not self.initialized:
-                ip = Settings.get_string("tradfri_hub_ip")
-                identity = Database().get_stat_string("LightingId")
-                key = Database().get_stat_string("LightingKey")
+        Logger().write(LogVerbosity.All, "Start LightManager init")
+        self.enabled = True
+        if not self.initialized:
+            ip = Settings.get_string("tradfri_hub_ip")
+            identity = Database().get_stat_string("LightingId")
+            key = Database().get_stat_string("LightingKey")
 
-                if identity is None or key is None:
-                    Logger().write(LogVerbosity.Info, "Lighting: No identity/key found, going to generate new")
-                    # We don't have all information to connect, reset and start from scratch
-                    Database().remove_stat("LightingId")
-                    Database().remove_stat("LightingKey")
-                    key = None
+            if identity is None or key is None:
+                Logger().write(LogVerbosity.Info, "Lighting: No identity/key found, going to generate new")
+                # We don't have all information to connect, reset and start from scratch
+                Database().remove_stat("LightingId")
+                Database().remove_stat("LightingKey")
+                key = None
 
-                    identity = uuid.uuid4().hex
-                    Database().update_stat("LightingId", identity)  # Generate and save a new id
-                    self.api_factory = APIFactory(host=ip, psk_id=identity)
-                else:
-                    self.api_factory = APIFactory(host=ip, psk_id=identity, psk=key)
+                identity = uuid.uuid4().hex
+                Database().update_stat("LightingId", identity)  # Generate and save a new id
+                self.api_factory = APIFactory(host=ip, psk_id=identity)
+            else:
+                self.api_factory = APIFactory(host=ip, psk_id=identity, psk=key)
 
-                self.api = self.api_factory.request
-                self.gateway = Gateway()
+            self.api = self.api_factory.request
+            self.gateway = Gateway()
 
-                if key is None:
-                    try:
-                        security_code = SecureSettings.get_string("tradfri_hub_code")  # the code at the bottom of the hub
-                        key = self.api_factory.generate_psk(security_code)
-                        Database().update_stat("LightingKey", key)  # Save the new key
-                        Logger().write(LogVerbosity.Info, "Lighting: New key retrieved")
-                        self.initialized = True
-                    except Exception as e:
-                        Logger().write_error(e, "Unhandled exception")
-                        return
-                else:
-                    Logger().write(LogVerbosity.Info, "Lighting: Previously saved key found")
+            if key is None:
+                try:
+                    security_code = SecureSettings.get_string("tradfri_hub_code")  # the code at the bottom of the hub
+                    key = self.api_factory.generate_psk(security_code)
+                    Database().update_stat("LightingKey", key)  # Save the new key
+                    Logger().write(LogVerbosity.Info, "Lighting: New key retrieved")
                     self.initialized = True
+                except Exception as e:
+                    Logger().write_error(e, "Unhandled exception")
+                    return
+            else:
+                Logger().write(LogVerbosity.Info, "Lighting: Previously saved key found")
+                self.initialized = True
 
-                groups = self.get_light_groups()
-                for group in groups:
-                    self.light_state.update_group(group)
+            groups = self.get_light_groups()
+            for group in groups:
+                self.light_state.update_group(group)
 
     def start_observing(self):
         Logger().write(LogVerbosity.Debug, "Start observing light data")
@@ -237,19 +235,18 @@ class LightState(Observable):
     def __init__(self):
         super().__init__("LightData", 1)
         self.groups = []
-        self._update_lock = Lock()
 
     def update_group(self, group):
         if hasattr(group, 'raw'):
             Logger().write(LogVerbosity.Debug, "Light update: " + str(group.raw))
-        with self._update_lock:
-            if group.id not in [x.id for x in self.groups]:
-                self.groups.append(LightGroup(group.id, group.name, group.state, group.dimmer))
-            else:
-                g = [x for x in self.groups if x.id == group.id][0]
-                g.state = group.state
-                g.dimmer = group.dimmer
-            self.changed()
+
+        if group.id not in [x.id for x in self.groups]:
+            self.groups.append(LightGroup(group.id, group.name, group.state, group.dimmer))
+        else:
+            g = [x for x in self.groups if x.id == group.id][0]
+            g.state = group.state
+            g.dimmer = group.dimmer
+        self.changed()
 
     def update_device(self, device):
         pass

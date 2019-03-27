@@ -7,6 +7,7 @@ from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
+from Shared.Timing import Timing
 from Shared.Util import current_time
 
 
@@ -33,6 +34,7 @@ class TorrentNetworkManager(LogObject):
 
         self.throttling = False
         self.last_throttle = 0
+        self.speed_log = 0
 
         self.average_download_counter = AverageCounter(self, 3)
 
@@ -55,6 +57,7 @@ class TorrentNetworkManager(LogObject):
 
     def execute(self):
         while self.running:
+            Timing().start_timing("IO")
             if self.throttling and current_time() - self.last_throttle > 2000:
                 Logger().write(LogVerbosity.Debug, "No longer throttling")
                 self.throttling = False  # has not throttled in last 2 seconds
@@ -101,7 +104,7 @@ class TorrentNetworkManager(LogObject):
                     message = peer.connection_manager.handle_read()
                     if message is not None:
                         msg_length = len(message)
-                        self.torrent.message_processor.add_message(peer, message)
+                        self.torrent.message_processor.add_message(peer, message, current_time())
                         self.average_download_counter.add_value(msg_length)
 
             for client in writeable:
@@ -109,6 +112,7 @@ class TorrentNetworkManager(LogObject):
                 if len(peer) > 0:
                     peer[0].connection_manager.handle_write()
 
+            Timing().stop_timing("IO")
             sleep(0)
 
     def stop(self):

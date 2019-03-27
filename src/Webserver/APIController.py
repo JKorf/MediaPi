@@ -27,7 +27,6 @@ class APIController(metaclass=Singleton):
     salt = None
     slaves = None
     last_id = 1
-    last_id_lock = Lock()
     last_data = dict()
 
     def __init__(self):
@@ -116,9 +115,8 @@ class APIController(metaclass=Singleton):
 
     @staticmethod
     def next_id():
-        with APIController.last_id_lock:
-            APIController.last_id += 1
-            return APIController.last_id
+        APIController.last_id += 1
+        return APIController.last_id
 
     def ui_request(self, topic, callback, timeout, args):
         from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController

@@ -1,3 +1,5 @@
+from enum import Enum
+
 from Shared.Logger import LogItemTracker
 from Shared.Settings import Settings
 
@@ -24,7 +26,10 @@ class LogObject:
             return
 
         if not isinstance(value, (str, int, float, bool)):
-            return
+            if isinstance(value, Enum):
+                value = str(value)
+            else:
+                return
 
         if hasattr(self, name) and getattr(self, name) == value:
             return

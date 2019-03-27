@@ -42,7 +42,6 @@ class StreamManager:
         self.piece_count_end_buffer_tolerance = 0
         self.init = False
         self.start_buffer = 0
-        self.seek_lock = Lock()
 
         self.end_buffer_start_byte = 0
         self.start_buffer_end_byte = 0
@@ -101,32 +100,31 @@ class StreamManager:
 
         relative_start_byte = start_byte - self.torrent.media_file.start_byte
 
-        with self.seek_lock:
-            if self.last_request_end == start_byte + length:
-                # If same request as last time, just try to retrieve data
-                return self.buffer.get_data_for_stream(start_byte, length)
+        if self.last_request_end == start_byte + length:
+            # If same request as last time, just try to retrieve data
+            return self.buffer.get_data_for_stream(start_byte, length)
 
-            if start_byte == self.last_request_end:
-                # If follow up request of last, change pos and retrieve data
-                self.last_request_end = start_byte + length
-                if self.has_played:
-                    self.change_stream_position(start_byte)
-                return self.buffer.get_data_for_stream(start_byte, length)
-
-            if relative_start_byte < self.start_buffer_end_byte or relative_start_byte > self.end_buffer_start_byte:
-                # If not follow up and in metadata range, just return data
-                self.last_request_end = start_byte + length
-                return self.buffer.get_data_for_stream(start_byte, length)
-
-            # This request is not the same as last, not following up, and not in metadata range
-            # Seeking?
-            request_piece = int(math.floor(start_byte / self.torrent.piece_length))
+        if start_byte == self.last_request_end:
+            # If follow up request of last, change pos and retrieve data
             self.last_request_end = start_byte + length
-            if request_piece not in self.torrent.download_manager.upped_prios:
-                Logger().write(LogVerbosity.Info, "Received stray request, going to search to " + str(request_piece))
-                self.seek(start_byte)
-                self.last_request_end = start_byte + length
-                return self.buffer.get_data_for_stream(start_byte, length)
+            if self.has_played:
+                self.change_stream_position(start_byte)
+            return self.buffer.get_data_for_stream(start_byte, length)
+
+        if relative_start_byte < self.start_buffer_end_byte or relative_start_byte > self.end_buffer_start_byte:
+            # If not follow up and in metadata range, just return data
+            self.last_request_end = start_byte + length
+            return self.buffer.get_data_for_stream(start_byte, length)
+
+        # This request is not the same as last, not following up, and not in metadata range
+        # Seeking?
+        request_piece = int(math.floor(start_byte / self.torrent.piece_length))
+        self.last_request_end = start_byte + length
+        if request_piece not in self.torrent.download_manager.upped_prios:
+            Logger().write(LogVerbosity.Info, "Received stray request, going to search to " + str(request_piece))
+            self.seek(start_byte)
+            self.last_request_end = start_byte + length
+            return self.buffer.get_data_for_stream(start_byte, length)
 
     def seek(self, start_byte):
         old_stream_position = self.stream_position_piece_index
@@ -141,10 +139,12 @@ class StreamManager:
 
     def change_stream_position(self, start_byte):
         new_index = int(math.floor(start_byte / self.torrent.piece_length))
+        old_index = self.stream_position_piece_index
         if new_index != self.stream_position_piece_index:
             Logger().write(LogVerbosity.Debug, 'Stream position changed: ' + str(self.stream_position_piece_index) + ' -> ' + str(
                 new_index))
             self.stream_position_piece_index = new_index
+        self.torrent.data_manager.clear_pieces(old_index, new_index)
 
     def write_pieces(self, pieces):
         self.buffer.write_pieces(pieces)
@@ -158,22 +158,17 @@ class StreamBuffer:
 
     @property
     def bytes_in_buffer(self):
-        with self.__lock:
-            total = sum(x.length for x in self.data_ready)
-        return total
+        return sum(x.length for x in self.data_ready)
 
     def __init__(self, manager, piece_length):
         self.stream_manager = manager
         self.piece_length = piece_length
         self.data_ready = set()
-        self.__lock = Lock()
         self.last_check_start_piece = 0
         self.last_consecutive_piece = 0
 
     def update(self):
-        with self.__lock:
-            self.data_ready = {x for x in self.data_ready if x.index >= self.stream_manager.stream_position_piece_index or x.persistent}
-
+        self.data_ready = {x for x in self.data_ready if x.index >= self.stream_manager.stream_position_piece_index or x.persistent}
         self.update_consecutive(True)
         return True
 
@@ -203,10 +198,9 @@ class StreamBuffer:
             piece_index = int(math.floor(current_byte_to_search / self.piece_length))
 
             current_piece = None
-            with self.__lock:
-                pieces = [x for x in self.data_ready if x.index == piece_index]
-                if len(pieces) > 0:
-                    current_piece = pieces[0]
+            pieces = [x for x in self.data_ready if x.index == piece_index]
+            if len(pieces) > 0:
+                current_piece = pieces[0]
 
             if current_piece is None:
                 return None
@@ -223,27 +217,24 @@ class StreamBuffer:
         return result
 
     def write_pieces(self, pieces):
-        with self.__lock:
-            self.data_ready.update(pieces)
-
+        self.data_ready.update(pieces)
         self.update_consecutive(True)
 
     def update_consecutive(self, force):
         if not force and self.last_check_start_piece == self.stream_manager.stream_position_piece_index:
             return
 
-        with self.__lock:
-            ordered_data = sorted(self.data_ready, key=lambda x: x.index)
-            start = self.stream_manager.stream_position_piece_index
+        ordered_data = sorted(self.data_ready, key=lambda x: x.index)
+        start = self.stream_manager.stream_position_piece_index
 
-            for item in ordered_data:
-                if item.index <= start:
-                    continue
+        for item in ordered_data:
+            if item.index <= start:
+                continue
 
-                if item.index == start + 1:
-                    start = item.index
-                else:
-                    break
+            if item.index == start + 1:
+                start = item.index
+            else:
+                break
 
         self.last_consecutive_piece = start
         self.last_check_start_piece = self.stream_manager.stream_position_piece_index

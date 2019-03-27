@@ -75,7 +75,6 @@ class Block:
         self.done = False
         self.data = None
 
-        self.download_lock = Lock()
         self.peers_downloading = []
 
     def _write_data(self, data):
@@ -87,12 +86,10 @@ class Block:
         self.data = None
 
     def add_downloader(self, peer):
-        with self.download_lock:
-            self.peers_downloading.append(peer)
+        self.peers_downloading.append(peer)
 
     def remove_downloader(self, peer):
-        with self.download_lock:
-            self.peers_downloading.remove(peer)
+        self.peers_downloading.remove(peer)
 
 
 class Piece(LogObject):
@@ -125,8 +122,6 @@ class Piece(LogObject):
         self.priority = 0
         self.persistent = persistent
 
-        self.write_lock = Lock()
-
     def init_blocks(self):
         Logger().write(LogVerbosity.Debug, "Initializing blocks for piece " + str(self.index))
         self._blocks = dict()
@@ -148,25 +143,24 @@ class Piece(LogObject):
         return self.blocks.get(index)
 
     def write_block(self, block, data):
-        with self.write_lock:
-            if self.done:
-                return False
-
-            block._write_data(data)
-            self.block_writes += 1
-            if self.block_writes >= self.total_blocks:
-                if len([x for x in self.blocks.values() if not x.done]) == 0:
-                    self.done = True
-                    Logger().write(LogVerbosity.Debug, "Piece " + str(self.index) + " done after writing block " + str(block.index))
-
-                    self._data = bytearray()
-                    for block in self.blocks.values():
-                        if self._data is None or block.data is None:
-                            raise Exception("Erased data on piece " + str(self.index) + ", block: " + str(block.index))
-                        self._data.extend(block.data)
-                    self._blocks = dict()
-                    return True
+        if self.done:
             return False
+
+        block._write_data(data)
+        self.block_writes += 1
+        if self.block_writes >= self.total_blocks:
+            if len([x for x in self.blocks.values() if not x.done]) == 0:
+                self.done = True
+                Logger().write(LogVerbosity.Debug, "Piece " + str(self.index) + " done after writing block " + str(block.index))
+
+                self._data = bytearray()
+                for block in self.blocks.values():
+                    if self._data is None or block.data is None:
+                        raise Exception("Erased data on piece " + str(self.index) + ", block: " + str(block.index))
+                    self._data.extend(block.data)
+                self._blocks = dict()
+                return True
+        return False
 
     def get_data(self):
         if not self.done:

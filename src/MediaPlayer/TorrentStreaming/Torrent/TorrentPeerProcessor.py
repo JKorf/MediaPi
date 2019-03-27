@@ -1,6 +1,7 @@
 import time
 
 from Shared.Threading import CustomThread
+from Shared.Timing import Timing
 from Shared.Util import current_time
 
 
@@ -25,7 +26,10 @@ class TorrentPeerProcessor:
             start_time = current_time()
             peers_to_process = list(self.torrent.peer_manager.connected_peers)
 
+            Timing().start_timing("peer_processing")
             for peer in peers_to_process:
                 peer.update()
+            Timing().stop_timing("peer_processing")
 
-            time.sleep(100 - current_time() - start_time)
+            spend_time = current_time() - start_time
+            time.sleep(0.1 - (spend_time / 1000))

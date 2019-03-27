@@ -8,7 +8,6 @@ class MultiQueue:
 
     def __init__(self, name, processor):
         self.queue = []
-        self.queue_lock = Lock()
         self.queue_event = Event()
 
         self.running = False
@@ -16,9 +15,8 @@ class MultiQueue:
         self.process_thread = CustomThread(self.process_queue, "Queue processor: " + name, [])
 
     def add_item(self, item):
-        with self.queue_lock:
-            self.queue.append(item)
-            self.queue_event.set()
+        self.queue.append(item)
+        self.queue_event.set()
 
     def start(self):
         self.running = True
@@ -35,9 +33,8 @@ class MultiQueue:
             if not self.running:
                 return
 
-            with self.queue_lock:
-                items = list(self.queue)
-                self.queue.clear()
-                self.queue_event.clear()
+            items = list(self.queue)
+            self.queue.clear()
+            self.queue_event.clear()
 
             self.processor(items)

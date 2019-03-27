@@ -1,3 +1,5 @@
+import time
+
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import ChokeMessage, BasePeerMessage, UnchokeMessage, InterestedMessage, \
     UninterestedMessage, HaveMessage, RequestMessage, PieceMessage, CancelMessage, PortMessage, BitfieldMessage, \
     ExtensionHandshakeMessage, PeerExchangeMessage, MetadataMessage, KeepAliveMessage, HaveAllMessage, HaveNoneMessage, \
@@ -9,6 +11,7 @@ from MediaPlayer.Util.MultiQueue import MultiQueue
 from Shared.Events import EventManager, EventType
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
+from Shared.Timing import Timing
 
 
 class TorrentMessageProcessor(LogObject):
@@ -31,19 +34,20 @@ class TorrentMessageProcessor(LogObject):
     def stop(self):
         self.queue.stop()
 
-    def add_message(self, peer, message):
-        self.queue.add_item((peer, message))
+    def add_message(self, peer, message, timestamp):
+        self.queue.add_item((peer, message, timestamp))
         self.message_queue_length = len(self.queue.queue)
 
     def process_messages(self, messages):
+        Timing().start_timing("process_messages")
         self.message_queue_length = len(self.queue.queue)
         if not self.torrent.is_preparing and len(self.metadata_wait_list) > 0:
-            for peer, message in self.metadata_wait_list:
-                self.handle_message(peer, message)
+            for peer, message, timestamp in self.metadata_wait_list:
+                self.handle_message(peer, message, timestamp)
             self.metadata_wait_list.clear()
             self.metadata_wait_list_log = 0
 
-        for peer, message_bytes in messages:
+        for peer, message_bytes, timestamp in messages:
             if not peer.metadata_manager.handshake_successful:
                 # Handshake is the first message we should receive
                 handshake = HandshakeMessage.from_bytes(message_bytes)
@@ -71,16 +75,17 @@ class TorrentMessageProcessor(LogObject):
                 # Add messages we cannot process yet to wait list
                 if not isinstance(message, MetadataMessage) and not isinstance(message, ExtensionHandshakeMessage):
                     Logger().write(LogVerbosity.All, str(peer.id) + " Adding " + str(message.__class__.__name__) + " to metadata wait list")
-                    self.metadata_wait_list.append((peer, message))
+                    self.metadata_wait_list.append((peer, message, timestamp))
                     self.metadata_wait_list_log = len(self.metadata_wait_list)
                     continue
 
-            self.handle_message(peer, message)
+            self.handle_message(peer, message, timestamp)
+        Timing().stop_timing("process_messages")
 
-    def handle_message(self, peer, message):
+    def handle_message(self, peer, message, timestamp):
         if isinstance(message, PieceMessage):
             Logger().write(LogVerbosity.All, str(peer.id) + ' Received piece message: ' + str(message.index) + ', offset ' + str(message.offset))
-            self.torrent.data_manager.block_done(peer, message.index, message.offset, message.data)
+            self.torrent.data_manager.block_done(peer, message.index, message.offset, message.data, timestamp)
             peer.counter.add_value(message.length)
             return
 

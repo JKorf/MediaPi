@@ -1,6 +1,7 @@
 from random import Random
 from urllib.parse import urlparse
 
+import time
 from pympler import asizeof
 
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import HaveMessage
@@ -12,6 +13,7 @@ from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Stats import Stats
+from Shared.Timing import Timing
 from Shared.Util import current_time, write_size
 
 
@@ -149,7 +151,7 @@ class TorrentPeerManager(LogObject):
         connecting_peers_under_max = self.max_peers_connecting - len(self.connecting_peers)
         peers_to_connect = min(connecting_peers_under_max, connected_peers_under_max)
 
-        peer_list = list(self.potential_peers)  # Try connecting to new peers from potential list
+        peer_list = self.potential_peers  # Try connecting to new peers from potential list
         if len(peer_list) == 0:
             peer_list = [x for x in self.disconnected_peers if current_time() - x[2] > 10000][peers_to_connect:]  # If we dont have any new peers to try, try connecting to disconnected peers
             if len(peer_list) == 0:
@@ -162,12 +164,6 @@ class TorrentPeerManager(LogObject):
                 return True
 
             peer_to_connect = self.random.choice(peer_list)
-
-            if peer_to_connect in self.potential_peers:
-                self.potential_peers.remove(peer_to_connect)
-            elif peer_to_connect in self.disconnected_peers:
-                self.disconnected_peers.remove(peer_to_connect)
-
             peer_list.remove(peer_to_connect)
             self.__peer_id += 1
             new_peer = Peer(self.__peer_id, self.torrent, peer_to_connect[0], peer_to_connect[1])
@@ -210,7 +206,6 @@ class TorrentPeerManager(LogObject):
         self.connected_peers_log = len(self.connected_peers)
         self.cant_connect_peers_log = len(self.cant_connect_peers)
         self.disconnected_peers_log = len(self.disconnected_peers)
-
         return True
 
     def update_bad_peers(self):
@@ -226,7 +221,7 @@ class TorrentPeerManager(LogObject):
         if current_time() - self.download_start < 20000:
             return True  # Don't drop peers if we only recently started downloading again
 
-        if self.potential_peers < self.max_peers_connected - len(self.connected_peers):
+        if len(self.potential_peers) < self.max_peers_connected - len(self.connected_peers):
             return True  # Don't stop peers if we don't have enough new
 
         peers_to_check = [x for x in self.connected_peers if current_time() - x.connection_manager.connected_on > 30000]

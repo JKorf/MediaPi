@@ -11,6 +11,7 @@ from Shared.LogObject import LogObject, log_wrapper
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Stats import Stats
 from Shared.Threading import CustomThread
+from Shared.Timing import Timing
 
 
 class Peer(LogObject):
@@ -30,7 +31,6 @@ class Peer(LogObject):
         self.id = id
         self.torrent = torrent
         self.uri = uri
-        # self.engine = Engine.Engine('Peer processor', 200, self)
         self.running = False
         self.source = source
 
@@ -40,11 +40,22 @@ class Peer(LogObject):
         self.extension_manager = None
 
         self.__bitfield = None
-        self.communication_state = PeerCommunicationState()
+        self.communication_state = PeerCommunicationState(self)
         self.counter = None
         self.peer_speed = PeerSpeed.Low
 
         self.allowed_fast_pieces = []
+
+        self.round_trips = 0
+        self.round_trip_total = 0
+        self.round_trip_average = 0
+        self.max_blocks_log = 0
+        self.speed_log = 0
+
+    def adjust_round_trip_time(self, time):
+        self.round_trips += 1
+        self.round_trip_total += time
+        self.round_trip_average = self.round_trip_total / self.round_trips
 
     def start(self):
         Logger().write(LogVerbosity.All, str(self.id) + ' Starting peer')
@@ -102,9 +113,11 @@ class Peer(LogObject):
         Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer stopped')
 
 
-class PeerCommunicationState:
+class PeerCommunicationState(LogObject):
 
-    def __init__(self):
+    def __init__(self, peer):
+        super().__init__(peer, "com state")
+
         self.out_choke = PeerChokeState.Choked
         self.in_choke = PeerChokeState.Choked
         self.out_interest = PeerInterestedState.Uninterested
