@@ -134,6 +134,3 @@ class PeerMetaDataManager(LogObject):
 
         Logger().write(LogVerbosity.All, "Sending handshake")
         self.peer.connection_manager.send(message.to_bytes())
-
-    def stop(self):
-        self.peer = None

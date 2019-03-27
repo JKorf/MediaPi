@@ -226,6 +226,9 @@ class TorrentPeerManager(LogObject):
         if current_time() - self.download_start < 20000:
             return True  # Don't drop peers if we only recently started downloading again
 
+        if self.potential_peers < self.max_peers_connected - len(self.connected_peers):
+            return True  # Don't stop peers if we don't have enough new
+
         peers_to_check = [x for x in self.connected_peers if current_time() - x.connection_manager.connected_on > 30000]
         peers_to_check = sorted(peers_to_check, key=lambda x: x.counter.total)
         for peer in peers_to_check:

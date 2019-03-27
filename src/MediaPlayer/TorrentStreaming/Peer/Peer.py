@@ -30,7 +30,7 @@ class Peer(LogObject):
         self.id = id
         self.torrent = torrent
         self.uri = uri
-        self.engine = Engine.Engine('Peer processor', 200, self)
+        # self.engine = Engine.Engine('Peer processor', 200, self)
         self.running = False
         self.source = source
 
@@ -56,12 +56,13 @@ class Peer(LogObject):
         self.extension_manager = PeerExtensionManager(self)
         self.counter = AverageCounter(self, 3)
 
-        self.engine.add_work_item("connection_manager", 30000, self.connection_manager.update)
-        self.engine.add_work_item("metadata_manager", 1000, self.metadata_manager.update)
-        self.engine.add_work_item("download_manager", 200, self.download_manager.update)
+        CustomThread(self.connection_manager.start, "Start peer " + str(id)).start()
 
-        self.engine.start()
         Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer started')
+
+    def update(self):
+        self.metadata_manager.update()
+        self.download_manager.update()
 
     def log(self):
         Logger().write(LogVerbosity.Important, "     " + str(self.id) + " | " + self.communication_state.print())
@@ -93,8 +94,6 @@ class Peer(LogObject):
         Logger().write(LogVerbosity.All, str(self.id) + ' Peer stopping')
         self.running = False
 
-        self.engine.stop()
-        self.metadata_manager.stop()
         self.download_manager.stop()
         self.connection_manager.disconnect()
 

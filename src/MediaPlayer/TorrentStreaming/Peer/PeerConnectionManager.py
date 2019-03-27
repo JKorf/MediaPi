@@ -115,18 +115,6 @@ class PeerConnectionManager(LogObject):
             self.to_send_bytes.extend(data)
             self.to_send_bytes_log = len(data)
 
-    def update(self):
-        if self.connection_state == ConnectionState.Initial:
-            self.start()
-        if self.connection_state == ConnectionState.Connected \
-                and self._last_communication < current_time() - self._peer_timeout \
-                and self.connected_on < current_time() - 30000:
-            Logger().write(LogVerbosity.Debug, "Sending keep alive")
-            self.send(KeepAliveMessage().to_bytes())
-        if self.connection_state == ConnectionState.Disconnected:
-            return False
-        return True
-
     def log(self):
         Logger().write(LogVerbosity.Important, "       Last communication: " + str(current_time() - self._last_communication) + "ms ago")
         Logger().write(LogVerbosity.Important, "       To send buffer length: " + str(len(self.to_send_bytes)))

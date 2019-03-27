@@ -12,6 +12,7 @@ from MediaPlayer.TorrentStreaming.Torrent.TorrentMessageProcessor import Torrent
 from MediaPlayer.TorrentStreaming.Torrent.TorrentMetadataManager import TorrentMetadataManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentNetworkManager import TorrentNetworkManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentOutputManager import TorrentOutputManager
+from MediaPlayer.TorrentStreaming.Torrent.TorrentPeerProcessor import TorrentPeerProcessor
 from MediaPlayer.TorrentStreaming.Tracker.Tracker import TrackerManager
 
 from MediaPlayer.TorrentStreaming.Torrent.TorrentPeerManager import TorrentPeerManager
@@ -119,6 +120,7 @@ class Torrent(LogObject):
         self.metadata_manager = TorrentMetadataManager(self)
         self.network_manager = TorrentNetworkManager(self)
         self.message_processor = TorrentMessageProcessor(self)
+        self.peer_processor = TorrentPeerProcessor(self)
 
     def check_size(self):
         for key, value, size in sorted([(key, value, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[2], reverse=True):
@@ -219,6 +221,7 @@ class Torrent(LogObject):
         self.data_manager.start()
         self.message_processor.start()
         self.network_manager.start()
+        self.peer_processor.start()
         Logger().write(LogVerbosity.Important, "Torrent started")
 
     def parse_info_dictionary(self, info_dict):
@@ -376,6 +379,7 @@ class Torrent(LogObject):
         self.engine.stop()
         Logger().write(LogVerbosity.Debug, 'Torrent engines stopped')
 
+        self.peer_processor.stop()
         self.message_processor.stop()
         self.data_manager.stop()
         self.output_manager.stop()
