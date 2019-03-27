@@ -1,4 +1,5 @@
 import os
+from subprocess import PIPE
 
 import psutil
 import time
@@ -53,7 +54,7 @@ class StateManager(metaclass=Singleton):
     def get_temperature(self):
         if not self.monitoring:
             return "-"
-        proc = subprocess.Popen(["vcgencmd", "measure_temp"], stdout=greenio.GreenPipe, universal_newlines=True)
+        proc = subprocess.Popen(["vcgencmd", "measure_temp"], stdout=PIPE, universal_newlines=True)
         out, err = proc.communicate()
         return out.replace("temp=", "")
 

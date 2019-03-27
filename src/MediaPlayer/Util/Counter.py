@@ -1,108 +1,32 @@
-from threading import Lock, Event
-
-import time
-
-import itertools
+from threading import Lock
 
 from Shared.LogObject import LogObject
-from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
 
 class AverageCounter(LogObject):
 
-    def __init__(self, parent, name, seconds_average, caching_time):
-        super().__init__(parent, "speed")
-
-        self._last_seconds = list(itertools.repeat(0, seconds_average))
-        self._loop_number = 0
-        self.total = 0
-        self._last_result_time = 0
-        self.last_result = 0
-        self.max = 0
-        self.caching_time = caching_time
-        self.name = name
-        self.seconds_average = seconds_average
-        self.thread = None
-        self.running = False
-        self._current_second = 0
-        self.__lock = Lock()
-        self.wait_event = Event()
-
-    def start(self):
-        self.running = True
-        self.thread = CustomThread(self.update, self.name)
-        self.thread.start()
-
-    def stop(self):
-        self.running = False
-        self.wait_event.set()
-        self.thread.join()
-
     @property
     def value(self):
-        if current_time() - self._last_result_time < self.caching_time:
+        with self.item_lock:
+            self.items = [x for x in self.items if current_time() - x[0] < self._retaining]
+            self.last_result = sum([x[1] for x in self.items]) // self.seconds_average
             return self.last_result
 
-        self._last_result_time = current_time()
-        self.last_result = sum(self._last_seconds) / self.seconds_average
+    def get_speed(self):
+        return sum([x[1] for x in self.items if current_time() - x[0] < 1000])
 
-        if self.last_result > self.max:
-            self.max = self.last_result
-
-        return self.last_result
-
-    def add_value(self, val):
-        with self.__lock:
-            self.total += val
-            self._current_second += val
-
-    def update(self):
-        while self.running:
-            start_time = current_time()
-            with self.__lock:
-                self._loop_number += 1
-                if self._loop_number == self.seconds_average:
-                    self._loop_number = 0
-                self._last_seconds[self._loop_number] = self._current_second
-                self._current_second = 0
-
-            self.wait_event.wait(max(1 - ((current_time() - start_time) / 1000), 0))
-
-
-class LiveCounter:
-
-    def __init__(self, name, update_time):
-        self.data = []
-        self.update_time = update_time
-        self.name = name
+    def __init__(self, parent, seconds_average):
+        super().__init__(parent, "speed")
+        self.items = []
+        self.seconds_average = seconds_average
+        self._retaining = seconds_average * 1000
+        self.item_lock = Lock()
         self.total = 0
+        self.last_result = 0
 
-        self.thread = None
-        self.running = False
-        self.__lock = Lock()
-
-    def start(self):
-        self.running = True
-        self.thread = CustomThread(self.update, self.name)
-        self.thread.start()
-
-    def stop(self):
-        self.running = False
-        self.thread.join()
-
-    @property
-    def value(self):
-        return sum([v for t, v in self.data])
-
-    def add_value(self, val):
-        with self.__lock:
-            self.data.append((current_time(), val))
-            self.total += val
-
-    def update(self):
-        while self.running:
-            start_time = current_time()
-            with self.__lock:
-                self.data = [x for x in self.data if current_time() - x[0] < 1000]
-            time.sleep(max(self.update_time - (current_time() - start_time), 0) / 1000)
+    def add_value(self, value):
+        with self.item_lock:
+            self.items.append((current_time(), value))
+            self.items = [x for x in self.items if current_time() - x[0] < self._retaining]
+        self.total += value

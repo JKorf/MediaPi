@@ -356,7 +356,7 @@ class Torrent(LogObject):
 
     def check_download_speed(self):
         current_max = Stats.total('max_download_speed')
-        current_speed = self.network_manager.live_download_counter.value
+        current_speed = self.network_manager.average_download_counter.get_speed()
         if current_speed > current_max:
             Stats.set('max_download_speed', current_speed)
         return True

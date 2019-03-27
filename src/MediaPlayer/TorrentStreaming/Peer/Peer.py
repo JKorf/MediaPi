@@ -54,13 +54,12 @@ class Peer(LogObject):
         self.download_manager = PeerDownloadManager(self)
         self.metadata_manager = PeerMetaDataManager(self)
         self.extension_manager = PeerExtensionManager(self)
-        self.counter = AverageCounter(self, "Peerspeed counter", 3, 200)
+        self.counter = AverageCounter(self, 3)
 
         self.engine.add_work_item("connection_manager", 30000, self.connection_manager.update)
         self.engine.add_work_item("metadata_manager", 1000, self.metadata_manager.update)
         self.engine.add_work_item("download_manager", 200, self.download_manager.update)
 
-        self.counter.start()
         self.engine.start()
         Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer started')
 
@@ -98,8 +97,6 @@ class Peer(LogObject):
         self.metadata_manager.stop()
         self.download_manager.stop()
         self.connection_manager.disconnect()
-
-        self.counter.stop()
 
         self.torrent = None
         self.finish()

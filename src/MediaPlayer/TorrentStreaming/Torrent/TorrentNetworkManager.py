@@ -1,8 +1,7 @@
 import select
-from threading import Lock
 from time import sleep
 
-from MediaPlayer.Util.Counter import LiveCounter, AverageCounter
+from MediaPlayer.Util.Counter import AverageCounter
 from Shared.Events import EventManager, EventType
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
@@ -35,8 +34,7 @@ class TorrentNetworkManager(LogObject):
         self.throttling = False
         self.last_throttle = 0
 
-        self.live_download_counter = LiveCounter("Network speed live counter", 50)
-        self.average_download_counter = AverageCounter(self, "Network speed average counter", 3, 1000)
+        self.average_download_counter = AverageCounter(self, 3)
 
         self.thread = None
         self._event_id_log = EventManager.register_event(EventType.Log, self.log)
@@ -52,8 +50,6 @@ class TorrentNetworkManager(LogObject):
 
     def start(self):
         Logger().write(LogVerbosity.Info, "Starting network manager")
-        self.live_download_counter.start()
-        self.average_download_counter.start()
         self.thread = CustomThread(self.execute, "Network IO")
         self.thread.start()
 
@@ -90,7 +86,7 @@ class TorrentNetworkManager(LogObject):
                 continue
 
             for client in readable:
-                download_speed = self.live_download_counter.value
+                download_speed = self.average_download_counter.get_speed()
                 if self.max_download_speed != 0 and download_speed > self.max_download_speed:
                     self.last_throttle = current_time()
                     if not self.throttling:
@@ -106,7 +102,6 @@ class TorrentNetworkManager(LogObject):
                     if message is not None:
                         msg_length = len(message)
                         self.torrent.message_processor.add_message(peer, message)
-                        self.live_download_counter.add_value(msg_length)
                         self.average_download_counter.add_value(msg_length)
 
             for client in writeable:
@@ -119,6 +114,4 @@ class TorrentNetworkManager(LogObject):
     def stop(self):
         self.running = False
         self.thread.join()
-        self.live_download_counter.stop()
-        self.average_download_counter.stop()
         self.torrent = None
