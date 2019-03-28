@@ -103,11 +103,11 @@ class TorrentNetworkManager(LogObject):
                     peer = [x for x in input_peers if x.connection_manager.connection.socket == client]
                     if len(peer) > 0:
                         peer = peer[0]
-                        message = peer.connection_manager.handle_read()
-                        if message is not None:
-                            msg_length = len(message)
-                            received_messages.append((peer, message, current_time()))
-                            self.average_download_counter.add_value(msg_length)
+                        messages_size, messages = peer.connection_manager.handle_read()
+                        if messages_size > 0:
+                            self.average_download_counter.add_value(messages_size)
+                            time = current_time()
+                            received_messages += [(peer, x, time) for x in messages]
                 except Exception as e:
                     Logger().write(LogVerbosity.Info, "Error reading from client: " + str(e))
                     continue

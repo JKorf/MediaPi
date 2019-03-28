@@ -10,12 +10,17 @@ from Shared.Util import current_time
 
 class PeerConnectionManager(LogObject):
 
+    @property
+    def ready_for_sending(self):
+        return len(self.to_send_bytes) > 0 and current_time() - self.last_send > 50
+
     def __init__(self, peer, uri):
         super().__init__(peer, "Connection manager")
 
         self.peer = peer
         self.uri = uri
         self.to_send_bytes = bytearray()
+        self.last_send = 0
         self.connection_state = ConnectionState.Initial
         self.connected_on = 0
         self._last_communication = 0
@@ -24,9 +29,12 @@ class PeerConnectionManager(LogObject):
 
         self.connection = TcpClient(uri.hostname, uri.port, self._connection_timeout)
         self.buffer = bytearray()
-        self._next_message_length = 68
+        self._next_message_length = 0
         self._buffer_position = 0
-        self._receive_state = ReceiveState.ReceiveMessage
+        self._receive_state = ReceiveState.ReceiveLength
+        self.receive_buffer_size = 32768
+
+        self.reading_handshake = True
 
         # Logging props
         self.to_send_bytes_log = 0
@@ -52,43 +60,56 @@ class PeerConnectionManager(LogObject):
 
     def handle_read(self):
         if self.connection_state != ConnectionState.Connected:
-            return None
+            return 0, []
 
-        data = self.connection.receive_available(self._next_message_length)
+        data = self.connection.receive_available(self.receive_buffer_size)
         if data is None or len(data) == 0:
             self.peer.stop_async()
-            return None
+            return 0, []
 
-        self.buffer[self._buffer_position:] = data
+        received_messages = []
+        messages_size = 0
+
+        self.buffer += data
         self._last_communication = current_time()
+        buffer_size = len(self.buffer)
 
-        data_length = len(data)
-        if data_length < self._next_message_length:
-            # incomplete message
-            self._next_message_length -= data_length
-            self._buffer_position += data_length
-            return None
-        else:
+        while True:
+            if buffer_size - self._buffer_position < self._next_message_length:
+                # cant read another complete message
+                break
+
+            # form messages from the buffer:
             if self._receive_state == ReceiveState.ReceiveLength:
-                offset, msg_length = read_integer(self.buffer, 0)
+                if self.reading_handshake:
+                    offset, id_length = read_byte_as_int(self.buffer, 0)
+                    msg_length = id_length + 49  # Handshake sends the length of the id, the rest of the handshake takes 49 bytes
+                    if msg_length > len(self.buffer):
+                        break
+                    self.reading_handshake = False
+                else:
+                    offset, msg_length = read_integer(self.buffer, self._buffer_position)
+                    self._buffer_position += 4
+
                 self._next_message_length = msg_length
-                self._buffer_position = 0
                 self._receive_state = ReceiveState.ReceiveMessage
-                self.buffer.clear()
 
                 if self._next_message_length < 0 or self._next_message_length > 17000:
                     Logger().write(LogVerbosity.Info, "Invalid next message length: " + str(self._next_message_length))
                     self.peer.stop_async()
-
-                return None
+                    break
             else:
-                total_data = data_length + self._buffer_position
-                message = bytes(self.buffer[0: total_data])
-                self.buffer.clear()
+                total_data = self._buffer_position + self._next_message_length
+                message = bytes(self.buffer[self._buffer_position: total_data])
+                self._buffer_position = total_data
                 self._next_message_length = 4
-                self._buffer_position = 0
                 self._receive_state = ReceiveState.ReceiveLength
-                return message
+                messages_size += len(message)
+                received_messages.append(message)
+
+        self.buffer = self.buffer[self._buffer_position:]
+        self._buffer_position = 0
+        return messages_size, received_messages
 
     def handle_write(self):
         if self.connection_state != ConnectionState.Connected:
@@ -99,6 +120,7 @@ class PeerConnectionManager(LogObject):
             success = self.connection.send(self.to_send_bytes)
             self.to_send_bytes.clear()
             self.to_send_bytes_log = 0
+            self.last_send = current_time()
             self._last_communication = current_time()
 
         if not success:

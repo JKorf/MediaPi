@@ -228,7 +228,7 @@ class TorrentPeerManager(LogObject):
         return True
 
     def get_peers_for_io(self):
-        return sorted(self.connected_peers, key=lambda p: p.connection_manager._last_communication), [x for x in self.connected_peers if len(x.connection_manager.to_send_bytes) > 0]
+        return sorted(self.connected_peers, key=lambda p: p.connection_manager._last_communication), [x for x in self.connected_peers if x.connection_manager.ready_for_sending]
 
     def are_fast_peers_available(self):
         return self.high_speed_peers > 0 or self.medium_speed_peers > 1
