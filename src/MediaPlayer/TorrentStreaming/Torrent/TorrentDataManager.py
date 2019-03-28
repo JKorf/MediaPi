@@ -172,7 +172,7 @@ class TorrentDataManager(LogObject):
 
         if self.init_done:
             if self.torrent.state != TorrentState.Done:
-                if len([x for x in self._pieces.values() if x.index >= self.torrent.stream_position and not x.done]) == 0:
+                if self.torrent.left == 0:
                     self.torrent.torrent_done()
 
         Timing().stop_timing("done_blocks")

@@ -1,4 +1,4 @@
-import time
+from time import sleep
 
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import ChokeMessage, BasePeerMessage, UnchokeMessage, InterestedMessage, \
     UninterestedMessage, HaveMessage, RequestMessage, PieceMessage, CancelMessage, PortMessage, BitfieldMessage, \
@@ -6,7 +6,7 @@ from MediaPlayer.TorrentStreaming.Peer.PeerMessages import ChokeMessage, BasePee
     AllowedFastMessage, SuggestPieceMessage, RejectRequestMessage, HandshakeMessage
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
-from MediaPlayer.Util.Enums import ConnectionState, PeerSource, PeerChokeState, PeerInterestedState, MetadataMessageType
+from MediaPlayer.Util.Enums import PeerSource, PeerChokeState, PeerInterestedState, MetadataMessageType, PeerState
 from MediaPlayer.Util.MultiQueue import MultiQueue
 from Shared.Events import EventManager, EventType
 from Shared.LogObject import LogObject
@@ -34,8 +34,8 @@ class TorrentMessageProcessor(LogObject):
     def stop(self):
         self.queue.stop()
 
-    def add_message(self, peer, message, timestamp):
-        self.queue.add_item((peer, message, timestamp))
+    def add_messages(self, message_list):
+        self.queue.add_items(message_list)
         self.message_queue_length = len(self.queue.queue)
 
     def process_messages(self, messages):
@@ -80,6 +80,7 @@ class TorrentMessageProcessor(LogObject):
                     continue
 
             self.handle_message(peer, message, timestamp)
+            sleep(0)
         Timing().stop_timing("process_messages")
 
     def handle_message(self, peer, message, timestamp):
@@ -114,13 +115,13 @@ class TorrentMessageProcessor(LogObject):
             return
 
         elif isinstance(message, HaveMessage):
-            if peer.connection_state == ConnectionState.Connected:
+            if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.All, str(peer.id) + ' Received have message')
                 peer.bitfield.update_piece(message.piece_index, True)
             return
 
         elif isinstance(message, BitfieldMessage):
-            if peer.connection_state == ConnectionState.Connected:
+            if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.All, str(peer.id) + ' Received bitfield message')
                 peer.bitfield.update(message.bitfield)
             return
@@ -139,19 +140,19 @@ class TorrentMessageProcessor(LogObject):
             return
 
         elif isinstance(message, HaveAllMessage):
-            if peer.connection_state == ConnectionState.Connected:
+            if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.All, str(peer.id) + " Received HaveAll message")
                 peer.bitfield.set_has_all()
             return
 
         elif isinstance(message, HaveNoneMessage):
-            if peer.connection_state == ConnectionState.Connected:
+            if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.All, str(peer.id) + " Received HaveNone message")
                 peer.bitfield.set_has_none()
             return
 
         elif isinstance(message, AllowedFastMessage):
-            if peer.connection_state == ConnectionState.Connected:
+            if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.All, str(peer.id) + " Received AllowedFast message")
                 peer.allowed_fast_pieces.append(message.piece_index)
             return
@@ -161,7 +162,7 @@ class TorrentMessageProcessor(LogObject):
             return
 
         elif isinstance(message, RejectRequestMessage):
-            if peer.connection_state == ConnectionState.Connected:
+            if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.Debug, str(peer.id) + " Received RejectRequest message")
                 peer.download_manager.request_rejected(message.index, message.offset, message.data_length)
             return

@@ -18,6 +18,10 @@ class MultiQueue:
         self.queue.append(item)
         self.queue_event.set()
 
+    def add_items(self, items):
+        self.queue += items
+        self.queue_event.set()
+
     def start(self):
         self.running = True
         self.process_thread.start()
@@ -32,6 +36,9 @@ class MultiQueue:
             self.queue_event.wait(0.2)
             if not self.running:
                 return
+
+            if len(self.queue) == 0:
+                continue
 
             items = list(self.queue)
             self.queue.clear()

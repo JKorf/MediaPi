@@ -15,16 +15,10 @@ class WiFiController(LogObject, metaclass=Singleton):
 
     def __init__(self):
         super().__init__(None, "WIFI")
-
-        self.engine = Engine("WiFi processor")
-        self.engine.add_work_item("WiFi watcher", 15000, self.watch_wifi, False)
         self.pi = sys.platform == "linux" or sys.platform == "linux2"
         self.quality = 0
 
-    def start(self):
-        self.engine.start()
-
-    def watch_wifi(self):
+    def check_wifi(self):
         if self.pi:
             proc = subprocess.Popen(["iwgetid"], stdout=PIPE, universal_newlines=True)
             out, err = proc.communicate()

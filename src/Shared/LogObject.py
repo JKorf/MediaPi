@@ -25,14 +25,14 @@ class LogObject:
         if name.startswith("_"):
             return
 
+        if hasattr(self, name) and getattr(self, name) == value:
+            return
+
         if not isinstance(value, (str, int, float, bool)):
             if isinstance(value, Enum):
                 value = str(value)
             else:
                 return
-
-        if hasattr(self, name) and getattr(self, name) == value:
-            return
 
         self.log_tracker.update(name, value)
 

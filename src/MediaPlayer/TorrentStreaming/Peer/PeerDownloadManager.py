@@ -1,7 +1,5 @@
-from threading import Lock
-
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import RequestMessage, CancelMessage
-from MediaPlayer.Util.Enums import ConnectionState, PeerSpeed, PeerInterestedState, PeerChokeState
+from MediaPlayer.Util.Enums import PeerInterestedState, PeerChokeState, PeerState
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
@@ -40,13 +38,11 @@ class PeerDownloadManager(LogObject):
         self.downloading_log = ""
 
     def update(self):
-        if self.peer.connection_state != ConnectionState.Connected:
+        if self.peer.state != PeerState.Started:
             return True
 
-        self.check_current_downloading()
-
-        if not self.has_interesting_pieces():
-            return True
+        self.check_done_blocks()
+        self.check_timeout_blocks()
 
         if self.peer.communication_state.out_interest == PeerInterestedState.Uninterested:
             return True
@@ -71,20 +67,14 @@ class PeerDownloadManager(LogObject):
             #     self.request(to_download)
             #     return True
 
-        if self.stopped:
-            return False
-
-        currently_downloading = len(self.downloading)
         if current_time() - self.timed_out_blocks < 5000:
             # We have timed out on block we previously requested, don't request new for some time
             return True
 
-        new_blocks = self.max_blocks - currently_downloading
+        new_blocks = self.max_blocks - len(self.downloading)
         to_download = self.peer.torrent.download_manager.get_blocks_to_download(self.peer, new_blocks)
-        for block in to_download:
-            self.downloading.append((block, current_time()))
+        self.downloading += [(block, current_time()) for block in to_download]
         self.request(to_download)
-
         return True
 
     def request(self, to_download):
@@ -102,47 +92,49 @@ class PeerDownloadManager(LogObject):
     def block_done(self, block_offset, timestamp):
         self.blocks_done.append((block_offset, timestamp))
 
-    def check_current_downloading(self):
+    def check_done_blocks(self):
+        for block_offset, timestamp in self.blocks_done:
+            downloading_block = [(block, request_time) for block, request_time in self.downloading if block.start_byte_total == block_offset]
+            if len(downloading_block) == 0:
+                continue  # Not currently registered as downloading
+
+            downloading_block = downloading_block[0]
+            round_trip_time = timestamp - downloading_block[1]
+            self.peer.adjust_round_trip_time(round_trip_time)
+            self.downloading.remove(downloading_block)
+            self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
+            downloading_block[0].remove_downloader(self.peer)
+        self.blocks_done.clear()
+
+    def check_timeout_blocks(self):
         canceled = 0
 
-        done_copy = list(self.blocks_done)
-        self.blocks_done.clear()
-        if self.stopped:
-            return False
+        timed_out_blocks = [(block, request_time) for block, request_time in self.downloading
+                            if current_time() - request_time > self.get_priority_timeout(self.peer.torrent.data_manager._pieces[block.piece_index].priority)]
 
-        for block, request_time in list(self.downloading):
-            if block.start_byte_total in [offset for offset, timestamp in done_copy]:  # Peer downloaded this block; it's done
-                round_trip_time = [x for x in done_copy if x[0] == block.start_byte_total][0][1] - request_time
-                self.peer.adjust_round_trip_time(round_trip_time)
-                self.downloading = [x for x in self.downloading if not x[0].index == block.index]
-                self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
-                block.remove_downloader(self.peer)
-                continue
+        for block_request in timed_out_blocks:
+            block = block_request[0]
+            self.downloading.remove(block_request)
+            self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
 
-            block_prio = self.peer.torrent.data_manager._pieces[block.piece_index].priority
-            prio_timeout = self.get_priority_timeout(block_prio)
-            passed_time = current_time() - request_time
-            if prio_timeout != 0 and passed_time > prio_timeout:
-                self.downloading = [x for x in self.downloading if not x[0].index == block.index]
-                self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
+            cancel_msg = CancelMessage(block.piece_index, block.start_byte_in_piece, block.length)
+            Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending cancel for piece ' + str(block.piece_index) + ", block " + str(cancel_msg.offset // 16384))
+            self.peer.connection_manager.send(cancel_msg.to_bytes())
 
-                cancel_msg = CancelMessage(block.piece_index, block.start_byte_in_piece, block.length)
-                Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending cancel for piece ' + str(block.piece_index) + ", block " + str(cancel_msg.offset // 16384))
-                self.peer.connection_manager.send(cancel_msg.to_bytes())
-
-                block.remove_downloader(self.peer)
-                canceled += 1
+            block.remove_downloader(self.peer)
+            canceled += 1
 
         if canceled:
             Logger().write(LogVerbosity.Debug, str(self.peer.id) + " canceled " + str(canceled) + " blocks")
             self.timed_out_blocks = current_time()
 
-    def get_priority_timeout(self, priority):
+    @staticmethod
+    def get_priority_timeout(priority):
         if priority >= 100:
             return 5000
         if priority >= 95:
             return 15000
-        return 0
+        return 9999999999
 
     def has_interesting_pieces(self):
         if self.peer.bitfield is None or self.peer.bitfield.has_none:

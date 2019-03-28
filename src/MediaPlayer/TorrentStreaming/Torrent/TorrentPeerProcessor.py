@@ -24,7 +24,7 @@ class TorrentPeerProcessor:
     def process(self):
         while self.running:
             start_time = current_time()
-            peers_to_process = list(self.torrent.peer_manager.connected_peers)
+            peers_to_process = self.torrent.peer_manager.connected_peers
 
             Timing().start_timing("peer_processing")
             for peer in peers_to_process:

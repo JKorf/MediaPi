@@ -1,10 +1,8 @@
-from time import sleep
-
 from MediaPlayer.TorrentStreaming.ExtensionManager import ProtocolExtensionManager
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import BitfieldMessage, InterestedMessage, HandshakeMessage, ExtensionHandshakeMessage, \
-    UninterestedMessage, MetadataMessage, PortMessage, HaveNoneMessage
-from MediaPlayer.Util.Enums import ConnectionState, ExtensionName, MetadataMessageType, TorrentState, PeerInterestedState, \
-    PeerSpeed
+    UninterestedMessage, MetadataMessage, HaveNoneMessage
+from MediaPlayer.Util.Enums import ExtensionName, MetadataMessageType, TorrentState, PeerInterestedState, \
+    PeerSpeed, PeerState
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
@@ -30,7 +28,7 @@ class PeerMetaDataManager(LogObject):
         self._medium_peer_max_speed = Settings.get_int("medium_peer_max_download_buffer") / 3
 
     def update(self):
-        if self.peer.connection_manager.connection_state != ConnectionState.Connected:
+        if self.peer.state != PeerState.Started:
             return True
 
         if not self.handshake_send:
@@ -46,7 +44,7 @@ class PeerMetaDataManager(LogObject):
                 return False
             return True
 
-        if self.peer.extension_manager.peer_supports(ExtensionName.ExtensionProtocol) and not self.extension_handshake_send:
+        if not self.extension_handshake_send and self.peer.extension_manager.peer_supports(ExtensionName.ExtensionProtocol):
             Logger().write(LogVerbosity.All, str(self.peer.id) + ' sending extended handshake')
 
             dic = ProtocolExtensionManager.create_extension_dictionary()
@@ -93,9 +91,9 @@ class PeerMetaDataManager(LogObject):
 
         if not self.port_send:
             self.port_send = True
-            if self.peer.extension_manager.peer_supports(ExtensionName.DHT):
-                Logger().write(LogVerbosity.All, str(self.peer.id) + ' sending port message')
-                self.peer.connection_manager.send(PortMessage(Settings.get_int("dht_port")).to_bytes())
+            # if self.peer.extension_manager.peer_supports(ExtensionName.DHT):
+            #     Logger().write(LogVerbosity.All, str(self.peer.id) + ' sending port message')
+            #     self.peer.connection_manager.send(PortMessage(Settings.get_int("dht_port")).to_bytes())
 
         if not self.peer.torrent.data_manager.bitfield:
             return False
@@ -119,9 +117,10 @@ class PeerMetaDataManager(LogObject):
         if self.peer.extension_manager.peer_supports(ExtensionName.PeerExchange):
             pass
 
-        if self.peer.counter.value < self._low_peer_max_speed:
+        counter_value = self.peer.counter.value
+        if counter_value < self._low_peer_max_speed:
             self.peer.peer_speed = PeerSpeed.Low
-        elif self.peer.counter.value < self._medium_peer_max_speed:
+        elif counter_value < self._medium_peer_max_speed:
             self.peer.peer_speed = PeerSpeed.Medium
         else:
             self.peer.peer_speed = PeerSpeed.High

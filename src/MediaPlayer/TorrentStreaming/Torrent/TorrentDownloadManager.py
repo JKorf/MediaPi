@@ -27,7 +27,7 @@ class TorrentDownloadManager(LogObject):
         self.upped_prios = []
 
         self.queue = []
-        self.slow_peer_block_offset = 0
+        self.slow_peer_piece_offset = 0
         self._ticks = 0
 
         self.download_mode = DownloadMode.Full
@@ -130,7 +130,6 @@ class TorrentDownloadManager(LogObject):
             piece.reset()
             self.queue.append(piece)
             left += piece.length
-            time.sleep(0)
 
         first = "none"
         length = len(self.queue)
@@ -138,7 +137,7 @@ class TorrentDownloadManager(LogObject):
             first = str(self.queue[0].index)
         self.queue_log = "length: " + str(length) + ", first: " + first
 
-        self.slow_peer_block_offset = 15000000 // self.torrent.data_manager.piece_length # TODO Setting
+        self.slow_peer_piece_offset = 15000000 // self.torrent.data_manager.piece_length # TODO Setting
         Logger().write(LogVerbosity.Debug, "Queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
         self.torrent.left = left
 
@@ -193,12 +192,11 @@ class TorrentDownloadManager(LogObject):
         if peer.peer_speed == PeerSpeed.Low:
             if self.torrent.peer_manager.are_fast_peers_available():
                 # Slow peer; get block further down the queue
-                piece_offset = self.slow_peer_block_offset
-                if len(self.queue) < piece_offset:
-                    piece_offset = max(len(self.queue) - 10, 0)
-
-        skipped = 0
-        removed = 0
+                queue_length = len(self.queue)
+                if queue_length > self.slow_peer_piece_offset:
+                    piece_offset = self.slow_peer_piece_offset
+                else:
+                    piece_offset = queue_length // 2
 
         start = current_time()
         if self.torrent.end_game:
@@ -218,8 +216,10 @@ class TorrentDownloadManager(LogObject):
                     break
             return result
 
-        queue = self.queue[piece_offset:]
-        for piece in queue:
+        skipped = 0
+        removed = 0
+
+        for piece in self.queue[piece_offset:]:
             if piece.done:
                 to_remove.append(piece)
                 removed += 1
@@ -236,15 +236,21 @@ class TorrentDownloadManager(LogObject):
                         # The block is more than 100mb from our current position; don't download this
                         break
 
-                for block in [x for x in piece.blocks.values() if not x.done]:
-                    if len(block.peers_downloading) == 0:
+                for block in sorted([x for x in piece.blocks.values() if not x.done], key=lambda x: len(x.peers_downloading)):
+                    downloading = len(block.peers_downloading)
+                    if downloading == 0:
                         result.append(block)
 
-                    elif not self.torrent.starting:
-                        if self.can_download_priority_pieces(block, peer, piece.priority):
-                            result.append(block)
-                    else:
+                    elif peer in block.peers_downloading:
                         skipped += 1
+                        continue
+
+                    elif self.download_mode == DownloadMode.ImportantOnly:
+                        skipped += 1
+                        continue
+
+                    elif not self.torrent.starting and self.allowed_download(piece.priority, downloading, peer.peer_speed):
+                        result.append(block)
 
                     if len(result) == amount:
                         break
@@ -274,28 +280,6 @@ class TorrentDownloadManager(LogObject):
         self.last_get_time = current_time()
         Timing().stop_timing("get_blocks")
         return result
-
-    def can_download_priority_pieces(self, block, peer, prio):
-        if peer in block.peers_downloading:
-            return False  # already downloading this
-
-        if len([x for x in block.peers_downloading if x.peer_speed == PeerSpeed.High]) > 0:
-            return False  # a high speed peer is already downloading this
-
-        if peer.peer_speed != PeerSpeed.High and len([x for x in block.peers_downloading if x.peer_speed == PeerSpeed.Medium]) > 0:
-            return False  # a medium speed peer is already downloading this and we're not fast ourselfs
-
-        if self.torrent.end_game:
-            return True
-
-        currently_downloading = len(block.peers_downloading)
-
-        if self.download_mode == DownloadMode.ImportantOnly:
-            if prio == 100:
-                return True
-            return currently_downloading < 5
-
-        return self.allowed_download(prio, currently_downloading, peer.peer_speed)
 
     def allowed_download(self, priority, current, speed):
         for prio, slow, fast in self.peers_per_piece:

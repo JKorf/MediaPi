@@ -103,3 +103,11 @@ class ReceiveState(Enum):
 class DownloadMode(Enum):
     Full = 0
     ImportantOnly = 1
+
+
+class PeerState(Enum):
+    Initial = 0,
+    Starting = 1,
+    Started = 2,
+    Stopping = 3,
+    Stopped = 4

@@ -1,7 +1,4 @@
-from threading import Lock
-
-from MediaPlayer.TorrentStreaming.Peer.PeerMessages import KeepAliveMessage
-from MediaPlayer.Util.Enums import ConnectionState, ReceiveState
+from MediaPlayer.Util.Enums import ConnectionState, ReceiveState, PeerState
 from MediaPlayer.Util.Network import *
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
@@ -13,7 +10,7 @@ from Shared.Util import current_time
 
 class PeerConnectionManager(LogObject):
 
-    def __init__(self, peer, uri, on_connect):
+    def __init__(self, peer, uri):
         super().__init__(peer, "Connection manager")
 
         self.peer = peer
@@ -24,7 +21,6 @@ class PeerConnectionManager(LogObject):
         self._last_communication = 0
         self._peer_timeout = Settings.get_int("peer_timeout")
         self._connection_timeout = Settings.get_int("connection_timeout") / 1000
-        self.on_connect = on_connect
 
         self.connection = TcpClient(uri.hostname, uri.port, self._connection_timeout)
         self.buffer = bytearray()
@@ -48,10 +44,11 @@ class PeerConnectionManager(LogObject):
             return
 
         self.connected_on = current_time()
-        self.on_connect()
+        self.peer.add_connected_peer_stat(self.peer.source)
         Stats.add('peers_connect_success', 1)
         Logger().write(LogVerbosity.Debug, str(self.peer.id) + ' connected to ' + str(self.uri.netloc))
         self.connection_state = ConnectionState.Connected
+        self.peer.state = PeerState.Started
 
     def handle_read(self):
         if self.connection_state != ConnectionState.Connected:

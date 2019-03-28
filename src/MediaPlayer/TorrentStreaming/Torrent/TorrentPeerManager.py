@@ -1,19 +1,17 @@
 from random import Random
 from urllib.parse import urlparse
 
-import time
 from pympler import asizeof
 
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import HaveMessage
 
 from MediaPlayer.TorrentStreaming.Peer.Peer import Peer
-from MediaPlayer.Util.Enums import PeerSource, TorrentState, ConnectionState, PeerSpeed
+from MediaPlayer.Util.Enums import PeerSource, TorrentState, PeerSpeed, PeerState
 from Shared.Events import EventManager, EventType
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Stats import Stats
-from Shared.Timing import Timing
 from Shared.Util import current_time, write_size
 
 
@@ -129,71 +127,65 @@ class TorrentPeerManager(LogObject):
             EventManager.throw_event(EventType.RequestPeers, [self.torrent])
             self.last_peer_request = current_time()
 
-        if current_time() - self.start_time > 45000 and not self.checked_no_peers:
+        currently_connecting = len(self.connecting_peers)
+        currently_connected = len(self.connected_peers)
+
+        if not self.checked_no_peers and current_time() - self.start_time > 45000:
             self.checked_no_peers = True
 
-            if len(self.potential_peers) == 0 and \
-                            len(self.connecting_peers) == 0 and \
-                            len(self.connected_peers) == 0:
+            if len(self.potential_peers) == 0 and currently_connecting == 0 and currently_connected == 0:
                 Logger().write(LogVerbosity.Important, "No peers found for torrent, stopping")
                 EventManager.throw_event(EventType.NoPeers, [])
                 return False
 
-        if len(self.connected_peers) >= self.max_peers_connected:
+        if currently_connected >= self.max_peers_connected:
             # already have max connections
             return True
 
-        if len(self.connecting_peers) >= self.max_peers_connecting:
+        if currently_connecting >= self.max_peers_connecting:
             # already have max connecting
             return True
 
-        connected_peers_under_max = self.max_peers_connected - len(self.connected_peers)
-        connecting_peers_under_max = self.max_peers_connecting - len(self.connecting_peers)
+        connected_peers_under_max = self.max_peers_connected - currently_connected
+        connecting_peers_under_max = self.max_peers_connecting - currently_connecting
         peers_to_connect = min(connecting_peers_under_max, connected_peers_under_max)
 
         peer_list = self.potential_peers  # Try connecting to new peers from potential list
-        if len(peer_list) == 0:
+        peer_list_size = len(peer_list)
+        using_disconnected = False
+        if peer_list_size == 0:
+            using_disconnected = True
             peer_list = [x for x in self.disconnected_peers if current_time() - x[2] > 10000][peers_to_connect:]  # If we dont have any new peers to try, try connecting to disconnected peers
-            if len(peer_list) == 0:
+            peer_list_size = len(peer_list)
+            if peer_list_size == 0:
                 return True  # No peers available
 
+        peers_to_connect = min(peer_list_size, peers_to_connect)
         Logger().write(LogVerbosity.Debug, 'starting ' + str(peers_to_connect) + ' new peers')
-        for index in range(peers_to_connect):
-            if len(peer_list) == 0:
-                # We probably stopped the torrent if this happens
-                return True
-
-            peer_to_connect = self.random.choice(peer_list)
-            peer_list.remove(peer_to_connect)
+        selected_peers = self.random.sample(peer_list, peers_to_connect)
+        if not using_disconnected:
+            self.potential_peers = [x for x in peer_list if x not in selected_peers]
+        else:
+            self.disconnected_peers = [x for x in peer_list if x not in selected_peers]
+        for peer in selected_peers:
             self.__peer_id += 1
-            new_peer = Peer(self.__peer_id, self.torrent, peer_to_connect[0], peer_to_connect[1])
+            new_peer = Peer(self.__peer_id, self.torrent, peer[0], peer[1])
             new_peer.start()
-            self.connecting_peers.append(new_peer)
 
         self.potential_peers_log = len(self.potential_peers)
         self.disconnected_peers_log = len(self.disconnected_peers)
-        self.connecting_peers_log = len(self.connecting_peers)
         return True
 
-    def update_peer_status(self):
-        peers_connected = [peer for peer in self.connecting_peers if peer.connection_state == ConnectionState.Connected]
-        peers_failed_connect = [peer for peer in self.connecting_peers if peer.connection_state == ConnectionState.Disconnected and peer.connection_manager.connected_on == 0]
-        peers_busy = [peer for peer in self.connecting_peers if peer.connection_state == ConnectionState.Disconnected and peer.connection_manager.connected_on != 0]
-        peers_disconnected_connected = [peer for peer in self.connected_peers if peer.connection_state == ConnectionState.Disconnected]
-
-        for peer in peers_connected:
+    def update_peer(self, peer, from_state, to_state):
+        if from_state == PeerState.Initial and to_state == PeerState.Starting:
+            self.connecting_peers.append(peer)
+        elif from_state == PeerState.Starting and to_state == PeerState.Started:
             self.connecting_peers.remove(peer)
             self.connected_peers.append(peer)
-
-        for peer in peers_busy:
+        elif from_state == PeerState.Starting and to_state == PeerState.Stopping:
             self.connecting_peers.remove(peer)
-            self.disconnected_peers.append((peer.uri, peer.source, current_time(), 0))
-
-        for peer in peers_failed_connect:
-            self.connecting_peers.remove(peer)
-            self.cant_connect_peers.append(peer.uri)
-
-        for peer in peers_disconnected_connected:
+            self.cant_connect_peers.append(peer)
+        elif from_state == PeerState.Started and to_state == PeerState.Stopping:
             self.connected_peers.remove(peer)
             self.disconnected_peers.append((peer.uri, peer.source, current_time(), peer.counter.total))
 
@@ -206,7 +198,6 @@ class TorrentPeerManager(LogObject):
         self.connected_peers_log = len(self.connected_peers)
         self.cant_connect_peers_log = len(self.cant_connect_peers)
         self.disconnected_peers_log = len(self.disconnected_peers)
-        return True
 
     def update_bad_peers(self):
         if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData:
@@ -237,8 +228,7 @@ class TorrentPeerManager(LogObject):
         return True
 
     def get_peers_for_io(self):
-        return list(sorted([x for x in self.connected_peers if x.connection_manager.connection_state == ConnectionState.Connected], key=lambda p: p.connection_manager._last_communication)), \
-               list([x for x in self.connected_peers if len(x.connection_manager.to_send_bytes) > 0 and x.connection_manager.connection_state == ConnectionState.Connected])
+        return sorted(self.connected_peers, key=lambda p: p.connection_manager._last_communication), [x for x in self.connected_peers if len(x.connection_manager.to_send_bytes) > 0]
 
     def are_fast_peers_available(self):
         return self.high_speed_peers > 0 or self.medium_speed_peers > 1
@@ -253,7 +243,6 @@ class TorrentPeerManager(LogObject):
         self.complete_peer_list.clear()
         self.potential_peers.clear()
         self.cant_connect_peers.clear()
-        self.update_peer_status()
         self.disconnected_peers.clear()
 
         self.potential_peers_log = 0

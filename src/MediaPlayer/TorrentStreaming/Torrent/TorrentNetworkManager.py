@@ -88,6 +88,7 @@ class TorrentNetworkManager(LogObject):
                 sleep(0.01)
                 continue
 
+            received_messages = []
             for client in readable:
                 try:
                     download_speed = self.average_download_counter.get_speed()
@@ -105,11 +106,15 @@ class TorrentNetworkManager(LogObject):
                         message = peer.connection_manager.handle_read()
                         if message is not None:
                             msg_length = len(message)
-                            self.torrent.message_processor.add_message(peer, message, current_time())
+                            received_messages.append((peer, message, current_time()))
                             self.average_download_counter.add_value(msg_length)
                 except Exception as e:
                     Logger().write(LogVerbosity.Info, "Error reading from client: " + str(e))
                     continue
+
+            if len(received_messages) != 0:
+                self.torrent.message_processor.add_messages(received_messages)
+
             for client in writeable:
                 try:
                     peer = [x for x in output_peers if x.connection_manager.connection.socket == client]
