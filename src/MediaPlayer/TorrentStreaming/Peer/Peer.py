@@ -29,7 +29,8 @@ class Peer(LogObject):
         if self._state != value:
             old = self._state
             self._state = value
-            self.torrent.peer_manager.update_peer(self, old, value)
+            if self.torrent.peer_manager is not None:
+                self.torrent.peer_manager.update_peer(self, old, value)
 
     @property
     def connection_state(self):

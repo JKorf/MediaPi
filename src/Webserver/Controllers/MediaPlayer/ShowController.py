@@ -70,7 +70,7 @@ class ShowController:
         data['favorite'] = False
         if not Settings.get_bool("slave"):
             seen_episodes = Database().get_history_for_id(show_id)
-            data['favorite'] = id in [x.id for x in Database().get_favorites()]
+            data['favorite'] = show_id in [x.id for x in Database().get_favorites()]
         for episode in data['episodes']:
             seen = [x for x in seen_episodes if episode['season'] == x.season and episode['episode'] == x.episode]
             episode['seen'] = len(seen) != 0

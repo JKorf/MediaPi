@@ -85,6 +85,7 @@ export default class WS {
             if(sub.removeCallback(callback_id))
             {
                 if(sub.callbacks.length === 0){
+                    this.subscriptions = this.subscriptions.filter(item => item !== sub);
                     this.socket.emit('unsubscribe', sub.topic);
                     return;
                 }
