@@ -1,5 +1,5 @@
 from MediaPlayer.TorrentStreaming.Peer.PeerMessages import RequestMessage, CancelMessage
-from MediaPlayer.Util.Enums import PeerInterestedState, PeerChokeState, PeerState
+from MediaPlayer.Util.Enums import PeerInterestedState, PeerChokeState, PeerState, PeerSpeed
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
@@ -9,15 +9,17 @@ from Shared.Util import current_time, write_size
 class PeerDownloadManager(LogObject):
     @property
     def max_blocks(self):
-        blocks = self._low_peer_max_blocks
-        if self.peer.round_trip_average != 0:
-            single_block_speed = self._block_size * (1000 / self.peer.round_trip_average)
-            target = self.peer.counter.value * 1.5
-            blocks = target // single_block_speed
-            blocks = max(self._low_peer_max_blocks, blocks)
-            blocks = min(self._fast_peer_max_blocks, blocks)
-        self.peer.max_blocks_log = blocks
-        return blocks
+        if self.peer.peer_speed != PeerSpeed.Low:
+            return self._fast_peer_max_blocks
+        return self._low_peer_max_blocks
+        # if self.peer.round_trip_average != 0:
+        #     single_block_speed = self._block_size * (1000 / self.peer.round_trip_average)
+        #     target = self.peer.counter.value * 1.5
+        #     blocks = target // single_block_speed
+        #     blocks = max(self._low_peer_max_blocks, blocks)
+        #     blocks = min(self._fast_peer_max_blocks, blocks)
+        # self.peer.max_blocks_log = blocks
+        # return blocks
 
     def __init__(self, peer):
         super().__init__(peer, "download")
@@ -81,6 +83,7 @@ class PeerDownloadManager(LogObject):
         download_count = len(to_download)
         if download_count > 0:
             Logger().write(LogVerbosity.Debug, str(self.peer.id) + " going to request " + str(len(to_download)) + " blocks")
+            self.peer.protocol_logger.update("Sending requests", True)
         for block in to_download:
             block.add_downloader(self.peer)
             request = RequestMessage(block.piece_index, block.start_byte_in_piece, block.length)
@@ -118,6 +121,7 @@ class PeerDownloadManager(LogObject):
             self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
 
             cancel_msg = CancelMessage(block.piece_index, block.start_byte_in_piece, block.length)
+            self.peer.protocol_logger.update("Sending cancel (timeout)")
             Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending cancel for piece ' + str(block.piece_index) + ", block " + str(cancel_msg.offset // 16384))
             self.peer.connection_manager.send(cancel_msg.to_bytes())
 

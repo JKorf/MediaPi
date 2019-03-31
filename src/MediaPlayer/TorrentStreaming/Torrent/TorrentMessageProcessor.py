@@ -61,6 +61,7 @@ class TorrentMessageProcessor(LogObject):
                     peer.stop_async()
                     continue
 
+                peer.protocol_logger.update("Received Handshake")
                 peer.extension_manager.parse_extension_bytes(handshake.reserved)
                 peer.metadata_manager.handshake_successful = True
                 continue
@@ -86,89 +87,106 @@ class TorrentMessageProcessor(LogObject):
     def handle_message(self, peer, message, timestamp):
         if isinstance(message, PieceMessage):
             Logger().write(LogVerbosity.All, str(peer.id) + ' Received piece message: ' + str(message.index) + ', offset ' + str(message.offset))
+            peer.protocol_logger.update("Received piece", True)
             self.torrent.data_manager.block_done(peer, message.index, message.offset, message.data, timestamp)
             peer.counter.add_value(message.length)
             return
 
         elif isinstance(message, KeepAliveMessage):
             Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received keep alive message')
+            peer.protocol_logger.update("Received KeepAlive")
             return
 
         elif isinstance(message, ChokeMessage):
             Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received choke message')
+            peer.protocol_logger.update("Received Choke")
             peer.communication_state.in_choke = PeerChokeState.Choked
             return
 
         elif isinstance(message, UnchokeMessage):
             Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received unchoke message')
+            peer.protocol_logger.update("Received UnChoke")
             peer.communication_state.in_choke = PeerChokeState.Unchoked
             return
 
         elif isinstance(message, InterestedMessage):
             Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received interested message')
-            peer.communication_state.in_interested = PeerInterestedState.Interested
+            peer.protocol_logger.update("Received Interested")
+            peer.communication_state.in_interest = PeerInterestedState.Interested
             return
 
         elif isinstance(message, UninterestedMessage):
             Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received uninterested message')
-            peer.communication_state.in_interested = PeerInterestedState.Uninterested
+            peer.protocol_logger.update("Received Uninterested")
+            peer.communication_state.in_interest = PeerInterestedState.Uninterested
             return
 
         elif isinstance(message, HaveMessage):
             if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.All, str(peer.id) + ' Received have message')
+                peer.protocol_logger.update("Received Have", True)
                 peer.bitfield.update_piece(message.piece_index, True)
             return
 
         elif isinstance(message, BitfieldMessage):
             if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.All, str(peer.id) + ' Received bitfield message')
+                peer.protocol_logger.update("Received Bitfield")
                 peer.bitfield.update(message.bitfield)
             return
 
         elif isinstance(message, RequestMessage):
             Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received request message')
+            peer.protocol_logger.update("Received Request")
             return
 
         elif isinstance(message, CancelMessage):
             Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received cancel message')
+            peer.protocol_logger.update("Received Cancel")
             return
 
         elif isinstance(message, PortMessage):
             Logger().write(LogVerbosity.All, str(peer.id) + ' Received port message, port = ' + str(message.port))
+            peer.protocol_logger.update("Received Port")
             EventManager.throw_event(EventType.NewDHTNode, [peer.connection_manager.uri.hostname, message.port])
             return
 
         elif isinstance(message, HaveAllMessage):
             if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.All, str(peer.id) + " Received HaveAll message")
+                peer.protocol_logger.update("Received HaveAll")
                 peer.bitfield.set_has_all()
             return
 
         elif isinstance(message, HaveNoneMessage):
             if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.All, str(peer.id) + " Received HaveNone message")
+                peer.protocol_logger.update("Received HaveNone")
                 peer.bitfield.set_has_none()
             return
 
         elif isinstance(message, AllowedFastMessage):
             if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.All, str(peer.id) + " Received AllowedFast message")
+                peer.protocol_logger.update("Received AllowedFast", True)
                 peer.allowed_fast_pieces.append(message.piece_index)
             return
 
         elif isinstance(message, SuggestPieceMessage):
             Logger().write(LogVerbosity.All, str(peer.id) + " Received SuggestPiece message")
+            peer.protocol_logger.update("Received SuggestPiece", True)
             return
 
         elif isinstance(message, RejectRequestMessage):
             if peer.state == PeerState.Started:
                 Logger().write(LogVerbosity.Debug, str(peer.id) + " Received RejectRequest message")
+                peer.protocol_logger.update("Received RejectRequest", True)
                 peer.download_manager.request_rejected(message.index, message.offset, message.data_length)
             return
 
         elif isinstance(message, ExtensionHandshakeMessage):
             Logger().write(LogVerbosity.All, str(peer.id) + ' Received extension handshake message')
+            peer.protocol_logger.update("Received ExtensionHandshake")
 
             try:
                 dic = Bencode.bdecode(message.bencoded_payload)
@@ -185,14 +203,17 @@ class TorrentMessageProcessor(LogObject):
             return
 
         elif isinstance(message, PeerExchangeMessage):
+            peer.protocol_logger.update("Received PeerExchange")
             Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received ' + str(len(message.added)) + ' peers from peer exchange')
             self.torrent.peer_manager.add_potential_peers(message.added, PeerSource.PeerExchange)
             return
 
         elif isinstance(message, MetadataMessage):
             if message.metadata_message_type == MetadataMessageType.Data:
+                peer.protocol_logger.update("Received Metadata")
                 Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received metadata message index ' + str(message.piece_index))
                 self.torrent.metadata_manager.add_metadata_piece(message.piece_index, message.data)
             else:
+                peer.protocol_logger.update("Received Metadata rejected")
                 Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received metadata reject message ' + str(message.piece_index))
             return

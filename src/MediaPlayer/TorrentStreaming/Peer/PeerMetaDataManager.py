@@ -39,6 +39,7 @@ class PeerMetaDataManager(LogObject):
 
         if not self.handshake_successful:
             if current_time() - self.peer.connection_manager.connected_on > 5000:
+                self.peer.protocol_logger.update("No handshake response")
                 # No handshake received
                 self.peer.stop_async()
                 return False
@@ -49,6 +50,7 @@ class PeerMetaDataManager(LogObject):
 
             dic = ProtocolExtensionManager.create_extension_dictionary()
             handshake = ExtensionHandshakeMessage(dic)
+            self.peer.protocol_logger.update("Sending extension handshake")
             self.peer.connection_manager.send(handshake.to_bytes())
             self.extension_handshake_send = True
 
@@ -67,7 +69,7 @@ class PeerMetaDataManager(LogObject):
             self.metadata_requested = True
 
             Logger().write(LogVerbosity.Debug, str(self.peer.id) + " Requesting metadata")
-
+            self.peer.protocol_logger.update("Sending metadata requests")
             to_request = self.peer.torrent.metadata_manager.get_pieces_to_do()
             for index in to_request:
                 Logger().write(LogVerbosity.All, "Meta data request for piece " + str(index.index))
@@ -83,6 +85,7 @@ class PeerMetaDataManager(LogObject):
                 self.pause_handled = True
 
                 if self.peer.communication_state.out_interest == PeerInterestedState.Interested:
+                    self.peer.protocol_logger.update("Sending uninterested (paused)")
                     Logger().write(LogVerbosity.Debug, "Paused, sending uninterested")
                     self.peer.communication_state.out_interest = PeerInterestedState.Uninterested
                     self.peer.connection_manager.send(UninterestedMessage().to_bytes())
@@ -103,14 +106,17 @@ class PeerMetaDataManager(LogObject):
             self.bitfield_done = True
             if self.peer.extension_manager.peer_supports(ExtensionName.FastExtension) and \
                self.peer.torrent.data_manager.bitfield.has_none:
+                    self.peer.protocol_logger.update("Sending HaveNone")
                     Logger().write(LogVerbosity.All, "Got nothing, sending HaveNone")
                     self.peer.connection_manager.send(HaveNoneMessage().to_bytes())
             else:
                 Logger().write(LogVerbosity.All, "Sending bitfield message")
+                self.peer.protocol_logger.update("Sending bitfield")
                 self.peer.connection_manager.send(BitfieldMessage(self.peer.torrent.data_manager.bitfield.get_bitfield()).to_bytes())
 
         if self.peer.communication_state.out_interest == PeerInterestedState.Uninterested and self.peer.download_manager.has_interesting_pieces():
             Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending interested message')
+            self.peer.protocol_logger.update("Sending interested")
             self.peer.communication_state.out_interest = PeerInterestedState.Interested
             self.peer.connection_manager.send(InterestedMessage().to_bytes())
 
@@ -132,4 +138,5 @@ class PeerMetaDataManager(LogObject):
         message.reserved = ProtocolExtensionManager.add_extensions_to_handshake(message.reserved)
 
         Logger().write(LogVerbosity.All, "Sending handshake")
+        self.peer.protocol_logger.update("Sending handshake")
         self.peer.connection_manager.send(message.to_bytes())

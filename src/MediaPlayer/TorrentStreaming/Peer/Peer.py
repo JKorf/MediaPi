@@ -62,6 +62,8 @@ class Peer(LogObject):
         self.max_blocks_log = 0
         self.speed_log = 0
 
+        self.protocol_logger = ProtocolLogger(self)
+
     def adjust_round_trip_time(self, time):
         self.round_trips += 1
         self.round_trip_total += time
@@ -136,3 +138,27 @@ class PeerCommunicationState(LogObject):
 
     def print(self):
         return "Choke: Out " + str(self.out_choke) + ", In " + str(self.in_choke) + ", Interest: Out " + str(self.out_interest) + ", In " + str(self.in_interest)
+
+
+class ProtocolLogger(LogObject):
+
+    def __init__(self, peer):
+        super().__init__(peer, "protocol")
+        self.children = []
+        self.cache = 0
+        self.current_cache = None
+
+    def update(self, step, aggregate=False):
+        if self.current_cache is not None and self.current_cache != step:
+            # process cache
+            prot = LogObject(self, self.current_cache + " x" + str(self.cache))
+            self.children.append(prot)
+            self.cache = 0
+
+        if aggregate:
+            self.current_cache = step
+            self.cache += 1
+            return
+
+        prot = LogObject(self, step)
+        self.children.append(prot)

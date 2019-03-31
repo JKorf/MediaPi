@@ -133,6 +133,7 @@ class TorrentDataManager(LogObject):
             if not piece.cleared and not piece.persistent:
                 piece.clear()
                 self.total_cleared += piece.length
+                cleared += 1
 
         Logger().write(LogVerbosity.Debug, "Cleared " + str(cleared) + " piece(s): " + str(write_size(cleared_size)) + ". Total cleared: " + str(write_size(self.total_cleared)))
 
@@ -212,6 +213,7 @@ class TorrentDataManager(LogObject):
 
         if piece.write_block(block, data):
             self.piece_hash_validator.add_piece_to_hash(piece)
+            self.bitfield.update_piece(piece.index, True)
 
     def is_interested_in(self, bitfield):
         if self.bitfield is None or bitfield is None:

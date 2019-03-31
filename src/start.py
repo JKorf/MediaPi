@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import eventlet
 from eventlet.green.subprocess import call
+from eventlet import hubs
+hubs.use_hub("selects")
 
 eventlet.monkey_patch()
 
@@ -106,6 +108,7 @@ class Program:
     @staticmethod
     def get_latest_change():
         last_mod = 0
+        return datetime.now().timestamp()
         for root, _, filenames in os.walk(os.curdir):
             for filename in filenames:
                 if not filename.endswith(".py"):

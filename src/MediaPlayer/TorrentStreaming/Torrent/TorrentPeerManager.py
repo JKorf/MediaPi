@@ -112,6 +112,7 @@ class TorrentPeerManager(LogObject):
         for piece in pieces:
             Logger().write(LogVerbosity.Debug, "Sending have messages for piece " + str(piece.index))
             for peer in list(self.connected_peers):
+                peer.protocol_logger.update("Sending Have", True)
                 peer.connection_manager.send(HaveMessage(piece.index).to_bytes())
 
     def update_new_peers(self):
