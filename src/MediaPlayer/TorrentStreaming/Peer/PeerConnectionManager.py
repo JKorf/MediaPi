@@ -1,10 +1,13 @@
-from MediaPlayer.Util.Enums import ConnectionState, ReceiveState, PeerState
+import time
+
+from MediaPlayer.Util.Enums import ReceiveState, PeerState
 from MediaPlayer.Util.Network import *
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import TcpClient
 from Shared.Settings import Settings
 from Shared.Stats import Stats
+from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
 
@@ -12,16 +15,19 @@ class PeerConnectionManager(LogObject):
 
     @property
     def ready_for_sending(self):
-        return len(self.to_send_bytes) > 0 and current_time() - self.last_send > 50
+        return len(self.to_send_bytes) > 0 and current_time() - self.last_send > 10
+
+    @property
+    def ready_for_reading(self):
+        return len(self.buffer) > 0
 
     def __init__(self, peer, uri):
-        super().__init__(peer, "Connection manager")
+        super().__init__(peer, "connection")
 
         self.peer = peer
         self.uri = uri
         self.to_send_bytes = bytearray()
         self.last_send = 0
-        self.connection_state = ConnectionState.Initial
         self.connected_on = 0
         self._last_communication = 0
         self._peer_timeout = Settings.get_int("peer_timeout")
@@ -29,18 +35,19 @@ class PeerConnectionManager(LogObject):
 
         self.connection = TcpClient(uri.hostname, uri.port, self._connection_timeout)
         self.buffer = bytearray()
+
+        self.buffer_in_size = 0
+        self.buffer_out_size = 0
+
         self._next_message_length = 0
         self._buffer_position = 0
         self._receive_state = ReceiveState.ReceiveLength
-        self.receive_buffer_size = 32768
+        self._receive_buffer_size = 32768
 
+        self.in_thread = None
         self.reading_handshake = True
 
-        # Logging props
-        self.to_send_bytes_log = 0
-
     def start(self):
-        self.connection_state = ConnectionState.Connecting
         self.connected_on = 0
         Logger().write(LogVerbosity.All, str(self.peer.id) + ' connecting to ' + str(self.uri.netloc))
         Stats.add('peers_connect_try', 1)
@@ -55,26 +62,32 @@ class PeerConnectionManager(LogObject):
         self.peer.add_connected_peer_stat(self.peer.source)
         Stats.add('peers_connect_success', 1)
         Logger().write(LogVerbosity.Debug, str(self.peer.id) + ' connected to ' + str(self.uri.netloc))
-        self.connection_state = ConnectionState.Connected
         self.peer.state = PeerState.Started
 
+        self.in_thread = CustomThread(self.socket_reader, "Peer " + str(self.peer.id) + " input")
+        self.in_thread.start()
+
+    def socket_reader(self):
+        while self.peer.state == PeerState.Started:
+            if len(self.buffer) > 1000000:
+                time.sleep(0.01)
+                continue
+
+            data = self.connection.receive_available(self._receive_buffer_size)
+            if data is None or len(data) == 0:
+                self.peer.stop_async()
+                break
+
+            self._last_communication = current_time()
+            self.buffer += data
+            self.buffer_in_size = len(self.buffer)
+
     def handle_read(self):
-        if self.connection_state != ConnectionState.Connected:
-            return 0, []
-
-        data = self.connection.receive_available(self.receive_buffer_size)
-        if data is None or len(data) == 0:
-            self.peer.stop_async()
-            return 0, []
-
         received_messages = []
         messages_size = 0
 
-        self.buffer += data
-        self._last_communication = current_time()
-        buffer_size = len(self.buffer)
-
         while True:
+            buffer_size = len(self.buffer)
             if buffer_size - self._buffer_position < self._next_message_length:
                 # cant read another complete message
                 break
@@ -109,40 +122,30 @@ class PeerConnectionManager(LogObject):
 
         self.buffer = self.buffer[self._buffer_position:]
         self._buffer_position = 0
+        self.buffer_in_size = len(self.buffer)
         return messages_size, received_messages
 
     def handle_write(self):
-        if self.connection_state != ConnectionState.Connected:
-            return
-
-        success = True
-        if len(self.to_send_bytes) != 0:
-            success = self.connection.send(self.to_send_bytes)
-            self.to_send_bytes.clear()
-            self.to_send_bytes_log = 0
-            self.last_send = current_time()
-            self._last_communication = current_time()
+        success = self.connection.send(self.to_send_bytes)
+        self.to_send_bytes.clear()
+        self.buffer_out_size = 0
+        self.last_send = current_time()
+        self._last_communication = current_time()
 
         if not success:
             self.peer.stop_async()
 
     def send(self, data):
         self.to_send_bytes.extend(data)
-        self.to_send_bytes_log = len(data)
-
-    def log(self):
-        Logger().write(LogVerbosity.Important, "       Last communication: " + str(current_time() - self._last_communication) + "ms ago")
-        Logger().write(LogVerbosity.Important, "       To send buffer length: " + str(len(self.to_send_bytes)))
+        self.buffer_out_size = len(self.to_send_bytes)
 
     def disconnect(self):
-        if self.connection_state == ConnectionState.Disconnected:
-            return
-
         Logger().write(LogVerbosity.Debug, str(self.peer.id) + ' disconnected')
-        self.connection_state = ConnectionState.Disconnected
-
-        self.to_send_bytes.clear()
-        self.to_send_bytes_log = 0
 
         self.connection.disconnect()
+        self.to_send_bytes.clear()
+
+        if self.in_thread is not None:
+            self.in_thread.join()
         self.buffer.clear()
+

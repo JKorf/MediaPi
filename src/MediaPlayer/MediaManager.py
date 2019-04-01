@@ -48,18 +48,11 @@ class MediaManager(metaclass=Singleton):
         EventManager.register_event(EventType.NoPeers, self.stop_torrent)
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.media_selection_required)
         EventManager.register_event(EventType.TorrentMediaFileSet, lambda x: self._start_playing_torrent())
-        EventManager.register_event(EventType.Log, lambda: self.check_size())
 
         VLCPlayer().player_state.register_callback(self.player_state_change)
         self.torrent_observer = CustomThread(self.observe_torrent, "Torrent observer")
         self.torrent_observer.start()
         self.next_epi_thread = None
-
-    def check_size(self):
-        if self.torrent is not None:
-            Logger().write(LogVerbosity.Important, "Size of torrent: " + write_size(asizeof.asizeof(self.torrent)))
-            #self.torrent.check_size()
-            self.torrent.data_manager.check_pieces_size()
 
     def start_file(self, url, time):
         actual_url = url

@@ -31,13 +31,7 @@ class UtilController:
     @staticmethod
     @app.route('/util/log', methods=['POST'])
     def debug_log():
-        Logger().write(LogVerbosity.Important, "============== Test ===============")
-        EventManager.throw_event(EventType.Log, [])
-        Logger().write(LogVerbosity.Important, "-- Threads --")
-        for thread_list in sorted(ThreadManager().thread_history.values(), key=lambda x: len(x), reverse=True):
-            Logger().write(LogVerbosity.Important, "     " + thread_list[0].thread_name + " " + str(len(thread_list)) + " entries, averages " + str(sum(c.end_time - c.start_time for c in thread_list if c.end_time != 0) / len(thread_list)) + "ms")
-            for thread in [x for x in thread_list if x.end_time == 0]:
-                Logger().write(LogVerbosity.Important, "         Currently running for " + str((current_time() - thread.start_time)/1000) + " seconds")
+        Logger().write(LogVerbosity.Important, "Test")
         return "OK"
 
     @staticmethod

@@ -46,8 +46,7 @@ class StateManager(metaclass=Singleton):
 
         while True:
             if self.state_data.memory > 90:
-                Logger().write(LogVerbosity.Info, "Memory high ( " + str(self.state_data.memory) + "% ), logging")
-                EventManager.throw_event(EventType.Log, [])
+                Logger().write(LogVerbosity.Info, "Memory high ( " + str(self.state_data.memory) + "% )")
 
             time.sleep(10)
 

@@ -3,15 +3,14 @@ import hashlib
 import math
 import urllib.parse
 import urllib.request
-from threading import Lock
 from pympler import asizeof
 
+from MediaPlayer.Streaming.StreamManager import StreamManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDataManager import TorrentDataManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentDownloadManager import TorrentDownloadManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentMessageProcessor import TorrentMessageProcessor
 from MediaPlayer.TorrentStreaming.Torrent.TorrentMetadataManager import TorrentMetadataManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentNetworkManager import TorrentNetworkManager
-from MediaPlayer.TorrentStreaming.Torrent.TorrentOutputManager import TorrentOutputManager
 from MediaPlayer.TorrentStreaming.Torrent.TorrentPeerProcessor import TorrentPeerProcessor
 from MediaPlayer.TorrentStreaming.Tracker.Tracker import TrackerManager
 
@@ -32,27 +31,27 @@ class Torrent(LogObject):
 
     @property
     def stream_speed(self):
-        return self.output_manager.stream_manager.stream_speed
+        return self.stream_manager.stream_speed
 
     @property
     def bytes_ready_in_buffer(self):
-        return self.output_manager.stream_manager.consecutive_pieces_total_length
+        return self.stream_manager.consecutive_pieces_total_length
 
     @property
     def bytes_total_in_buffer(self):
-        return self.output_manager.stream_manager.bytes_in_buffer
+        return self.stream_manager.bytes_in_buffer
 
     @property
     def stream_position(self):
-        return self.output_manager.stream_manager.stream_position_piece_index
+        return self.stream_manager.stream_position_piece_index
 
     @property
     def stream_buffer_position(self):
-        return self.output_manager.stream_manager.consecutive_pieces_last_index
+        return self.stream_manager.consecutive_pieces_last_index
 
     @property
     def bytes_streamed(self):
-        return self.output_manager.stream_manager.listener.bytes_send
+        return self.stream_manager.listener.bytes_send
 
     @property
     def end_game(self):
@@ -107,7 +106,6 @@ class Torrent(LogObject):
         self.stream_file_hash = None
 
         self._user_file_selected_id = EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
-        self._log_id = EventManager.register_event(EventType.Log, self.log)
 
         self.engine = Engine.Engine('Main processor', 500, self)
 
@@ -115,7 +113,7 @@ class Torrent(LogObject):
         self.peer_manager = TorrentPeerManager(self)
         self.data_manager = TorrentDataManager(self)
         self.download_manager = TorrentDownloadManager(self)
-        self.output_manager = TorrentOutputManager(self)
+        self.stream_manager = StreamManager(self)
         self.metadata_manager = TorrentMetadataManager(self)
         self.network_manager = TorrentNetworkManager(self)
         self.message_processor = TorrentMessageProcessor(self)
@@ -207,16 +205,10 @@ class Torrent(LogObject):
 
         self.engine.add_work_item("peer_manager_new", 1000, self.peer_manager.update_new_peers)
         self.engine.add_work_item("peer_manager_bad_peers", 30000, self.peer_manager.update_bad_peers)
-        self.engine.add_work_item("torrent_download_manager", 5000, self.download_manager.update)
         self.engine.add_work_item("torrent_download_manager_prio", 5000, self.download_manager.update_priority)
-        self.engine.add_work_item("output_manager", 1000, self.output_manager.update)
-        self.engine.add_work_item("piece_validator", 500, self.data_manager.piece_hash_validator.update)
-        self.engine.add_work_item("stream_manager", 3000, self.output_manager.stream_manager.update)
         self.engine.add_work_item("check_download_speed", 1000, self.check_download_speed)
 
         self.engine.start()
-        self.data_manager.start()
-        self.message_processor.start()
         self.network_manager.start()
         self.peer_processor.start()
         Logger().write(LogVerbosity.Important, "Torrent started")
@@ -338,7 +330,6 @@ class Torrent(LogObject):
 
     def torrent_done(self):
         Logger().write(LogVerbosity.Important, 'Torrent is done')
-        self.output_manager.flush()
         self.left = 0
         self.__set_state(TorrentState.Done)
 
@@ -349,7 +340,7 @@ class Torrent(LogObject):
         EventManager.throw_event(EventType.TorrentStateChange, [old, value])
 
     def get_data_bytes_for_stream(self, start_byte, length):
-        return self.output_manager.stream_manager.get_data_for_stream(start_byte + self.media_file.start_byte, length)
+        return self.stream_manager.get_data_for_stream(start_byte + self.media_file.start_byte, length)
 
     def get_data_bytes_for_hash(self, start_byte, length):
         return self.data_manager.get_data_bytes_for_hash(start_byte + self.media_file.start_byte, length)
@@ -361,9 +352,6 @@ class Torrent(LogObject):
             Stats.set('max_download_speed', current_speed)
         return True
 
-    def log(self):
-        pass
-
     def stop(self):
         if self.__state == TorrentState.Stopping:
             return
@@ -371,19 +359,14 @@ class Torrent(LogObject):
         Logger().write(LogVerbosity.Info, 'Torrent stopping')
         self.__set_state(TorrentState.Stopping)
         EventManager.deregister_event(self._user_file_selected_id)
-        EventManager.deregister_event(self._log_id)
 
         self.engine.stop()
         Logger().write(LogVerbosity.Debug, 'Torrent engines stopped')
 
         self.peer_processor.stop()
-        self.message_processor.stop()
-        self.data_manager.stop()
-        self.output_manager.stop()
         self.peer_manager.stop()
         self.tracker_manager.stop()
         self.download_manager.stop()
-        self.data_manager.stop()
         self.network_manager.stop()
         self.metadata_manager.stop()
         Logger().write(LogVerbosity.Debug, 'Torrent managers stopped')
@@ -396,7 +379,7 @@ class Torrent(LogObject):
         self.peer_manager = None
         self.data_manager = None
         self.download_manager = None
-        self.output_manager = None
+        self.stream_manager = None
         self.metadata_manager = None
         self.network_manager = None
         self.message_processor = None

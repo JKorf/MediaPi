@@ -14,7 +14,7 @@ tradfri_hub_ip=192.168.2.73
 
 # Connections
 max_peers_connecting=20
-max_peers_connected=30
+max_peers_connected=20
 connection_timeout=2000
 peer_timeout=60000
 

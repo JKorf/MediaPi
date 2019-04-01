@@ -27,8 +27,6 @@ class Engine(LogObject):
         self.timing = dict()
         self.own_time = TimingObject(self.name)
 
-        self._event_id = EventManager.register_event(EventType.Log, self.log)
-
         # Log props
         self.current_item_log = ""
 
@@ -51,7 +49,6 @@ class Engine(LogObject):
 
     def stop(self):
         self.running = False
-        EventManager.deregister_event(self._event_id)
         self.thread.join()
 
     def tick(self):
@@ -88,17 +85,6 @@ class Engine(LogObject):
                 sleep(0)
 
         self.own_time.add_time(current_time() - tick_time)
-
-    def log(self):
-        if self.own_time.ticks > 1:
-            Logger().write(LogVerbosity.Important, "-- Engine "+self.name + " --")
-            log_str = self.own_time.print() + ", tick time: " + str(self.tick_time)
-            if self.current_item:
-                log_str += ", CT: " + str(current_time() - self.start_time) + " @ " + str(self.current_item.name)
-            Logger().write(LogVerbosity.Important, log_str)
-            Logger().write(LogVerbosity.Important, "Last round trip: " + str(current_time() - self.last_tick) + "ms ago")
-            for key, value in self.timing.items():
-                Logger().write(LogVerbosity.Important, "     " + value.print())
 
 
 class EngineWorkItem(LogObject):

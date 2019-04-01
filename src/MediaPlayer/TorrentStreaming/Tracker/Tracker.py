@@ -142,7 +142,8 @@ class TrackerManager:
             thread = CustomThread(self.tracker_announce, "Tracker announce", [tracker, torrent])
             thread.start()
 
-    def tracker_announce(self, tracker, torrent):
+    @staticmethod
+    def tracker_announce(tracker, torrent):
         if not tracker.announce_torrent(torrent):
             Logger().write(LogVerbosity.Debug, 'Could not connect to tracker: ' + tracker.host)
         else:

@@ -22,25 +22,11 @@ class TorrentMessageProcessor(LogObject):
         self.torrent = torrent
         self.metadata_wait_list = []
 
-        self.queue = MultiQueue("Message queue", self.process_messages)
-
         # Logging props
         self.metadata_wait_list_log = 0
-        self.message_queue_length = 0
-
-    def start(self):
-        self.queue.start()
-
-    def stop(self):
-        self.queue.stop()
-
-    def add_messages(self, message_list):
-        self.queue.add_items(message_list)
-        self.message_queue_length = len(self.queue.queue)
 
     def process_messages(self, messages):
         Timing().start_timing("process_messages")
-        self.message_queue_length = len(self.queue.queue)
         if not self.torrent.is_preparing and len(self.metadata_wait_list) > 0:
             for peer, message, timestamp in self.metadata_wait_list:
                 self.handle_message(peer, message, timestamp)
@@ -87,8 +73,9 @@ class TorrentMessageProcessor(LogObject):
     def handle_message(self, peer, message, timestamp):
         if isinstance(message, PieceMessage):
             Logger().write(LogVerbosity.All, str(peer.id) + ' Received piece message: ' + str(message.index) + ', offset ' + str(message.offset))
-            peer.protocol_logger.update("Received piece", True)
-            self.torrent.data_manager.block_done(peer, message.index, message.offset, message.data, timestamp)
+            peer.protocol_logger.update("Sending/receiving requests", True)
+            self.torrent.data_manager.block_done(peer, message.index, message.offset, message.data)
+            peer.download_manager.block_done(message.index * self.torrent.data_manager.piece_length + message.offset, timestamp)
             peer.counter.add_value(message.length)
             return
 

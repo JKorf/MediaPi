@@ -37,41 +37,18 @@ class TorrentDownloadManager(LogObject):
             (0, 1, 1)
         ]
 
-        self._event_id_log = EventManager.register_event(EventType.Log, self.log_queue)
         self._event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
+        self._event_id_torrent_state = EventManager.register_event(EventType.TorrentStateChange, self.init_queue)
 
         self.queue_log = ""
 
     def unregister(self):
         EventManager.deregister_event(self._event_id_stopped)
-        EventManager.deregister_event(self._event_id_log)
 
-    def check_size(self):
-        for key, size in sorted([(key, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[1], reverse=True):
-            Logger().write(LogVerbosity.Important, "       Size of " + str(key) + ": " + write_size(size))
-
-    def log_queue(self):
-        Logger().write(LogVerbosity.Important, "-- TorrentDownloadManager state --")
-        first = ""
-        if self.queue:
-            first = str(self.queue[0].index)
-        Logger().write(LogVerbosity.Important, "     Queue status: length: " + str(len(self.queue)) + ", init: " + str(self.init) + ", prio: " + str(self.prio))
-        Logger().write(LogVerbosity.Important, "     First in queue: " + first)
-        Logger().write(LogVerbosity.Important, "     Last get_blocks: " + str(self.last_get_result[1]) + "/" + str(self.last_get_result[0]) + " " + str(current_time() - self.last_get_time) + "ms ago")
-        if len(self.queue) > 0:
-            blocks = [x for x in self.queue[0].blocks.values() if not x.done][0: 5]
-            for block in blocks:
-                Logger().write(LogVerbosity.Important, "     Block " + str(block.index) + " being downloaded by peers: " + ",".join([str(x.id) for x in block.peers_downloading]))
-
-    def update(self):
-        if self.torrent.state != TorrentState.Downloading:
-            return True
-
-        if not self.init:
+    def init_queue(self, old_state, new_state):
+        if not self.init and new_state == TorrentState.Downloading:
             self.init = True
             self.requeue(0)
-
-        return True
 
     def update_priority(self, full=False):
         if not self.init:
@@ -125,6 +102,9 @@ class TorrentDownloadManager(LogObject):
                 continue
 
             if piece.persistent and piece.done:
+                continue
+
+            if not piece.cleared and piece.done and piece.index < start_position + (10000000 // self.torrent.data_manager.piece_length):
                 continue
 
             piece.reset()

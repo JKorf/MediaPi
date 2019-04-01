@@ -30,15 +30,11 @@ class TorrentDataManager(LogObject):
         self.persistent_pieces = []
         self.total_cleared = 0
 
-        self.done_queue = MultiQueue("Blocks done queue", self.process_done_blocks)
-
         self.block_size = Settings.get_int("block_size")
 
         self.piece_hash_validator = TorrentPieceHashValidator()
-        self.piece_hash_validator.on_piece_accept = self.piece_hash_valid
-        self.piece_hash_validator.on_piece_reject = self.piece_hash_invalid
+        self.broadcasted_hash_data = False
 
-        self._event_id_log = EventManager.register_event(EventType.Log, self.log_queue)
         self._event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
 
         self.blocks_done_length = 0
@@ -60,38 +56,18 @@ class TorrentDataManager(LogObject):
         Logger().write(LogVerbosity.Important, "    pieces < stream index: " + str(len(stream_index)) + " - " + write_size(asizeof.asizeof(stream_index)))
         Logger().write(LogVerbosity.Important, "    pieces > stream index + 50mb: " + str(len(stream_index_50_mb)) + " - " + write_size(asizeof.asizeof(stream_index_50_mb)))
         Logger().write(LogVerbosity.Important, "    pieces with initialized blocks: " + str(len([piece for piece in self._pieces.values() if len(piece._blocks) > 0])))
-        if self.torrent.output_manager.stream_manager.buffer is not None:
-            data_ready = [piece for piece in self.torrent.output_manager.stream_manager.buffer.data_ready]
+        if self.torrent.stream_manager.buffer is not None:
+            data_ready = [piece for piece in self.torrent.stream_manager.buffer.data_ready]
             Logger().write(LogVerbosity.Important, "    pieces in data_ready: " + str(len(data_ready)) + " - " + write_size(asizeof.asizeof(data_ready)))
 
-    def log_queue(self):
-        unfinished = [x for x in self._pieces.values() if not x.done]
-        unfinished_next = [x for x in self._pieces.values() if not x.done and x.index >= self.torrent.stream_position]
-
-        Logger().write(LogVerbosity.Important, "-- TorrentDataManager state --")
-        first = ""
-        first_next = ""
-        if unfinished:
-            first = str(unfinished[0].index)
-        if unfinished_next:
-            first_next = str(unfinished_next[0].index)
-        Logger().write(LogVerbosity.Important, "     Data status: first unfinished=" + first + ", first unfinished after stream pos: " + first_next + ", total unfinished=" + str(len(unfinished)) + " pieces")
-
     def unregister(self):
-        EventManager.deregister_event(self._event_id_log)
         EventManager.deregister_event(self._event_id_stopped)
-
-    def start(self):
-        self.done_queue.start()
-
-    def stop(self):
-        self.done_queue.stop()
 
     def set_piece_info(self, piece_length, piece_hashes):
         self.piece_hash_validator.update_hashes(piece_hashes)
         self.piece_length = piece_length
         self.total_pieces = int(math.ceil(self.torrent.total_size / piece_length))
-        self.bitfield = Bitfield(self.total_pieces)
+        self.bitfield = Bitfield(self.torrent, self.total_pieces)
         self.init_pieces()
 
     def init_pieces(self):
@@ -134,42 +110,40 @@ class TorrentDataManager(LogObject):
                 piece.clear()
                 self.total_cleared += piece.length
                 cleared += 1
+                cleared_size += piece.length
 
         Logger().write(LogVerbosity.Debug, "Cleared " + str(cleared) + " piece(s): " + str(write_size(cleared_size)) + ". Total cleared: " + str(write_size(self.total_cleared)))
 
-    def process_done_blocks(self, done_items):
+    def block_done(self, peer, piece_index, offset, data):
         Timing().start_timing("done_blocks")
-        self.blocks_done_length = len(self.done_queue.queue)
-        for peer, piece_index, offset, data, timestamp in done_items:
-            piece = self._pieces[piece_index]
-            Logger().write(LogVerbosity.All, str(peer.id) + ' Received piece message: ' + str(piece.index) + ', block offset: ' + str(offset))
+        piece = self._pieces[piece_index]
+        Logger().write(LogVerbosity.All, str(peer.id) + ' Received piece message: ' + str(piece.index) + ', block offset: ' + str(offset))
 
-            peer.download_manager.block_done(piece_index * self.piece_length + offset, timestamp)
-            if self.torrent.state == TorrentState.Done:
-                Logger().write(LogVerbosity.All, 'Received a block but torrent already done')
-                self.torrent.overhead += len(data)
-                continue
+        if self.torrent.state == TorrentState.Done:
+            Logger().write(LogVerbosity.All, 'Received a block but torrent already done')
+            self.torrent.overhead += len(data)
+            return
 
-            if piece.index < self.torrent.stream_position and not piece.persistent:
-                Logger().write(LogVerbosity.All, 'Received a block which is no longer needed')
-                self.torrent.overhead += len(data)
-                continue
+        if piece.index < self.torrent.stream_position and not piece.persistent:
+            Logger().write(LogVerbosity.All, 'Received a block which is no longer needed')
+            self.torrent.overhead += len(data)
+            return
 
-            if piece.done:
-                Logger().write(LogVerbosity.All, 'Received block but piece was already done')
-                self.torrent.overhead += len(data)
-                continue
+        if piece.done:
+            Logger().write(LogVerbosity.All, 'Received block but piece was already done')
+            self.torrent.overhead += len(data)
+            return
 
-            block = piece.get_block_by_offset(offset)
-            if block.done:
-                Logger().write(LogVerbosity.All, 'Received block but block was already done')
-                self.torrent.overhead += len(data)
-                continue
+        block = piece.get_block_by_offset(offset)
+        if block.done:
+            Logger().write(LogVerbosity.All, 'Received block but block was already done')
+            self.torrent.overhead += len(data)
+            return
 
-            self.write_block(piece, block, data)
+        self.write_block(piece, block, data)
 
-            self.torrent.left -= block.length
-            Stats.add('total_downloaded', block.length)
+        self.torrent.left -= block.length
+        Stats.add('total_downloaded', block.length)
 
         if self.init_done:
             if self.torrent.state != TorrentState.Done:
@@ -177,19 +151,6 @@ class TorrentDataManager(LogObject):
                     self.torrent.torrent_done()
 
         Timing().stop_timing("done_blocks")
-
-    def piece_hash_valid(self, piece):
-        Logger().write(LogVerbosity.All, "Piece " + str(piece.index) + " has valid hash")
-        piece.validated = True
-        self.torrent.output_manager.add_piece_to_output(piece)
-
-    def piece_hash_invalid(self, piece):
-        if not piece.done:
-            return
-
-        Logger().write(LogVerbosity.Info, "Piece " + str(piece.index) + " has invalid hash, re-downloading it")
-        piece.reset()
-        self.torrent.download_manager.redownload_piece(piece)
 
     def get_block_by_offset(self, piece_index, offset_in_piece):
         return self.get_piece_by_index(piece_index).get_block_by_offset(offset_in_piece)
@@ -203,17 +164,22 @@ class TorrentDataManager(LogObject):
     def get_piece_by_index(self, index):
         return self._pieces.get(index)
 
-    def block_done(self, peer, piece_index, offset, data, timestamp):
-        self.done_queue.add_item((peer, piece_index, offset, data, timestamp))
-        self.blocks_done_length = len(self.done_queue.queue)
-
     def write_block(self, piece, block, data):
         if piece.done or piece.validated:
             return
 
         if piece.write_block(block, data):
-            self.piece_hash_validator.add_piece_to_hash(piece)
-            self.bitfield.update_piece(piece.index, True)
+            if self.piece_hash_validator.validate_piece(piece):
+                Logger().write(LogVerbosity.All, "Piece " + str(piece.index) + " has valid hash")
+                piece.validated = True
+                self.bitfield.update_piece(piece.index, True)
+                self.torrent.stream_manager.write_piece(piece)
+                self.torrent.peer_manager.piece_done(piece)
+                self.check_stream_file_hash()
+            else:
+                Logger().write(LogVerbosity.Info, "Piece " + str(piece.index) + " has invalid hash, re-downloading it")
+                piece.reset()
+                self.torrent.download_manager.redownload_piece(piece)
 
     def is_interested_in(self, bitfield):
         if self.bitfield is None or bitfield is None:
@@ -238,3 +204,31 @@ class TorrentDataManager(LogObject):
             result.extend(data[offset:offset + going_to_copy])
             current_read += going_to_copy
         return result
+
+    def check_stream_file_hash(self):
+        if self.broadcasted_hash_data or self.torrent.stream_file_hash is not None:
+            return
+
+        start_piece = self.torrent.data_manager.get_piece_by_index(self.torrent.media_file.start_piece(self.torrent.data_manager.piece_length))
+        end_piece = self.torrent.data_manager.get_piece_by_index(self.torrent.media_file.end_piece(self.torrent.data_manager.piece_length))
+        start_done = False
+        end_done = False
+
+        if start_piece.length < 65536:
+            if start_piece.done and self.torrent.outputdata_manager.get_piece_by_index(self.torrent.media_file.start_piece(self.torrent.data_manager.piece_length) + 1).done:
+                start_done = True
+        else:
+            if start_piece.done:
+                start_done = True
+
+        if self.torrent.media_file.end_byte - end_piece.start_byte < 65536:
+            if end_piece.done and self.torrent.data_manager.get_piece_by_index(self.torrent.media_file.end_piece(self.torrent.data_manager.piece_length) - 1).done:
+                end_done = True
+        else:
+            if end_piece.done:
+                end_done = True
+
+        if start_done and end_done:
+            self.broadcasted_hash_data = True
+            self.torrent.media_file.first_64k = self.torrent.get_data_bytes_for_hash(0, 65536)
+            self.torrent.media_file.last_64k = self.torrent.get_data_bytes_for_hash(self.torrent.media_file.length - 65536, 65536)

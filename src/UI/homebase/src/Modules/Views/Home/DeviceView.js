@@ -299,14 +299,19 @@ class DeviceView extends Component {
     let torrentComponent = "";
     if (this.state.torrentData.title)
     {
-        var max_dl = " (max " + this.writeSpeed(this.state.torrentData.max_download_speed) + ")";
-        if (this.state.torrentData.max_download_speed === 0)
-            max_dl = "";
+        var download_state = "";
+        if (this.state.torrentData.state === 3 && this.state.torrentData.max_download_speed != 0)
+            download_state = " (max " + this.writeSpeed(this.state.torrentData.max_download_speed) + ")";
+
+        if (this.state === 2) download_state = " (metadata)";
+        if (this.state === 4) download_state = " (paused)";
+        if (this.state === 6) download_state = " (waiting)";
+
         torrentComponent = (
                 <div className="player-group-details">
                     <InfoRow name="Buffer ready" value={this.writeSize(this.state.torrentData.buffer_size)} />
                     <InfoRow name="Total streamed" value={this.writeSize(this.state.torrentData.total_streamed)} />
-                    <InfoRow name="Download speed" value={this.writeSpeed(this.state.torrentData.download_speed) + max_dl} />
+                    <InfoRow name="Download speed" value={this.writeSpeed(this.state.torrentData.download_speed) + download_state} />
                     <InfoRow name="Left" value={this.writeSize(this.state.torrentData.left) + " / " + this.writeSize(this.state.torrentData.size)} />
                     <InfoRow name="Peers available" value={this.state.torrentData.potential} />
                     <InfoRow name="Peers connected" value={this.state.torrentData.connected} />

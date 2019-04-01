@@ -6,10 +6,13 @@ from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 
 
-class Bitfield:
-    def __init__(self, size):
+class Bitfield(LogObject):
+    def __init__(self, parent, size):
+        super().__init__(parent, "bitfield")
         self.size = size
         self.field = [False] * size
+
+        self.pieces_has_log = 0
 
     @property
     def has_all(self):
@@ -21,6 +24,7 @@ class Bitfield:
 
     def update_piece(self, index, value):
         self.field[index] = value
+        self.pieces_has_log += 1
 
     def has_piece(self, index):
         return self.field[index]
@@ -28,23 +32,27 @@ class Bitfield:
     def set_has_all(self):
         for i in range(self.size):
             self.field[i] = True
+        self.pieces_has_log = self.size
 
     def set_has_none(self):
         for i in range(self.size):
             self.field[i] = False
+        self.pieces_has_log = 0
 
     def update(self, data):
+        self.pieces_has_log = 0
         for i in range(self.size):
             byte_index = i // 8
             bit_index = i % 8
 
             if ((data[byte_index] << bit_index) & 0x80) == 0x80:
                 self.field[i] = True
+                self.pieces_has_log += 1
             else:
                 self.field[i] = False
 
     def get_bitfield(self):
-        result = bytearray(int(round(self.size / 8, 0)))
+        result = bytearray(math.ceil(self.size / 8))
         for index in range(self.size):
             for byte_index in range(8):
                 mask = 1 << byte_index
@@ -64,8 +72,9 @@ class Bitfield:
         return False
 
 
-class Block:
-    def __init__(self, index, piece_index, block_index_in_piece, start_byte_in_piece, start_byte_total, length):
+class Block(LogObject):
+    def __init__(self, parent, index, piece_index, block_index_in_piece, start_byte_in_piece, start_byte_total, length):
+        super().__init__(parent, "Block " + str(index))
         self.index = index
         self.piece_index = piece_index
         self.block_index_in_piece = block_index_in_piece
@@ -76,6 +85,7 @@ class Block:
         self.data = None
 
         self.peers_downloading = []
+        self.peers_downloading_log = ""
 
     def _write_data(self, data):
         Logger().write(LogVerbosity.All, "Writing block " + str(self.index) + " in piece " + str(self.piece_index))
@@ -87,9 +97,11 @@ class Block:
 
     def add_downloader(self, peer):
         self.peers_downloading.append(peer)
+        self.peers_downloading_log = ", ".join([str(x.id) for x in self.peers_downloading])
 
     def remove_downloader(self, peer):
         self.peers_downloading.remove(peer)
+        self.peers_downloading_log = ", ".join([str(x.id) for x in self.peers_downloading])
 
 
 class Piece(LogObject):
@@ -128,10 +140,10 @@ class Piece(LogObject):
         partial_block = self.length % self.block_size
         whole_blocks = int(math.floor(self.length / self.block_size))
         for index in range(whole_blocks):
-            self._blocks[index] = Block(self.block_start_index + index, self.index, index, index * self.block_size,
+            self._blocks[index] = Block(self, self.block_start_index + index, self.index, index, index * self.block_size,
                                        self.start_byte + (index * self.block_size), self.block_size)
         if partial_block != 0:
-            self._blocks[len(self._blocks)] = Block(self.block_start_index + len(self._blocks), self.index, len(self._blocks),
+            self._blocks[len(self._blocks)] = Block(self, self.block_start_index + len(self._blocks), self.index, len(self._blocks),
                                                   len(self._blocks) * self.block_size, self.start_byte + (len(self._blocks) * self.block_size), partial_block)
         self.total_blocks = len(self._blocks)
 
@@ -158,7 +170,6 @@ class Piece(LogObject):
                     if self._data is None or block.data is None:
                         raise Exception("Erased data on piece " + str(self.index) + ", block: " + str(block.index))
                     self._data.extend(block.data)
-                self._blocks = dict()
                 return True
         return False
 

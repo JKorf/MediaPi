@@ -28,7 +28,8 @@ class TorrentPeerProcessor:
 
             Timing().start_timing("peer_processing")
             for peer in peers_to_process:
-                peer.update()
+                peer.metadata_manager.update()
+                peer.download_manager.update_timeout()
             Timing().stop_timing("peer_processing")
 
             spend_time = current_time() - start_time

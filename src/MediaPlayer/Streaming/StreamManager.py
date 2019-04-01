@@ -4,6 +4,7 @@ from threading import Lock
 from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
 from MediaPlayer.Streaming.StreamListener import StreamListener
 from MediaPlayer.Util.Enums import TorrentState, DownloadMode
+from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Util import write_size
@@ -52,6 +53,8 @@ class StreamManager:
         self.max_in_buffer_threshold = Settings.get_int("max_bytes_reached_threshold")
         self.stream_tolerance = Settings.get_int("stream_pause_tolerance")
 
+        self._event_id_torrent_state = EventManager.register_event(EventType.TorrentStateChange, self.init_buffer)
+
         VLCPlayer().player_state.register_callback(self.player_change)
         self.listener.start_listening()
 
@@ -59,11 +62,8 @@ class StreamManager:
         if new.state == PlayerState.Playing:
             self.has_played = True
 
-    def update(self):
-        if self.torrent.is_preparing:
-            return True
-
-        if not self.init:
+    def init_buffer(self, old_state, new_state):
+        if not self.init and new_state == TorrentState.Downloading:
             self.init = True
             self.end_buffer_start_byte = self.torrent.media_file.length - Settings.get_int("stream_end_buffer_tolerance")
             self.start_buffer_end_byte = Settings.get_int("stream_start_buffer")
@@ -73,23 +73,6 @@ class StreamManager:
                 Settings.get_int("stream_end_buffer_tolerance") / self.torrent.piece_length)
             self.buffer = StreamBuffer(self, self.torrent.piece_length)
             self.change_stream_position(self.torrent.media_file.start_byte)
-
-        if self.consecutive_pieces_total_length >= self.max_in_buffer and self.torrent.left > self.stream_tolerance:
-            if self.torrent.state == TorrentState.Downloading:
-                Logger().write(LogVerbosity.Info, "Pausing torrent: left to download = " + write_size((self.end_piece - self.consecutive_pieces_last_index) * self.torrent.piece_length))
-                self.torrent.pause()
-        elif self.torrent.state == TorrentState.Paused:
-            if self.consecutive_pieces_total_length < self.max_in_buffer - self.max_in_buffer_threshold:
-                self.torrent.unpause()
-
-        if self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer > Settings.get_int("important_only_start_threshold") and self.torrent.download_manager.download_mode == DownloadMode.Full:
-            Logger().write(LogVerbosity.Info, "Entering ImportantOnly download mode: " + write_size(self.torrent.bytes_total_in_buffer) + " in buffer total, " + write_size(self.consecutive_pieces_total_length) + " consequtive")
-            self.torrent.download_manager.download_mode = DownloadMode.ImportantOnly
-        elif self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer < Settings.get_int("important_only_stop_threshold") and self.torrent.download_manager.download_mode == DownloadMode.ImportantOnly:
-            Logger().write(LogVerbosity.Info, "Leaving ImportantOnly download mode")
-            self.torrent.download_manager.download_mode = DownloadMode.Full
-
-        return self.buffer.update()
 
     def get_data_bytes_for_hash(self, start_byte, length):
         return self.buffer.get_data_for_hash(start_byte, length)
@@ -123,7 +106,6 @@ class StreamManager:
         if request_piece not in self.torrent.download_manager.upped_prios:
             Logger().write(LogVerbosity.Info, "Received stray request, going to search to " + str(request_piece))
             self.seek(start_byte)
-            self.last_request_end = start_byte + length
             return self.buffer.get_data_for_stream(start_byte, length)
 
     def seek(self, start_byte):
@@ -133,9 +115,9 @@ class StreamManager:
         if 0 <= index_change < 2:  # If it's the same piece or only one piece forwards dont seek
             return
 
-        Logger().write(LogVerbosity.Info, "Seeking to byte " + start_byte)
+        Logger().write(LogVerbosity.Info, "Seeking to byte " + str(start_byte))
         self.torrent.download_manager.seek(old_stream_position, self.stream_position_piece_index)
-        self.buffer.seek(self.stream_position_piece_index)
+        self.buffer.update_position(self.stream_position_piece_index)
 
     def change_stream_position(self, start_byte):
         new_index = int(math.floor(start_byte / self.torrent.piece_length))
@@ -145,12 +127,29 @@ class StreamManager:
                 new_index))
             self.stream_position_piece_index = new_index
         self.torrent.data_manager.clear_pieces(old_index, new_index)
+        self.buffer.update_position(self.stream_position_piece_index)
 
-    def write_pieces(self, pieces):
-        self.buffer.write_pieces(pieces)
+    def write_piece(self, piece):
+        self.buffer.write_piece(piece)
+
+        if self.consecutive_pieces_total_length >= self.max_in_buffer and self.torrent.left > self.stream_tolerance:
+            if self.torrent.state == TorrentState.Downloading:
+                Logger().write(LogVerbosity.Info, "Pausing torrent: left to download = " + write_size((self.end_piece - self.consecutive_pieces_last_index) * self.torrent.piece_length))
+                self.torrent.pause()
+        elif self.torrent.state == TorrentState.Paused:
+            if self.consecutive_pieces_total_length < self.max_in_buffer - self.max_in_buffer_threshold:
+                self.torrent.unpause()
+
+        if self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer > Settings.get_int("important_only_start_threshold") and self.torrent.download_manager.download_mode == DownloadMode.Full:
+            Logger().write(LogVerbosity.Info, "Entering ImportantOnly download mode: " + write_size(self.torrent.bytes_total_in_buffer) + " in buffer total, " + write_size(self.consecutive_pieces_total_length) + " consequtive")
+            self.torrent.download_manager.download_mode = DownloadMode.ImportantOnly
+        elif self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer < Settings.get_int("important_only_stop_threshold") and self.torrent.download_manager.download_mode == DownloadMode.ImportantOnly:
+            Logger().write(LogVerbosity.Info, "Leaving ImportantOnly download mode")
+            self.torrent.download_manager.download_mode = DownloadMode.Full
 
     def stop(self):
         self.torrent = None
+        EventManager.deregister_event(self._event_id_torrent_state)
         self.listener.stop()
 
 
@@ -167,8 +166,8 @@ class StreamBuffer:
         self.last_check_start_piece = 0
         self.last_consecutive_piece = 0
 
-    def update(self):
-        self.data_ready = {x for x in self.data_ready if x.index >= self.stream_manager.stream_position_piece_index or x.persistent}
+    def update_position(self, position):
+        self.data_ready = {x for x in self.data_ready if x.index >= position or x.persistent}
         self.update_consecutive(True)
         return True
 
@@ -216,8 +215,8 @@ class StreamBuffer:
             current_read += going_to_copy
         return result
 
-    def write_pieces(self, pieces):
-        self.data_ready.update(pieces)
+    def write_piece(self, piece):
+        self.data_ready.add(piece)
         self.update_consecutive(True)
 
     def update_consecutive(self, force):

@@ -2,6 +2,7 @@ import select
 from time import sleep
 
 from MediaPlayer.Util.Counter import AverageCounter
+from MediaPlayer.Util.Enums import PeerState
 from Shared.Events import EventManager, EventType
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
@@ -29,9 +30,6 @@ class TorrentNetworkManager(LogObject):
         self.min_download_speed = Settings.get_int("min_download_speed")
         self.torrent = torrent
 
-        self.last_inputs = 0
-        self.last_outputs = 0
-
         self.throttling = False
         self.last_throttle = 0
         self.speed_log = 0
@@ -39,16 +37,10 @@ class TorrentNetworkManager(LogObject):
         self.average_download_counter = AverageCounter(self, 3)
 
         self.thread = None
-        self._event_id_log = EventManager.register_event(EventType.Log, self.log)
         self._event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
-
-    def log(self):
-        Logger().write(LogVerbosity.Important, "-- TorrentNetworkManager state --")
-        Logger().write(LogVerbosity.Important, "     Network manager: last run input sockets: " + str(self.last_inputs) + ", output: " + str(self.last_outputs))
 
     def unregister(self):
         EventManager.deregister_event(self._event_id_stopped)
-        EventManager.deregister_event(self._event_id_log)
 
     def start(self):
         Logger().write(LogVerbosity.Info, "Starting network manager")
@@ -64,68 +56,38 @@ class TorrentNetworkManager(LogObject):
 
             # Select in/outputs
             input_peers, output_peers = self.torrent.peer_manager.get_peers_for_io()
-
-            if not input_peers and not output_peers:
-                sleep(0.05)  # no peers to read/write
-                continue
-
-            input_sockets = [x.connection_manager.connection.socket for x in input_peers]
-            output_sockets = [x.connection_manager.connection.socket for x in output_peers]
-
-            if not input_sockets and not output_sockets:
-                sleep(0.01)  # no sockets available to read/write
-                continue
-
-            self.last_inputs = len(input_sockets)
-            self.last_outputs = len(output_sockets)
-
-            try:
-                # Check which ones can read/write
-                readable, writeable, exceptional = \
-                    select.select(input_sockets, output_sockets, input_sockets + output_sockets, 0.2)
-            except Exception as e:
-                Logger().write(LogVerbosity.Important, "Select error: " + str(e))
+            if len(input_peers) == 0 and len(output_peers) == 0:
                 sleep(0.01)
                 continue
 
             received_messages = []
-            for client in readable:
-                try:
-                    download_speed = self.average_download_counter.get_speed()
-                    if self.max_download_speed != 0 and download_speed > self.max_download_speed:
-                        self.last_throttle = current_time()
-                        if not self.throttling:
-                            self.throttling = True
-                            Logger().write(LogVerbosity.Debug, "Start throttling at " + str(self.max_download_speed))
-                        sleep(0.05)
-                        break
+            for peer in input_peers:
+                download_speed = self.average_download_counter.get_speed()
+                if self.max_download_speed != 0 and download_speed > self.max_download_speed:
+                    self.last_throttle = current_time()
+                    if not self.throttling:
+                        self.throttling = True
+                        Logger().write(LogVerbosity.Debug, "Start throttling at " + str(self.max_download_speed))
+                    sleep(0.05)
+                    break
 
-                    peer = [x for x in input_peers if x.connection_manager.connection.socket == client]
-                    if len(peer) > 0:
-                        peer = peer[0]
-                        messages_size, messages = peer.connection_manager.handle_read()
-                        if messages_size > 0:
-                            self.average_download_counter.add_value(messages_size)
-                            time = current_time()
-                            received_messages += [(peer, x, time) for x in messages]
-                except Exception as e:
-                    Logger().write(LogVerbosity.Info, "Error reading from client: " + str(e))
-                    continue
+                messages_size, messages = peer.connection_manager.handle_read()
+                if messages_size > 0:
+                    self.average_download_counter.add_value(messages_size)
+                    time = current_time()
+                    received_messages += [(peer, x, time) for x in messages]
 
+            sleep(0)
             if len(received_messages) != 0:
-                self.torrent.message_processor.add_messages(received_messages)
+                self.torrent.message_processor.process_messages(received_messages)
 
-            for client in writeable:
-                try:
-                    peer = [x for x in output_peers if x.connection_manager.connection.socket == client]
-                    if len(peer) > 0:
-                        peer[0].connection_manager.handle_write()
-                except Exception as e:
-                    Logger().write(LogVerbosity.Info, "Error reading from client: " + str(e))
-                    continue
+            for peer in [peer for peer, msg, time in received_messages if peer.state == PeerState.Started]:
+                peer.download_manager.update_requests()
+
+            for peer in [peer for peer in output_peers if peer.state == PeerState.Started]:
+                peer.connection_manager.handle_write()
 
             Timing().stop_timing("IO")
-            sleep(0)
 
     def stop(self):
         self.running = False

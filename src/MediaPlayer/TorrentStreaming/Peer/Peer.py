@@ -17,7 +17,7 @@ class Peer(LogObject):
     def bitfield(self):
         # Only create a new bitfield when we actually have metadata for it
         if self.__bitfield is None and not self.torrent.is_preparing:
-            self.__bitfield = Bitfield(self.torrent.data_manager.total_pieces)
+            self.__bitfield = Bitfield(self, self.torrent.data_manager.total_pieces)
         return self.__bitfield
 
     @property
@@ -31,10 +31,6 @@ class Peer(LogObject):
             self._state = value
             if self.torrent.peer_manager is not None:
                 self.torrent.peer_manager.update_peer(self, old, value)
-
-    @property
-    def connection_state(self):
-        return self.connection_manager.connection_state
 
     def __init__(self, id, torrent, uri, source):
         super().__init__(torrent, "Peer " + str(id))
@@ -87,12 +83,6 @@ class Peer(LogObject):
         self.metadata_manager.update()
         self.download_manager.update()
 
-    def log(self):
-        Logger().write(LogVerbosity.Important, "     " + str(self.id) + " | " + self.communication_state.print())
-
-        self.connection_manager.log()
-        self.download_manager.log()
-
     def on_connect(self):
         self.add_connected_peer_stat(self.source)
 
@@ -108,12 +98,10 @@ class Peer(LogObject):
             Stats.add('peers_source_exchange_connected', 1)
 
     def stop_async(self):
+        self.state = PeerState.Stopping
         CustomThread(self.stop, "Peer stopper " + str(self.id), []).start()
 
     def stop(self):
-        if self.state not in [PeerState.Starting, PeerState.Started]:
-            return
-
         self.state = PeerState.Stopping
 
         Logger().write(LogVerbosity.All, str(self.id) + ' Peer stopping')
@@ -154,6 +142,7 @@ class ProtocolLogger(LogObject):
             prot = LogObject(self, self.current_cache + " x" + str(self.cache))
             self.children.append(prot)
             self.cache = 0
+            self.current_cache = None
 
         if aggregate:
             self.current_cache = step
