@@ -98,6 +98,9 @@ class Peer(LogObject):
             Stats.add('peers_source_exchange_connected', 1)
 
     def stop_async(self):
+        if self.state != PeerState.Started and self.state != PeerState.Starting:
+            return
+
         self.state = PeerState.Stopping
         CustomThread(self.stop, "Peer stopper " + str(self.id), []).start()
 
