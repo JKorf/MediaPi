@@ -303,9 +303,10 @@ class DeviceView extends Component {
         if (this.state.torrentData.state === 3 && this.state.torrentData.max_download_speed != 0)
             download_state = " (max " + this.writeSpeed(this.state.torrentData.max_download_speed) + ")";
 
-        if (this.state === 2) download_state = " (metadata)";
-        if (this.state === 4) download_state = " (paused)";
-        if (this.state === 6) download_state = " (waiting)";
+        if (this.state.torrentData.state === 2) download_state = " (metadata)";
+        if (this.state.torrentData.state === 4) download_state = " (paused)";
+        if (this.state.torrentData.state === 5) download_state = " (done)";
+        if (this.state.torrentData.state === 6) download_state = " (waiting)";
 
         torrentComponent = (
                 <div className="player-group-details">

@@ -40,15 +40,3 @@ class LogObject:
     def finish(self):
         if self.logging:
             self.log_tracker.finish()
-
-
-def log_wrapper(prop):
-    def wrapper_decorator(func):
-        def func_wrapper(sender, value):
-            if getattr(sender, prop) != value:
-                sender.log_tracker.update(prop, value)
-            func(sender, value)
-
-        return func_wrapper
-
-    return wrapper_decorator

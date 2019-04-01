@@ -16,6 +16,7 @@
 
     Fix slave requesting subtitles
     Fix slave updating
+    Fix seeking back when done
 
     Add a rule based task system for automation
         Do (x) when (x) == True
