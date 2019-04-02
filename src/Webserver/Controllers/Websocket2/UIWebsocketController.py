@@ -114,7 +114,7 @@ class UIWebsocketController:
         request_message = Request(request_id, topic, data, UIWebsocketController._complete_request)
         UIWebsocketController.requests.append(request_message)
         socketio.emit("request", (request_id, topic, data), namespace="/UI")
-        return request
+        return request_message
 
     @staticmethod
     def _complete_request(request_message):

@@ -35,6 +35,10 @@ class Peer(LogObject):
             if self.torrent.peer_manager is not None:
                 self.torrent.peer_manager.update_peer(self, old, value)
 
+            if value == PeerState.Started:
+                self.peer_state_task = CustomThread(self.check_peer_state, "Check peer state " + str(self.id))
+                self.peer_state_task.start()
+
     def __init__(self, id, torrent, uri, source):
         super().__init__(torrent, "Peer " + str(id))
         self.id = id
@@ -65,6 +69,7 @@ class Peer(LogObject):
         self.peer_state_task = None
         self.peer_stop_task = None
 
+        self.stop_reason = None
         self.protocol_logger = ProtocolLogger(self)
 
     def adjust_round_trip_time(self, time):
@@ -91,11 +96,6 @@ class Peer(LogObject):
         self.metadata_manager.update()
         self.download_manager.update()
 
-    def on_connect(self):
-        self.add_connected_peer_stat(self.source)
-        self.peer_state_task = CustomThread(self.check_peer_state, "Check peer state " + str(self.id))
-        self.peer_state_task.start()
-
     def check_peer_state(self):
         zero_speed_checks = 0
         while self.state == PeerState.Started:
@@ -109,14 +109,14 @@ class Peer(LogObject):
 
             if self.counter.total == 0:
                 Logger().write(LogVerbosity.Info, str(self.id) + " stopping not downloading peer")
-                self.stop_async()  # Stop since we haven't downloaded anything since connecting
+                self.stop_async("Not downloading")  # Stop since we haven't downloaded anything since connecting
                 return
 
             if self.counter.value == 0:
                 zero_speed_checks += 1
                 if zero_speed_checks >= 10:
                     Logger().write(LogVerbosity.Info,  str(self.id) + " stopping currently not downloading peer")
-                    self.stop_async()  # Stop since we haven't downloaded anything in the last 10 seconds
+                    self.stop_async("Not recently downloading")  # Stop since we haven't downloaded anything in the last 10 seconds
                     return
             else:
                 zero_speed_checks = 0
@@ -134,10 +134,11 @@ class Peer(LogObject):
         elif source == PeerSource.PeerExchange:
             Stats.add('peers_source_exchange_connected', 1)
 
-    def stop_async(self):
+    def stop_async(self, reason):
         if self.state != PeerState.Started and self.state != PeerState.Starting:
             return
 
+        self.stop_reason = reason
         self.state = PeerState.Stopping
         self.peer_stop_task = CustomThread(self.stop, "Peer stopper " + str(self.id), [])
         self.peer_stop_task.start()

@@ -44,9 +44,9 @@ stream_end_buffer_tolerance=5000000
 network_caching=5000
 
 # Logging
-log_level=2
+log_level=1
 max_log_file_size=10000000
-vlc_log_level=1
+vlc_log_level=3
 state_logging=True
 
 # DHT

@@ -41,15 +41,17 @@ class Bitfield(LogObject):
 
     def update(self, data):
         self.pieces_has_log = 0
+        pieces_has = 0
         for i in range(self.size):
             byte_index = i // 8
             bit_index = i % 8
 
             if ((data[byte_index] << bit_index) & 0x80) == 0x80:
                 self.field[i] = True
-                self.pieces_has_log += 1
+                pieces_has += 1
             else:
                 self.field[i] = False
+        self.pieces_has_log = pieces_has
 
     def get_bitfield(self):
         result = bytearray(math.ceil(self.size / 8))
@@ -170,6 +172,7 @@ class Piece(LogObject):
                     if self._data is None or block.data is None:
                         raise Exception("Erased data on piece " + str(self.index) + ", block: " + str(block.index))
                     self._data.extend(block.data)
+                    block.clear()
                 return True
         return False
 
@@ -200,8 +203,4 @@ class Piece(LogObject):
         self._data = None
         self.validated = False
         self.cleared = False
-
-    def get_data_and_clear(self):
-        data = self.get_data()
-        self.clear()
-        return data
+        self.initialized = False

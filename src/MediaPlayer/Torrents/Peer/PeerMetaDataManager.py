@@ -41,7 +41,7 @@ class PeerMetaDataManager(LogObject):
             if current_time() - self.peer.connection_manager.connected_on > 5000:
                 self.peer.protocol_logger.update("No handshake response")
                 # No handshake received
-                self.peer.stop_async()
+                self.peer.stop_async("No handshake")
                 return False
             return True
 

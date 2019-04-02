@@ -125,8 +125,8 @@ class StreamManager:
             Logger().write(LogVerbosity.Debug, 'Stream position changed: ' + str(self.stream_position_piece_index) + ' -> ' + str(
                 new_index))
             self.stream_position_piece_index = new_index
-        self.torrent.data_manager.clear_pieces(old_index, new_index)
-        self.buffer.update_position(self.stream_position_piece_index)
+            self.torrent.data_manager.clear_pieces(old_index, new_index)
+            self.buffer.update_position(self.stream_position_piece_index)
 
         if self.torrent.state == TorrentState.Paused:
             if self.consecutive_pieces_total_length < self.max_in_buffer - self.max_in_buffer_threshold:

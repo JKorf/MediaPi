@@ -55,7 +55,7 @@ class PeerConnectionManager(LogObject):
         if not self.connection.connect():
             Stats.add('peers_connect_failed', 1)
             Logger().write(LogVerbosity.All, str(self.peer.id) + ' could not connect to ' + str(self.uri.netloc))
-            self.peer.stop_async()
+            self.peer.stop_async("Can't connect")
             return
 
         self.connected_on = current_time()
@@ -75,7 +75,7 @@ class PeerConnectionManager(LogObject):
 
             data = self.connection.receive_available(self._receive_buffer_size)
             if data is None or len(data) == 0:
-                self.peer.stop_async()
+                self.peer.stop_async("Reading error")
                 break
 
             self._last_communication = current_time()
@@ -109,7 +109,7 @@ class PeerConnectionManager(LogObject):
 
                 if self._next_message_length < 0 or self._next_message_length > 17000:
                     Logger().write(LogVerbosity.Info, "Invalid next message length: " + str(self._next_message_length))
-                    self.peer.stop_async()
+                    self.peer.stop_async("Invalid next msg length")
                     break
             else:
                 total_data = self._buffer_position + self._next_message_length
@@ -133,7 +133,7 @@ class PeerConnectionManager(LogObject):
         self._last_communication = current_time()
 
         if not success:
-            self.peer.stop_async()
+            self.peer.stop_async("Write error")
 
     def send(self, data):
         self.to_send_bytes.extend(data)

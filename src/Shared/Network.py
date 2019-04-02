@@ -1,6 +1,8 @@
 import socket
 import urllib.request
 
+from eventlet.hubs import IOClosed
+
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import headers
 

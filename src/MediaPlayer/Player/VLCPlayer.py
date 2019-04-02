@@ -181,63 +181,6 @@ class VLCPlayer(metaclass=Singleton):
     def get_selected_sub(self):
         return self.__player.video_get_spu()
 
-    def hook_events(self):
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerOpening, self.state_change_opening)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerPlaying, self.state_change_playing)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerPaused, self.state_change_paused)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerStopped, self.state_change_stopped)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerEndReached, self.state_change_end_reached)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerEncounteredError, self.on_error)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerTimeChanged, self.on_time_change)
-
-    def on_time_change(self, event):
-        self.player_state.start_update()
-        self.player_state.playing_for = event.u.new_time
-        self.player_state.stop_update()
-
-    def state_change_opening(self, event):
-        if self.player_state.state != PlayerState.Opening:
-            self.change_state(PlayerState.Opening)
-
-    def state_change_playing(self, event):
-        if self.player_state.state != PlayerState.Paused:
-            self.player_state.length = self.get_length()
-        self.change_state(PlayerState.Playing)
-
-    def state_change_paused(self, event):
-        if self.player_state.state != PlayerState.Paused:
-            self.change_state(PlayerState.Paused)
-
-    def state_change_stopped(self, event):
-        if self.player_state.state != PlayerState.Nothing:
-            self.change_state(PlayerState.Nothing)
-
-            self.player_state.start_update()
-            self.player_state.length = 0
-            self.player_state.playing_for = 0
-            self.player_state.path = None
-            self.player_state.sub_delay = 0
-            self.player_state.sub_track = 0
-            self.player_state.sub_tracks = []
-            self.player_state.audio_track = 0
-            self.player_state.audio_tracks = []
-            self.player_state.stop_update()
-
-    def state_change_end_reached(self, event):
-        if self.player_state.path is not None and "youtube" in self.player_state.path and not self.trying_subitems:
-            Logger().write(LogVerbosity.Debug, "Trying youtube sub items")
-            self.trying_subitems = True
-            thread = CustomThread(self.try_play_subitem, "Try play subitem")
-            thread.start()
-        elif self.trying_subitems:
-            self.trying_subitems = False
-
-        if self.player_state.state != PlayerState.Ended:
-            self.change_state(PlayerState.Ended)
-
-    def on_error(self, event):
-        Logger().write(LogVerbosity.Info, "VLC error")
-
     def try_play_subitem(self):
         media = self.__player.get_media()
         if media is None:
@@ -257,6 +200,16 @@ class VLCPlayer(metaclass=Singleton):
     def observe_player(self):
         while True:
             state = self.get_state().value
+            if state == 6 and self.player_state.state != PlayerState.Nothing:
+                if "youtube" in self.player_state.path and not self.trying_subitems:
+                    Logger().write(LogVerbosity.Debug, "Trying youtube sub items")
+                    self.trying_subitems = True
+                    thread = CustomThread(self.try_play_subitem, "Try play subitem")
+                    thread.start()
+                    continue
+            else:
+                self.trying_subitems = False
+
             if state in [5, 6, 7]:
                 state = 0
 

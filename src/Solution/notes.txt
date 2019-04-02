@@ -17,6 +17,7 @@
     Fix slave requesting subtitles
     Fix slave updating
     Fix seeking back when done
+    Remember peers that are known to be good to download from when pausing?
 
     Add a rule based task system for automation
         Do (x) when (x) == True

@@ -197,19 +197,41 @@ class TorrentPeerManager(LogObject):
 
         return True
 
-    def get_peers_for_io(self):
-        return sorted([x for x in self.connected_peers if x.connection_manager.ready_for_reading], key=lambda p: p.connection_manager._last_communication), \
-               [x for x in self.connected_peers if x.connection_manager.ready_for_sending]
+    def stop_slowest_peer(self):
+        if not self.should_stop_peers():
+            return True
+
+        if self.max_peers_connected - len(self.connected_peers) > 3:
+            return True  # No need to stop slowest if we have enough room to connect more
+
+        peers_to_check = [x for x in self.connected_peers if current_time() - x.connection_manager.connected_on > 30000]
+        peers_to_check = sorted(peers_to_check, key=lambda x: x.counter.value)
+        if len(peers_to_check) == 0:
+            return True
+
+        slowest = peers_to_check[0]
+        if slowest.counter.value > 100000:  # if the slowest peer is downloading with more than 100kbps we're fine
+            return True
+
+        Logger().write(LogVerbosity.Info, str(slowest.id) + " stopping peer to find a potential faster one. Peer speed last 5 seconds was " + str(write_size(slowest.counter.value)) + ", total: " + str(write_size(slowest.counter.total)))
+        slowest.stop_async("Slowest")
+        return True
+
+    def get_peers_for_reading(self):
+        return sorted([x for x in self.connected_peers if x.connection_manager.ready_for_reading], key=lambda p: p.connection_manager._last_communication)
+
+    def get_peers_for_writing(self):
+        return [x for x in self.connected_peers if x.connection_manager.ready_for_sending]
 
     def are_fast_peers_available(self):
         return self.high_speed_peers > 0 or self.medium_speed_peers > 1
 
     def stop(self):
         for peer in self.connecting_peers:
-            peer.stop_async()
+            peer.stop_async("Stopping torrent")
 
         for peer in self.connected_peers:
-            peer.stop_async()
+            peer.stop_async("Stopping torrent")
 
         self.complete_peer_list.clear()
         self.potential_peers.clear()

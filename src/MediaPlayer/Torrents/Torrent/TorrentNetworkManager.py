@@ -55,10 +55,10 @@ class TorrentNetworkManager(LogObject):
                 self.throttling = False  # has not throttled in last 2 seconds
 
             # Select in/outputs
-            input_peers, output_peers = self.torrent.peer_manager.get_peers_for_io()
-            if len(input_peers) == 0 and len(output_peers) == 0:
-                sleep(0.01)
-                continue
+            input_peers = self.torrent.peer_manager.get_peers_for_reading()
+            # if len(input_peers) == 0 and len(output_peers) == 0:
+            #     sleep(0.01)
+            #     continue
 
             received_messages = []
             for peer in input_peers:
@@ -83,7 +83,8 @@ class TorrentNetworkManager(LogObject):
             for peer in [peer for peer, msg, time in received_messages if peer.state == PeerState.Started]:
                 peer.download_manager.update_requests()
 
-            for peer in [peer for peer in output_peers if peer.state == PeerState.Started]:
+            output_peers = self.torrent.peer_manager.get_peers_for_writing()
+            for peer in output_peers:
                 peer.connection_manager.handle_write()
 
             Timing().stop_timing("IO")

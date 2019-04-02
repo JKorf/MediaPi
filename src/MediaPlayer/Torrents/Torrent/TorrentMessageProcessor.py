@@ -38,12 +38,12 @@ class TorrentMessageProcessor(LogObject):
                 handshake = HandshakeMessage.from_bytes(message_bytes)
                 if handshake is None:
                     Logger().write(LogVerbosity.All, str(peer.id) + ' invalid handshake response')
-                    peer.stop_async()
+                    peer.stop_async("Invalid handshake")
                     continue
 
                 if handshake.protocol != b'BitTorrent protocol':
                     Logger().write(LogVerbosity.Debug, 'Unknown bittorrent protocol, disconnecting. ' + str(handshake.protocol))
-                    peer.stop_async()
+                    peer.stop_async("Invalid protocol")
                     continue
 
                 peer.protocol_logger.update("Received Handshake")
@@ -54,7 +54,7 @@ class TorrentMessageProcessor(LogObject):
             message = BasePeerMessage.from_bytes(message_bytes)
             if message is None:
                 Logger().write(LogVerbosity.Info, "Unknown or invalid peer message received (id = " + str(message_bytes[0]) + "), closing connection")
-                peer.stop_async()
+                peer.stop_async("Unknown msg id")
                 continue
 
             if self.torrent.is_preparing:
@@ -178,7 +178,7 @@ class TorrentMessageProcessor(LogObject):
                 dic = Bencode.bdecode(message.bencoded_payload)
             except BTFailure:
                 Logger().write(LogVerbosity.Debug, "Invalid extension handshake received")
-                peer.stop_async()
+                peer.stop_async("Invalid extension handshake")
                 return
 
             peer.extension_manager.parse_dictionary(dic)

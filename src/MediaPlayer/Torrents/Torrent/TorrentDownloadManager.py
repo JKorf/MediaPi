@@ -234,8 +234,7 @@ class TorrentDownloadManager(LogObject):
                         continue
 
                     elif self.download_mode == DownloadMode.ImportantOnly:
-                        skipped += 1
-                        continue
+                        result.append(block)
 
                     elif not self.torrent.starting and self.allowed_download(piece.priority, downloading, peer.peer_speed):
                         result.append(block)
