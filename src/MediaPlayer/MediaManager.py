@@ -131,6 +131,8 @@ class MediaManager(metaclass=Singleton):
 
     def seek(self, position):
         VLCPlayer().set_time(position)
+        if self.torrent is not None:
+            self.torrent.stream_manager.listener.seek()
 
     def change_subtitle(self, track):
         VLCPlayer().set_subtitle_track(track)

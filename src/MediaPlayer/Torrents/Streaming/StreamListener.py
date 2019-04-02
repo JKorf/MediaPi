@@ -8,13 +8,14 @@ import time
 
 import select
 
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
 
-class StreamListener:
+class StreamListener(LogObject):
 
     wait_for_data = 0.1
 
@@ -30,6 +31,7 @@ class StreamListener:
         return max([x.stream_speed for x in self.sockets_writing_data], default=0)
 
     def __init__(self, name, port, arg=None):
+        super().__init__(arg, name)
 
         self.name = name
         self.torrent = arg
@@ -44,6 +46,9 @@ class StreamListener:
         self.running = False
         self.bytes_send = 0
         self.id = 0
+
+    def seek(self):
+        pass
 
     def start_listening(self):
         self.thread = CustomThread(self.server.start, "Listener: " + self.name)
@@ -202,7 +207,7 @@ class StreamListener:
         Logger().write(LogVerbosity.Info, self.name + " write data: " + str(requested_byte) + ", length " + str(length))
         id = self.id
         self.id += 1
-        data_writer = SocketWritingData(id, socket, requested_byte, requested_byte + length, current_time())
+        data_writer = SocketWritingData(self, id, socket, requested_byte, requested_byte + length, current_time())
         self.sockets_writing_data.append(data_writer)
         if len(self.sockets_writing_data) > 1:
             Logger().write(LogVerbosity.Debug, "Multiple data writers:")
@@ -212,12 +217,18 @@ class StreamListener:
         while written < length:
             part_length = min(length - written, self.chunk_length)
             if not self.running:
-                Logger().write(LogVerbosity.Debug, self.name + ' writer ' + str(data_writer.id) + " canceling retrieved data because we are no longer running 1")
-                socket.close()
+                Logger().write(LogVerbosity.Debug, self.name + ' writer ' + str(data_writer.id) + " canceling retrieving data because we are no longer running 1")
+                data_writer.close()
                 self.sockets_writing_data.remove(data_writer)
                 return
 
-            if not self.wait_writable(socket):
+            if data_writer.stop:
+                Logger().write(LogVerbosity.Debug, self.name + ' writer ' + str(data_writer.id) + " canceling because we're seeking and expecting a new request")
+                data_writer.close()
+                self.sockets_writing_data.remove(data_writer)
+                return
+
+            if not self.wait_writable(data_writer, socket):
                 Logger().write(LogVerbosity.Debug, self.name + ' writer ' + str(data_writer.id) + " closed")
                 self.sockets_writing_data.remove(data_writer)
                 return
@@ -225,7 +236,7 @@ class StreamListener:
             data = data_delegate(requested_byte + written, part_length)
             if not self.running:
                 Logger().write(LogVerbosity.Debug, self.name + ' writer ' + str(data_writer.id) + " canceling retrieved data because we are no longer running 2")
-                socket.close()
+                data_writer.close()
                 self.sockets_writing_data.remove(data_writer)
                 return
 
@@ -248,17 +259,22 @@ class StreamListener:
                     time.sleep(0.005)  # give other threads some time
             except (ConnectionAbortedError, ConnectionResetError, OSError) as e:
                 Logger().write(LogVerbosity.Info, self.name + " writer " + str(data_writer.id) + " connection closed during sending of data: " + str(e))
-                socket.close()
+                data_writer.close()
                 self.sockets_writing_data.remove(data_writer)
                 return
 
         Logger().write(LogVerbosity.Info, "Completed request: " + str(data_writer))
-        socket.close()
+        data_writer.close()
         self.sockets_writing_data.remove(data_writer)
 
-    def wait_writable(self, socket):
+    def wait_writable(self, writer, socket):
         while True:
             if not self.running:
+                return False
+
+            if writer.stop:
+                Logger().write(LogVerbosity.Debug, self.name + " canceling because we're seeking and expecting a new request")
+                writer.close()
                 return False
 
             # check if socket is still open
@@ -267,7 +283,7 @@ class StreamListener:
                 read = socket.recv(1)
                 if len(read) == 0:
                     Logger().write(LogVerbosity.Info, self.name + " socket no longer open 3")
-                    socket.close()
+                    writer.close()
                     return False
                 else:
                     Logger().write(LogVerbosity.Info, self.name + " recv received data??")
@@ -313,6 +329,7 @@ class StreamServer:
 
         try:
             while True:
+                Logger().write(LogVerbosity.Debug, "StreamServer "+self.name+" listening for incoming connection")
                 conn, addr = self.soc.accept()
                 if not self.running:
                     break
@@ -321,8 +338,9 @@ class StreamServer:
                 thread = CustomThread(self.client_thread, "Stream request", [conn])
                 thread.start()
         except Exception as e:
-            Logger().write(LogVerbosity.Important, "Unexpected error in StreamServer " + self.name + ": " + str(e))
+            Logger().write_error(e, "Stream server")
 
+        Logger().write(LogVerbosity.Debug, "StreamServer "+self.name+" closing")
         self.soc.close()
 
     def close(self):
@@ -419,19 +437,25 @@ class HttpHeader:
         return result
 
 
-class SocketWritingData:
+class SocketWritingData(LogObject):
 
     @property
     def stream_speed(self):
         return self.streamed / ((current_time() - self.connect_time) / 1000)
 
-    def __init__(self, id, socket, range_start, range_end, connect_time):
+    def __init__(self, parent, id, socket, range_start, range_end, connect_time):
+        super().__init__(parent, "request " + str(id))
         self.id = id
         self.socket = socket
         self.range_start = range_start
         self.range_end = range_end
         self.connect_time = connect_time
         self.streamed = 0
+        self.stop = False
+
+    def close(self):
+        self.socket.close()
+        self.finish()
 
     def __str__(self):
         return "Id: "+str(self.id)+", Range: " + str(self.range_start) + "-" + str(self.range_end) + " connected at " + str(self.connect_time) + ", streamed: " +str(self.streamed)

@@ -127,8 +127,8 @@ class TorrentDataManager(LogObject):
             self.torrent.overhead += len(data)
             return
 
-        if piece.done:
-            Logger().write(LogVerbosity.All, 'Received block but piece was already done')
+        if piece.done or piece.cleared:
+            Logger().write(LogVerbosity.All, 'Received block but piece was already done or cleared')
             self.torrent.overhead += len(data)
             return
 

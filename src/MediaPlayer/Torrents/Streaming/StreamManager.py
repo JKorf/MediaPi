@@ -4,12 +4,13 @@ from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
 from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
 from MediaPlayer.Util.Enums import TorrentState, DownloadMode
 from Shared.Events import EventManager, EventType
+from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Util import write_size
 
 
-class StreamManager:
+class StreamManager(LogObject):
 
     @property
     def stream_speed(self):
@@ -34,6 +35,7 @@ class StreamManager:
         return self.buffer.get_consecutive_bytes_in_buffer(self.stream_position_piece_index)
 
     def __init__(self, torrent):
+        super().__init__(torrent, "stream manager")
         self.torrent = torrent
         self.stream_position_piece_index = 0
         self.listener = StreamListener("TorrentServer", 50009, torrent)
@@ -96,16 +98,17 @@ class StreamManager:
         if relative_start_byte < self.start_buffer_end_byte or relative_start_byte > self.end_buffer_start_byte:
             # If not follow up and in metadata range, just return data
             self.last_request_end = start_byte + length
+            if self.has_played:
+                self.seek(start_byte)
             return self.buffer.get_data_for_stream(start_byte, length)
 
         # This request is not the same as last, not following up, and not in metadata range
         # Seeking?
         request_piece = int(math.floor(start_byte / self.torrent.piece_length))
         self.last_request_end = start_byte + length
-        if request_piece not in self.torrent.download_manager.upped_prios:
-            Logger().write(LogVerbosity.Info, "Received stray request, going to search to " + str(request_piece))
-            self.seek(start_byte)
-            return self.buffer.get_data_for_stream(start_byte, length)
+        Logger().write(LogVerbosity.Info, "Received stray request, going to search to " + str(request_piece))
+        self.seek(start_byte)
+        return self.buffer.get_data_for_stream(start_byte, length)
 
     def seek(self, start_byte):
         old_stream_position = self.stream_position_piece_index
