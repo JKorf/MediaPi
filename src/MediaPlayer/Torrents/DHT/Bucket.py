@@ -1,4 +1,4 @@
-from MediaPlayer.TorrentStreaming.DHT.Node import NodeState
+from MediaPlayer.Torrents.DHT.Node import NodeState
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import current_time
 

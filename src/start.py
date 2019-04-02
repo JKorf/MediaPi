@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import eventlet
-from eventlet.green.subprocess import call
 from eventlet import hubs
+from eventlet.green.subprocess import call
+
 hubs.use_hub("selects")
 
 eventlet.monkey_patch()
@@ -9,7 +10,6 @@ eventlet.monkey_patch()
 import os
 os.chdir(os.path.dirname(__file__))
 
-from eventlet import debug
 from datetime import datetime
 import sys
 import time
@@ -20,7 +20,7 @@ from Webserver.APIController import APIController
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaManager import MediaManager
-from MediaPlayer.Streaming.StreamListener import StreamListener
+from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
 
 from Controllers.WiFiController import WiFiController
 from Controllers.LightManager import LightManager

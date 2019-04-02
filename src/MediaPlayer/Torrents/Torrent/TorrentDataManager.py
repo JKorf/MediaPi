@@ -1,12 +1,10 @@
+import hashlib
 import math
 
-import time
 from pympler import asizeof
 
-from MediaPlayer.TorrentStreaming.Data import Bitfield, Piece
-from MediaPlayer.TorrentStreaming.Torrent.TorrentPieceHashValidator import TorrentPieceHashValidator
+from MediaPlayer.Torrents.Data import Bitfield, Piece
 from MediaPlayer.Util.Enums import TorrentState
-from MediaPlayer.Util.MultiQueue import MultiQueue
 from Shared.Events import EventManager, EventType
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
@@ -26,13 +24,13 @@ class TorrentDataManager(LogObject):
         self.total_pieces = 0
         self.piece_length = 0
         self.bitfield = None
+        self.hashes = []
 
         self.persistent_pieces = []
         self.total_cleared = 0
 
         self.block_size = Settings.get_int("block_size")
 
-        self.piece_hash_validator = TorrentPieceHashValidator()
         self.broadcasted_hash_data = False
 
         self._event_id_stopped = EventManager.register_event(EventType.TorrentStopped, self.unregister)
@@ -64,7 +62,7 @@ class TorrentDataManager(LogObject):
         EventManager.deregister_event(self._event_id_stopped)
 
     def set_piece_info(self, piece_length, piece_hashes):
-        self.piece_hash_validator.update_hashes(piece_hashes)
+        self.update_hashes(piece_hashes)
         self.piece_length = piece_length
         self.total_pieces = int(math.ceil(self.torrent.total_size / piece_length))
         self.bitfield = Bitfield(self.torrent, self.total_pieces)
@@ -169,7 +167,7 @@ class TorrentDataManager(LogObject):
             return
 
         if piece.write_block(block, data):
-            if self.piece_hash_validator.validate_piece(piece):
+            if self.validate_piece(piece):
                 Logger().write(LogVerbosity.All, "Piece " + str(piece.index) + " has valid hash")
                 piece.validated = True
                 self.bitfield.update_piece(piece.index, True)
@@ -232,3 +230,16 @@ class TorrentDataManager(LogObject):
             self.broadcasted_hash_data = True
             self.torrent.media_file.first_64k = self.torrent.get_data_bytes_for_hash(0, 65536)
             self.torrent.media_file.last_64k = self.torrent.get_data_bytes_for_hash(self.torrent.media_file.length - 65536, 65536)
+
+    def update_hashes(self, hash_string):
+        for i in range(len(hash_string) // 20):
+            self.hashes.append(hash_string[i * 20: (i + 1) * 20])
+
+    def validate_piece(self, piece):
+        expected_hash = self.hashes[piece.index]
+        data = piece.get_data()
+        if not data:
+            return False
+
+        actual_hash = hashlib.sha1(data).digest()
+        return expected_hash[0] == actual_hash[0] and expected_hash[8] == actual_hash[8] and expected_hash[19] == actual_hash[19]

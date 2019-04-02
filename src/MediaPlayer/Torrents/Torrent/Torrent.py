@@ -3,18 +3,18 @@ import hashlib
 import math
 import urllib.parse
 import urllib.request
+
 from pympler import asizeof
 
-from MediaPlayer.Streaming.StreamManager import StreamManager
-from MediaPlayer.TorrentStreaming.Torrent.TorrentDataManager import TorrentDataManager
-from MediaPlayer.TorrentStreaming.Torrent.TorrentDownloadManager import TorrentDownloadManager
-from MediaPlayer.TorrentStreaming.Torrent.TorrentMessageProcessor import TorrentMessageProcessor
-from MediaPlayer.TorrentStreaming.Torrent.TorrentMetadataManager import TorrentMetadataManager
-from MediaPlayer.TorrentStreaming.Torrent.TorrentNetworkManager import TorrentNetworkManager
-from MediaPlayer.TorrentStreaming.Torrent.TorrentPeerProcessor import TorrentPeerProcessor
-from MediaPlayer.TorrentStreaming.Tracker.Tracker import TrackerManager
-
-from MediaPlayer.TorrentStreaming.Torrent.TorrentPeerManager import TorrentPeerManager
+from MediaPlayer.Torrents.Streaming.StreamManager import StreamManager
+from MediaPlayer.Torrents.Torrent.TorrentDataManager import TorrentDataManager
+from MediaPlayer.Torrents.Torrent.TorrentDownloadManager import TorrentDownloadManager
+from MediaPlayer.Torrents.Torrent.TorrentMessageProcessor import TorrentMessageProcessor
+from MediaPlayer.Torrents.Torrent.TorrentMetadataManager import TorrentMetadataManager
+from MediaPlayer.Torrents.Torrent.TorrentNetworkManager import TorrentNetworkManager
+from MediaPlayer.Torrents.Torrent.TorrentPeerManager import TorrentPeerManager
+from MediaPlayer.Torrents.Torrent.TorrentPeerProcessor import TorrentPeerProcessor
+from MediaPlayer.Torrents.Tracker.Tracker import TrackerManager
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 from MediaPlayer.Util.Enums import TorrentState

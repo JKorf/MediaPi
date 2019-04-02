@@ -8,12 +8,12 @@ import gc
 from pympler import asizeof
 
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
-from MediaPlayer.TorrentStreaming.Torrent.Torrent import Torrent
+from MediaPlayer.Torrents.Torrent.Torrent import Torrent
 
 from Database.Database import Database, History
 from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
-from MediaPlayer.TorrentStreaming.DHT.Engine import DHTEngine
+from MediaPlayer.Torrents.DHT.Engine import DHTEngine
 from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger, LogVerbosity

@@ -1,10 +1,10 @@
 import os
 import socket
 
-from MediaPlayer.TorrentStreaming.DHT.Bucket import Bucket
-from MediaPlayer.TorrentStreaming.DHT.Tasks import PingTask
+from MediaPlayer.Torrents.DHT.Bucket import Bucket
+from MediaPlayer.Torrents.DHT.Tasks import PingTask
 
-from MediaPlayer.TorrentStreaming.DHT.Node import Node
+from MediaPlayer.Torrents.DHT.Node import Node
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import current_time
 

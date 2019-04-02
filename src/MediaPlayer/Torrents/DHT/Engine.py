@@ -2,13 +2,13 @@ import os
 from random import Random
 from threading import Lock
 
-from MediaPlayer.TorrentStreaming.DHT.Messages import ResponseDHTMessage, ErrorDHTMessage
-from MediaPlayer.TorrentStreaming.DHT.Socket import Socket
-from MediaPlayer.TorrentStreaming.DHT.Table import Table
-from MediaPlayer.TorrentStreaming.DHT.Tasks import FindNodeTask, GetPeersTask, PingTask
-from MediaPlayer.TorrentStreaming.DHT.Util import TokenManager
+from MediaPlayer.Torrents.DHT.Messages import ResponseDHTMessage, ErrorDHTMessage
+from MediaPlayer.Torrents.DHT.Socket import Socket
+from MediaPlayer.Torrents.DHT.Table import Table
+from MediaPlayer.Torrents.DHT.Tasks import FindNodeTask, GetPeersTask, PingTask
+from MediaPlayer.Torrents.DHT.Util import TokenManager
 
-from MediaPlayer.TorrentStreaming.DHT.Node import Node, NodeState
+from MediaPlayer.Torrents.DHT.Node import Node, NodeState
 from MediaPlayer.Util.Enums import PeerSource
 from Shared.Engine import Engine
 from Shared.Events import EventManager, EventType

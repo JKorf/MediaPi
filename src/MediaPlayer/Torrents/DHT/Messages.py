@@ -1,6 +1,6 @@
 import abc
 
-from MediaPlayer.TorrentStreaming.DHT.Util import TransactionIdManager
+from MediaPlayer.Torrents.DHT.Util import TransactionIdManager
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 from Shared.Logger import Logger, LogVerbosity

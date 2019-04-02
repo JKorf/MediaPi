@@ -2,7 +2,7 @@ import random
 import time
 from urllib.parse import urlparse
 
-from MediaPlayer.TorrentStreaming.Tracker import TrackerMessages
+from MediaPlayer.Torrents.Tracker import TrackerMessages
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 from MediaPlayer.Util.Enums import PeerSource

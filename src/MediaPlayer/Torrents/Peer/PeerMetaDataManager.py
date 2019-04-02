@@ -1,5 +1,5 @@
-from MediaPlayer.TorrentStreaming.ExtensionManager import ProtocolExtensionManager
-from MediaPlayer.TorrentStreaming.Peer.PeerMessages import BitfieldMessage, InterestedMessage, HandshakeMessage, ExtensionHandshakeMessage, \
+from MediaPlayer.Torrents.ExtensionManager import ProtocolExtensionManager
+from MediaPlayer.Torrents.Peer.PeerMessages import BitfieldMessage, InterestedMessage, HandshakeMessage, ExtensionHandshakeMessage, \
     UninterestedMessage, MetadataMessage, HaveNoneMessage
 from MediaPlayer.Util.Enums import ExtensionName, MetadataMessageType, TorrentState, PeerInterestedState, \
     PeerSpeed, PeerState

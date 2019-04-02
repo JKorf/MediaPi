@@ -1,4 +1,4 @@
-from MediaPlayer.TorrentStreaming.ExtensionManager import ProtocolExtensionManager
+from MediaPlayer.Torrents.ExtensionManager import ProtocolExtensionManager
 from MediaPlayer.Util.Enums import ExtensionType
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity

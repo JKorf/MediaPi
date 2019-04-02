@@ -1,15 +1,12 @@
-from threading import Lock
+import math
 
-import time
-from pympler import asizeof
-
-from MediaPlayer.TorrentStreaming.Torrent.Prioritizer import StreamPrioritizer
 from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 from Shared.Events import EventManager, EventType
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
+from Shared.Settings import Settings
 from Shared.Timing import Timing
-from Shared.Util import current_time, write_size
+from Shared.Util import current_time
 
 
 class TorrentDownloadManager(LogObject):
@@ -18,7 +15,6 @@ class TorrentDownloadManager(LogObject):
         super().__init__(torrent, "download")
 
         self.torrent = torrent
-        self.prioritizer = StreamPrioritizer(self.torrent)
 
         self.init = False
         self.prio = False
@@ -29,6 +25,12 @@ class TorrentDownloadManager(LogObject):
         self.queue = []
         self.slow_peer_piece_offset = 0
         self._ticks = 0
+
+        self.start_piece = 0
+        self.end_piece = 0
+        self.stream_end_buffer_pieces = 0
+        self.stream_play_buffer_high_priority = 0
+        self.max_chunk_size = Settings.get_int("max_chunk_size")
 
         self.download_mode = DownloadMode.Full
         self.peers_per_piece = [
@@ -48,6 +50,12 @@ class TorrentDownloadManager(LogObject):
     def init_queue(self, old_state, new_state):
         if not self.init and new_state == TorrentState.Downloading:
             self.init = True
+
+            self.start_piece = self.torrent.media_file.start_piece(self.torrent.piece_length)
+            self.end_piece = self.torrent.media_file.end_piece(self.torrent.piece_length)
+            self.stream_end_buffer_pieces = self.torrent.data_manager.get_piece_by_offset(self.torrent.media_file.end_byte - Settings.get_int("stream_end_buffer_tolerance")).index
+            self.stream_play_buffer_high_priority = max(1500000 // self.torrent.piece_length, 2)  # TODO setting
+
             self.requeue(0)
 
     def update_priority(self, full=False):
@@ -73,7 +81,7 @@ class TorrentDownloadManager(LogObject):
         pieces_to_look_at = self.torrent.data_manager.get_pieces_by_index_range(start, start + amount)
 
         for piece in pieces_to_look_at:
-            piece.priority = self.prioritizer.prioritize_piece_index(piece.index)
+            piece.priority = self.prioritize_piece_index(piece.index)
         if full:
             self.queue = sorted(self.queue, key=lambda x: x.priority, reverse=True)
             first = "none"
@@ -295,6 +303,32 @@ class TorrentDownloadManager(LogObject):
         first = str(self.queue[0].index)
         self.queue_log = "length: " + str(length) + ", first: " + first
 
+    def prioritize_piece_index(self, piece_index):
+        if piece_index in self.torrent.download_manager.upped_prios:
+            return 100
+
+        if piece_index < self.start_piece or piece_index > self.end_piece:
+            return 0
+
+        dif = piece_index - self.torrent.stream_position
+
+        if dif < 0:
+            return 0
+
+        if piece_index <= self.start_piece + math.ceil(self.max_chunk_size / self.torrent.piece_length) or piece_index > self.end_piece - math.ceil(self.max_chunk_size / self.torrent.piece_length):
+            return 101  # Highest prio on start, to be able to return the first data, and end to be able to calc hash
+
+        if piece_index >= self.stream_end_buffer_pieces:
+            return 101 - ((self.end_piece - piece_index) / 100000)  # Second highest prio on start, to be able to return metadata at end of file
+
+        if self.torrent.end_game:
+            return 100
+
+        if dif <= self.stream_play_buffer_high_priority:
+            return 100
+
+        dif_bytes = dif*self.torrent.piece_length
+        return max(10, round(100 - (dif_bytes / 1000 / 1000), 4))
+
     def stop(self):
-        self.prioritizer.stop()
         self.torrent = None

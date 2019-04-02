@@ -1,4 +1,4 @@
-from MediaPlayer.TorrentStreaming.Peer.PeerMessages import RequestMessage, CancelMessage
+from MediaPlayer.Torrents.Peer.PeerMessages import RequestMessage, CancelMessage
 from MediaPlayer.Util.Enums import PeerInterestedState, PeerChokeState, PeerState, PeerSpeed
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity

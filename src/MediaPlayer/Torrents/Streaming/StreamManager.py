@@ -1,8 +1,7 @@
 import math
-from threading import Lock
 
 from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
-from MediaPlayer.Streaming.StreamListener import StreamListener
+from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
 from MediaPlayer.Util.Enums import TorrentState, DownloadMode
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger, LogVerbosity
