@@ -129,6 +129,10 @@ class StreamManager:
         self.torrent.data_manager.clear_pieces(old_index, new_index)
         self.buffer.update_position(self.stream_position_piece_index)
 
+        if self.torrent.state == TorrentState.Paused:
+            if self.consecutive_pieces_total_length < self.max_in_buffer - self.max_in_buffer_threshold:
+                self.torrent.unpause()
+
     def write_piece(self, piece):
         self.buffer.write_piece(piece)
 
@@ -136,9 +140,6 @@ class StreamManager:
             if self.torrent.state == TorrentState.Downloading:
                 Logger().write(LogVerbosity.Info, "Pausing torrent: left to download = " + write_size((self.end_piece - self.consecutive_pieces_last_index) * self.torrent.piece_length))
                 self.torrent.pause()
-        elif self.torrent.state == TorrentState.Paused:
-            if self.consecutive_pieces_total_length < self.max_in_buffer - self.max_in_buffer_threshold:
-                self.torrent.unpause()
 
         if self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer > Settings.get_int("important_only_start_threshold") and self.torrent.download_manager.download_mode == DownloadMode.Full:
             Logger().write(LogVerbosity.Info, "Entering ImportantOnly download mode: " + write_size(self.torrent.bytes_total_in_buffer) + " in buffer total, " + write_size(self.consecutive_pieces_total_length) + " consequtive")

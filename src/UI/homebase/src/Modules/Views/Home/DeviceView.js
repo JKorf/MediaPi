@@ -300,7 +300,7 @@ class DeviceView extends Component {
     if (this.state.torrentData.title)
     {
         var download_state = "";
-        if (this.state.torrentData.state === 3 && this.state.torrentData.max_download_speed != 0)
+        if (this.state.torrentData.state === 3 && this.state.torrentData.max_download_speed !== 0)
             download_state = " (max " + this.writeSpeed(this.state.torrentData.max_download_speed) + ")";
 
         if (this.state.torrentData.state === 2) download_state = " (metadata)";
