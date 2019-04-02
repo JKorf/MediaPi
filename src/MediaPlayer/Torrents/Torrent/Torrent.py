@@ -204,7 +204,6 @@ class Torrent(LogObject):
             self.__set_state(TorrentState.Downloading)
 
         self.engine.add_work_item("peer_manager_new", 1000, self.peer_manager.update_new_peers)
-        self.engine.add_work_item("peer_manager_bad_peers", 30000, self.peer_manager.update_bad_peers)
         self.engine.add_work_item("torrent_download_manager_prio", 5000, self.download_manager.update_priority)
         self.engine.add_work_item("check_download_speed", 1000, self.check_download_speed)
 

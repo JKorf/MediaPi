@@ -182,31 +182,18 @@ class TorrentPeerManager(LogObject):
         self.cant_connect_peers_log = len(self.cant_connect_peers)
         self.disconnected_peers_log = len(self.disconnected_peers)
 
-    def update_bad_peers(self):
+    def should_stop_peers(self):
         if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData:
-            return True
-
-        if self.torrent.network_manager.throttling:
-            return True  # currently throttling, don't stop slow peers because they might just be throttled
-
-        if len(self.connected_peers) < self.max_peers_connected ** 0.66:
-            return True  # Don't stop any peers if we have less than 66% of the max amount of peers
+            return False
 
         if current_time() - self.download_start < 20000:
-            return True  # Don't drop peers if we only recently started downloading again
+            return False
+
+        if self.torrent.network_manager.throttling:
+            return False
 
         if len(self.potential_peers) < self.max_peers_connected - len(self.connected_peers):
-            return True  # Don't stop peers if we don't have enough new
-
-        peers_to_check = [x for x in self.connected_peers if current_time() - x.connection_manager.connected_on > 30000]
-        peers_to_check = sorted(peers_to_check, key=lambda x: x.counter.total)
-        for peer in peers_to_check:
-            if peer.counter.value > 5000:
-                # If peer speed is more than 5kbps don't remove
-                break
-
-            Logger().write(LogVerbosity.Info, "Stopping slowest peer to find a potential faster one. Peer speed last 5 seconds was " + str(write_size(peer.counter.value)) + ", total: " + str(write_size(peer.counter.total)))
-            peer.stop_async()
+            return False
 
         return True
 

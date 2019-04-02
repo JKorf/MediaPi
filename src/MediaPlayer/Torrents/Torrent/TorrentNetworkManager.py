@@ -77,7 +77,6 @@ class TorrentNetworkManager(LogObject):
                     time = current_time()
                     received_messages += [(peer, x, time) for x in messages]
 
-            sleep(0)
             if len(received_messages) != 0:
                 self.torrent.message_processor.process_messages(received_messages)
 
@@ -88,6 +87,7 @@ class TorrentNetworkManager(LogObject):
                 peer.connection_manager.handle_write()
 
             Timing().stop_timing("IO")
+            sleep(0.005)
 
     def stop(self):
         self.running = False

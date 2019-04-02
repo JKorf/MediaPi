@@ -19,7 +19,7 @@ class PeerConnectionManager(LogObject):
 
     @property
     def ready_for_reading(self):
-        return len(self.buffer) > 0
+        return len(self.buffer) > self._next_message_length
 
     def __init__(self, peer, uri):
         super().__init__(peer, "connection")

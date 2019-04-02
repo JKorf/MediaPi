@@ -1,3 +1,5 @@
+import time
+
 from MediaPlayer.Torrents.Peer.PeerConnectionManager import PeerConnectionManager
 from MediaPlayer.Torrents.Peer.PeerDownloadManager import PeerDownloadManager
 from MediaPlayer.Torrents.Peer.PeerExtensionManager import PeerExtensionManager
@@ -5,11 +7,12 @@ from MediaPlayer.Torrents.Peer.PeerMetaDataManager import PeerMetaDataManager
 
 from MediaPlayer.Torrents.Data import Bitfield
 from MediaPlayer.Util.Counter import AverageCounter
-from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState, PeerSource, PeerState
+from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState, PeerSource, PeerState, TorrentState
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Stats import Stats
 from Shared.Threading import CustomThread
+from Shared.Util import current_time
 
 
 class Peer(LogObject):
@@ -58,6 +61,10 @@ class Peer(LogObject):
         self.max_blocks_log = 0
         self.speed_log = 0
 
+        self.peer_start_task = None
+        self.peer_state_task = None
+        self.peer_stop_task = None
+
         self.protocol_logger = ProtocolLogger(self)
 
     def adjust_round_trip_time(self, time):
@@ -75,7 +82,8 @@ class Peer(LogObject):
         self.extension_manager = PeerExtensionManager(self)
         self.counter = AverageCounter(self, 3)
 
-        CustomThread(self.connection_manager.start, "Start peer " + str(self.id)).start()
+        self.peer_start_task = CustomThread(self.connection_manager.start, "Start peer " + str(self.id))
+        self.peer_start_task.start()
 
         Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer started')
 
@@ -85,6 +93,35 @@ class Peer(LogObject):
 
     def on_connect(self):
         self.add_connected_peer_stat(self.source)
+        self.peer_state_task = CustomThread(self.check_peer_state, "Check peer state " + str(self.id))
+        self.peer_state_task.start()
+
+    def check_peer_state(self):
+        zero_speed_checks = 0
+        while self.state == PeerState.Started:
+            if current_time() - self.connection_manager.connected_on < 20000:
+                time.sleep(1)
+                continue
+
+            if not self.torrent.peer_manager.should_stop_peers():
+                time.sleep(1)
+                continue
+
+            if self.counter.total == 0:
+                Logger().write(LogVerbosity.Info, str(self.id) + " stopping not downloading peer")
+                self.stop_async()  # Stop since we haven't downloaded anything since connecting
+                return
+
+            if self.counter.value == 0:
+                zero_speed_checks += 1
+                if zero_speed_checks >= 10:
+                    Logger().write(LogVerbosity.Info,  str(self.id) + " stopping currently not downloading peer")
+                    self.stop_async()  # Stop since we haven't downloaded anything in the last 10 seconds
+                    return
+            else:
+                zero_speed_checks = 0
+
+            time.sleep(1)
 
     @staticmethod
     def add_connected_peer_stat(source):
@@ -102,7 +139,8 @@ class Peer(LogObject):
             return
 
         self.state = PeerState.Stopping
-        CustomThread(self.stop, "Peer stopper " + str(self.id), []).start()
+        self.peer_stop_task = CustomThread(self.stop, "Peer stopper " + str(self.id), [])
+        self.peer_stop_task.start()
 
     def stop(self):
         self.state = PeerState.Stopping
@@ -112,6 +150,9 @@ class Peer(LogObject):
         self.connection_manager.disconnect()
 
         self.state = PeerState.Stopped
+        self.peer_start_task.join()
+        if self.peer_state_task is not None:
+            self.peer_state_task.join()
         self.torrent = None
         self.finish()
         Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer stopped')
