@@ -377,7 +377,6 @@ class Torrent(LogObject):
         self.engine = None
         self.tracker_manager = None
         self.peer_manager = None
-        self.data_manager = None
         self.download_manager = None
         self.stream_manager = None
         self.metadata_manager = None

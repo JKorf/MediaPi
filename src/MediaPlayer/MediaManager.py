@@ -14,6 +14,7 @@ from Database.Database import Database, History
 from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
 from MediaPlayer.Subtitles.SubtitleProvider import SubtitleProvider
 from MediaPlayer.Torrents.DHT.Engine import DHTEngine
+from MediaPlayer.Util.Enums import TorrentState
 from MediaPlayer.Util.Util import get_file_info
 from Shared.Events import EventType, EventManager
 from Shared.Logger import Logger, LogVerbosity
@@ -289,7 +290,7 @@ class MediaManager(metaclass=Singleton):
 
     def observe_torrent(self):
         while True:
-            if self.torrent is None:
+            if self.torrent is None or self.torrent.state == TorrentState.Stopping:
                 self.torrent_data.reset()
                 time.sleep(0.5)
                 continue
