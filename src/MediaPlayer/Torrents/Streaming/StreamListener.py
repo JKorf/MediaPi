@@ -297,6 +297,9 @@ class StreamListener(LogObject):
 
     def stop(self):
         self.running = False
+        for writer in self.sockets_writing_data:
+            writer.stop = True
+
         self.torrent = None
         if self.server is not None:
             self.server.close()

@@ -369,6 +369,7 @@ class Torrent(LogObject):
         self.download_manager.stop()
         self.network_manager.stop()
         self.metadata_manager.stop()
+        self.stream_manager.stop()
         Logger().write(LogVerbosity.Debug, 'Torrent managers stopped')
 
         for file in self.files:
