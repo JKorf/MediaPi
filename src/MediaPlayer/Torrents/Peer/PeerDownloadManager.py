@@ -92,7 +92,8 @@ class PeerDownloadManager(LogObject):
         self.peer.adjust_round_trip_time(round_trip_time)
         self.downloading.remove(downloading_block)
         self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
-        downloading_block[0].remove_downloader(self.peer)
+        if self.peer in downloading_block[0].peers_downloading:
+            downloading_block[0].remove_downloader(self.peer)
 
     def update_timeout(self):
         if self.peer.state != PeerState.Started:
@@ -105,7 +106,7 @@ class PeerDownloadManager(LogObject):
 
         for block_request in timed_out_blocks:
             block = block_request[0]
-            self.downloading.remove(block_request)
+            #self.downloading.remove(block_request)
             self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
 
             # cancel_msg = CancelMessage(block.piece_index, block.start_byte_in_piece, block.length)
