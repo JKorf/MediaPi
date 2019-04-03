@@ -243,5 +243,3 @@ class TorrentPeerManager(LogObject):
         self.connected_peers_log = 0
         self.cant_connect_peers_log = 0
         self.disconnected_peers_log = 0
-
-        self.torrent = None
