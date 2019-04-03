@@ -108,10 +108,10 @@ class PeerDownloadManager(LogObject):
             self.downloading.remove(block_request)
             self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
 
-            cancel_msg = CancelMessage(block.piece_index, block.start_byte_in_piece, block.length)
-            self.peer.protocol_logger.update("Sending cancel (timeout)")
-            Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending cancel for piece ' + str(block.piece_index) + ", block " + str(cancel_msg.offset // 16384))
-            self.peer.connection_manager.send(cancel_msg.to_bytes())
+            # cancel_msg = CancelMessage(block.piece_index, block.start_byte_in_piece, block.length)
+            # self.peer.protocol_logger.update("Sending cancel (timeout)")
+            # Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending cancel for piece ' + str(block.piece_index) + ", block " + str(cancel_msg.offset // 16384))
+            # self.peer.connection_manager.send(cancel_msg.to_bytes())
 
             block.remove_downloader(self.peer)
             canceled += 1
@@ -132,7 +132,8 @@ class PeerDownloadManager(LogObject):
         if self.peer.bitfield is None or self.peer.bitfield.has_none:
             return False
 
-        return self.peer.torrent.data_manager.bitfield.interested_in(self.peer.bitfield)
+        interesting_pieces = self.peer.torrent.data_manager.get_interesting_pieces()
+        return self.peer.torrent.data_manager.bitfield.interested_in(self.peer.bitfield, interesting_pieces)
 
     def request_rejected(self, piece_index, offset, length):
         peer_download = [x for x in self.downloading if x[0].piece_index == piece_index and x[0].start_byte_in_piece == offset]

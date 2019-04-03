@@ -92,10 +92,12 @@ class TorrentPeerManager(LogObject):
             Stats.add('peers_source_exchange', 1)
 
     def piece_done(self, piece):
-        Logger().write(LogVerbosity.Debug, "Sending have messages for piece " + str(piece.index))
-        for peer in list(self.connected_peers):
-            peer.protocol_logger.update("Sending Have", True)
-            peer.connection_manager.send(HaveMessage(piece.index).to_bytes())
+        # Don't actually send have messages since we don't want clients to download
+        pass
+        # Logger().write(LogVerbosity.Debug, "Sending have messages for piece " + str(piece.index))
+        # for peer in [peer for peer in self.connected_peers if peer.metadata_manager.bitfield_done]:
+        #     peer.protocol_logger.update("Sending Have", True)
+        #     peer.connection_manager.send(HaveMessage(piece.index).to_bytes())
 
     def update_new_peers(self):
         if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData and self.torrent.state != TorrentState.WaitingUserFileSelection:

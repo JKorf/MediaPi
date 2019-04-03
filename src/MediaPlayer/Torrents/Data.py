@@ -54,21 +54,18 @@ class Bitfield(LogObject):
         self.pieces_has_log = pieces_has
 
     def get_bitfield(self):
-        result = bytearray(math.ceil(self.size / 8))
-        for index in range(self.size):
-            for byte_index in range(8):
-                mask = 1 << byte_index
-                current = (index * 8) + byte_index
-                if current >= self.size:
-                    continue
-
-                if self.has_piece(current):
-                    result[index] |= mask
+        result = bytearray()
+        for index in range(int(math.ceil(self.size / 8))):
+            byte_start = index * 8
+            byte_end = min((index + 1) * 8, self.size)
+            p = self.field[byte_start: byte_end]
+            int_v = sum(v << i for i, v in enumerate(p[::-1]))
+            result += (int_v).to_bytes(1, 'big')
 
         return result
 
-    def interested_in(self, bitfield):
-        for index in range(self.size):
+    def interested_in(self, bitfield, interesting_pieces):
+        for index in interesting_pieces:
             if not self.field[index] and bitfield.field[index]:
                 return True
         return False

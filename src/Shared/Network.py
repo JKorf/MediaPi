@@ -39,7 +39,7 @@ class TcpClient:
     def receive_available(self, max_bytes):
         try:
             return bytes(self.socket.recv(max_bytes))
-        except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError):
+        except (socket.timeout, ConnectionRefusedError, ConnectionAbortedError, ConnectionResetError, OSError, EOFError):
             return None
 
     def receive(self, expected):

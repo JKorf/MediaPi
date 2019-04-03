@@ -179,10 +179,8 @@ class TorrentDataManager(LogObject):
                 piece.reset()
                 self.torrent.download_manager.redownload_piece(piece)
 
-    def is_interested_in(self, bitfield):
-        if self.bitfield is None or bitfield is None:
-            return False
-        return self.bitfield.interested_in(bitfield)
+    def get_interesting_pieces(self):
+        return [x.index for x in self._pieces if x.index > self.torrent.stream_position and not x.done]
 
     def get_data_bytes_for_hash(self, start_byte, length):
         current_read = 0

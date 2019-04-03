@@ -80,7 +80,7 @@ class TorrentNetworkManager(LogObject):
             if len(received_messages) != 0:
                 self.torrent.message_processor.process_messages(received_messages)
 
-            for peer in [peer for peer, msg, time in received_messages if peer.state == PeerState.Started]:
+            for peer in self.torrent.peer_manager.connected_peers:
                 peer.download_manager.update_requests()
 
             output_peers = self.torrent.peer_manager.get_peers_for_writing()
