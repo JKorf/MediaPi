@@ -8,10 +8,10 @@ from MediaPlayer.Util.Network import read_ushort
 
 
 def get_file_info(filename):
-    f = open(filename, "rb")
-    first = f.read(65536)
-    f.seek(-65536, os.SEEK_END)
-    last = f.read(65536)
+    with open(filename, "rb") as f:
+        first = f.read(65536)
+        f.seek(-65536, os.SEEK_END)
+        last = f.read(65536)
     return os.path.getsize(filename), first, last
 
 

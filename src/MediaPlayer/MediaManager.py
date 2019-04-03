@@ -255,14 +255,16 @@ class MediaManager(metaclass=Singleton):
         media_type = self.media_data.type
         if media_type == "File":
             if Settings.get_bool("slave"):
-                #  SlaveClientController.request_master_cb("get_subtitles", 5, url, current_time())
-                #  TODO slave request subtitles
-                pass
+                SlaveClientController.request_master_cb("get_file_info", self.process_file_info_for_subtitles, 5, self.media_data.url)
             else:
                 size, first_64k, last_64k = get_file_info(self.media_data.url)
                 EventManager.throw_event(EventType.SearchSubtitles, [self.media_data.title, size, VLCPlayer().get_length(), first_64k, last_64k])
         elif media_type == "Show" or media_type == "Movie" or media_type == "Torrent":
             EventManager.throw_event(EventType.SearchSubtitles, [os.path.basename(self.torrent.media_file.name), self.torrent.media_file.length, VLCPlayer().get_length(), self.torrent.media_file.first_64k, self.torrent.media_file.last_64k])
+
+    def process_file_info_for_subtitles(self, size, first_64k, last_64k):
+        Logger().write(LogVerbosity.Debug, "Received file info from master, requesting subs")
+        EventManager.throw_event(EventType.SearchSubtitles, [self.media_data.title, size, VLCPlayer().get_length(), first_64k.encode('utf8'), last_64k.encode('utf8')])
 
     def update_tracking(self, state):
             if self.media_data.type == "Radio":

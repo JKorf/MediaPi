@@ -14,7 +14,6 @@
     Websockets:
         Slave authentication
 
-    Fix slave requesting subtitles
     Fix slave updating
     Fix seeking back when done
     Remember peers that are known to be good to download from when pausing?

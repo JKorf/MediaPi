@@ -1,8 +1,10 @@
+import base64
 import json
 
 from flask import request
 
 from Database.Database import Database
+from MediaPlayer.Util.Util import get_file_info
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import current_time, to_JSON
 from Webserver.APIController import socketio, WebsocketClient, APIController, SlaveClient
@@ -46,7 +48,7 @@ class SlaveWebsocketController:
             Logger().write(LogVerbosity.Debug, "Slave update for not initialized slave")
             return
 
-        Logger().write(LogVerbosity.Debug, "Slave update " + topic + ": " + data)
+        Logger().write(LogVerbosity.All, "Slave update " + topic + ": " + data)
 
         slave_topic = str(slave.id) + "." + topic
         UIWebsocketController.broadcast(slave_topic, data)
@@ -84,6 +86,12 @@ class SlaveWebsocketController:
             history_id = Database().add_watched_url(*data)
             Logger().write(LogVerbosity.Debug, "Slave response: " + str(history_id))
             socketio.emit("response", (request_id, history_id), namespace="/Slave", room=request.sid)
+        elif topic == "get_file_info":
+            size, first_64k, last_64k = get_file_info(*data)
+            Logger().write(LogVerbosity.Debug, "Slave response: " + str(size))
+            encoded_first = base64.encodebytes(first_64k).decode('utf8')
+            encoded_last = base64.encodebytes(last_64k).decode('utf8')
+            socketio.emit("response", (request_id, size, encoded_first, encoded_last), namespace="/Slave", room=request.sid)
 
     @staticmethod
     @socketio.on('ui_request', namespace="/Slave")
