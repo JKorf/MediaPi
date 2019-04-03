@@ -4,6 +4,7 @@ from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON
+from Updater import Updater
 from Webserver.APIController import APIController, Request
 
 
@@ -105,9 +106,19 @@ class SlaveClientController:
             from MediaPlayer.MediaManager import MediaManager
             method = getattr(MediaManager(), command)
 
+        if topic == "updater":
+            from Updater import Updater
+            method = getattr(Updater(), command)
+
         if method is not None:
             cb_thread = CustomThread(method, "Master command", args)
             cb_thread.start()
+
+    @staticmethod
+    def on_request(request_id, topic, data):
+        Logger().write(LogVerbosity.Debug, "Master request: " + topic)
+        if topic == "get_last_version":
+            SlaveClientController.slave_ns.emit("response", request_id, Updater().check_version(), Updater().last_version)
 
     @staticmethod
     def _send_request(topic, data):
@@ -151,8 +162,11 @@ class Handler(BaseNamespace):
     def on_response(self, request_id, *args):
         SlaveClientController.on_response(request_id, args)
 
-    def on_command(self, *args):
-        SlaveClientController.on_command(*args)
+    def on_command(self, topic, command, *args):
+        SlaveClientController.on_command(topic, command, args)
+
+    def on_request(self, request_id, topic, *args):
+        SlaveClientController.on_request(request_id, topic, args)
 
     def on_disconnect(self, *args):
         Logger().write(LogVerbosity.Info, "Disconnected from master")

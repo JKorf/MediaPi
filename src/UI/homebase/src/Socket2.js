@@ -33,7 +33,6 @@ export default class WS {
 
         this.socket.on('request', (id, topic, data) => {
             console.log("Received request: " + topic + ", data: " + data);
-            data = JSON.parse(data);
             var handler = this.request_handlers.find(el => el.name === topic);
             if (!handler){
                 console.log("No handler for " + topic + " found");

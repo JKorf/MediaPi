@@ -9,61 +9,66 @@ from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import current_time, to_JSON
 from Webserver.APIController import socketio, WebsocketClient, APIController, SlaveClient
 from Webserver.Controllers.MediaPlayer.HDController import HDController
+from Webserver.Controllers.Websocket2.BaseWebsocketController import BaseWebsocketController
 from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
 
 
-class SlaveWebsocketController:
-    @staticmethod
-    def init():
-        pass
+class SlaveWebsocketController(BaseWebsocketController):
 
     @staticmethod
-    @socketio.on('connect', namespace="/Slave")
-    def connected():
+    def on_connect():
         Logger().write(LogVerbosity.Info, "Slave client connected")
 
     @staticmethod
-    @socketio.on('disconnect', namespace="/Slave")
-    def disconnected():
+    def on_disconnect():
         slave = APIController.slaves.get_slave_by_sid(request.sid)
         if slave is None:
             return
-        APIController.slaves.remove_slave(slave)
+        slave.connected = False
+        APIController.slaves.changed()
         Logger().write(LogVerbosity.Info, "Slave client disconnected")
 
     @staticmethod
-    @socketio.on('init', namespace="/Slave")
-    def init_client(client_name):
+    def on_init(client_name):
         Logger().write(LogVerbosity.Info, "Init slave: " + client_name)
+        slave = APIController.slaves.get_slave(client_name)
+        if slave is not None:
+            if slave.connected:
+                Logger().write(LogVerbosity.Info, "Slave " + str(client_name) + " connected twice?")
+                return False
+            else:
+                Logger().write(LogVerbosity.Info, "Slave " + str(client_name) + " reconnected")
+                slave.reconnect(request.sid)
+                APIController.slaves.changed()
+                return True
+
         client = WebsocketClient(request.sid, current_time())
         client.authenticated = True  # Need some authentication here
         APIController.slaves.add_slave(SlaveClient(APIController.next_id(), client_name, client))
         return client.authenticated
 
     @staticmethod
-    @socketio.on('update', namespace="/Slave")
-    def slave_update(topic, data):
+    def on_update(topic, data):
         slave = APIController.slaves.get_slave_by_sid(request.sid)
         if slave is None:
             Logger().write(LogVerbosity.Debug, "Slave update for not initialized slave")
             return
 
         Logger().write(LogVerbosity.All, "Slave update " + topic + ": " + data)
+        data = json.loads(data)
 
         slave_topic = str(slave.id) + "." + topic
         UIWebsocketController.broadcast(slave_topic, data)
 
     @staticmethod
-    @socketio.on('notify', namespace="/Slave")
-    def slave_request(topic, data):
+    def on_notify(topic, data):
         data = json.loads(data)
         Logger().write(LogVerbosity.Debug, "Slave notification " + topic + ": " + str(data))
         if topic == "update_watching_item":
             Database().update_watching_item(*data)
 
     @staticmethod
-    @socketio.on('request', namespace="/Slave")
-    def slave_request(request_id, topic, data):
+    def on_request(request_id, topic, data):
         Logger().write(LogVerbosity.Debug, "Slave request " + topic + ": " + data)
         data = json.loads(data)
         if topic == "get_directory":
@@ -94,18 +99,13 @@ class SlaveWebsocketController:
             socketio.emit("response", (request_id, size, encoded_first, encoded_last), namespace="/Slave", room=request.sid)
 
     @staticmethod
-    @socketio.on('ui_request', namespace="/Slave")
-    def slave_ui_request(request_id, topic, data, timeout):
+    def on_ui_request(request_id, topic, data, timeout):
         Logger().write(LogVerbosity.Debug, "Slave ui request " + topic + ": " + data)
         slave = APIController.slaves.get_slave_by_sid(request.sid)
-        UIWebsocketController.request_cb(topic, lambda *x: SlaveWebsocketController.slave_ui_request_callback(request_id, slave, x), timeout, json.loads(data))
+        APIController().ui_request(topic, lambda *x: SlaveWebsocketController.slave_ui_request_callback(request_id, slave, x), timeout, json.loads(data))
 
     @staticmethod
     def slave_ui_request_callback(request_id, slave, response):
         Logger().write(LogVerbosity.Debug, "Slave ui request response id " + str(request_id) + ": " + str(response))
         socketio.emit("response", (request_id, *response), namespace="/Slave", room=slave._client.sid)
 
-    @staticmethod
-    def slave_command(slave_id, topic, command, args):
-        slave = APIController.slaves.get_slave_by_id(slave_id)
-        socketio.emit("command", (topic, command, args), namespace="/Slave", room=slave._client.sid)

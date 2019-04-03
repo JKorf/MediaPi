@@ -14,8 +14,7 @@ from Shared.Logger import Logger, LogVerbosity
 from Shared.Observable import Observable
 from Shared.Settings import Settings, SecureSettings
 from Shared.Threading import CustomThread
-from Shared.Util import Singleton
-
+from Shared.Util import Singleton, to_JSON, current_time
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -31,6 +30,8 @@ class APIController(metaclass=Singleton):
 
     def __init__(self):
         self.slave = Settings.get_bool("slave")
+        self.ui_websocket_controller = None
+        self.slave_websocket_controller = None
 
     def start(self):
         APIController.slaves = SlaveCollection()
@@ -62,8 +63,13 @@ class APIController(metaclass=Singleton):
         from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
         from Webserver.Controllers.Websocket2.SlaveWebsocketController import SlaveWebsocketController
 
+        self.ui_websocket_controller = UIWebsocketController("/UI")
+        self.slave_websocket_controller = SlaveWebsocketController("/Slave")
         UIWebsocketController.init()
-        SlaveWebsocketController.init()
+
+        socketio.on_namespace(self.ui_websocket_controller)
+        socketio.on_namespace(self.slave_websocket_controller)
+
         APIController.slaves.add_slave(SlaveClient(1, Settings.get_string("name"), None))
 
         socketio.run(app, host='0.0.0.0', port=int(Settings.get_string("api_port")), log_output=True)
@@ -119,13 +125,20 @@ class APIController(metaclass=Singleton):
         return APIController.last_id
 
     def ui_request(self, topic, callback, timeout, args):
-        from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
         from Webserver.Controllers.Websocket2.SlaveClientController import SlaveClientController
 
         if self.slave:
-            SlaveClientController.request_ui_cb(topic, callback, timeout, args)
+            SlaveClientController.request_ui_cb(topic, callback, timeout, None, args)
         else:
-            UIWebsocketController.request_cb(topic, callback, timeout, args)
+            self.ui_websocket_controller.request_cb(topic, callback, timeout, None, args)
+
+    def slave_command(self, instance, topic, command, *args):
+        slave = APIController.slaves.get_slave_by_id(instance)
+        self.slave_websocket_controller.send_no_wait(topic, command, slave._client.sid, args)
+
+    def slave_request(self, instance, topic, timeout, *args):
+        slave = APIController.slaves.get_slave_by_id(instance)
+        return self.slave_websocket_controller.request_wait(topic, timeout, slave._client.sid, args)
 
 
 class SlaveClient:
@@ -135,6 +148,7 @@ class SlaveClient:
         self.name = name
         self._client = client
         self.last_seen = 0
+        self.connected = True
         self._data_registrations = dict()
         self._data_registrations["player"] = None
         self._data_registrations["media"] = None
@@ -149,6 +163,11 @@ class SlaveClient:
     def get_data(self, name):
         return self._data_registrations[name].data
 
+    def reconnect(self, sid):
+        self.connected = True
+        self._client.sid = sid
+        self._client.connect_time = current_time()
+
 
 class SlaveCollection(Observable):
 
@@ -158,10 +177,6 @@ class SlaveCollection(Observable):
 
     def add_slave(self, slave):
         self.data.append(slave)
-        self.changed()
-
-    def remove_slave(self, slave):
-        self.data.remove(slave)
         self.changed()
 
     def get_slave(self, name):

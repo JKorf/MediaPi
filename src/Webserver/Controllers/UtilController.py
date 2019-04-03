@@ -2,13 +2,10 @@ import urllib.parse
 
 from flask import request
 
-from Shared.Events import EventManager
-from Shared.Events import EventType
 from Shared.Logger import Logger, LogVerbosity
-from Shared.Threading import ThreadManager
-from Shared.Util import to_JSON, current_time, write_size
+from Shared.Util import to_JSON, write_size
 from Updater import Updater
-from Webserver.APIController import app
+from Webserver.APIController import app, APIController
 
 
 class UtilController:
@@ -16,7 +13,14 @@ class UtilController:
     @staticmethod
     @app.route('/util/update', methods=['GET'])
     def get_update():
-        return to_JSON(UpdateAvailable(Updater().check_version(), Updater().last_version))
+        instance = int(request.args.get("instance"))
+        if instance == 1:
+            return to_JSON(UpdateAvailable(Updater().check_version(), Updater().last_version))
+        else:
+            result = APIController().slave_request(instance, "get_last_version", 10)
+            if result is None:
+                return to_JSON(UpdateAvailable(False, ""))
+            return to_JSON(UpdateAvailable(result[0], result[1]))
 
     @staticmethod
     @app.route('/util/update', methods=['POST'])
@@ -25,7 +29,7 @@ class UtilController:
         if instance == 1:
             Updater().update()
         else:
-            pass  # MasterWebsocketController().send_to_slave(instance, "updater", "update", [])
+            APIController().slave_command(instance, "updater", "update")
         return "OK"
 
     @staticmethod

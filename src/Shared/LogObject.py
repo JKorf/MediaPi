@@ -7,15 +7,15 @@ from Shared.Settings import Settings
 class LogObject:
 
     def __init__(self, parent, name):
-        self.logging = Settings.get_bool("state_logging")
-        if self.logging:
+        self._logging = Settings.get_bool("state_logging")
+        if self._logging:
             parent_id = 0
             if parent is not None:
                 parent_id = parent.log_tracker.id
             self.log_tracker = LogItemTracker(parent_id, name)
 
     def __setattr__(self, name, value):
-        if hasattr(self, "logging") and self.logging:
+        if hasattr(self, "_logging") and self._logging:
             self.process_update(name, value)
         super().__setattr__(name, value)
 
@@ -38,5 +38,5 @@ class LogObject:
         self.log_tracker.update(name, value)
 
     def finish(self):
-        if self.logging:
+        if self._logging:
             self.log_tracker.finish()

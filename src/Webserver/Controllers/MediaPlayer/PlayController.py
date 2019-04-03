@@ -6,10 +6,9 @@ from flask import request
 
 from MediaPlayer.MediaManager import MediaManager
 from Shared.Logger import Logger, LogVerbosity
-from Webserver.APIController import app
+from Webserver.APIController import app, APIController
 from Webserver.Controllers.MediaPlayer.RadioController import RadioController
 from Webserver.Controllers.MediaPlayer.TorrentProvider import Torrent
-from Webserver.Controllers.Websocket2.SlaveWebsocketController import SlaveWebsocketController
 
 
 class PlayController:
@@ -28,7 +27,7 @@ class PlayController:
         if instance == 1:
             MediaManager().start_movie(movie_id, title, url, img, position)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "start_movie", [movie_id, title, url, img, position])
+            APIController().slave_command(instance, "media", "start_movie", movie_id, title, url, img, position)
         return "OK"
 
     @staticmethod
@@ -47,7 +46,7 @@ class PlayController:
         if instance == 1:
             MediaManager().start_episode(movie_id, season, episode, title, url, img, position)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "start_episode", [movie_id, season, episode, title, url, img, position])
+            APIController().slave_command(instance, "media", "start_episode", movie_id, season, episode, title, url, img, position)
         return "OK"
 
     @staticmethod
@@ -61,7 +60,7 @@ class PlayController:
         if instance == 1:
             MediaManager().start_torrent(title, Torrent.get_magnet_uri(url))
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "start_torrent", [title, Torrent.get_magnet_uri(url)])
+            APIController().slave_command(instance, "media", "start_torrent", title, Torrent.get_magnet_uri(url))
         return "OK"
 
     @staticmethod
@@ -75,7 +74,7 @@ class PlayController:
         if instance == 1:
             MediaManager().start_radio(radio.title, radio.url)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "start_radio", [radio.title, radio.url])
+            APIController().slave_command(instance, "media", "start_radio", radio.title, radio.url)
         return "OK"
 
     @staticmethod
@@ -92,7 +91,7 @@ class PlayController:
         if instance == 1:
             MediaManager().start_file(file, position)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "start_file", [file, position])
+            APIController().slave_command(instance, "media", "start_file", file, position)
         return "OK"
 
     @staticmethod
@@ -106,7 +105,7 @@ class PlayController:
         if instance == 1:
             MediaManager().start_url(title, url)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "start_url", [title, url])
+            APIController().slave_command(instance, "media", "start_url", title, url)
         return "OK"
 
     @staticmethod
@@ -119,7 +118,7 @@ class PlayController:
         if instance == 1:
             MediaManager().change_subtitle(track)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "change_subtitle", [track])
+            APIController().slave_command(instance, "media", "change_subtitle", track)
         return "OK"
 
     @staticmethod
@@ -132,7 +131,7 @@ class PlayController:
         if instance == 1:
             MediaManager().change_audio(track)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "change_audio", [track])
+            APIController().slave_command(instance, "media", "change_audio", track)
         return "OK"
 
     @staticmethod
@@ -144,7 +143,7 @@ class PlayController:
         if instance == 1:
             MediaManager().stop_play()
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "stop_play", [])
+            APIController().slave_command(instance, "media", "stop_play")
         return "OK"
 
     @staticmethod
@@ -156,7 +155,7 @@ class PlayController:
         if instance == 1:
             MediaManager().pause_resume()
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "pause_resume", [])
+            APIController().slave_command(instance, "media", "pause_resume")
         return "OK"
 
     @staticmethod
@@ -169,7 +168,7 @@ class PlayController:
         if instance == 1:
             MediaManager().change_volume(volume)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "change_volume", [volume])
+            APIController().slave_command(instance, "media", "change_volume", volume)
         return "OK"
 
     @staticmethod
@@ -182,7 +181,7 @@ class PlayController:
         if instance == 1:
             MediaManager().change_subtitle_delay(delay)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "change_subtitle_delay", [delay])
+            APIController().slave_command(instance, "media", "change_subtitle_delay", delay)
         return "OK"
 
     @staticmethod
@@ -195,5 +194,5 @@ class PlayController:
         if instance == 1:
             MediaManager().seek(position)
         else:
-            SlaveWebsocketController.slave_command(instance, "media", "seek", [position])
+            APIController().slave_command(instance, "media", "seek", position)
         return "OK"
