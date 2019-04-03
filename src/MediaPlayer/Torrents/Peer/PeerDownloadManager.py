@@ -114,7 +114,8 @@ class PeerDownloadManager(LogObject):
             # Logger().write(LogVerbosity.All, str(self.peer.id) + ' Sending cancel for piece ' + str(block.piece_index) + ", block " + str(cancel_msg.offset // 16384))
             # self.peer.connection_manager.send(cancel_msg.to_bytes())
 
-            block.remove_downloader(self.peer)
+            if self.peer in block.peers_downloading:
+                block.remove_downloader(self.peer)
             canceled += 1
 
         if canceled:

@@ -180,7 +180,7 @@ class TorrentDataManager(LogObject):
                 self.torrent.download_manager.redownload_piece(piece)
 
     def get_interesting_pieces(self):
-        return [x.index for x in self._pieces if x.index > self.torrent.stream_position and not x.done]
+        return [x.index for x in self._pieces.values() if x.index > self.torrent.stream_position and not x.done]
 
     def get_data_bytes_for_hash(self, start_byte, length):
         current_read = 0
