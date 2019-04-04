@@ -18,6 +18,10 @@
     Fix seeking back when done
     Remember peers that are known to be good to download from when pausing?
 
+    TV UI
+        https://forum.videolan.org/viewtopic.php?t=136443
+        --no-xlib ?
+
     Add a rule based task system for automation
         Do (x) when (x) == True
         ie: Turn on lights at 18:00 and people are home

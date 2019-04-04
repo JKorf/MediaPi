@@ -6,7 +6,7 @@ from enum import Enum
 import sys
 
 from MediaPlayer.Player import vlc
-from MediaPlayer.Player.vlc import libvlc_get_version, EventType as VLCEventType, MediaSlaveType, MediaSlave, Media
+from MediaPlayer.Player.vlc import libvlc_get_version, Media
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Observable import Observable
@@ -25,8 +25,8 @@ class VLCPlayer(metaclass=Singleton):
 
         self.media = None
         self.__player = self.__vlc_instance.media_player_new()
-        if sys.platform == "linux" or sys.platform == "linux2":
-            self.__player.set_fullscreen(True)
+        # if sys.platform == "linux" or sys.platform == "linux2":
+        #     self.__player.set_fullscreen(True)
 
         self.__event_manager = self.__player.event_manager()
 
@@ -84,6 +84,12 @@ class VLCPlayer(metaclass=Singleton):
             params.append("start-time=" + str(time // 1000))
 
         return params
+
+    def set_window(self, handle):
+        if sys.platform == "linux" or sys.platform == "linux2":
+            self.__player.set_xwindow(handle)
+        else:
+            self.__player.set_hwnd(handle)
 
     def pause_resume(self):
         Logger().write(LogVerbosity.All, "Player pause resume")
