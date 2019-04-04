@@ -36,13 +36,20 @@ class BaseWebsocketController(Namespace):
     def _send_request(self, topic, data, room):
         Logger().write(LogVerbosity.Debug, "Sending request: " + topic + ", data: " + str(data))
         request_id = APIController().next_id()
-        request_message = Request(request_id, topic, data, self._complete_request)
+        request_message = Request(request_id, topic, data, room, self._complete_request)
         self.requests.append(request_message)
         self.emit("request", (request_id, topic, data), room=room)
         return request_message
 
+    def timeout_request(self, request_message):
+        self.emit("timeout", request_message.request_id, room=request_message.room)
+
     def wait_for_request_response(self, request_message, timeout, callback=None):
-        response = request_message.wait(timeout)
+        responded, response = request_message.wait(timeout)
+        if not responded:
+            self.timeout_request(request_message)
+            response = [None]
+
         if callback is not None:
             callback(*response)
         return response

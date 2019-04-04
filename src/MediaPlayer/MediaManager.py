@@ -190,7 +190,7 @@ class MediaManager(metaclass=Singleton):
                 file.played_for = seen.played_for
                 file.play_length = seen.length
 
-        APIController().ui_request("SelectMediaFile", self.set_media_file, 1000 * 60 * 30, files)
+        APIController().ui_request("SelectMediaFile", self.set_media_file, 60 * 30, files)
 
     def set_media_file(self, file, position):
         if not file:

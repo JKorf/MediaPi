@@ -37,7 +37,7 @@ class NextEpisodeManager(metaclass=Singleton):
     def notify_next_episode(self, callback):
         if self.next_type is not None:
             Logger().write(LogVerbosity.Info, "Can continue with next episode: " + self.next_title)
-            APIController().ui_request("SelectNextEpisode", callback, 1000 * 60, self.next_title)
+            APIController().ui_request("SelectNextEpisode", callback, 60 * 60, self.next_title)
 
     def check_next_episode(self, media_data, torrent):
         if media_data.type == "Radio" or media_data.type == "YouTube":

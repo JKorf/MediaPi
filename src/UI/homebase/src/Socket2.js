@@ -41,6 +41,12 @@ export default class WS {
 
             handler.handler(id, ...data);
         });
+
+        this.socket.on('timeout', (id) => {
+            console.log("Received timeout: " + id);
+
+            // TODO hide the popup again
+        });
     }
 
     static processAuthResult(data){

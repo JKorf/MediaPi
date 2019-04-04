@@ -208,18 +208,20 @@ class WebsocketClient:
 
 class Request:
 
-    def __init__(self, request_id, topic, data, on_complete):
+    def __init__(self, request_id, topic, data, room, on_complete):
         self.evnt = Event()
         self.request_id = request_id
         self.topic = topic
         self.data = data
+        self.room = room
         self.response = None
         self.on_complete = on_complete
 
     def wait(self, timeout):
-        if not self.evnt.wait(timeout):
+        responded = self.evnt.wait(timeout)
+        if not responded:
             self.on_complete(self)
-        return self.response
+        return responded, self.response
 
     def set(self, data):
         self.response = data

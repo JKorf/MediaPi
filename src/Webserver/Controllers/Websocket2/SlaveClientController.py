@@ -65,7 +65,8 @@ class SlaveClientController:
     def request_master(topic, timeout, *args):
         data = to_JSON(args)
         request = SlaveClientController._send_request(topic, data)
-        return request.wait(timeout)
+        responded, response = request.wait(timeout)
+        return response
 
     @staticmethod
     def request_master_cb(topic, callback, timeout, *args):
@@ -82,7 +83,7 @@ class SlaveClientController:
 
     @staticmethod
     def wait_for_request_response(request, timeout, callback=None):
-        response = request.wait(timeout)
+        responded, response = request.wait(timeout)
         if callback is not None:
             callback(*response)
         return response
@@ -124,7 +125,7 @@ class SlaveClientController:
     def _send_request(topic, data):
         Logger().write(LogVerbosity.Debug, "Sending request: " + topic + ", data: " + str(data))
         request_id = APIController().next_id()
-        request = Request(request_id, topic, data, SlaveClientController._complete_request)
+        request = Request(request_id, topic, data, None, SlaveClientController._complete_request)
         SlaveClientController.requests.append(request)
         SlaveClientController.slave_ns.emit("request", request_id, topic, data)
         return request
@@ -133,7 +134,7 @@ class SlaveClientController:
     def _send_ui_request(topic, data, timeout):
         Logger().write(LogVerbosity.Debug, "Sending ui request: " + topic + ", data: " + str(data))
         request_id = APIController().next_id()
-        request = Request(request_id, topic, data, SlaveClientController._complete_request)
+        request = Request(request_id, topic, data, None, SlaveClientController._complete_request)
         SlaveClientController.requests.append(request)
         SlaveClientController.slave_ns.emit("ui_request", request_id, topic, data, timeout)
         return request
