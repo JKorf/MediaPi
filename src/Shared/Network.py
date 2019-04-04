@@ -90,7 +90,7 @@ class UdpClient:
 class RequestFactory:
 
     @staticmethod
-    def make_request(path, method="GET", timeout=5, useragent=None):
+    def make_request(path, method="GET", timeout=5.0, useragent=None):
         try:
             body = None
             if method == 'POST':
@@ -102,7 +102,7 @@ class RequestFactory:
                 }
 
             request = urllib.request.Request(path, body, heads, method=method)
-            return urllib.request.urlopen(request, timeout).read()
+            return urllib.request.urlopen(request, timeout=timeout).read()
         except Exception as e:
             Logger().write(LogVerbosity.Important, "Error requesting url " + path + ": " + str(e))
             return None

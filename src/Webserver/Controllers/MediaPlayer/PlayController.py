@@ -67,7 +67,7 @@ class PlayController:
     @app.route('/play/radio', methods=['POST'])
     def play_radio():
         radio_id = int(request.args.get("id"))
-        radio = RadioController.radios([x for x in RadioController.radios if x.id == radio_id][0])
+        radio = [x for x in RadioController.radios if x.id == radio_id][0]
         instance = int(request.args.get("instance"))
 
         Logger().write(LogVerbosity.Info, "Play radio " + radio.title + " on " + str(instance))
