@@ -14,7 +14,6 @@
     Websockets:
         Slave authentication
 
-    Ui timeout messages
     Fix seeking back when done
     Remember peers that are known to be good to download from when pausing?
 
@@ -28,5 +27,3 @@
     SSL certificates
         https://www.nginx.com/blog/using-free-ssltls-certificates-from-lets-encrypt-with-nginx/
     Continue with optimizations
-
-    https://github.com/eventlet/eventlet/issues/300

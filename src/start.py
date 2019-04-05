@@ -58,11 +58,11 @@ class Program:
         APIController().start()
         self.version = datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S")
 
-        LightManager().init()
         WiFiController().check_wifi()
         Stats().start()
 
         if not self.is_slave:
+            LightManager().init()
             self.file_listener = StreamListener("MasterFileServer", 50015)
             self.file_listener.start_listening()
 
@@ -88,7 +88,6 @@ class Program:
         NextEpisodeManager()
         WiFiController()
         MediaManager()
-        LightManager()
         Updater()
         ThreadManager()
 

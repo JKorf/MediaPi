@@ -1,7 +1,7 @@
 from socketIO_client import SocketIO, BaseNamespace
 
 from Shared.Logger import Logger, LogVerbosity
-from Shared.Settings import Settings
+from Shared.Settings import Settings, SecureSettings
 from Shared.Threading import CustomThread
 from Shared.Util import to_JSON
 from Updater import Updater
@@ -156,9 +156,15 @@ class Handler(BaseNamespace):
 
     def initialize(self):
         Logger().write(LogVerbosity.Info, "Connected to master")
-        self.emit("init", Settings.get_string("name"))
-        for k, v in SlaveClientController.last_data.items():
-            self.emit("update", k, v)
+        self.emit("init", Settings.get_string("name"), SecureSettings.get_string("master_key"), self.handle_init_response)
+
+    def handle_init_response(self, success):
+        if success:
+            for k, v in SlaveClientController.last_data.items():
+                self.emit("update", k, v)
+        else:
+            Logger().write(LogVerbosity.Info, "Failed slave init")
+            self.disconnect()
 
     def on_response(self, request_id, *args):
         SlaveClientController.on_response(request_id, args)
