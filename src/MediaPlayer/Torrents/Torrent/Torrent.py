@@ -366,7 +366,6 @@ class Torrent(LogObject):
         self.peer_processor.stop()
         self.peer_manager.stop()
         self.tracker_manager.stop()
-        self.download_manager.stop()
         self.network_manager.stop()
         self.metadata_manager.stop()
         self.stream_manager.stop()

@@ -1,7 +1,7 @@
 # Instance config
 name=Woonkamer
 slave=False
-UI=False
+UI=True
 
 # Paths
 serie_api=https://tv-v2.api-fetch.website/
@@ -13,7 +13,7 @@ api_port=50021
 tradfri_hub_ip=192.168.2.73
 
 # Connections
-max_peers_connecting=20
+max_peers_connecting=30
 max_peers_connected=20
 connection_timeout=2000
 peer_timeout=60000

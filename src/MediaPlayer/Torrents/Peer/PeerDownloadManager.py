@@ -149,7 +149,8 @@ class PeerDownloadManager(LogObject):
     def stop(self):
         self.stopped = True
         for block, request_time in self.downloading:
-            block.remove_downloader(self.peer)
+            if self.peer in block.peers_downloading:
+                block.remove_downloader(self.peer)
         self.downloading.clear()
         self.downloading_log = ""
 

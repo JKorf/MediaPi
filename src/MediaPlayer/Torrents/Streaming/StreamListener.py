@@ -280,7 +280,12 @@ class StreamListener(LogObject):
             # check if socket is still open
             readable, writeable, exceptional = select.select([socket], [socket], [socket], 0)
             if len(readable) == 1:
-                read = socket.recv(1)
+                read = 0
+                try:
+                    read = socket.recv(1)
+                except Exception as e:
+                    Logger().write(LogVerbosity.Debug, "Request socket closed with exception: " + str(e))
+
                 if len(read) == 0:
                     Logger().write(LogVerbosity.Info, self.name + " socket no longer open 3")
                     writer.close()

@@ -11,9 +11,6 @@
 
     check if people are home
 
-    Websockets:
-        Slave authentication
-
     Fix seeking back when done
     Remember peers that are known to be good to download from when pausing?
 
