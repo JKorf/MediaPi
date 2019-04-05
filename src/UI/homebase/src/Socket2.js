@@ -39,13 +39,14 @@ export default class WS {
                 return
             }
 
-            handler.handler(id, ...data);
+            handler.data_callback(id, ...data);
         });
 
         this.socket.on('timeout', (id) => {
             console.log("Received timeout: " + id);
 
-            // TODO hide the popup again
+            for (var i = 0; i < this.request_handlers.length; i++)
+                this.request_handlers[i].timeout_callback(id)
         });
     }
 
@@ -107,8 +108,8 @@ export default class WS {
         return null;
     }
 
-    static addRequestHandler(request_name, callback){
-        this.request_handlers.push({name: request_name, handler: callback});
+    static addRequestHandler(request_name, data_callback, timeout_callback){
+        this.request_handlers.push({name: request_name, data_callback: data_callback, timeout_callback: timeout_callback});
     }
 
     static getCurrentRequests()

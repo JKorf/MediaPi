@@ -11,7 +11,8 @@ class PopupController extends Component {
     this.showSelectMediaFile = this.showSelectMediaFile.bind(this);
     this.showContinueNextEpisode = this.showContinueNextEpisode.bind(this);
 
-    this.test = this.test.bind(this);
+    this.timeoutSelectMedia = this.timeoutSelectMedia.bind(this);
+    this.timeoutContinue = this.timeoutContinue.bind(this);
     this.selectMediaFile = this.selectMediaFile.bind(this);
     this.cancelMediaSelect = this.cancelMediaSelect.bind(this);
 
@@ -19,34 +20,22 @@ class PopupController extends Component {
   }
 
   componentDidMount() {
-    Socket.addRequestHandler("SelectMediaFile", this.showSelectMediaFile);
-    Socket.addRequestHandler("SelectNextEpisode", this.showContinueNextEpisode);
-    Socket.addRequestHandler("Test", this.test);
-    Socket.addRequestHandler("Test2", this.test2);
-    Socket.addRequestHandler("Test3", this.test3);
+    Socket.addRequestHandler("SelectMediaFile", this.showSelectMediaFile, this.timeoutSelectMedia);
+    Socket.addRequestHandler("SelectNextEpisode", this.showContinueNextEpisode, this.timeoutContinue);
     Socket.getCurrentRequests();
   }
 
   componentWillUnmount(){
   }
 
-  test(id, instance_id, data)
-  {
-      Socket.respond(id, false);
-  }
-
-  test2(id, instance_id, data)
-  {
-  }
-
-  test3(id, instance_id, data)
-  {
-      Socket.respond(id, {result: "Test"});
-  }
-
   showSelectMediaFile(id, files){
     console.log(files);
     this.setState({mediaSelect: {show: true, files: files, id: id}});
+  }
+
+  timeoutSelectMedia(id)
+  {
+    this.setState({mediaSelect: {show: false}});
   }
 
   selectMediaFile(file, start_from){
@@ -62,6 +51,11 @@ class PopupController extends Component {
   showContinueNextEpisode(id, title){
     console.log(title)
     this.setState({continueNextEpisode: {show: true, title: title, id: id}});
+  }
+
+  timeoutContinue(id)
+  {
+    this.setState({continueNextEpisode: {show: false}});
   }
 
   continueNextEpisode(continue_next)
