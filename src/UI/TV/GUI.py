@@ -179,7 +179,7 @@ class App(tk.Frame):
         self.loading_buffered_value = self.background_canvas.create_text(w // 2 + 180, h // 2 + 14, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
         self.loading_peers_value = self.background_canvas.create_text(w // 2 + 180, h // 2 + 38, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
 
-        self.player_frame = tk.Frame(self.parent, width=w, height=h, highlightthickness=0, background="green")
+        self.player_frame = tk.Frame(self.parent, width=w, height=h, highlightthickness=0, background="black")
         self.status_image_frame = tk.Canvas(self.parent, width=84, height=84, highlightthickness=0, background="#DDD")
         self.status_image_frame.pause_image = ImageTk.PhotoImage(Image.open(self.base_image_path + "paused.png"))
         self.pause_image = self.status_image_frame.create_image(10, 10, anchor='nw', image=self.status_image_frame.pause_image)

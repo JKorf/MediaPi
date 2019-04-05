@@ -65,7 +65,7 @@ class PeerDownloadManager(LogObject):
 
         new_blocks = self.max_blocks - len(self.downloading)
         to_download = self.peer.torrent.download_manager.get_blocks_to_download(self.peer, new_blocks)
-        self.downloading += [(block, current_time()) for block in to_download]
+        self.downloading += [(block, current_time(), False) for block in to_download]
         self.request(to_download)
         return True
 
@@ -83,7 +83,7 @@ class PeerDownloadManager(LogObject):
         self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
 
     def block_done(self, block_offset, timestamp):
-        downloading_block = [(block, request_time) for block, request_time in self.downloading if block.start_byte_total == block_offset]
+        downloading_block = [(block, request_time, timed_out) for block, request_time, timed_out in self.downloading if block.start_byte_total == block_offset]
         if len(downloading_block) == 0:
             return  # Not currently registered as downloading
 
@@ -100,12 +100,13 @@ class PeerDownloadManager(LogObject):
 
         canceled = 0
 
-        timed_out_blocks = [(block, request_time) for block, request_time in self.downloading
-                            if current_time() - request_time > self.get_priority_timeout(self.peer.torrent.data_manager._pieces[block.piece_index].priority)]
+        timed_out_blocks = [(block, request_time, timed_out) for block, request_time, timed_out in self.downloading
+                            if current_time() - request_time > self.get_priority_timeout(self.peer.torrent.data_manager._pieces[block.piece_index].priority) and not timed_out]
 
         for block_request in timed_out_blocks:
             block = block_request[0]
-            #self.downloading.remove(block_request)
+            self.downloading.remove(block_request)
+            self.downloading.add((block_request[0], block_request[1], True))
             self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
 
             # cancel_msg = CancelMessage(block.piece_index, block.start_byte_in_piece, block.length)

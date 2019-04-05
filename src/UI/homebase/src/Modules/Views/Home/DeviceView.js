@@ -372,7 +372,7 @@ class DeviceView extends Component {
                                     <InfoGroup title="Subtitles">
                                         <div className="player-group-details">
                                             { this.state.playerData.sub_tracks.map((o) => (
-                                                <div key={o[0]} className="selection-box-option" onClick={() => this.state.onSubTrackChange(o[0])}>
+                                                <div key={o[0]} className="selection-box-option" onClick={() => this.subChange(o[0])}>
                                                     <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.sub_track === o[0]} /></div>
                                                     <div className="selection-box-option-title truncate">{o[1]}</div>
                                                 </div> )
@@ -391,7 +391,7 @@ class DeviceView extends Component {
                                     <InfoGroup title="Audio">
                                         <div className="player-group-details">
                                         { this.state.playerData.audio_tracks.map((o) => (
-                                            <div  key={o[0]} className="selection-box-option" onClick={() => this.state.onAudioTrackChange(o[0])}>
+                                            <div  key={o[0]} className="selection-box-option" onClick={() => this.audioChange(o[0])}>
                                                 <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.audio_track === o[0]} /></div>
                                                 <div className="selection-box-option-title truncate">{o[1]}</div>
                                             </div> )
