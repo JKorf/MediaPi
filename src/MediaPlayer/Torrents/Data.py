@@ -99,8 +99,9 @@ class Block(LogObject):
         self.peers_downloading_log = ", ".join([str(x.id) for x in self.peers_downloading])
 
     def remove_downloader(self, peer):
-        self.peers_downloading.remove(peer)
-        self.peers_downloading_log = ", ".join([str(x.id) for x in self.peers_downloading])
+        if peer in self.peers_downloading:
+            self.peers_downloading.remove(peer)
+            self.peers_downloading_log = ", ".join([str(x.id) for x in self.peers_downloading])
 
 
 class Piece(LogObject):

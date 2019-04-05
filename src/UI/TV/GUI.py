@@ -3,6 +3,7 @@ import os
 import tkinter as tk
 
 import time
+from datetime import datetime
 from enum import Enum
 from io import BytesIO
 from urllib.request import urlopen
@@ -13,8 +14,9 @@ from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer, PlayerState
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
-from Shared.Settings import Settings
+from Shared.Settings import Settings, SecureSettings
 from Shared.Threading import CustomThread
+from Shared.Util import write_size
 
 
 class UIState(Enum):
@@ -41,15 +43,13 @@ class App(tk.Frame):
             self.status_image_frame.place_forget()
             self.player_frame.place_forget()
             self.background_canvas.place(x=0, y=0)
-            self.background_canvas.itemconfig(self.loading_background, state="hidden")
-            self.background_canvas.itemconfig(self.loading_label, state="hidden")
+            self.change_loading_visibility(False)
         elif value == UIState.Loading:
             self.background_canvas.itemconfig(self.loading_background, state="normal")
             self.background_canvas.itemconfig(self.loading_label, state="normal")
         elif value == UIState.Playing:
             self.status_image_frame.place_forget()
-            self.background_canvas.itemconfig(self.loading_background, state="hidden")
-            self.background_canvas.itemconfig(self.loading_label, state="hidden")
+            self.change_loading_visibility(False)
             self.background_canvas.place_forget()
 
             if prev_state != UIState.Paused:
@@ -57,6 +57,20 @@ class App(tk.Frame):
 
         elif value == UIState.Paused:
             self.status_image_frame.place(x=self.parent.winfo_screenwidth() - 134, y=50)
+
+    def change_loading_visibility(self, show):
+        state = "hidden"
+        if show:
+            state = "normal"
+        self.background_canvas.itemconfig(self.loading_background, state=state)
+        self.background_canvas.itemconfig(self.loading_label, state=state)
+        self.background_canvas.itemconfig(self.loading_speed_label, state=state)
+        self.background_canvas.itemconfig(self.loading_speed_value, state=state)
+        self.background_canvas.itemconfig(self.loading_buffered_label, state=state)
+        self.background_canvas.itemconfig(self.loading_buffered_value, state=state)
+        self.background_canvas.itemconfig(self.loading_peers_label, state=state)
+        self.background_canvas.itemconfig(self.loading_peers_value, state=state)
+        self.loading_details_visible = show
 
     @staticmethod
     def initialize():
@@ -71,6 +85,8 @@ class App(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self._state = UIState.Home
+
+        self.loading_details_visible = False
 
         self.background_time = 60 * 15
         self.background_max_requests = 5
@@ -88,17 +104,34 @@ class App(tk.Frame):
         self.info_background = None
         self.loading_background = None
         self.loading_label = None
+
+        self.loading_speed_label = None
+        self.loading_buffered_label = None
+        self.loading_peers_label = None
+        self.loading_speed_value = None
+        self.loading_buffered_value = None
+        self.loading_peers_value = None
+
         self.loading_gif = None
         self.rects = []
         self.images = []
         self.player_frame = None
         self.status_image_frame = None
         self.pause_image = None
+        self.weather_max = None
+        self.weather_min = None
+        self.weather_temp = None
+        self.weather_sunrise = None
+        self.weather_sunset = None
+        self.weather_icon_image = None
+        self.weather_sunrise_image = None
+        self.weather_sunset_image = None
 
         self.init_UI()
 
         VLCPlayer().player_state.register_callback(self.player_update)
         MediaManager().media_data.register_callback(self.media_update)
+        MediaManager().torrent_data.register_callback(self.torrent_update)
 
         self.image_fetcher_thread = CustomThread(self.get_backgrounds, "UI background downloader")
         self.image_fetcher_thread.start()
@@ -106,6 +139,8 @@ class App(tk.Frame):
         self.background_swapper_thread.start()
         self.time_change_thread = CustomThread(self.change_time, "UI time changer")
         self.time_change_thread.start()
+        self.current_weather_thread = CustomThread(self.get_weather_data, "UI current weather")
+        self.current_weather_thread.start()
 
         VLCPlayer().set_window(self.player_frame.winfo_id())
 
@@ -123,22 +158,53 @@ class App(tk.Frame):
         self.background_canvas = tk.Canvas(self.parent, width=w, height=h, highlightthickness=0, background="#000")
         self.background_image = self.set_canvas_image(self.background_canvas, "background.jpg", 0, 0, w, h)
 
-        self.info_background = self.create_rectangle(self.background_canvas, w - 250, 0, w, h, fill="#FFF", alpha=0.5, outline="#AAA")
+        self.info_background = self.create_rectangle(self.background_canvas, w - 250, 0, w, h, fill="#FFF", alpha=0.7, outline="#AAA")
         self.name_label = self.background_canvas.create_text(w - 220, 30, anchor="nw", font=("Purisa", 26), text=Settings.get_string("name"), fill="#444")
 
-        self.playing_label = self.background_canvas.create_text(w - 220, 120, anchor="nw", font=("Purisa", 14), text="", fill="#999")
-        self.playing_value = self.background_canvas.create_text(w - 220, 140, anchor="nw", font=("Purisa", 16), text="", fill="#444")
+        playing_position = 96
+        self.playing_label = self.background_canvas.create_text(w - 220, playing_position, anchor="nw", font=("Purisa", 14), text="", fill="#999")
+        self.playing_value = self.background_canvas.create_text(w - 220, playing_position + 22, anchor="nw", font=("Purisa", 16), text="", fill="#444")
 
         self.time_label = self.background_canvas.create_text(w - 125, h - 90, font=("Purisa", 36), text=time.strftime('%H:%M'), fill="#444")
         self.date_label = self.background_canvas.create_text(w - 125, h - 40, font=("Purisa", 26), text=time.strftime('%a %d %b'), fill="#444")
 
-        self.loading_background = self.create_rectangle(self.background_canvas, w // 2 - 150,  h // 2 - 80, w // 2 + 150, h // 2 + 80, fill="#FFF", alpha=0.5, outline="#AAA", state="hidden")
-        self.loading_label = self.background_canvas.create_text(w // 2, h // 2, font=("Purisa", 24), text="loading..", fill="#444", state="hidden")
+        self.loading_background = self.create_rectangle(self.background_canvas, w // 2 - 200,  h // 2 - 80, w // 2 + 200, h // 2 + 80, fill="#FFF", alpha=0.5, outline="#AAA", state="hidden")
+        self.loading_label = self.background_canvas.create_text(w // 2, h // 2 - 40, font=("Purisa", 24), text="loading..", fill="#444", state="hidden")
+
+        self.loading_speed_label = self.background_canvas.create_text(w // 2 - 180, h // 2 - 10, anchor="nw", font=("Purisa", 18), text="download speed:", fill="#444", state="hidden")
+        self.loading_buffered_label = self.background_canvas.create_text(w // 2 - 180, h // 2 + 14, anchor="nw", font=("Purisa", 18), text="buffered:", fill="#444", state="hidden")
+        self.loading_peers_label = self.background_canvas.create_text(w // 2 - 180, h // 2 + 38, anchor="nw", font=("Purisa", 18), text="connected peers:", fill="#444", state="hidden")
+
+        self.loading_speed_value = self.background_canvas.create_text(w // 2 + 180, h // 2 - 10, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
+        self.loading_buffered_value = self.background_canvas.create_text(w // 2 + 180, h // 2 + 14, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
+        self.loading_peers_value = self.background_canvas.create_text(w // 2 + 180, h // 2 + 38, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
 
         self.player_frame = tk.Frame(self.parent, width=w, height=h, highlightthickness=0, background="green")
         self.status_image_frame = tk.Canvas(self.parent, width=84, height=84, highlightthickness=0, background="#DDD")
         self.status_image_frame.pause_image = ImageTk.PhotoImage(Image.open(self.base_image_path + "paused.png"))
         self.pause_image = self.status_image_frame.create_image(10, 10, anchor='nw', image=self.status_image_frame.pause_image)
+
+        self.weather_icon_image = self.background_canvas.create_image(w - 125, h - 300, image=None)
+
+        temp_position = h - 240
+        self.weather_temp = self.background_canvas.create_text(w - 230, temp_position + 9, anchor="w", font=("Purisa", 28), text="", fill="#444")
+        self.weather_max = self.background_canvas.create_text(w - 20, temp_position, anchor="e", font=("Purisa", 15), text="", fill="#cc3030")
+        self.weather_min = self.background_canvas.create_text(w - 20, temp_position + 20, anchor="e", font=("Purisa", 15), text="", fill="#689cc1")
+
+        sunrise_position = h - 160
+        self.weather_sunrise = self.background_canvas.create_text(w - 190, sunrise_position, anchor="w", font=("Purisa", 16), text="", fill="#444")
+        sunrise_img = ImageTk.PhotoImage(Image.open(self.base_image_path + "sunrise.png").resize((40, 40), Image.ANTIALIAS))
+        self.images.append(sunrise_img)
+        self.weather_sunrise_image = self.background_canvas.create_image(w - 240, sunrise_position, anchor="w", image=sunrise_img)
+
+        self.weather_sunset = self.background_canvas.create_text(w - 60, sunrise_position, anchor="e", font=("Purisa", 16), text="", fill="#444")
+        sunset_img = ImageTk.PhotoImage(Image.open(self.base_image_path + "sunset.png").resize((40, 40), Image.ANTIALIAS))
+        self.images.append(sunset_img)
+        self.weather_sunset_image = self.background_canvas.create_image(w - 10, sunrise_position, anchor="e", image=sunset_img)
+
+        self.background_canvas.create_line(w - 240, 80, w - 10, 80, fill="#888")
+        self.background_canvas.create_line(w - 240, h - 130, w - 10, h - 130, fill="#888")
+        self.background_canvas.create_line(w - 240, h - 190, w - 10, h - 190, fill="#888")
 
         self.state = UIState.Home
 
@@ -218,12 +284,34 @@ class App(tk.Frame):
         self.background_canvas.itemconfigure(self.playing_label, text=play_label)
         self.background_canvas.itemconfigure(self.playing_value, text=title or "")
 
+    def update_loading_state(self, title, speed, buffered, connected_peers):
+        if not self.loading_details_visible:
+            self.background_canvas.itemconfig(self.loading_speed_label, state="normal")
+            self.background_canvas.itemconfig(self.loading_buffered_label, state="normal")
+            self.background_canvas.itemconfig(self.loading_peers_label, state="normal")
+            self.background_canvas.itemconfig(self.loading_speed_value, state="normal")
+            self.background_canvas.itemconfig(self.loading_buffered_value, state="normal")
+            self.background_canvas.itemconfig(self.loading_peers_value, state="normal")
+            self.loading_details_visible = True
+
+        self.background_canvas.itemconfig(self.loading_speed_value, text=write_size(speed) + "ps")
+        self.background_canvas.itemconfig(self.loading_buffered_value, text=write_size(buffered))
+        self.background_canvas.itemconfig(self.loading_peers_value, text=str(connected_peers))
+
     def media_update(self, old_data, new_data):
         if old_data.title is None and new_data.title is not None:
             self.state = UIState.Loading
         if new_data.title is None and old_data.title is not None:
             self.state = UIState.Home
-        self.set_now_playing(new_data.title)
+
+        if MediaManager().media_data.type == "Radio":
+            self.set_now_playing(new_data.title)
+        else:
+            self.set_now_playing(None)
+
+    def torrent_update(self, old_data, new_data):
+        if self.state == UIState.Loading:
+            self.update_loading_state(new_data.title, new_data.download_speed, new_data.total_streamed, new_data.connected)
 
     def player_update(self, old_state, new_state):
         if new_state.state != old_state.state:
@@ -245,9 +333,9 @@ class App(tk.Frame):
     def fullscreen_cancel(self, event="none"):
         self.parent.attributes("-fullscreen", False)
         self.parent.wm_attributes("-topmost", 0)
-        self.centerWindow()
+        self.center_window()
 
-    def centerWindow(self):
+    def center_window(self):
         sw = self.parent.winfo_screenwidth()
         sh = self.parent.winfo_screenheight()
 
@@ -258,3 +346,32 @@ class App(tk.Frame):
         y = (sh-h)/2
 
         self.parent.geometry("%dx%d+%d+%d" % (w, h, x, y))
+
+    def get_weather_data(self):
+        while True:
+            api_key = SecureSettings.get_string("open_weather_map_key")
+            url = "http://api.openweathermap.org/data/2.5/group?id=2750947&units=metric&appid=" + api_key
+            result = RequestFactory.make_request(url)
+            if not result:
+                Logger().write(2, "Failed to get weather data")
+                return
+
+            data = json.loads(result.decode('utf8'))
+            current_temp = data['list'][0]['main']['temp']
+            min_temp = data['list'][0]['main']['temp_min']
+            max_temp = data['list'][0]['main']['temp_max']
+            icon = data['list'][0]['weather'][0]['icon']
+            sunrise = data['list'][0]['sys']['sunrise']
+            sunset = data['list'][0]['sys']['sunset']
+
+            self.background_canvas.itemconfigure(self.weather_temp, text=str(round(current_temp, 1)) + "°C")
+            self.background_canvas.itemconfigure(self.weather_min, text=str(round(min_temp, 1)) + "°C")
+            self.background_canvas.itemconfigure(self.weather_max, text=str(round(max_temp, 1)) + "°C")
+            self.background_canvas.itemconfigure(self.weather_sunrise, text=str(datetime.fromtimestamp(sunrise).strftime("%H:%M")))
+            self.background_canvas.itemconfigure(self.weather_sunset, text=str(datetime.fromtimestamp(sunset).strftime("%H:%M")))
+            self.background_canvas.itemconfigure(self.weather_sunset, text=str(datetime.fromtimestamp(sunset).strftime("%H:%M")))
+
+            self.background_canvas.weather_icon = ImageTk.PhotoImage(Image.open(self.base_image_path + "Weather/" + icon + ".png"))
+            self.background_canvas.itemconfigure(self.weather_icon_image, image=self.background_canvas.weather_icon)
+
+            time.sleep(60 * 30)

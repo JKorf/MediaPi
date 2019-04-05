@@ -24,7 +24,7 @@ def default_serializer(obj):
 
 def write_size(data):
     if data < 1100:
-        return str(data) + 'kb'
+        return str(data) + 'b'
     if data < 1100000:
         return str(round(data / 1000, 2)) + 'kb'
     if data < 1100000000:
