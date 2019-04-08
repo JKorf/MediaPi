@@ -21,8 +21,8 @@ class PresenceManager(metaclass=Singleton):
         self.pi = sys.platform == "linux" or sys.platform == "linux2"
 
         self.device_states = [
-            DeviceState("Mobiel Jan", "192.168.2.100", self.device_gone_interval),
-            DeviceState("Mobiel Melissa", "192.168.2.100", self.device_gone_interval),
+            DeviceState("Mobiel Jan", "192.168.2.51", self.device_gone_interval),
+            DeviceState("Mobiel Melissa", "192.168.2.50", self.device_gone_interval),
         ]
 
     def start(self):
