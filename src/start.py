@@ -22,6 +22,7 @@ from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
 
+from Controllers.PresenceManager import PresenceManager
 from Controllers.WiFiController import WiFiController
 from Controllers.LightManager import LightManager
 
@@ -41,8 +42,6 @@ class Program:
         sys.excepthook = self.handle_exception
 
         self.pi = sys.platform == "linux" or sys.platform == "linux2"
-        # if self.pi:
-        #     eventlet.debug.hub_blocking_detection(state=True, resolution=5)
 
         self.is_slave = Settings.get_bool("slave")
 
@@ -60,6 +59,7 @@ class Program:
 
         WiFiController().check_wifi()
         Stats().start()
+        PresenceManager().start()
 
         if not self.is_slave:
             LightManager().init()
@@ -90,6 +90,7 @@ class Program:
         MediaManager()
         Updater()
         ThreadManager()
+        PresenceManager()
 
     @staticmethod
     def init_sound():

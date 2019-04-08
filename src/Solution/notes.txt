@@ -24,3 +24,18 @@
     SSL certificates
         https://www.nginx.com/blog/using-free-ssltls-certificates-from-lets-encrypt-with-nginx/
     Continue with optimizations
+
+    Tablet mode for tablet on wall
+
+    Automation system:
+        Lights On, Off
+        Heating set temp
+        Sockets on/off
+        Sunscreen up/down
+
+        Conditions:
+            Enter/leave home,
+            Time,
+            Weather,
+            Home screen button press
+                Configurable buttons on homescreen
