@@ -1,5 +1,7 @@
 import threading
 
+import time
+
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger
 from Shared.Util import current_time, Singleton
@@ -51,6 +53,7 @@ class CustomThread(LogObject):
         self.thread_name = thread_name
         self.start_time = 0
         self.history_entry = None
+        self.started = False
 
     def start(self):
         self.start_time = current_time()
@@ -59,6 +62,7 @@ class CustomThread(LogObject):
 
     def __run(self):
         try:
+            self.started = True
             self.target(*self.args)
             ThreadManager().remove_thread(self)
             self.finish()
@@ -69,4 +73,6 @@ class CustomThread(LogObject):
 
     def join(self):
         if threading.current_thread() is not self.thread:
+            if not self.started:
+                time.sleep(0)
             self.thread.join()

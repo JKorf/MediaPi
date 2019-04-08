@@ -90,7 +90,7 @@ class ShowController:
         image = urllib.parse.unquote(request.args.get('image'))
 
         Logger().write(LogVerbosity.Info, "Add show favorite: " + show_id)
-        Database().add_favorite(id, "Show", title, image)
+        Database().add_favorite(show_id, "Show", title, image)
         return "OK"
 
     @staticmethod
@@ -99,7 +99,7 @@ class ShowController:
         show_id = request.args.get('id')
 
         Logger().write(LogVerbosity.Info, "Remove show favorite: " + show_id)
-        Database().remove_favorite(id)
+        Database().remove_favorite(show_id)
         return "OK"
 
     @staticmethod

@@ -360,7 +360,7 @@ class App(tk.Frame):
             current_temp = data['list'][0]['main']['temp']
             min_temp = data['list'][0]['main']['temp_min']
             max_temp = data['list'][0]['main']['temp_max']
-            icon = data['list'][0]['weather'][0]['icon']
+            icon = data['list'][0]['weather'][0]['icon'].replace('n', 'd')
             sunrise = data['list'][0]['sys']['sunrise']
             sunset = data['list'][0]['sys']['sunset']
 
