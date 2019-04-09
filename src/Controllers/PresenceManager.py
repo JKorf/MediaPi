@@ -14,14 +14,14 @@ class PresenceManager(metaclass=Singleton):
         self.check_thread = CustomThread(self.check_presence, "Presence checker")
         self.running = False
         self.check_interval = 10
-        self.device_gone_interval = 240
+        self.device_gone_interval = 120
         self.on_coming_home = None
         self.on_leaving_home = None
         self.anyone_home = True
         self.pi = sys.platform == "linux" or sys.platform == "linux2"
 
         self.device_states = [
-            DeviceState("Mobiel Jan", "192.168.2.51", self.device_gone_interval),
+            DeviceState("Mobiel Jan", "192.168.2.33", self.device_gone_interval),
             DeviceState("Mobiel Melissa", "192.168.2.50", self.device_gone_interval),
         ]
 
@@ -68,9 +68,9 @@ class DeviceState:
     def set_device_state(self, home):
         if home:
             self.last_seen = current_time()
+            self.last_home_state = True
             if not self.home_state:
                 self.home_state = True
-                self.last_home_state = True
                 Logger().write(LogVerbosity.Info, "Device " + self.name + " came home")
             return
 
@@ -82,7 +82,6 @@ class DeviceState:
             # Now not home, last state was home. Start timing
             self.last_home_state = False
             self.timeout_start_time = current_time()
-            Logger().write(LogVerbosity.Debug, "Device " + self.name + " not detected, starting leaving timeout")
             return
         else:
             # Now not home, last state was also not home. Check timeout
