@@ -61,6 +61,8 @@ class DeviceView extends Component {
 
     this.getLogFiles = this.getLogFiles.bind(this);
     this.updateUpdate = this.updateUpdate.bind(this);
+    this.restartDevice = this.restartDevice.bind(this);
+    this.restartApplication = this.restartApplication.bind(this);
   }
 
   componentDidMount() {
@@ -236,6 +238,22 @@ class DeviceView extends Component {
     playerData.sub_delay = value;
     this.setState({playerData: playerData});
     axios.post(window.vars.apiBase + 'player/sub_delay?instance=' + this.props.match.params.id + "&delay=" + Math.round(value));
+  }
+
+  restartDevice()
+  {
+     if(window.confirm("Do you want to restart the device?"))
+     {
+        axios.post(window.vars.apiBase + 'util/restart_device?instance=' + this.props.match.params.id);
+     }
+  }
+
+  restartApplication()
+  {
+    if(window.confirm("Do you want to restart the application?"))
+     {
+        axios.post(window.vars.apiBase + 'util/restart_application?instance=' + this.props.match.params.id);
+     }
   }
 
   writeSize(value){
@@ -442,7 +460,13 @@ class DeviceView extends Component {
                             </div>) }
                         </div>
 
-                        <div className="device-config-button"><Button text="Debug logging" classId="secondary" onClick={() => this.debugLogging()}/></div>
+                        <div className="device-config-button right"><Button text="Debug logging" classId="secondary" onClick={() => this.debugLogging()}/></div>
+                    </div>
+
+                    <div className="device-config-subtitle">actions</div>
+                    <div className="device-config-item">
+                        <div className="device-config-button"><Button text="Restart device" classId="secondary" onClick={() => this.restartDevice()}/></div>
+                        <div className="device-config-button"><Button text="Restart application" classId="secondary" onClick={() => this.restartApplication()}/></div>
                     </div>
                 </div>
              }

@@ -1,3 +1,6 @@
+import os
+
+import sys
 from socketIO_client import SocketIO, BaseNamespace
 
 from Shared.Logger import Logger, LogVerbosity
@@ -110,6 +113,13 @@ class SlaveClientController:
         if topic == "updater":
             from Updater import Updater
             method = getattr(Updater(), command)
+
+        if topic == "system":
+            if command == "restart_device":
+                os.system('sudo reboot')
+            if command == "restart_application":
+                python = sys.executable
+                os.execl(python, python, *sys.argv)
 
         if method is not None:
             cb_thread = CustomThread(method, "Master command", args)

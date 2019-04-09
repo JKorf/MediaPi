@@ -1,5 +1,8 @@
+import os
+import subprocess
 import urllib.parse
 
+import sys
 from flask import request
 
 from Shared.Logger import Logger, LogVerbosity
@@ -30,6 +33,27 @@ class UtilController:
             Updater().update()
         else:
             APIController().slave_command(instance, "updater", "update")
+        return "OK"
+
+    @staticmethod
+    @app.route('/util/restart_device', methods=['POST'])
+    def restart_device():
+        instance = int(request.args.get("instance"))
+        if instance == 1:
+            os.system('sudo reboot')
+        else:
+            APIController().slave_command(instance, "system", "restart_device")
+        return "OK"
+
+    @staticmethod
+    @app.route('/util/restart_application', methods=['POST'])
+    def restart_application():
+        instance = int(request.args.get("instance"))
+        if instance == 1:
+            python = sys.executable
+            os.execl(python, python, *sys.argv)
+        else:
+            APIController().slave_command(instance, "system", "restart_application")
         return "OK"
 
     @staticmethod
