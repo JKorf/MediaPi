@@ -106,7 +106,7 @@ class PeerDownloadManager(LogObject):
         for block_request in timed_out_blocks:
             block = block_request[0]
             self.downloading.remove(block_request)
-            self.downloading.add((block_request[0], block_request[1], True))
+            self.downloading.append((block_request[0], block_request[1], True))
             self.downloading_log = ", ".join([str(x[0].index) for x in self.downloading])
 
             # cancel_msg = CancelMessage(block.piece_index, block.start_byte_in_piece, block.length)
@@ -147,7 +147,7 @@ class PeerDownloadManager(LogObject):
 
     def stop(self):
         self.stopped = True
-        for block, request_time in self.downloading:
+        for block, request_time, timed_out in self.downloading:
             block.remove_downloader(self.peer)
         self.downloading.clear()
         self.downloading_log = ""

@@ -15,8 +15,8 @@
 *  Copy over scripts
 
 *  Install dependencies:
-sudo apt-get install vlc libxml2-dev libxslt-dev cec-utils pillow rng-tools arping (nginx for master)
-sudo pip3 install flask flask_cors flask_socketio socketIO-client psutil lxml purl pytradfri toonapilib
+sudo apt-get install vlc libxml2-dev libxslt-dev cec-utils python3-pil python3-pil.imagetk rng-tools arping (nginx for master)
+sudo pip3 install eventlet flask flask_cors flask_socketio socketIO-client psutil lxml purl pytradfri toonapilib
 
 *  Adjust boot config: sudo nano /boot/config.txt
 	hdmi_group=1
@@ -37,7 +37,7 @@ sudo pip3 install flask flask_cors flask_socketio socketIO-client psutil lxml pu
 
 
 *  (Master) Configure nginix
-sudo nano /etc/nginx/sites-available -> set port and folder
+sudo nano /etc/nginx/sites-available/default -> set port and folder
 
 *  (Master) Portforward to PI
 
