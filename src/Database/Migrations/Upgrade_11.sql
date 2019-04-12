@@ -1,22 +1,17 @@
 CREATE TABLE `Rules` (
 	`Id`	    INTEGER,
-	`ActionId`  INTEGER,
 	`Name`      TEXT,
 	`Created`   INTEGER,
 	`Active`    INTEGER,
 	`LastExecution` INTEGER,
-	`ParameterValue1` TEXT,
-	`ParameterValue2` TEXT,
-	`ParameterValue3` TEXT,
-	`ParameterValue4` TEXT,
-	`ParameterValue5` TEXT,
 	PRIMARY KEY(`Id`)
 );
 
-CREATE TABLE `Conditions` (
+CREATE TABLE `RuleLinks` (
 	`Id`	    INTEGER,
 	`RuleId`    INTEGER,
-	`ConditionType` INTEGER,
+	`RuleLinkType`    INTEGER,
+	`LinkType` TEXT,
 	`ParameterValue1` TEXT,
 	`ParameterValue2` TEXT,
 	`ParameterValue3` TEXT,

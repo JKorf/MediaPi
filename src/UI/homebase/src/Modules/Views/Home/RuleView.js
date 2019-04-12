@@ -13,7 +13,7 @@ import SelectConditionPopup from './../../Components/Popups/SelectConditionPopup
 class RuleView extends Component {
   constructor(props) {
     super(props);
-    this.state = { showSelectConditionType:false, currentRules: [], rule: { id: -1, conditions: [], action: {}}};
+    this.state = { showSelectConditionType:false, actions: [], rule: { id: -1, conditions: [], actions: []}};
 
     this.props.functions.changeBack({ to: "/home/rules" });
     this.props.functions.changeTitle("Rule");
@@ -35,8 +35,6 @@ class RuleView extends Component {
             data = data.data;
             console.log(data);
             this.setState({actions: data[0], conditions: data[1]});
-            if(this.newRule)
-                this.changeAction(1);
          },
         (error) => { console.log(error) }
     )
@@ -74,10 +72,14 @@ class RuleView extends Component {
         return;
     }
 
-    var paramLength = this.state.rule.action.parameters.length;
-    var paramString = "";
-    for (var i = 0; i < paramLength; i++)
-        paramString += "&param" + (i + 1) + "=" +this.state.rule.action.parameters[i];
+    var actionsLength = this.state.rule.actions.length;
+    var actionString = "&actions=" + actionsLength;
+    for (var i = 0; i < actionsLength; i++)
+    {
+        actionString += "&action"+i+"_type=" + this.state.rule.actions[i].type;
+        for (var j = 0; j < this.state.rule.actions[i].parameters.length; j++)
+            actionString += "&action"+i+"_param" + (j + 1) + "=" +this.state.rule.actions[i].parameters[j]
+    }
 
     var conditionLength = this.state.rule.conditions.length;
     var conditionString = "&conditions=" + conditionLength;
@@ -91,8 +93,7 @@ class RuleView extends Component {
     axios.post(window.vars.apiBase + 'rule/save?id=' + this.state.rule.id +
                             "&name=" + this.state.rule.name +
                             "&active=" + this.state.rule.active +
-                            "&action_id=" + this.state.rule.action.id +
-                            paramString + conditionString);
+                            actionString + conditionString);
 
     if (this.newRule){
         return;
@@ -111,7 +112,6 @@ class RuleView extends Component {
 
   paramChange(item, parameter_index, newValue)
   {
-    console.log(newValue);
     item.parameters[parameter_index] = newValue;
     this.setState({rule: this.state.rule});
   }
@@ -119,14 +119,12 @@ class RuleView extends Component {
   paramHourChange(item, parameter_index, newValue)
   {
     item.parameters[parameter_index] = (item.parameters[parameter_index] % 60) + newValue * 60;
-    console.log(item.parameters[parameter_index]);
     this.setState({rule: this.state.rule});
   }
 
   paramMinuteChange(item, parameter_index, newValue)
   {
     item.parameters[parameter_index] = (item.parameters[parameter_index] - item.parameters[parameter_index] % 60) + parseInt(newValue);
-    console.log(item.parameters[parameter_index]);
     this.setState({rule: this.state.rule});
   }
 
@@ -136,12 +134,9 @@ class RuleView extends Component {
     this.setState({rule: this.state.rule});
   }
 
-  changeAction(targetId)
+  removeAction(action)
   {
-    var action = this.getActionById(targetId);
-    var newParams = this.createParametersForItem(action);
-    this.state.rule.action.id = targetId;
-    this.state.rule.action.parameters = newParams;
+    this.state.rule.actions.splice(this.state.rule.actions.indexOf(action), 1);
     this.setState({rule: this.state.rule});
   }
 
@@ -196,9 +191,12 @@ class RuleView extends Component {
   }
 
   getActionItem(act){
-    var action = this.getActionById(act.id);
+    var action = this.getActionById(act.type);
     var item =
-             this.state.rule.action.parameters.map((param, index) =>
+        <div className="rule-condition" key={action.id}>
+            <div className="rule-condition-name">`{action.name}` action</div>
+            <div className="rule-condition-parameters">
+             { act.parameters.map((param, index) =>
                 <div className="rule-condition-parameter" key={index}>
                     <div className="rule-condition-parameter-name">{ action.parameter_description[index][0] }:</div>
                     <div className="rule-condition-parameter-value">
@@ -216,18 +214,28 @@ class RuleView extends Component {
                         }
                     </div>
                 </div>
-            )
+            ) }
+            </div>
+            <div className="rule-condition-remove" onClick={() => this.removeAction(action)}>
+                X
+            </div>
+        </div>
 
     return item
   }
 
   addNewCondition(type){
     var condition = this.getConditionById(type);
-    console.log(condition);
-    console.log(this.state.rule);
     var newParams = this.createParametersForItem(condition);
     this.state.rule.conditions.push({id: -1, type: type, parameters: newParams });
     this.setState({rule: this.state.rule, showSelectConditionType: false});
+  }
+
+  addNewAction(type){
+    var action = this.getActionById(type);
+    var newParams = this.createParametersForItem(action);
+    this.state.rule.actions.push({id: -1, type: type, parameters: newParams });
+    this.setState({rule: this.state.rule, showSelectActionType: false});
   }
 
   setName(name)
@@ -243,8 +251,13 @@ class RuleView extends Component {
   }
 
   render() {
-    if (!this.state.actions)
+    if (this.state.actions.length == 0)
         return "";
+
+    var actionItems = [];
+    for(var i = 0; i < this.state.rule.actions.length; i++){
+        actionItems.push(this.getActionItem(this.state.rule.actions[i]));
+    }
 
     var conditionItems = [];
     for(var i = 0; i < this.state.rule.conditions.length; i++){
@@ -253,48 +266,57 @@ class RuleView extends Component {
 
     return (
       <div className="rule-view">
-        <div className="rule-name">
-            <div className="rule-name-label">Name:</div>
-            <div className="rule-name-input"><input value={this.state.rule.name} onChange={(e) => { this.setName(e.target.value) }} type="text" placeholder="rule name" /></div>
-        </div>
-        <div className="rule-name">
-            <div className="rule-name-label">Active:</div>
-            <div className="rule-name-input"><CheckBox value={this.state.rule.active} onChange={(newValue) => { this.setActive(newValue) }} /></div>
+        <div className="rule-general">
+            <div className="rule-title">General</div>
+            <div className="rule-item-inner rule-general-inner">
+                <div className="rule-general-item">
+                    <div className="rule-name-label">Name:</div>
+                    <div className="rule-name-input"><input value={this.state.rule.name} onChange={(e) => { this.setName(e.target.value) }} type="text" placeholder="rule name" /></div>
+                </div>
+                <div className="rule-general-item">
+                    <div className="rule-name-label">Active:</div>
+                    <div className="rule-name-input"><CheckBox value={this.state.rule.active} onChange={(newValue) => { this.setActive(newValue) }} /></div>
+                </div>
+            </div>
         </div>
 
-        <div className="rule-summary">
-            <div className="rule-title">Summary</div>
-            <div className="rule-description">{ this.state.rule.description }</div>
-        </div>
+        { !this.newRule &&
+            <div className="rule-summary">
+                <div className="rule-title">Summary</div>
+                <div className="rule-description">{ this.state.rule.description }</div>
+            </div>
+        }
 
         <div className="rule-conditions">
             <div className="rule-title">Conditions</div>
-            {conditionItems}
-            <div className="rule-condition-add" onClick={() => { this.setState({showSelectConditionType: true}) }}>
-                + add condition
+            <div className="rule-item-inner">
+                {conditionItems}
+                { this.state.rule.conditions.length == 0 &&
+                    <div className="rule-condition rule-no-item">No conditions yet</div>
+                }
+                <div className="rule-condition-add" onClick={() => { this.setState({showSelectConditionType: true}) }}>
+                    + add condition
+                </div>
+                { this.state.showSelectConditionType &&
+                    <SelectConditionPopup conditionTypes={this.state.conditions} onCancel={() => { this.setState({showSelectConditionType: false}) }} onSelect={(selected) => {this.addNewCondition(selected)}} />
+                }
             </div>
-            { this.state.showSelectConditionType &&
-                <SelectConditionPopup conditionTypes={this.state.conditions} onCancel={() => { this.setState({showSelectConditionType: false}) }} onSelect={(selected) => {this.addNewCondition(selected)}} />
-            }
         </div>
 
-        <div className="rule-action">
-            <div className="rule-title">Action</div>
-            { this.state.actions && this.state.rule.action.parameters &&
-                <div className="rule-action-inner">
-                    <div className="rule-action-select">
-                        <span className="rule-condition-name">Action to execute:</span>
-                        <select className="rule-action-select-field" value={this.state.rule.action.id} onChange={(e) => { this.changeAction(parseInt(e.target.value)) }}>
-                            { this.state.actions.map(action =>
-                                <option key={action.id} value={action.id}>{action.name}</option>
-                            )}
-                        </select>
-                    </div>
-                    <div className="rule-action-parameters">
-                        {this.getActionItem(this.state.rule.action)}
-                    </div>
+        <div className="rule-actions">
+            <div className="rule-title">Actions</div>
+            <div className="rule-item-inner">
+                {actionItems}
+                { this.state.rule.actions.length == 0 &&
+                    <div className="rule-condition rule-no-item">No actions yet</div>
+                }
+                <div className="rule-condition-add" onClick={() => { this.setState({showSelectActionType: true}) }}>
+                    + add action
                 </div>
-            }
+                { this.state.showSelectActionType &&
+                    <SelectConditionPopup conditionTypes={this.state.actions} onCancel={() => { this.setState({showSelectActionType: false}) }} onSelect={(selected) => {this.addNewAction(selected)}} />
+                }
+            </div>
         </div>
 
         <div className="rule-save-button">

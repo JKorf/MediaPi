@@ -340,14 +340,14 @@ class Database(metaclass=Singleton):
         cursor.execute("SELECT * FROM Rules")
         rules = cursor.fetchall()
         result = []
-        for id, action_id, name, created, active, last_execution, param_1, param_2, param_3, param_4, param_5 in rules:
-            r = RuleRecord(id, name, created, active == 1, last_execution, action_id, [x for x in [param_1, param_2, param_3, param_4, param_5] if x is not None])
+        for id, name, created, active, last_execution in rules:
+            r = RuleRecord(id, name, created, active == 1, last_execution)
             result.append(r)
-            cursor.execute("SELECT * FROM Conditions WHERE RuleId=?", [id])
-            conditions = cursor.fetchall()
-            for cond_id, rule_id, cond_type, param_1, param_2, param_3, param_4, param_5 in conditions:
-                c = RuleCondition(cond_id, cond_type, [x for x in [param_1, param_2, param_3, param_4, param_5] if x is not None])
-                r.add_condition(c)
+            cursor.execute("SELECT * FROM RuleLinks WHERE RuleId=?", [id])
+            items = cursor.fetchall()
+            for id, rule_id, rule_link_type, link_type, param_1, param_2, param_3, param_4, param_5 in items:
+                c = RuleLink(id, rule_link_type, int(link_type), [x for x in [param_1, param_2, param_3, param_4, param_5] if x is not None])
+                r.links.append(c)
 
         database.commit()
         database.close()
@@ -356,7 +356,7 @@ class Database(metaclass=Singleton):
     def update_rule(self, rule):
         database, cursor = self.connect()
 
-        cursor.execute("UPDATE Rules SETLastExecution=? WHERE Id=?",
+        cursor.execute("UPDATE Rules SET LastExecution=? WHERE Id=?",
                        [rule.last_execution, rule.id])
 
         database.commit()
@@ -364,58 +364,58 @@ class Database(metaclass=Singleton):
 
     def save_rule(self, rule):
         database, cursor = self.connect()
-        none_params = 5 - len(rule.action.parameters)
-        action_params = rule.action.parameters + ([None] * none_params)
+        cursor.execute("DELETE FROM RuleLinks WHERE RuleId=?", [rule.id])
+
         if rule.id == -1:
-            cursor.execute("INSERT INTO Rules (ActionId, Name, Created, Active, LastExecution, ParameterValue1, ParameterValue2, ParameterValue3, ParameterValue4, ParameterValue5) "
-                           "Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [rule.action.id, rule.name, rule.created, rule.active, rule.last_execution, action_params[0], action_params[1], action_params[2], action_params[3], action_params[4]])
+            cursor.execute("INSERT INTO Rules (Name, Created, Active, LastExecution) "
+                           "Values (?, ?, ?, ?)", [rule.name, rule.created, rule.active, rule.last_execution])
             rule.id = cursor.lastrowid
         else:
-            cursor.execute("UPDATE Rules SET Name=?, Active=?, LastExecution=?, ActionId=?, ParameterValue1=?, ParameterValue2=?, ParameterValue3=?, ParameterValue4=?, ParameterValue5=? WHERE Id=?",
-                           [rule.name, rule.active, rule.last_execution, rule.action.id, action_params[0], action_params[1], action_params[2], action_params[3], action_params[4], rule.id])
+            cursor.execute("UPDATE Rules SET Name=?, Active=?, LastExecution=? WHERE Id=?",
+                           [rule.name, rule.active, rule.last_execution, rule.id])
 
-        cursor.execute("DELETE FROM Conditions WHERE RuleId=?", [rule.id])
+        for action in rule.actions:
+            self._add_rule_link(cursor, rule.id, action, "Action")
 
         for condition in rule.conditions:
-            none_params = 5 - len(condition.parameters)
-            condition_params = condition.parameters + ([None] * none_params)
-
-            cursor.execute("INSERT INTO Conditions (RuleId, ConditionType, ParameterValue1, ParameterValue2, ParameterValue3, ParameterValue4, ParameterValue5) "
-                           "Values (?, ?, ?, ?, ?, ?, ?)", [rule.id, condition.type, condition_params[0], condition_params[1], condition_params[2], condition_params[3], condition_params[4]])
-            condition.id = cursor.lastrowid
+            self._add_rule_link(cursor, rule.id, condition, "Condition")
 
         database.commit()
         database.close()
 
+    def _add_rule_link(self, cursor, rule_id, item, type):
+        none_params = 5 - len(item.parameters)
+        action_params = item.parameters + ([None] * none_params)
+
+        cursor.execute("INSERT INTO RuleLinks (RuleId, RuleLinkType, LinkType, ParameterValue1, ParameterValue2, ParameterValue3, ParameterValue4, ParameterValue5) "
+                       "Values (?, ?, ?, ?, ?, ?, ?, ?)", [int(rule_id), type, int(item.type), action_params[0], action_params[1], action_params[2], action_params[3], action_params[4]])
+        item.id = cursor.lastrowid
+
     def remove_rule(self, rule_id):
         database, cursor = self.connect()
         cursor.execute("DELETE FROM Rules WHERE Id=?", [rule_id])
-        cursor.execute("DELETE FROM Conditions WHERE RuleId=?", [rule_id])
+        cursor.execute("DELETE FROM RuleLinks WHERE RuleId=?", [rule_id])
         database.commit()
         database.close()
 
 
 class RuleRecord:
 
-    def __init__(self, id, name, created, active, last_execution, action_id, action_params):
+    def __init__(self, id, name, created, active, last_execution):
         self.id = id
         self.name = name
         self.created = created
         self.active = active
         self.last_execution = last_execution
-        self.conditions = []
-        self.action_id = action_id
-        self.action_params = action_params
-
-    def add_condition(self, condition):
-        self.conditions.append(condition)
+        self.links = []
 
 
-class RuleCondition:
+class RuleLink:
 
-    def __init__(self, id, condition_type, parameters):
+    def __init__(self, id, rule_link_type, link_type, parameters):
         self.id = id
-        self.condition_type = condition_type
+        self.link_type = link_type
+        self.rule_link_type = rule_link_type
         self.parameters = parameters
 
 

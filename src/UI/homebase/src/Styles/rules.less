@@ -32,6 +32,8 @@
 .current-rule-row{
     border-top: 1px solid #colors[borders];
     display:table;
+    table-layout: fixed;
+    width: 100%;
 }
 
 .current-rule.selected .current-rule-row{
@@ -45,7 +47,6 @@
 
 .current-rule-name{
     display: table-cell;
-    width: calc(100% - 200px);
     padding: 10px 10px;
     border-right: 1px solid #colors[borders];
     vertical-align: top;
@@ -69,7 +70,7 @@
 
 .current-rule-controls{
     display: table-cell;
-    width: 50px;
+    width: 60px;
     font-size: 12px;
     vertical-align: top;
     padding: 4px 10px;
@@ -83,6 +84,7 @@
 .rule-condition{
     padding: 8px;
     position: relative;
+    border-bottom: 1px solid #colors[button-border];
 }
 
 .rule-condition-name{
@@ -99,7 +101,7 @@
 
 .rule-condition-parameter{
     width: 100%;
-    margin-top: 2px;
+    margin-top: 6px;
 }
 
 .rule-condition-parameter-name{
@@ -158,10 +160,6 @@
     font-size: 12px;
 }
 
-.rule-name{
-    padding: 8px;
-}
-
 .rule-name-label{
     width: 50%;
     display: inline-block;
@@ -180,4 +178,26 @@
 
 .no-rules{
     padding: 8px;
+}
+
+.rule-no-item{
+    font-size: 13px;
+    color: #colors[text-faded];
+}
+
+.rule-item-inner{
+    background: #colors[item-background];
+}
+
+.rule-general-inner{
+    padding: 8px;
+
+}
+
+.rule-general-item{
+    margin-top: 8px;
+}
+
+.rule-general-item:first-child{
+    margin-top: 0;
 }

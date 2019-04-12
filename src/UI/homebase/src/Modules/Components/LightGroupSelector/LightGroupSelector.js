@@ -16,6 +16,7 @@ class LightGroupSelector extends Component {
             data = data.data;
             console.log(data);
             this.setState({lights: data});
+            this.changeValue(data[0].id);
          },
         (error) => { console.log(error) }
     )
@@ -29,7 +30,7 @@ class LightGroupSelector extends Component {
   render(){
     return (
       <div className="light-group-selector">
-        <select onChange={(e) => this.changeValue(e.target.value)}  value={this.props.value}>
+        <select onChange={(e) => this.changeValue(e.target.value)} value={this.props.value}>
             { this.state.lights.map(lightGroup => <option key={lightGroup.id} value={lightGroup.id}>{lightGroup.name}</option>) }
         </select>
       </div>)

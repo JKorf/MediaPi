@@ -14,20 +14,20 @@ from Shared.Util import Singleton, current_time, add_leading_zero
 
 class Rule:
 
-    def __init__(self, id, name, created, active):
+    def __init__(self, id, name, created, active, last_execution):
         self.id = id
         self.last_check_time = 0
         self.created = created
-        self.last_execution = 0
+        self.last_execution = last_execution
         self.active = active
         self.conditions = []
-        self.action = None
+        self.actions = []
         self.name = name
         self.run = False
         self.description = None
 
-    def set_action(self, action_id, action_params):
-        self.action = RuleManager.actions[action_id](action_id, *action_params)
+    def add_action(self, id, type, parameters):
+        self.actions.append(RuleManager.actions[type](id, type, *parameters))
         self.description = self.get_description()
 
     def add_condition(self, id, type, parameters):
@@ -43,7 +43,8 @@ class Rule:
         return not self.run
 
     def execute(self):
-        self.action.execute()
+        for action in self.actions:
+            action.execute()
         self.last_execution = current_time()
         self.run = True
 
@@ -54,7 +55,10 @@ class Rule:
             result += condition.get_description() + " and "
 
         result = result[:-4]
-        result += "then " + self.action.get_description()
+        result += "then "
+        for action in self.actions:
+            result += action.get_description() + " and "
+        result = result[:-4]
 
         return result
 
@@ -188,8 +192,9 @@ class ToggleLightsAction:
     description = "Turn on or off the lights in the specified groups"
     parameter_descriptions = [("Light group", "light_group"), ("On/Off", "bool")]
 
-    def __init__(self, id, group_ids, on):
+    def __init__(self, id, type, group_ids, on):
         self.id = id
+        self.type = type
         on_value = on == "True" or on == "true" or on == "1" or on is True
         self.parameters = [group_ids, on_value]
         self.group_ids = group_ids.split('|')
@@ -211,8 +216,9 @@ class SetTemperatureAction:
     description = "Change the temperature"
     parameter_descriptions = [("Target temperature", "int")]
 
-    def __init__(self, id, temp):
+    def __init__(self, id, type, temp):
         self.id = id
+        self.type = type
         self.parameters = [temp]
         self.temp = int(temp)
 
@@ -262,16 +268,7 @@ class RuleManager(metaclass=Singleton):
 
             time.sleep(10)
 
-    def add_rule(self, name, conditions, action_id, action_params):
-        rule = Rule(-1, name, current_time(), True)
-        rule.set_action(action_id, action_params)
-        for type, params in conditions:
-            rule.add_condition(-1, type, params)
-
-        self.current_rules.append(rule)
-        Database().save_rule(rule)
-
-    def update_rule(self, rule_id, active, action_id, name, param1, param2, param3, param4, param5, conditions):
+    def update_rule(self, rule_id, active, name, actions, conditions):
         if rule_id == -1:
             rule = Rule(-1, name, current_time(), True)
             self.current_rules.append(rule)
@@ -279,14 +276,15 @@ class RuleManager(metaclass=Singleton):
             rule = [x for x in self.current_rules if x.id == rule_id][0]
         rule.name = name
         rule.active = active
-        params = [param1, param2, param3, param4, param5]
-        rule.set_action(action_id, [x for x in params if x is not None])
+        rule.actions = []
+        for action in actions:
+            rule.add_action(-1, action[0], [x for x in action[1:] if x is not None])
 
         rule.conditions = []
-        rule.last_execution = 0
         for condition in conditions:
             rule.add_condition(-1, condition[0], [x for x in condition[1:] if x is not None])
 
+        rule.last_execution = 0
         Database().save_rule(rule)
 
     def remove_rule(self, rule_id):
@@ -308,19 +306,15 @@ class RuleManager(metaclass=Singleton):
         db_rules = Database().get_rules()
         self.current_rules = self.parse_rules(db_rules)
 
-        if len(self.current_rules) == 0:
-            self.add_rule("Test rule 1", [
-                (3, [True]),
-                (1, [480, 1320]),
-            ], 2, [20])
-
     def parse_rules(self, rules):
         result = []
         for r in rules:
-            rule = Rule(r.id, r.name, r.created, r.active)
-            rule.set_action(r.action_id, r.action_params)
-            for c in r.conditions:
-                rule.add_condition(c.id, c.condition_type, c.parameters)
+            rule = Rule(r.id, r.name, r.created, r.active, r.last_execution)
+            for link in r.links:
+                if link.rule_link_type == "Condition":
+                    rule.add_condition(link.id, link.link_type, link.parameters)
+                else:
+                    rule.add_action(link.id, link.link_type, link.parameters)
             result.append(rule)
         return result
 
