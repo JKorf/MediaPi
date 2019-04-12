@@ -21,6 +21,10 @@ class SelectConditionPopup extends Component {
     this.props.onSelect(this.state.selectedType);
   }
 
+  getConditionByType(id){
+    return this.props.conditionTypes.filter(c => c.id == id)[0]
+  }
+
   render() {
     const buttons = (
         <div>
@@ -34,6 +38,7 @@ class SelectConditionPopup extends Component {
         <select defaultValue={this.props.conditionTypes[0].id} onChange={(e) => this.setState({selectedType: e.target.value})}>
             { this.props.conditionTypes.map(type => <option value={type.id} key={type.id}>{type.name}</option>) }
         </select>
+        { this.getConditionByType(this.state.selectedType).description }
     </Popup>
     )
   }

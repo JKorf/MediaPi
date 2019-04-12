@@ -66,7 +66,7 @@ class Rule:
 class IsBetweenTimeCondition:
     name = "Time between"
     parameter_descriptions = [("Start time", "time"), ("End time", "time")]
-    description = "Is true when the time is between the start and end time"
+    description = "Triggers when time is between 2 points"
 
     def __init__(self, id, type, start_time, end_time):
         self.id = id
@@ -98,7 +98,7 @@ class IsBetweenTimeCondition:
 class IsPassingTimeCondition:
     name = "Time passing"
     parameter_descriptions = [("Time trigger", "time")]
-    description = "Is true the first time the current time passes the specified time"
+    description = "Triggers at a specific time"
 
     def __init__(self, id, type, trigger_time):
         self.id = id
@@ -122,7 +122,7 @@ class IsPassingTimeCondition:
 class IsHomeCondition:
     name = "Is anyone home"
     parameter_descriptions = [("Anyone home", "bool")]
-    description = "Is true if anyone is home is equal to provided should_be_home"
+    description = "Triggers if people are home (or not)"
 
     def __init__(self, id, type, should_be_home):
         self.id = id
@@ -143,7 +143,7 @@ class IsHomeCondition:
 class OnLeavingHomeCondition:
     name = "On leaving home"
     parameter_descriptions = []
-    description = "Is true the first time when nobody is home after someone was home"
+    description = "Triggers when everyone left home"
 
     def __init__(self, id, type):
         self.id = id
@@ -166,7 +166,7 @@ class OnLeavingHomeCondition:
 class OnComingHomeCondition:
     name = "On coming home"
     parameter_descriptions = []
-    description = "Is true the first time when someone is home after nobody was home"
+    description = "Triggers when someone comes home"
 
     def __init__(self, id, type):
         self.id = id
@@ -189,7 +189,7 @@ class OnComingHomeCondition:
 class ToggleLightsAction:
 
     name = "Toggle lights"
-    description = "Turn on or off the lights in the specified groups"
+    description = "Turns a light group on or off"
     parameter_descriptions = [("Light group", "light_group"), ("On/Off", "bool")]
 
     def __init__(self, id, type, group_ids, on):
@@ -213,7 +213,7 @@ class ToggleLightsAction:
 class SetTemperatureAction:
 
     name = "Set temperature"
-    description = "Change the temperature"
+    description = "Sets the temperature"
     parameter_descriptions = [("Target temperature", "int")]
 
     def __init__(self, id, type, temp):
@@ -270,7 +270,7 @@ class RuleManager(metaclass=Singleton):
 
     def update_rule(self, rule_id, active, name, actions, conditions):
         if rule_id == -1:
-            rule = Rule(-1, name, current_time(), True)
+            rule = Rule(-1, name, current_time(), True, 0)
             self.current_rules.append(rule)
         else:
             rule = [x for x in self.current_rules if x.id == rule_id][0]
