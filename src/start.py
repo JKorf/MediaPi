@@ -3,6 +3,8 @@ import eventlet
 from eventlet import hubs
 from eventlet.green.subprocess import call
 
+from Controllers.RuleManager import RuleManager
+
 hubs.use_hub("selects")
 
 eventlet.monkey_patch()
@@ -60,6 +62,7 @@ class Program:
         WiFiController().check_wifi()
         Stats().start()
         PresenceManager().start()
+        RuleManager().start()
 
         if not self.is_slave:
             LightManager().init()
@@ -91,6 +94,7 @@ class Program:
         Updater()
         ThreadManager()
         PresenceManager()
+        RuleManager()
 
     @staticmethod
     def init_sound():

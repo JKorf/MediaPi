@@ -24,6 +24,8 @@ import HeatingView from './Modules/Views/Home/HeatingView.js'
 import LightingView from './Modules/Views/Home/LightingView.js'
 import DevicesView from './Modules/Views/Home/DevicesView.js'
 import DeviceView from './Modules/Views/Home/DeviceView.js'
+import RulesView from './Modules/Views/Home/RulesView.js'
+import RuleView from './Modules/Views/Home/RuleView.js'
 
 import SettingsView from './Modules/Views/SettingsView.js'
 
@@ -32,6 +34,7 @@ import PopupController from './Modules/PopupController.js'
 
 import './Styles/base.less';
 import './Styles/mediaplayer.less';
+import './Styles/rules.less';
 
 class App extends Component {
   constructor(props) {
@@ -206,6 +209,8 @@ class App extends Component {
                     <Route path="/home/lighting" exact render={(props) => <LightingView {...props} functions={this.functions}  />} />
                     <Route path="/home/devices" exact render={(props) => <DevicesView {...props} functions={this.functions}/>} />
                     <Route path="/home/device/:id" exact render={(props) => <DeviceView {...props} functions={this.functions}  />} />
+                    <Route path="/home/rules" exact render={(props) => <RulesView {...props} functions={this.functions}  />} />
+                    <Route path="/home/rule/:id" exact render={(props) => <RuleView {...props} functions={this.functions}  />} />
 
                     <Route path="/settings" exact render={(props) => <SettingsView {...props} functions={this.functions}  />} />
                 </View>

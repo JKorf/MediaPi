@@ -60,6 +60,7 @@ class APIController(metaclass=Singleton):
         from Webserver.Controllers.LightController import LightController
         from Webserver.Controllers.ToonController import ToonController
         from Webserver.Controllers.UtilController import UtilController
+        from Webserver.Controllers.RuleController import RuleController
         from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
         from Webserver.Controllers.Websocket2.SlaveWebsocketController import SlaveWebsocketController
 

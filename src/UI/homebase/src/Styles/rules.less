@@ -1,0 +1,183 @@
+@import "base.less";
+
+.rules-header{
+    background: #colors[item-background];
+}
+
+.rules-header-column{
+    display:inline-block;
+    font-size: 11px;
+    color: #colors[text-faded];
+    text-align: center;
+    line-height: 22px;
+}
+
+.rules-header-name{
+    width: calc(100% - 200px);
+}
+
+.rules-header-last-run{
+    width: 100px;
+}
+
+.rules-header-active{
+    width: 36px;
+}
+
+.current-rule{
+    width: 100%;
+    border-bottom: 1px solid #colors[borders];
+}
+
+.current-rule-row{
+    border-top: 1px solid #colors[borders];
+    display:table;
+}
+
+.current-rule.selected .current-rule-row{
+    border-bottom: 1px solid #444;
+}
+
+.current-rule-selected{
+    padding: 8px;
+    font-size: 12px;
+}
+
+.current-rule-name{
+    display: table-cell;
+    width: calc(100% - 200px);
+    padding: 10px 10px;
+    border-right: 1px solid #colors[borders];
+    vertical-align: top;
+}
+
+.current-rule-last-execution{
+    display: table-cell;
+    width: 100px;
+    border-right: 1px solid #colors[borders];
+    padding: 10px 10px;
+    vertical-align: top;
+}
+
+.current-rule-active{
+    display: table-cell;
+    width: 36px;
+    border-right: 1px solid #colors[borders];
+    padding: 10px 10px;
+    vertical-align: top;
+}
+
+.current-rule-controls{
+    display: table-cell;
+    width: 50px;
+    font-size: 12px;
+    vertical-align: top;
+    padding: 4px 10px;
+}
+
+.rule-add-btn{
+    margin-top: 10px;
+    margin-left: 8px;
+}
+
+.rule-condition{
+    padding: 8px;
+    position: relative;
+}
+
+.rule-condition-name{
+    margin-bottom: 4px;
+    color: #colors[text-faded];
+    font-size: 12px;
+}
+
+.rule-title{
+    border-bottom: 1px solid #colors[text-faded];
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+.rule-condition-parameter{
+    width: 100%;
+    margin-top: 2px;
+}
+
+.rule-condition-parameter-name{
+    display: inline-block;
+    width: 60%;
+    vertical-align:top;
+    padding-left: 20px;
+}
+
+.rule-condition-parameter-value{
+    display:inline-block;
+    width: 40%;
+    vertical-align:top;
+}
+
+.rule-condition-remove{
+    position:absolute;
+    right: 10px;
+    top: 6px;
+}
+
+.rule-action{
+}
+
+.rule-conditions{
+    margin-top: 10px;
+}
+
+.rule-action-inner{
+    padding: 8px;
+}
+
+.rule-number-parameter{
+    width: 40px;
+}
+
+.rule-action-select{
+    margin-bottom: 10px;
+}
+
+.rule-action-select-field{
+    margin-left: 20px;
+}
+
+.rule-description{
+    padding: 8px;
+}
+
+.rule-save-button{
+    margin: 8px;
+}
+
+.rule-condition-add{
+    text-align: right;
+    padding: 8px;
+    font-size: 12px;
+}
+
+.rule-name{
+    padding: 8px;
+}
+
+.rule-name-label{
+    width: 50%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.rule-name-input{
+    width: 50%;
+    display: inline-block;
+    vertical-align: top;
+
+    input{
+        width: 100%;
+    }
+}
+
+.no-rules{
+    padding: 8px;
+}

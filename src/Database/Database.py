@@ -13,7 +13,7 @@ class Database(metaclass=Singleton):
     def __init__(self):
         self.path = Settings.get_string("base_folder") + "/Solution/database.data"
         self.slave = Settings.get_bool("slave")
-        self.current_version = 10
+        self.current_version = 11
 
     def init_database(self):
         Logger().write(LogVerbosity.Info, "Opening database at " + str(self.path))
@@ -334,6 +334,89 @@ class Database(metaclass=Singleton):
         cursor.execute("INSERT INTO Keys (ClientKey, SessionKey, Issued, LastSeen) Values (?, ?, ?, ?)", [client_key, session_key, time, time])
         database.commit()
         database.close()
+
+    def get_rules(self):
+        database, cursor = self.connect()
+        cursor.execute("SELECT * FROM Rules")
+        rules = cursor.fetchall()
+        result = []
+        for id, action_id, name, created, active, last_execution, param_1, param_2, param_3, param_4, param_5 in rules:
+            r = RuleRecord(id, name, created, active == 1, last_execution, action_id, [x for x in [param_1, param_2, param_3, param_4, param_5] if x is not None])
+            result.append(r)
+            cursor.execute("SELECT * FROM Conditions WHERE RuleId=?", [id])
+            conditions = cursor.fetchall()
+            for cond_id, rule_id, cond_type, param_1, param_2, param_3, param_4, param_5 in conditions:
+                c = RuleCondition(cond_id, cond_type, [x for x in [param_1, param_2, param_3, param_4, param_5] if x is not None])
+                r.add_condition(c)
+
+        database.commit()
+        database.close()
+        return result
+
+    def update_rule(self, rule):
+        database, cursor = self.connect()
+
+        cursor.execute("UPDATE Rules SETLastExecution=? WHERE Id=?",
+                       [rule.last_execution, rule.id])
+
+        database.commit()
+        database.close()
+
+    def save_rule(self, rule):
+        database, cursor = self.connect()
+        none_params = 5 - len(rule.action.parameters)
+        action_params = rule.action.parameters + ([None] * none_params)
+        if rule.id == -1:
+            cursor.execute("INSERT INTO Rules (ActionId, Name, Created, Active, LastExecution, ParameterValue1, ParameterValue2, ParameterValue3, ParameterValue4, ParameterValue5) "
+                           "Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [rule.action.id, rule.name, rule.created, rule.active, rule.last_execution, action_params[0], action_params[1], action_params[2], action_params[3], action_params[4]])
+            rule.id = cursor.lastrowid
+        else:
+            cursor.execute("UPDATE Rules SET Name=?, Active=?, LastExecution=?, ActionId=?, ParameterValue1=?, ParameterValue2=?, ParameterValue3=?, ParameterValue4=?, ParameterValue5=? WHERE Id=?",
+                           [rule.name, rule.active, rule.last_execution, rule.action.id, action_params[0], action_params[1], action_params[2], action_params[3], action_params[4], rule.id])
+
+        cursor.execute("DELETE FROM Conditions WHERE RuleId=?", [rule.id])
+
+        for condition in rule.conditions:
+            none_params = 5 - len(condition.parameters)
+            condition_params = condition.parameters + ([None] * none_params)
+
+            cursor.execute("INSERT INTO Conditions (RuleId, ConditionType, ParameterValue1, ParameterValue2, ParameterValue3, ParameterValue4, ParameterValue5) "
+                           "Values (?, ?, ?, ?, ?, ?, ?)", [rule.id, condition.type, condition_params[0], condition_params[1], condition_params[2], condition_params[3], condition_params[4]])
+            condition.id = cursor.lastrowid
+
+        database.commit()
+        database.close()
+
+    def remove_rule(self, rule_id):
+        database, cursor = self.connect()
+        cursor.execute("DELETE FROM Rules WHERE Id=?", [rule_id])
+        cursor.execute("DELETE FROM Conditions WHERE RuleId=?", [rule_id])
+        database.commit()
+        database.close()
+
+
+class RuleRecord:
+
+    def __init__(self, id, name, created, active, last_execution, action_id, action_params):
+        self.id = id
+        self.name = name
+        self.created = created
+        self.active = active
+        self.last_execution = last_execution
+        self.conditions = []
+        self.action_id = action_id
+        self.action_params = action_params
+
+    def add_condition(self, condition):
+        self.conditions.append(condition)
+
+
+class RuleCondition:
+
+    def __init__(self, id, condition_type, parameters):
+        self.id = id
+        self.condition_type = condition_type
+        self.parameters = parameters
 
 
 class Favorite:

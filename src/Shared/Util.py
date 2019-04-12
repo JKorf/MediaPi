@@ -7,6 +7,12 @@ def current_time():
     return int(round(time.time() * 1000))
 
 
+def add_leading_zero(value):
+    if value >= 10:
+        return str(value)
+    return "0" + str(value)
+
+
 def to_JSON(obj, sort_keys=True):
     return json.dumps(obj, default=default_serializer,
                       sort_keys=sort_keys, indent=4)
