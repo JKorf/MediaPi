@@ -21,7 +21,7 @@ class PresenceManager(metaclass=Singleton):
         self.pi = sys.platform == "linux" or sys.platform == "linux2"
 
         self.device_states = [
-            DeviceState("Mobiel Jan", "192.168.2.33", self.device_gone_interval),
+            DeviceState("Mobiel Jan", "192.168.2.51", self.device_gone_interval),
             DeviceState("Mobiel Melissa", "192.168.2.50", self.device_gone_interval),
         ]
 
@@ -44,10 +44,12 @@ class PresenceManager(metaclass=Singleton):
 
             if self.anyone_home and len([x for x in self.device_states if x.home_state]) == 0:
                 # left
+                self.anyone_home = False
                 if self.on_leaving_home is not None:
                     self.on_leaving_home()
             elif not self.anyone_home and len([x for x in self.device_states if x.home_state]) > 0:
                 # returned
+                self.anyone_home = True
                 if self.on_coming_home is not None:
                     self.on_coming_home()
 

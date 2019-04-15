@@ -434,7 +434,10 @@ class History:
         self.type = media_type
         self.title = title
         self.image = image
-        self.watched_at = int(watched_at)
+        try:
+            self.watched_at = int(watched_at)
+        except (ValueError, TypeError):
+            pass
         self.season = 0
         self.episode = 0
         try:
