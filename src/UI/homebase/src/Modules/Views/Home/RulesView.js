@@ -23,7 +23,7 @@ class RulesView extends Component {
         (data) => {
             data = data.data;
             console.log(data);
-            this.setState({currentRules: data});
+            this.setState({rulesEnabled: data[0], currentRules: data[1]});
          },
         (error) => { console.log(error) }
     )
@@ -37,6 +37,12 @@ class RulesView extends Component {
          this.setState({currentRules: this.state.currentRules});
          axios.post(window.vars.apiBase + 'rule/remove?id=' + rule.id);
       }
+  }
+
+  toggleEnabled(value)
+  {
+    axios.post(window.vars.apiBase + "rules/enable?val=" + value);
+    this.setState({rulesEnabled: value});
   }
 
   render() {
@@ -76,6 +82,12 @@ class RulesView extends Component {
           </div>
 
           <div className="rule-add-btn"><Link to={"/home/rule/-1"}><Button text="Add rule" classId="secondary"/></Link></div>
+
+
+        <div className="rule-enabled-checkbox">
+            <div className="rule-enabled-checkbox-label">Rules enabled:</div>
+            <div className="rule-enabled-checkbox-input"><CheckBox value={this.state.rulesEnabled} onChange={(newValue) => this.toggleEnabled(newValue)} /></div>
+        </div>
       </div>
     );
   }

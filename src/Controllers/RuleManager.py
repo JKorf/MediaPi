@@ -8,6 +8,7 @@ from Controllers.PresenceManager import PresenceManager
 from Controllers.ToonManager import ToonManager
 from Database.Database import Database
 from Shared.Logger import LogVerbosity, Logger
+from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import Singleton, current_time, add_leading_zero
 
@@ -223,8 +224,7 @@ class SetTemperatureAction:
         self.temp = int(temp)
 
     def execute(self):
-        pass
-        #ToonManager().set_temperature(self.temp)
+        ToonManager().set_temperature(self.temp)
 
     def get_description(self):
         return "set the temperature to " + str(self.temp) + "°C"
@@ -248,6 +248,8 @@ class RuleManager(metaclass=Singleton):
         self.current_rules = []
         self.check_thread = CustomThread(self.check_rules, "Rule checker")
         self.load_rules()
+        enabled = Database().get_stat("rules_enabled")
+        self.enabled = bool(enabled)
 
     def start(self):
         self.running = True
@@ -257,13 +259,18 @@ class RuleManager(metaclass=Singleton):
         self.running = False
         self.check_thread.join()
 
+    def set_enabled(self, enabled):
+        self.enabled = enabled
+        Database().update_stat("rules_enabled", enabled)
+
     def check_rules(self):
         while self.running:
             Logger().write(LogVerbosity.All, "Checking rules")
             for rule in self.current_rules:
                 if rule.check():
                     Logger().write(LogVerbosity.Info, "Executing rule " + rule.name + ": " + rule.description)
-                    rule.execute()
+                    if self.enabled:
+                        rule.execute()
                     Database().update_rule(rule)
 
             time.sleep(10)
@@ -295,7 +302,7 @@ class RuleManager(metaclass=Singleton):
         return [x for x in self.current_rules if x.id == rule_id][0]
 
     def get_rules(self):
-        return self.current_rules
+        return self.enabled, self.current_rules
 
     def get_actions_and_conditions(self):
         actions = [ActionModel(id, action.name, action.description, action.parameter_descriptions) for id, action in self.actions.items()]
