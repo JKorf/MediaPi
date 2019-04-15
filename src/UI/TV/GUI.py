@@ -44,9 +44,6 @@ class App(tk.Frame):
             self.player_frame.place_forget()
             self.background_canvas.place(x=0, y=0)
             self.change_loading_visibility(False)
-        elif value == UIState.Loading:
-            self.background_canvas.itemconfig(self.loading_background, state="normal")
-            self.background_canvas.itemconfig(self.loading_label, state="normal")
         elif value == UIState.Playing:
             self.status_image_frame.place_forget()
             self.change_loading_visibility(False)
@@ -62,14 +59,14 @@ class App(tk.Frame):
         state = "hidden"
         if show:
             state = "normal"
-        self.background_canvas.itemconfig(self.loading_background, state=state)
-        self.background_canvas.itemconfig(self.loading_label, state=state)
         self.background_canvas.itemconfig(self.loading_speed_label, state=state)
         self.background_canvas.itemconfig(self.loading_speed_value, state=state)
         self.background_canvas.itemconfig(self.loading_buffered_label, state=state)
         self.background_canvas.itemconfig(self.loading_buffered_value, state=state)
-        self.background_canvas.itemconfig(self.loading_peers_label, state=state)
-        self.background_canvas.itemconfig(self.loading_peers_value, state=state)
+        self.background_canvas.itemconfig(self.loading_peers_available_label, state=state)
+        self.background_canvas.itemconfig(self.loading_peers_available_value, state=state)
+        self.background_canvas.itemconfig(self.loading_peers_connected_label, state=state)
+        self.background_canvas.itemconfig(self.loading_peers_connected_value, state=state)
         self.loading_details_visible = show
 
     @staticmethod
@@ -102,15 +99,15 @@ class App(tk.Frame):
         self.playing_value = None
 
         self.info_background = None
-        self.loading_background = None
-        self.loading_label = None
 
         self.loading_speed_label = None
         self.loading_buffered_label = None
-        self.loading_peers_label = None
         self.loading_speed_value = None
         self.loading_buffered_value = None
-        self.loading_peers_value = None
+        self.loading_peers_connected_label = None
+        self.loading_peers_connected_value = None
+        self.loading_peers_available_value = None
+        self.loading_peers_available_label = None
 
         self.loading_gif = None
         self.rects = []
@@ -168,43 +165,43 @@ class App(tk.Frame):
         self.time_label = self.background_canvas.create_text(w - 125, h - 90, font=("Purisa", 36), text=time.strftime('%H:%M'), fill="#444")
         self.date_label = self.background_canvas.create_text(w - 125, h - 40, font=("Purisa", 26), text=time.strftime('%a %d %b'), fill="#444")
 
-        self.loading_background = self.create_rectangle(self.background_canvas, w // 2 - 200,  h // 2 - 80, w // 2 + 200, h // 2 + 80, fill="#FFF", alpha=0.5, outline="#AAA", state="hidden")
-        self.loading_label = self.background_canvas.create_text(w // 2, h // 2 - 40, font=("Purisa", 24), text="loading..", fill="#444", state="hidden")
+        loading_position = 120
+        self.loading_speed_label = self.background_canvas.create_text(w - 230, loading_position, anchor="nw", font=("Purisa", 18), text="Speed:", fill="#444", state="hidden")
+        self.loading_buffered_label = self.background_canvas.create_text(w - 230, loading_position + 24, anchor="nw", font=("Purisa", 18), text="Buffered:", fill="#444", state="hidden")
+        self.loading_peers_connected_label = self.background_canvas.create_text(w - 230, loading_position + 48, anchor="nw", font=("Purisa", 18), text="Connected:", fill="#444", state="hidden")
+        self.loading_peers_available_label = self.background_canvas.create_text(w - 230, loading_position + 72, anchor="nw", font=("Purisa", 18), text="Available:", fill="#444", state="hidden")
 
-        self.loading_speed_label = self.background_canvas.create_text(w // 2 - 180, h // 2 - 10, anchor="nw", font=("Purisa", 18), text="download speed:", fill="#444", state="hidden")
-        self.loading_buffered_label = self.background_canvas.create_text(w // 2 - 180, h // 2 + 14, anchor="nw", font=("Purisa", 18), text="buffered:", fill="#444", state="hidden")
-        self.loading_peers_label = self.background_canvas.create_text(w // 2 - 180, h // 2 + 38, anchor="nw", font=("Purisa", 18), text="connected peers:", fill="#444", state="hidden")
-
-        self.loading_speed_value = self.background_canvas.create_text(w // 2 + 180, h // 2 - 10, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
-        self.loading_buffered_value = self.background_canvas.create_text(w // 2 + 180, h // 2 + 14, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
-        self.loading_peers_value = self.background_canvas.create_text(w // 2 + 180, h // 2 + 38, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
+        self.loading_speed_value = self.background_canvas.create_text(w - 20, loading_position, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
+        self.loading_buffered_value = self.background_canvas.create_text(w - 20, loading_position + 24, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
+        self.loading_peers_connected_value = self.background_canvas.create_text(w - 20, loading_position + 48, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
+        self.loading_peers_available_value = self.background_canvas.create_text(w - 20, loading_position + 72, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
 
         self.player_frame = tk.Frame(self.parent, width=w, height=h, highlightthickness=0, background="black")
         self.status_image_frame = tk.Canvas(self.parent, width=84, height=84, highlightthickness=0, background="#DDD")
         self.status_image_frame.pause_image = ImageTk.PhotoImage(Image.open(self.base_image_path + "paused.png"))
         self.pause_image = self.status_image_frame.create_image(10, 10, anchor='nw', image=self.status_image_frame.pause_image)
 
-        self.weather_icon_image = self.background_canvas.create_image(w - 125, h - 300, image=None)
+        self.weather_icon_image = self.background_canvas.create_image(w - 125, h - 350, image=None)
 
-        temp_position = h - 240
+        temp_position = h - 296
         self.weather_temp = self.background_canvas.create_text(w - 230, temp_position + 9, anchor="w", font=("Purisa", 28), text="", fill="#444")
         self.weather_max = self.background_canvas.create_text(w - 20, temp_position, anchor="e", font=("Purisa", 15), text="", fill="#cc3030")
         self.weather_min = self.background_canvas.create_text(w - 20, temp_position + 20, anchor="e", font=("Purisa", 15), text="", fill="#689cc1")
 
-        sunrise_position = h - 160
-        self.weather_sunrise = self.background_canvas.create_text(w - 190, sunrise_position, anchor="w", font=("Purisa", 16), text="", fill="#444")
-        sunrise_img = ImageTk.PhotoImage(Image.open(self.base_image_path + "sunrise.png").resize((40, 40), Image.ANTIALIAS))
+        sunrise_position = h - 226
+        self.weather_sunrise = self.background_canvas.create_text(w - 67, sunrise_position, font=("Purisa", 20), text="", fill="#444")
+        sunrise_img = ImageTk.PhotoImage(Image.open(self.base_image_path + "sunrise.png").resize((64, 64), Image.ANTIALIAS))
         self.images.append(sunrise_img)
-        self.weather_sunrise_image = self.background_canvas.create_image(w - 240, sunrise_position, anchor="w", image=sunrise_img)
+        self.weather_sunrise_image = self.background_canvas.create_image(w - 192, sunrise_position, anchor="w", image=sunrise_img)
 
-        self.weather_sunset = self.background_canvas.create_text(w - 60, sunrise_position, anchor="e", font=("Purisa", 16), text="", fill="#444")
-        sunset_img = ImageTk.PhotoImage(Image.open(self.base_image_path + "sunset.png").resize((40, 40), Image.ANTIALIAS))
+        self.weather_sunset = self.background_canvas.create_text(w - 67, sunrise_position + 60, font=("Purisa", 20), text="", fill="#444")
+        sunset_img = ImageTk.PhotoImage(Image.open(self.base_image_path + "sunset.png").resize((64, 64), Image.ANTIALIAS))
         self.images.append(sunset_img)
-        self.weather_sunset_image = self.background_canvas.create_image(w - 10, sunrise_position, anchor="e", image=sunset_img)
+        self.weather_sunset_image = self.background_canvas.create_image(w - 192, sunrise_position + 60, anchor="w", image=sunset_img)
 
         self.background_canvas.create_line(w - 240, 80, w - 10, 80, fill="#888")
         self.background_canvas.create_line(w - 240, h - 130, w - 10, h - 130, fill="#888")
-        self.background_canvas.create_line(w - 240, h - 190, w - 10, h - 190, fill="#888")
+        self.background_canvas.create_line(w - 240, h - 260, w - 10, h - 260, fill="#888")
 
         self.state = UIState.Home
 
@@ -284,19 +281,22 @@ class App(tk.Frame):
         self.background_canvas.itemconfigure(self.playing_label, text=play_label)
         self.background_canvas.itemconfigure(self.playing_value, text=title or "")
 
-    def update_loading_state(self, title, speed, buffered, connected_peers):
+    def update_loading_state(self, title, speed, buffered, connected_peers, available_peers):
         if not self.loading_details_visible:
             self.background_canvas.itemconfig(self.loading_speed_label, state="normal")
             self.background_canvas.itemconfig(self.loading_buffered_label, state="normal")
-            self.background_canvas.itemconfig(self.loading_peers_label, state="normal")
             self.background_canvas.itemconfig(self.loading_speed_value, state="normal")
             self.background_canvas.itemconfig(self.loading_buffered_value, state="normal")
-            self.background_canvas.itemconfig(self.loading_peers_value, state="normal")
+            self.background_canvas.itemconfig(self.loading_peers_connected_label, state="normal")
+            self.background_canvas.itemconfig(self.loading_peers_available_label, state="normal")
+            self.background_canvas.itemconfig(self.loading_peers_connected_value, state="normal")
+            self.background_canvas.itemconfig(self.loading_peers_available_value, state="normal")
             self.loading_details_visible = True
 
         self.background_canvas.itemconfig(self.loading_speed_value, text=write_size(speed) + "ps")
         self.background_canvas.itemconfig(self.loading_buffered_value, text=write_size(buffered))
-        self.background_canvas.itemconfig(self.loading_peers_value, text=str(connected_peers))
+        self.background_canvas.itemconfig(self.loading_peers_available_value, text=str(available_peers))
+        self.background_canvas.itemconfig(self.loading_peers_connected_value, text=str(connected_peers))
 
     def media_update(self, old_data, new_data):
         if old_data.title is None and new_data.title is not None:
@@ -311,7 +311,7 @@ class App(tk.Frame):
 
     def torrent_update(self, old_data, new_data):
         if self.state == UIState.Loading:
-            self.update_loading_state(new_data.title, new_data.download_speed, new_data.total_streamed, new_data.connected)
+            self.update_loading_state(new_data.title, new_data.download_speed, new_data.total_streamed, new_data.connected, new_data.potential)
 
     def player_update(self, old_state, new_state):
         if new_state.state != old_state.state:
