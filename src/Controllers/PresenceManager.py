@@ -13,7 +13,7 @@ class PresenceManager(metaclass=Singleton):
     def __init__(self):
         self.check_thread = CustomThread(self.check_presence, "Presence checker")
         self.running = False
-        self.check_interval = 10
+        self.check_interval = 5
         self.device_gone_interval = 240
         self.on_coming_home = None
         self.on_leaving_home = None
