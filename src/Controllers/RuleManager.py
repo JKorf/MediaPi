@@ -8,7 +8,6 @@ from Controllers.PresenceManager import PresenceManager
 from Controllers.TVManager import TVManager
 from Controllers.ToonManager import ToonManager
 from Database.Database import Database
-from MediaPlayer.MediaManager import MediaManager
 from Shared.Logger import LogVerbosity, Logger
 from Shared.Threading import CustomThread
 from Shared.Util import Singleton, current_time, add_leading_zero
@@ -274,6 +273,7 @@ class PlayRadioAction:
     def execute(self):
         # TODO slave?
         radio = [x for x in Database().get_radios() if x.id == self.channel][0]
+        from MediaPlayer.MediaManager import MediaManager
         MediaManager().start_radio(radio.title, radio.url)
 
     def get_description(self):

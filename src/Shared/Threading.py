@@ -3,7 +3,7 @@ import threading
 import time
 
 from Shared.LogObject import LogObject
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import current_time, Singleton
 
 
@@ -57,6 +57,7 @@ class CustomThread(LogObject):
 
     def start(self):
         self.start_time = current_time()
+        Logger().write(LogVerbosity.All, "Starting thread " + self.thread_name)
         ThreadManager().add_thread(self)
         self.thread.start()
 
@@ -66,6 +67,7 @@ class CustomThread(LogObject):
             self.target(*self.args)
             ThreadManager().remove_thread(self)
             self.finish()
+            Logger().write(LogVerbosity.All, "Thread " + self.thread_name + " done")
         except Exception as e:
             Logger().write_error(e, "Exception in thread " + self.thread_name)
             ThreadManager().remove_thread(self)
