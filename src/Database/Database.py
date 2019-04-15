@@ -7,13 +7,14 @@ from threading import Lock
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Util import current_time, Singleton
+from Webserver.Models import BaseMedia
 
 
 class Database(metaclass=Singleton):
     def __init__(self):
         self.path = Settings.get_string("base_folder") + "/Solution/database.data"
         self.slave = Settings.get_bool("slave")
-        self.current_version = 11
+        self.current_version = 12
 
     def init_database(self):
         Logger().write(LogVerbosity.Info, "Opening database at " + str(self.path))
@@ -398,6 +399,19 @@ class Database(metaclass=Singleton):
         database.commit()
         database.close()
 
+    def get_radios(self):
+        Logger().write(LogVerbosity.All, "Database get radios")
+
+        database, cursor = self.connect()
+        cursor.execute("SELECT * FROM Radios")
+        data = cursor.fetchall()
+        database.commit()
+        database.close()
+        if not data:
+            return []
+
+        return [Radio(x[0], x[1], x[2], x[3]) for x in data]
+
 
 class RuleRecord:
 
@@ -446,3 +460,10 @@ class History:
         self.media_file = media_file
         self.played_for = played_for
         self.length = length
+
+
+class Radio(BaseMedia):
+
+    def __init__(self, radio_id, title, poster, url):
+        super().__init__(radio_id, poster, title)
+        self.url = url
