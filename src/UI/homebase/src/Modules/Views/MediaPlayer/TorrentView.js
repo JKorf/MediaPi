@@ -21,7 +21,16 @@ class TorrentView extends Component {
     super(props);
     this.viewRef = React.createRef();
     var prevSearch = getTorrentsSearch();
-    this.state = {selectedTorrent: null, searchTerm: prevSearch.term, loading: true};
+
+    this.state = {selectedTorrent: null, searchTerm: this.props.match.params.term || prevSearch.term, loading: true};
+
+    var params = this.props.location.search.replace('?', '').split('&')
+    for (var i = 0; i < params.length; i++)
+    {
+        var kv = params[i].split('=');
+        if (kv[0] === 'term')
+            this.state.searchTerm = decodeURIComponent(kv[1]);
+    }
 
     this.selectedTorrent = null;
     this.props.functions.changeBack({ to: "/mediaplayer/" });

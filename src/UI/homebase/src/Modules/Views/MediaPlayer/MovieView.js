@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import { Link } from "react-router-dom";
 
 import MediaPlayerView from './MediaPlayerView.js'
 
@@ -122,6 +123,7 @@ class MovieView extends Component {
                 <Button text="Play trailer" onClick={(e) => this.play_trailer(movie.trailer)} classId="secondary"/>
                  { movie.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(movie.played_for)} onClick={(e) => this.play_torrent(torrents[0][1], movie.played_for)} classId="secondary"></Button> }
                 { torrents.map(([res, torrent]) => <Button key={res} text={"Play " + res } onClick={(e) => this.play_torrent(torrent, 0)} classId="secondary" />)}
+                <Link to={"/mediaplayer/torrents?term=" + encodeURIComponent(movie.title)}><Button text="Search torrents" onClick={(e) => {}} classId="secondary"></Button></Link>
             </div>
 
             { showPopup &&
