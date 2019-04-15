@@ -32,7 +32,7 @@ def write_size(data):
     if data < 1100:
         return str(data) + 'b'
     if data < 1100000:
-        return str(round(data / 1000, 2)) + 'kb'
+        return str(round(data / 1000, 0)) + 'kb'
     if data < 1100000000:
         return str(round(data / 1000000, 2)) + 'mb'
     if data < 1100000000000:

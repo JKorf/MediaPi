@@ -4,10 +4,10 @@ import sys
 
 from flask import request
 
+from Database.Database import Database
 from MediaPlayer.MediaManager import MediaManager
 from Shared.Logger import Logger, LogVerbosity
 from Webserver.APIController import app, APIController
-from Webserver.Controllers.MediaPlayer.RadioController import RadioController
 from Webserver.Controllers.MediaPlayer.TorrentProvider import Torrent
 
 
@@ -67,7 +67,7 @@ class PlayController:
     @app.route('/play/radio', methods=['POST'])
     def play_radio():
         radio_id = int(request.args.get("id"))
-        radio = [x for x in RadioController.radios if x.id == radio_id][0]
+        radio = [x for x in Database().get_radios() if x.id == radio_id][0]
         instance = int(request.args.get("instance"))
 
         Logger().write(LogVerbosity.Info, "Play radio " + radio.title + " on " + str(instance))

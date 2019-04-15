@@ -1,21 +1,21 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-class LightGroupSelector extends Component {
+class RadioSelector extends Component {
   constructor(props) {
     super(props);
-    this.state = {lights: []};
+    this.state = {radios: []};
 
     this.changeValue = this.changeValue.bind(this);
   }
 
   componentDidMount()
   {
-    axios.get(window.vars.apiBase + 'lighting/groups').then(
+    axios.get(window.vars.apiBase + 'radios').then(
         (data) => {
             data = data.data;
             console.log(data);
-            this.setState({lights: data});
+            this.setState({radios: data});
             if (!this.props.value)
                 this.changeValue(data[0].id);
          },
@@ -30,12 +30,12 @@ class LightGroupSelector extends Component {
 
   render(){
     return (
-      <div className="light-group-selector">
+      <div className="radio-selector">
         <select onChange={(e) => this.changeValue(e.target.value)} value={this.props.value}>
-            { this.state.lights.map(lightGroup => <option key={lightGroup.id} value={lightGroup.id}>{lightGroup.name}</option>) }
+            { this.state.radios.map(radio => <option key={radio.id} value={radio.id}>{radio.title}</option>) }
         </select>
       </div>)
   }
 }
 
-export default LightGroupSelector;
+export default RadioSelector;

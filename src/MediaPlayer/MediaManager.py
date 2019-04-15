@@ -5,8 +5,6 @@ import urllib.parse
 
 import gc
 
-from pympler import asizeof
-
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Torrents.Torrent.Torrent import Torrent
 
@@ -21,7 +19,7 @@ from Shared.Logger import Logger, LogVerbosity
 from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
-from Shared.Util import current_time, Singleton, write_size
+from Shared.Util import current_time, Singleton
 from Webserver.APIController import APIController
 from Webserver.Controllers.Websocket2.SlaveClientController import SlaveClientController
 

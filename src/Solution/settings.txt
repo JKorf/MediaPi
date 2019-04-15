@@ -1,13 +1,13 @@
 # Instance config
 name=Woonkamer
 slave=False
-UI=False
+UI=True
 
 # Paths
 serie_api=https://tv-v2.api-fetch.website/
 movie_api=https://tv-v2.api-fetch.website/
 base_folder=C:/home/pi/Scripts/
-tpb_api=https://piratebay.icu
+tpb_api=https://unblockpirate.org
 master_ip=127.0.0.1
 api_port=50021
 tradfri_hub_ip=192.168.2.73

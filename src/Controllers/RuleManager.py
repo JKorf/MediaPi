@@ -5,6 +5,7 @@ import math
 
 from Controllers.LightManager import LightManager
 from Controllers.PresenceManager import PresenceManager
+from Controllers.TVManager import TVManager
 from Controllers.ToonManager import ToonManager
 from Database.Database import Database
 from Shared.Logger import LogVerbosity, Logger
@@ -223,11 +224,60 @@ class SetTemperatureAction:
         self.temp = int(temp)
 
     def execute(self):
-        pass
-        #ToonManager().set_temperature(self.temp)
+        ToonManager().set_temperature(self.temp)
 
     def get_description(self):
         return "set the temperature to " + str(self.temp) + "°C"
+
+
+class ToggleTvAction:
+
+    name = "Turn on/off TV"
+    description = "Turn the TV on or off"
+    parameter_descriptions = [("Instance", "instance"), ("On/Off", "bool")]
+
+    def __init__(self, id, type, instance, on):
+        self.id = id
+        self.type = type
+        on_value = on == "True" or on == "true" or on == "1" or on is True
+        self.parameters = [instance, on_value]
+        self.instance = int(instance)
+        self.on = on_value
+
+    def execute(self):
+        # TODO slave?
+        if self.on:
+            TVManager().turn_tv_on()
+        else:
+            TVManager().turn_tv_off()
+
+    def get_description(self):
+        if self.on:
+            return "turn on the tv"
+        return "turn off the tv"
+
+
+class PlayRadioAction:
+
+    name = "Play radio"
+    description = "Play radio"
+    parameter_descriptions = [("Instance", "instance"), ("Channel", "radio")]
+
+    def __init__(self, id, type, instance, channel):
+        self.id = id
+        self.type = type
+        self.parameters = [instance, channel]
+        self.instance = int(instance)
+        self.channel = int(channel)
+
+    def execute(self):
+        # TODO slave?
+        radio = [x for x in Database().get_radios() if x.id == self.channel][0]
+        from MediaPlayer.MediaManager import MediaManager
+        MediaManager().start_radio(radio.title, radio.url)
+
+    def get_description(self):
+        return "play a radio channel"
 
 
 class RuleManager(metaclass=Singleton):
@@ -240,7 +290,9 @@ class RuleManager(metaclass=Singleton):
     }
     actions = {
         1: ToggleLightsAction,
-        2: SetTemperatureAction
+        2: SetTemperatureAction,
+        3: ToggleTvAction,
+        4: PlayRadioAction
     }
 
     def __init__(self):
@@ -248,6 +300,8 @@ class RuleManager(metaclass=Singleton):
         self.current_rules = []
         self.check_thread = CustomThread(self.check_rules, "Rule checker")
         self.load_rules()
+        enabled = Database().get_stat("rules_enabled")
+        self.enabled = bool(enabled)
 
     def start(self):
         self.running = True
@@ -257,13 +311,21 @@ class RuleManager(metaclass=Singleton):
         self.running = False
         self.check_thread.join()
 
+    def set_enabled(self, enabled):
+        self.enabled = enabled
+        Database().update_stat("rules_enabled", enabled)
+
     def check_rules(self):
         while self.running:
             Logger().write(LogVerbosity.All, "Checking rules")
             for rule in self.current_rules:
                 if rule.check():
                     Logger().write(LogVerbosity.Info, "Executing rule " + rule.name + ": " + rule.description)
-                    rule.execute()
+                    if self.enabled:
+                        try:
+                            rule.execute()
+                        except Exception as e:
+                            Logger().write_error(e, "Rule error")
                     Database().update_rule(rule)
 
             time.sleep(10)
@@ -295,7 +357,7 @@ class RuleManager(metaclass=Singleton):
         return [x for x in self.current_rules if x.id == rule_id][0]
 
     def get_rules(self):
-        return self.current_rules
+        return self.enabled, self.current_rules
 
     def get_actions_and_conditions(self):
         actions = [ActionModel(id, action.name, action.description, action.parameter_descriptions) for id, action in self.actions.items()]

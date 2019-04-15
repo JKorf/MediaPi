@@ -1,5 +1,9 @@
 @import "base.less";
 
+.rules-view{
+    position: relative;
+}
+
 .rules-header{
     background: #colors[item-background];
 }
@@ -79,6 +83,23 @@
 .rule-add-btn{
     margin-top: 10px;
     margin-left: 8px;
+}
+
+.rule-enabled-checkbox{
+    position: absolute;
+    bottom: 4px;
+    right: 8px;
+
+    .rule-enabled-checkbox-label{
+        display:inline-block;
+        vertical-align: top;
+        margin-right: 6px;
+    }
+
+    .rule-enabled-checkbox-input{
+        display:inline-block;
+        vertical-align: top;
+    }
 }
 
 .rule-condition{

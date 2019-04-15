@@ -23,8 +23,8 @@ class Observable(LogObject):
 
         self.__wait_event = Event()
 
+        self.__running = False
         self.__update_thread = CustomThread(self.__check_update, name + " observer")
-        self.__update_thread.start()
 
     def register_callback(self, cb):
         self.__callbacks.append(cb)
@@ -39,10 +39,14 @@ class Observable(LogObject):
                 self.__changed = True
                 self.__wait_event.set()
                 break
+        if not self.__running:
+            self.__update_thread.start()
 
     def changed(self):
         self.__changed = True
         self.__wait_event.set()
+        if not self.__running:
+            self.__update_thread.start()
 
     def reset(self):
         self.start_update()
@@ -54,7 +58,8 @@ class Observable(LogObject):
         self.stop_update()
 
     def __check_update(self):
-        while True:
+        self.__running = True
+        while self.__running:
             self.__wait_event.wait(self.__update_interval)
             self.__wait_event.clear()
             if current_time() - self.__last_update < (self.__update_interval * 1000):

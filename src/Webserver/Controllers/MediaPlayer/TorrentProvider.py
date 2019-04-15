@@ -45,7 +45,7 @@ class List(object):
         on page.
         """
         Logger().write(LogVerbosity.Debug, "TPB requesting " + str(self.url))
-        result = RequestFactory.make_request(str(self.url))
+        result = RequestFactory.make_request(str(self.url), timeout=15.0)
         if result is None:
             return
 

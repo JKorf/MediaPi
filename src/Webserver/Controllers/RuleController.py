@@ -29,6 +29,15 @@ class RuleController:
         return to_JSON(RuleManager().get_rule(rule_id))
 
     @staticmethod
+    @app.route('/rules/enable', methods=['POST'])
+    def set_rules_enable():
+        enabled = request.args.get('val') == "true"
+        Logger().write(LogVerbosity.Debug, "Setting rules enabled to " + str(enabled))
+        RuleManager().set_enabled(enabled)
+
+        return "OK"
+
+    @staticmethod
     @app.route('/rule/save', methods=['POST'])
     def save_rule():
         rule_id = int(request.args.get('id'))
