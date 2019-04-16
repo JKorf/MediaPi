@@ -140,7 +140,8 @@ class PeerConnectionManager(LogObject):
         self.buffer_out_size = len(self.to_send_bytes)
 
     def disconnect(self):
-        Logger().write(LogVerbosity.Debug, str(self.peer.id) + ' disconnected')
+        if self.connected_on != 0:
+            Logger().write(LogVerbosity.Debug, str(self.peer.id) + ' disconnected')
 
         self.connection.disconnect()
         self.to_send_bytes.clear()

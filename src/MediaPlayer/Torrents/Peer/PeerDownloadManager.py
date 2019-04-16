@@ -65,15 +65,15 @@ class PeerDownloadManager(LogObject):
 
         new_blocks = self.max_blocks - len(self.downloading)
         to_download = self.peer.torrent.download_manager.get_blocks_to_download(self.peer, new_blocks)
-        self.downloading += [(block, current_time(), False) for block in to_download]
         self.request(to_download)
         return True
 
     def request(self, to_download):
         download_count = len(to_download)
         if download_count > 0:
-            Logger().write(LogVerbosity.Debug, str(self.peer.id) + " going to request " + str(len(to_download)) + " blocks")
+            Logger().write(LogVerbosity.Debug, str(self.peer.id) + " going to request " + str(len(to_download)) + " blocks. Now " + str(len(self.downloading)))
             self.peer.protocol_logger.update("Sending/receiving requests", True)
+        self.downloading += [(block, current_time(), False) for block in to_download]
         for block in to_download:
             block.add_downloader(self.peer)
             request = RequestMessage(block.piece_index, block.start_byte_in_piece, block.length)

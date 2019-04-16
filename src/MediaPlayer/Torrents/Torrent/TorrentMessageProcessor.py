@@ -37,7 +37,7 @@ class TorrentMessageProcessor(LogObject):
                 # Handshake is the first message we should receive
                 handshake = HandshakeMessage.from_bytes(message_bytes)
                 if handshake is None:
-                    Logger().write(LogVerbosity.All, str(peer.id) + ' invalid handshake response')
+                    Logger().write(LogVerbosity.Debug, str(peer.id) + ' invalid handshake response')
                     peer.stop_async("Invalid handshake")
                     continue
 

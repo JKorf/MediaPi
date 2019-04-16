@@ -156,7 +156,7 @@ class Peer(LogObject):
             self.peer_state_task.join()
         self.torrent = None
         self.finish()
-        Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer stopped')
+        Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer stopped: ' + self.stop_reason)
 
 
 class PeerCommunicationState(LogObject):
