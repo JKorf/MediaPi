@@ -2,21 +2,24 @@ from time import sleep
 
 from Shared.Events import EventManager
 from Shared.Events import EventType
-from Shared.Logger import Logger
+from Shared.LogObject import LogObject
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Threading import CustomThread
+from Shared.Timing import Timing
 from Shared.Util import current_time
 
 
-class Engine:
+class Engine(LogObject):
 
-    def __init__(self, name, tick_time=1000):
+    def __init__(self, name, tick_time=1000, parent=None):
+        super().__init__(parent, "Engine:" + name)
+
         self.name = name
         self.tick_time = tick_time
         self.last_tick = 0
         self.running = False
         self.thread = None
         self.work_items = []
-        self.overtime = 0
 
         self.current_item = None
         self.start_time = 0
@@ -24,20 +27,16 @@ class Engine:
         self.timing = dict()
         self.own_time = TimingObject(self.name)
 
-        self.event_id = EventManager.register_event(EventType.Log, self.log)
+        # Log props
+        self.current_item_log = ""
 
     def runner(self):
         while self.running:
-            test_time = current_time()
-            remaining_time = self.tick_time - (test_time - self.last_tick)
-
-            if remaining_time < 0:
-                remaining_time = 0
-            sleep(remaining_time / 1000)
-            self.last_tick = current_time()
+            sleep(0.01)
             if not self.running:
                 break
 
+            self.last_tick = current_time()
             self.tick()
 
     def start(self):
@@ -46,11 +45,11 @@ class Engine:
         self.thread.start()
 
     def add_work_item(self, name, interval, work_item, initial_invoke=True):
-        self.work_items.append(EngineWorkItem(name, interval, work_item, initial_invoke))
+        self.work_items.append(EngineWorkItem(self, name, interval, work_item, initial_invoke))
 
     def stop(self):
         self.running = False
-        EventManager.deregister_event(self.event_id)
+        self.thread.join()
 
     def tick(self):
         tick_time = current_time()
@@ -59,12 +58,19 @@ class Engine:
             work_item = cur_list[i]
 
             if work_item.last_run_time + work_item.interval < tick_time:
+                Timing().start_timing("Engine item " + work_item.name)
                 self.current_item = work_item
+                self.current_item_log = work_item.name
                 self.start_time = current_time()
+                if not self.running:
+                    return
+
                 result = work_item.action()
                 self.current_item = None
+                self.current_item_log = ""
                 test_time = current_time()
                 work_item.last_run_time = test_time
+                work_item.last_run_duration = test_time - self.start_time
 
                 if work_item.interval == -1:
                     self.work_items.remove(work_item)
@@ -75,25 +81,17 @@ class Engine:
                 if work_item.name not in self.timing:
                     self.timing[work_item.name] = TimingObject(work_item.name)
                 self.timing[work_item.name].add_time(current_time() - self.start_time)
+                Timing().stop_timing("Engine item " + work_item.name)
+                sleep(0)
 
         self.own_time.add_time(current_time() - tick_time)
 
-    def log(self):
-        if self.own_time.ticks > 1:
-            with Logger.lock:
-                Logger.write(3, "-- Engine "+self.name + " --")
-                log_str = self.own_time.print() + ", tick time: " + str(self.tick_time)
-                if self.current_item:
-                    log_str += ", CT: " + str(current_time() - self.start_time) + " @ " + str(self.current_item.name)
-                Logger.write(3, log_str)
-                Logger.write(3, "Last round trip: " + str(current_time() - self.last_tick) + "ms ago")
-                for key, value in self.timing.items():
-                    Logger.write(3, "     " + value.print())
 
+class EngineWorkItem(LogObject):
 
-class EngineWorkItem:
+    def __init__(self, parent, name, interval, action, initial_invoke):
+        super().__init__(parent, name)
 
-    def __init__(self, name, interval, action, initial_invoke):
         self.name = name
         self.interval = interval
         self.action = action

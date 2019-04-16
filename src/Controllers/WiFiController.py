@@ -1,32 +1,30 @@
-import socket
-import subprocess
+from subprocess import PIPE
+
+from eventlet import greenio
+from eventlet.green import subprocess
+
+import sys
 
 from Shared.Engine import Engine
-from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
-from Shared.Settings import Settings
+from Shared.LogObject import LogObject
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import Singleton
 
 
-class WiFiController(metaclass=Singleton):
+class WiFiController(LogObject, metaclass=Singleton):
 
     def __init__(self):
-        self.engine = Engine("WiFi Manager")
-        self.engine.add_work_item("WiFi watcher", 5000, self.watch_wifi, False)
-        self.pi = Settings.get_bool("raspberry")
+        super().__init__(None, "WIFI")
+        self.pi = sys.platform == "linux" or sys.platform == "linux2"
+        self.quality = 0
 
-        self.connected = False
-
-    def start(self):
-        self.engine.start()
-
-    def watch_wifi(self):
+    def check_wifi(self):
         if self.pi:
-            proc = subprocess.Popen(["iwgetid"], stdout=subprocess.PIPE, universal_newlines=True)
+            proc = subprocess.Popen(["iwgetid"], stdout=PIPE, universal_newlines=True)
             out, err = proc.communicate()
             network_ssid = out.split(":")[1]
 
-            proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=subprocess.PIPE, universal_newlines=True)
+            proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=PIPE, universal_newlines=True)
             out, err = proc.communicate()
             cells = out.split("Cell ")
             cell_lines = [x for x in cells if network_ssid in x]
@@ -46,34 +44,24 @@ class WiFiController(metaclass=Singleton):
 
                             if key_value[0] == "Quality":
                                 value_max = key_value[1].split("/")
-                                EventManager.throw_event(EventType.WiFiQualityUpdate, [float(value_max[0]) / float(value_max[1]) * 100])
-
-                                if not self.connected:
-                                    self.connected = self.get_actual_address()
+                                new_val = float(value_max[0]) / float(value_max[1]) * 100
+                                if self.quality != new_val:
+                                    if self.quality == 0:
+                                        Logger().write(LogVerbosity.Debug, "Wifi quality: " + str(new_val))
+                                    self.quality = new_val
 
         else:
-            proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=subprocess.PIPE, universal_newlines=True)
+            proc = subprocess.Popen(["Netsh", "WLAN", "show", "interfaces"], stdout=PIPE, universal_newlines=True)
             out, err = proc.communicate()
             lines = out.split("\n")
             for line in lines:
                 if "Signal" in line:
                     split = line.split(":")
-                    EventManager.throw_event(EventType.WiFiQualityUpdate, [float(split[1].replace("%", ""))])
+                    new_val = float(split[1].replace("%", ""))
+                    if self.quality != new_val:
+                        if self.quality == 0:
+                            Logger().write(LogVerbosity.Debug, "Wifi quality: " + str(new_val))
 
-                    if not self.connected:
-                        self.connected = self.get_actual_address()
+                        self.quality = new_val
+
         return True
-
-    def get_actual_address(self):
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(("gmail.com", 80))
-                ip = s.getsockname()[0]
-                s.close()
-                Logger.write(3, "WebServer running on " + ip)
-                EventManager.throw_event(EventType.RetrievedAddress, [ip])
-                return True
-
-            except Exception as e:
-                Logger.write(2, "Failed to connect to remote server")
-                return False

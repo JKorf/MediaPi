@@ -1,85 +1,52 @@
-import threading
 from enum import Enum
 from threading import Lock
 
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
+from Shared.Threading import CustomThread
 
 
 class EventType(Enum):
-    HashDataKnown = 1,
-
-    Seek = 2,
-    StartPlayer = 3,
-    PreparePlayer = 35,
-    StopPlayer = 9,
-    PlayerStopped = 10
-    SetVolume = 11,
-    PauseResumePlayer = 12,
-    PlayerPaused = 13,
-    PlayerError = 14,
-    PlayerStateChange = 15,
-    PlayerMediaLoaded = 39,
-
-    SetSubtitleFiles = 16,
-    SetSubtitleId = 17,
-    SetSubtitleOffset = 18,
-    SubtitlesDownloaded = 19,
-
-    SetAudioId = 22,
-
-    StartTorrent = 23,
-    StopTorrent = 24,
-    TorrentMetadataDone = 25
+    SearchSubtitles = 1
+    Seek = 2
+    StopPlayer = 9
+    SetSubtitleFiles = 16
     TorrentStopped = 26
-    TorrentMediaFileSet = 34,
-    TorrentStateChange = 37,
-
-    Error = 27,
-
-    NewDHTNode = 28,
-    Log = 30,
-
-    NewRequest = 31,
-    TorrentMediaSelectionRequired = 32,
-    TorrentMediaFileSelection = 33,
-    NextEpisodeSelection = 36,
-    NoPeers = 38,
-
-    PeersFound = 40,
-    RequestPeers = 41,
-    RetrievedAddress = 42,
-    WiFiQualityUpdate = 43,
+    TorrentMediaFileSet = 34
+    TorrentStateChange = 37
+    Error = 27
+    NewDHTNode = 28
+    Log = 30
+    TorrentMediaSelectionRequired = 32
+    TorrentMediaFileSelection = 33
+    NoPeers = 38
+    PeersFound = 40
+    RequestPeers = 41
 
 
 class EventManager:
 
     last_registered_id = 0
     registered_events = []
-    lock = Lock()
 
     @staticmethod
     def throw_event(event_type, args):
-        thread = threading.Thread(name="Event " + str(event_type), target=EventManager.execute_handlers, args=[event_type, args])
-        thread.daemon = True
+        thread = CustomThread(EventManager.execute_handlers, "EventHandler " + str(event_type), args=[event_type, args])
         thread.start()
 
     @staticmethod
     def execute_handlers(event_type, args):
-        Logger.write(1, "Firing event " + str(event_type))
-        with EventManager.lock:
-            to_handle = [x for x in EventManager.registered_events if x[1] == event_type]
+        Logger().write(LogVerbosity.All, "Firing event " + str(event_type))
+        to_handle = [x for x in EventManager.registered_events if x[1] == event_type]
 
-        for id, event_type, handler in to_handle:
+        for item_id, event_type, handler in to_handle:
             handler(*args)
 
     @staticmethod
     def register_event(event_type, callback):
-        with EventManager.lock:
-            EventManager.last_registered_id += 1
-            EventManager.registered_events.append((EventManager.last_registered_id, event_type, callback))
+        EventManager.last_registered_id += 1
+        EventManager.registered_events.append((EventManager.last_registered_id, event_type, callback))
         return EventManager.last_registered_id
 
     @staticmethod
-    def deregister_event(id):
-        with EventManager.lock:
-            EventManager.registered_events = [x for x in EventManager.registered_events if x[0] != id]
+    def deregister_event(item_id):
+        EventManager.registered_events = [x for x in EventManager.registered_events if x[0] != item_id]

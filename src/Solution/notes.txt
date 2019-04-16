@@ -1,6 +1,4 @@
 --- ON HOLD ---
-    Update to VLC 3.0
-
     spotify
         https://eltechs.com/run-spotify-on-raspberry-pi/
         
@@ -9,17 +7,14 @@
 
     zigbee
 
-    Out of memory als een torrent lang aan staat?
-
-    Websocket connectie niet up als messages getoont moet worden
-
-    speed graph
-
     Tv control goed toepassen
 
-    add_watched e.d. niet vanuit UI initieren
+    Fix seeking back when done
+    Remember peers that are known to be good to download from when pausing?
 
-    New UI
-	Angular4?
-	Single app voor meerdere pi's
-	
+    SSL certificates
+        https://www.nginx.com/blog/using-free-ssltls-certificates-from-lets-encrypt-with-nginx/
+
+    Tablet mode for tablet on wall
+
+    utp

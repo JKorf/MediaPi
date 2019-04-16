@@ -1,3 +1,6 @@
+from enum import Enum
+
+
 class TorrentState:
     Initial = 1
     DownloadingMetaData = 2
@@ -5,6 +8,7 @@ class TorrentState:
     Downloading = 3
     Paused = 4
     Done = 5
+    Stopping = 7
 
     @staticmethod
     def get_str(val):
@@ -14,6 +18,7 @@ class TorrentState:
         if val == TorrentState.Paused: return "Paused"
         if val == TorrentState.Done: return "Done"
         if val == TorrentState.WaitingUserFileSelection: return "WaitingUserFileSelection"
+        if val == TorrentState.Stopping: return "Stopping"
 
 
 class PeerMessageType:
@@ -35,17 +40,17 @@ class PeerMessageType:
     ExtensionMessage = 20
 
 
-class PeerChokeState:
+class PeerChokeState(Enum):
     Choked = 1
     Unchoked = 2
 
 
-class PeerInterestedState:
+class PeerInterestedState(Enum):
     Interested = 1
     Uninterested = 2
 
 
-class ConnectionState:
+class ConnectionState(Enum):
     Initial = 0
     Connecting = 1
     Connected = 2
@@ -57,7 +62,7 @@ class ExtensionType:
     Extension = 2
 
 
-class ExtensionName:
+class ExtensionName(Enum):
     FastExtension = 1
     ExtensionProtocol = 2
     PeerExchange = 3
@@ -71,14 +76,14 @@ class ExtensionProtocolMessageType:
     Metadata = 2
 
 
-class PeerSource:
+class PeerSource(Enum):
     HttpTracker = 0
     UdpTracker = 1
     PeerExchange = 2
     DHT = 3
 
 
-class PeerSpeed:
+class PeerSpeed(Enum):
     Low = 1
     Medium = 2
     High = 3
@@ -90,11 +95,19 @@ class MetadataMessageType:
     Reject = 2
 
 
-class ReceiveState:
+class ReceiveState(Enum):
     ReceiveLength = 0
     ReceiveMessage = 1
 
 
-class DownloadMode:
+class DownloadMode(Enum):
     Full = 0
     ImportantOnly = 1
+
+
+class PeerState(Enum):
+    Initial = 0,
+    Starting = 1,
+    Started = 2,
+    Stopping = 3,
+    Stopped = 4

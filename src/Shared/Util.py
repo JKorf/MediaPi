@@ -1,22 +1,38 @@
 import json
 import time
-from Shared.Logger import Logger
+from enum import Enum
 
 
 def current_time():
     return int(round(time.time() * 1000))
 
 
-def to_JSON(obj):
-    return json.dumps(obj, default=lambda o: o.__dict__,
-                      sort_keys=True, indent=4)
+def add_leading_zero(value):
+    if value >= 10:
+        return str(value)
+    return "0" + str(value)
+
+
+def to_JSON(obj, sort_keys=True):
+    return json.dumps(obj, default=default_serializer,
+                      sort_keys=sort_keys, indent=4)
+
+
+def default_serializer(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, Enum):
+        serial = obj.value
+        return serial
+
+    return {x: obj.__dict__[x] for x in obj.__dict__ if not x.startswith("_")}
 
 
 def write_size(data):
     if data < 1100:
-        return str(data) + 'kb'
+        return str(data) + 'b'
     if data < 1100000:
-        return str(round(data / 1000, 2)) + 'kb'
+        return str(round(data / 1000, 0)) + 'kb'
     if data < 1100000000:
         return str(round(data / 1000000, 2)) + 'mb'
     if data < 1100000000000:
@@ -25,16 +41,11 @@ def write_size(data):
         return str(round(data / 1000000000, 2)) + 'tb'
 
 
-def write_time_from_seconds(t):
-    return time.strftime('%H:%M:%S', time.gmtime(t))
-
-
 class Singleton(type):
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            Logger.write(1, "Creating singleton: " + str(cls))
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 

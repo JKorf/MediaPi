@@ -1,30 +1,36 @@
 #!/usr/bin/env python3
-import os
-import threading
-from datetime import datetime
-from subprocess import call
-import sys
-import time
-import traceback
+import eventlet
+from eventlet import hubs
+from eventlet.green.subprocess import call
 
+from Controllers.RuleManager import RuleManager
+
+hubs.use_hub("selects")
+
+eventlet.monkey_patch()
+
+import os
 os.chdir(os.path.dirname(__file__))
 
+from datetime import datetime
+import sys
+import time
 
+from Shared.Threading import ThreadManager
+from Updater import Updater
+from Webserver.APIController import APIController
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
-from Webserver.TornadoServer import TornadoServer
 from MediaPlayer.MediaManager import MediaManager
-from MediaPlayer.MediaTracker import MediaTracker
-from MediaPlayer.Streaming.StreamListener import StreamListener
+from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
 
-from UI.TV.GUI import GUI
-
+from Controllers.PresenceManager import PresenceManager
 from Controllers.WiFiController import WiFiController
-from Controllers.LightController import LightManager
+from Controllers.LightManager import LightManager
 
 from Shared.Util import current_time
 from Shared.Stats import Stats
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 
 from Database.Database import Database
@@ -33,9 +39,11 @@ from Database.Database import Database
 class Program:
 
     def __init__(self):
-        Logger.set_log_level(Settings.get_int("log_level"))
-        Logger.write(2, "Starting")
+        Logger().start(Settings.get_int("log_level"))
+        Logger().write(LogVerbosity.Info, "Starting")
         sys.excepthook = self.handle_exception
+
+        self.pi = sys.platform == "linux" or sys.platform == "linux2"
 
         self.is_slave = Settings.get_bool("slave")
 
@@ -48,32 +56,29 @@ class Program:
         self.init_sound()
         self.init_folders()
 
-        self.server = TornadoServer()
-        self.server.start()
+        APIController().start()
         self.version = datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S")
 
-        LightManager().init()
-        WiFiController().start()
+        WiFiController().check_wifi()
         Stats().start()
-        MediaTracker().start()
+        PresenceManager().start()
+        RuleManager().start()
 
         if not self.is_slave:
-            self.file_listener = StreamListener("MasterFileServer", 50010)
+            LightManager().init()
+            self.file_listener = StreamListener("MasterFileServer", 50015)
             self.file_listener.start_listening()
 
-        Logger.write(3, "MediaPlayer build [" + self.version + "]")
-        Logger.write(3, "Slave: " + str(self.is_slave))
+        Logger().write(LogVerbosity.Info, "MediaPlayer build [" + self.version + "]")
+        Logger().write(LogVerbosity.Info, "Slave: " + str(self.is_slave))
         if self.is_slave:
-            Logger.write(3, "Master ip: " + str(Settings.get_string("master_ip")))
-        Logger.write(3, "Pi: " + str(Settings.get_bool("raspberry")))
+            Logger().write(LogVerbosity.Info, "Master ip: " + str(Settings.get_string("master_ip")))
+        Logger().write(LogVerbosity.Info, "Pi: " + str(self.pi))
 
-        Logger.write(2, "Started")
-        if Settings.get_bool("show_gui"):
-            self.app, self.gui = GUI.new_gui()
-
-            if self.gui is not None:
-                self.gui.showFullScreen()
-                sys.exit(self.app.exec_())
+        Logger().write(LogVerbosity.Important, "Started")
+        if Settings.get_bool("UI"):
+            from UI.TV.GUI import App
+            self.gui = App.initialize()
 
         else:
             while self.running:
@@ -84,15 +89,17 @@ class Program:
         Stats()
         VLCPlayer()
         NextEpisodeManager()
-        MediaTracker()
         WiFiController()
         MediaManager()
-        LightManager()
+        Updater()
+        ThreadManager()
+        PresenceManager()
+        RuleManager()
 
     @staticmethod
     def init_sound():
         if sys.platform == "linux" or sys.platform == "linux2":
-            Logger.write(2, "Settings sound to 100%")
+            Logger().write(LogVerbosity.Debug, "Settings sound to 100%")
             call(["amixer", "sset", "PCM,0", "100%"])
 
     @staticmethod
@@ -105,6 +112,7 @@ class Program:
     @staticmethod
     def get_latest_change():
         last_mod = 0
+        return datetime.now().timestamp()
         for root, _, filenames in os.walk(os.curdir):
             for filename in filenames:
                 if not filename.endswith(".py"):
@@ -117,20 +125,13 @@ class Program:
 
     @staticmethod
     def handle_exception(exc_type, exc_value, exc_traceback):
-        if issubclass(exc_type, KeyboardInterrupt):
-            return
-
-        filename, line, dummy, dummy = traceback.extract_tb(exc_traceback).pop()
-        filename = os.path.basename(filename)
-
-        Logger.write(3, "Unhandled exception on line " + str(line) + ", file " + filename, 'error')
-        Logger.write(3, "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)), 'error')
-
+        Logger().write_error(exc_value, "Unhandled exception")
+        Logger().stop()
         sys.exit(1)
-
 
 try:
     Program()
 except Exception as e:
-    Logger.write(3, "Exception during startup: " + str(e))
-    Logger.write(3, traceback.format_exc())
+    Logger().write_error(e, "Exception during startup")
+    Logger().stop()
+

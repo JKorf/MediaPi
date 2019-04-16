@@ -3,7 +3,7 @@ import json
 import struct
 
 from MediaPlayer.Subtitles.SubtitleSourceBase import SubtitleSourceBase
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
 
 
@@ -13,12 +13,16 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
 
     def get_subtitles(self, size, file_length, file_name, first_64k, last_64k):
         result_raw = RequestFactory.make_request("https://rest.opensubtitles.org/search/moviebytesize-" + str(size) + "/moviehash-" + str(self.get_hash(size, first_64k, last_64k))
-                                                 + "/sublanguageid-eng", "GET", "mediaplayerjk")
+                                                 + "/sublanguageid-eng", "GET", useragent="mediaplayerjk")
+        if not result_raw:
+            Logger().write(LogVerbosity.Info, "Failed to get subtitles")
+            return []
+
         result = json.loads(result_raw.decode('utf8'))
         paths = []
 
         results_correct_name = [x for x in result if x['MovieReleaseName'] in file_name]
-        Logger.write(2, "Subs with correct name (" + file_name + "): " + str(len(results_correct_name)))
+        Logger().write(LogVerbosity.Debug, "Subs with correct name (" + file_name + "): " + str(len(results_correct_name)))
         added = 0
         for sub in results_correct_name:
             path = self.download_sub(sub)
@@ -28,7 +32,7 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
                 break
 
         results_correct_size = [x for x in result if abs(int(x['MovieTimeMS']) - file_length) < 10]
-        Logger.write(2, "Subs with correct size (" + str(file_length) + "): " + str(len(results_correct_size)))
+        Logger().write(LogVerbosity.Debug, "Subs with correct size (" + str(file_length) + "): " + str(len(results_correct_size)))
         added = 0
         for sub in results_correct_size:
             path = self.download_sub(sub)
@@ -38,7 +42,7 @@ class SubtitlesOpenSubtitles(SubtitleSourceBase):
                 break
 
         results_other = [x for x in result if x not in results_correct_size and x not in results_correct_name]
-        Logger.write(2, "Subs other: " + str(len(results_other)))
+        Logger().write(LogVerbosity.Debug, "Subs other: " + str(len(results_other)))
         added = 0
         for sub in results_other:
             path = self.download_sub(sub)

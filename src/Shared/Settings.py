@@ -49,5 +49,17 @@ class Settings:
             l = line.replace('\r', '').replace('\n', '')
             if len(l) == 0 or l.startswith("#") or '=' not in l:
                 continue
-            keyvalue = l.split('=')
+            keyvalue = l.split('=', 1)
             Settings.content[keyvalue[0]] = keyvalue[1]
+
+
+class SecureSettings:
+    @staticmethod
+    def get_string(name):
+        for line in open(os.getcwd() + '/Solution/credentials.txt', 'rt'):
+            l = line.replace('\r', '').replace('\n', '')
+            if len(l) == 0 or l.startswith("#") or '=' not in l:
+                continue
+            keyvalue = l.split('=', 1)
+            if keyvalue[0] == name:
+                return str(keyvalue[1])

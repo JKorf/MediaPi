@@ -3,10 +3,13 @@ import os
 import time
 from enum import Enum
 
+import sys
+
 from MediaPlayer.Player import vlc
-from MediaPlayer.Player.vlc import libvlc_get_version, EventType as VLCEventType
+from MediaPlayer.Player.vlc import libvlc_get_version, Media
 from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
+from Shared.Logger import Logger, LogVerbosity
+from Shared.Observable import Observable
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import Singleton
@@ -15,76 +18,50 @@ from Shared.Util import Singleton
 class VLCPlayer(metaclass=Singleton):
 
     def __init__(self):
-        self.__end_action = None
         self.__vlc_instance = None
+        self.player_state = PlayerData()
 
         self.instantiate_vlc()
 
+        self.media = None
         self.__player = self.__vlc_instance.media_player_new()
+        # if sys.platform == "linux" or sys.platform == "linux2":
+        #     self.__player.set_fullscreen(True)
+
         self.__event_manager = self.__player.event_manager()
-        self.hook_events()
 
         self.set_volume(75)
 
-        self.media = None
-        self.prepared = False
-
-        self.state = PlayerState.Nothing
-
         self.trying_subitems = False
-        self.youtube_end_counter = 0
 
         EventManager.register_event(EventType.SetSubtitleFiles, self.set_subtitle_files)
-        EventManager.register_event(EventType.SetSubtitleId, self.set_subtitle_track)
-        EventManager.register_event(EventType.SetSubtitleOffset, self.set_subtitle_delay)
-        EventManager.register_event(EventType.SubtitlesDownloaded, self.set_subtitle_files)
-        EventManager.register_event(EventType.SetAudioId, self.set_audio_track)
-
-        EventManager.register_event(EventType.PauseResumePlayer, self.pause_resume)
-        EventManager.register_event(EventType.SetVolume, self.set_volume)
-        EventManager.register_event(EventType.Seek, self.set_time)
-
-        EventManager.register_event(EventType.PreparePlayer, self.prepare_play)
-        EventManager.register_event(EventType.StartPlayer, self.play)
         EventManager.register_event(EventType.StopPlayer, self.stop)
-
-        EventManager.register_event(EventType.TorrentMediaFileSelection, self.user_file_selected)
-        EventManager.register_event(EventType.TorrentMediaFileSet, self.torrent_media_file_set)
         EventManager.register_event(EventType.NoPeers, self.stop)
 
-        thread = CustomThread(self.watch_time_change, "VLC State watcher")
-        thread.start()
+        self.player_observer = CustomThread(self.observe_player, "Player observer")
+        self.player_observer.start()
+        self.stop_player_thread = None
 
     def instantiate_vlc(self):
         parameters = self.get_instance_parameters()
-        Logger.write(2, "VLC parameters: " + str(parameters))
-        self.__vlc_instance = vlc.Instance("vlc", *parameters)
-        Logger.write(3, "VLC version " + libvlc_get_version().decode('utf8'))
+        Logger().write(LogVerbosity.Debug, "VLC parameters: " + str(parameters))
+        self.__vlc_instance = vlc.Instance("cvlc", *parameters)
+        Logger().write(LogVerbosity.Info, "VLC version " + libvlc_get_version().decode('utf8'))
 
-    def prepare_play(self, media):
-        self.media = media
-        self.prepared = True
+    def play(self, url, time=0):
+        parameters = self.get_play_parameters(url, time)
 
-    def play(self, time=0, filename=None):
-        if not self.prepared:
-            raise ValueError("Player not prepared")
+        Logger().write(LogVerbosity.Info, "VLC Play | Url: " + url)
+        Logger().write(LogVerbosity.Info, "VLC Play | Time: " + str(time))
+        Logger().write(LogVerbosity.Info, "VLC Play | Parameters: " + str(parameters))
 
-        if time != 0:
-            self.media.start_time = time
-        if filename is not None:
-            self.media.file = filename
+        self.player_state.start_update()
+        self.player_state.path = url
+        self.player_state.stop_update()
 
-        parameters = self.get_play_parameters()
-
-        Logger.write(2, "VLC Play | Type: " + self.media.type)
-        Logger.write(2, "VLC Play | Title: " + self.media.title)
-        Logger.write(2, "VLC Play | Url: " + self.media.path)
-        Logger.write(2, "VLC Play | Time: " + str(self.media.start_time))
-        Logger.write(2, "VLC Play | Filename: " + str(self.media.file))
-        Logger.write(2, "VLC Play | Parameters: " + str(parameters))
-
-        self.__player.set_mrl(self.media.path, *parameters)
-        return self.__player.play() != -1
+        self.media = Media(url, *parameters)
+        self.__player.set_media(self.media)
+        self.__player.play()
 
     @staticmethod
     def get_instance_parameters():
@@ -93,84 +70,69 @@ class VLCPlayer(metaclass=Singleton):
                   "--ipv4-timeout=500",
                   "--image-duration=-1"]
 
-        if Settings.get_bool("raspberry"):
-            log_path = Settings.get_string("log_folder")
-            params.append("--logfile=" + log_path + '/vlclog_' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".txt")
+        if sys.platform == "linux" or sys.platform == "linux2":
+            log_path = Settings.get_string("base_folder") + "/Logs/" + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+            params.append("--logfile=" + log_path + '/vlc_' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S') + ".txt")
             params.append("--file-logging")
-            params.append("--codec=omxil")
-            params.append("--vout=omxil_vout")
             params.append("--file-caching=5000")
 
         return params
 
-    def get_play_parameters(self):
+    def get_play_parameters(self, url, time):
         params = []
-        if self.media.type == "YouTube":
-            params.append("lua-intf=youtube")
+        if time != 0:
+            params.append("start-time=" + str(time // 1000))
 
-        if self.media.start_time != 0:
-            params.append("start-time=" + str(self.media.start_time // 1000))
-
-        if self.media.type != "File":
-            if self.media.start_time != 0 and self.media.file.endswith("mp4"):
-                params.append("demux=avformat")
-            elif self.media.file is not None and self.media.file.endswith("avi"):
-                params.append("demux=avformat")
         return params
 
-    def torrent_media_file_set(self, file_name):
-        self.play(0, file_name)
-
-    def user_file_selected(self, path):
-        self.media.title = os.path.basename(path)
+    def set_window(self, handle):
+        if sys.platform == "linux" or sys.platform == "linux2":
+            self.__player.set_xwindow(handle)
+        else:
+            self.__player.set_hwnd(handle)
 
     def pause_resume(self):
+        Logger().write(LogVerbosity.All, "Player pause resume")
         self.__player.pause()
 
     def stop(self):
-        pos = self.get_position()
-        length = self.get_length()
-        self.__player.stop()
-        self.media = None
-        self.prepared = False
-        self.youtube_end_counter = 0
-        EventManager.throw_event(EventType.PlayerStopped, [pos, length])
-
-    def fullscreen_on(self):
-        self.__player.set_fullscreen(True)
-
-    def fullscreen_off(self):
-        self.__player.set_fullscreen(False)
-
-    def mute_on(self):
-        self.__player.audio_set_mute(True)
-
-    def mute_off(self):
-        self.__player.audio_set_mute(False)
+        Logger().write(LogVerbosity.All, "Player stop")
+        thread = CustomThread(lambda: self.__player.stop(), "Stopping VLC player")
+        thread.start()
 
     def set_volume(self, vol):
+        Logger().write(LogVerbosity.Debug, "Player set volume " + str(vol))
         self.__player.audio_set_volume(vol)
+        self.player_state.start_update()
+        self.player_state.volume = vol
+        self.player_state.stop_update()
 
     def get_volume(self):
         return self.__player.audio_get_volume()
 
     def get_position(self):
-        return int(self.__player.get_time() / 1000)
+        return self.__player.get_time()
 
     def get_length(self):
-        return int(self.__player.get_length() / 1000)
-
-    def get_length_ms(self):
         return int(self.__player.get_length())
 
     def set_time(self, pos):
+        Logger().write(LogVerbosity.Debug, "Player set time " + str(pos))
         self.__player.set_time(pos)
+        self.player_state.start_update()
+        self.player_state.playing_for = pos
+        self.player_state.stop_update()
 
     def set_position(self, pos):
+        Logger().write(LogVerbosity.Debug, "Player set position " + str(pos))
         self.__player.set_position(pos)
 
     def set_subtitle_delay(self, delay):
+        Logger().write(LogVerbosity.Debug, "Player set subtitle delay " + str(delay))
         self.__player.video_set_spu_delay(delay)
+        self.player_state.start_update()
+        self.player_state.sub_delay = delay
+        self.player_state.stop_update()
 
     def get_state(self):
         return self.__player.get_state()
@@ -179,7 +141,11 @@ class VLCPlayer(metaclass=Singleton):
         return self.__player.audio_get_track()
 
     def set_audio_track(self, track_id):
-        return self.__player.audio_set_track(track_id)
+        Logger().write(LogVerbosity.Debug, "Player set audio track " + str(track_id))
+        self.__player.audio_set_track(track_id)
+        self.player_state.start_update()
+        self.player_state.audio_track = track_id
+        self.player_state.stop_update()
 
     def get_audio_tracks(self):
         tracks = self.__player.audio_get_track_description()
@@ -189,8 +155,8 @@ class VLCPlayer(metaclass=Singleton):
         return result
 
     def set_subtitle_files(self, files):
-        Logger.write(2, "Adding " + str(len(files)) + " subtitle files")
-        pi = Settings.get_bool("raspberry")
+        Logger().write(LogVerbosity.Debug, "Adding " + str(len(files)) + " subtitle files")
+        pi = sys.platform == "linux" or sys.platform == "linux2"
         for file in reversed(files):
             if not pi and file[1] != ":":
                 file = "C:" + file
@@ -199,7 +165,11 @@ class VLCPlayer(metaclass=Singleton):
             self.__player.video_set_subtitle_file(file)
 
     def set_subtitle_track(self, id):
+        Logger().write(LogVerbosity.Debug, "Player set subtitle track " + str(id))
         self.__player.video_set_spu(id)
+        self.player_state.start_update()
+        self.player_state.sub_track = id
+        self.player_state.stop_update()
 
     def get_subtitle_count(self):
         return self.__player.video_get_spu_count()
@@ -208,7 +178,6 @@ class VLCPlayer(metaclass=Singleton):
         tracks = self.__player.video_get_spu_description()
         result = []
         for trackid, trackname in tracks:
-
             result.append((trackid, trackname.decode('utf-8')))
         return result
 
@@ -218,58 +187,14 @@ class VLCPlayer(metaclass=Singleton):
     def get_selected_sub(self):
         return self.__player.video_get_spu()
 
-    def get_fps(self):
-        return int(1000 // (self.__player.get_fps() or 25))
-
-    def hook_events(self):
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerOpening, self.state_change_opening)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerPlaying, self.state_change_playing)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerPaused, self.state_change_paused)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerStopped, self.state_change_stopped)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerEndReached, self.state_change_end_reached)
-        self.__event_manager.event_attach(VLCEventType.MediaPlayerEncounteredError, self.on_error)
-
-    def state_change_opening(self, event):
-        if self.state != PlayerState.Opening:
-            self.change_state(PlayerState.Opening)
-
-    def state_change_playing(self, event):
-        if self.state == PlayerState.Paused:
-            self.change_state(PlayerState.Playing)
-        else:
-            pass # gets handled by watching time change
-
-    def state_change_paused(self, event):
-        if self.state != PlayerState.Paused:
-            self.change_state(PlayerState.Paused)
-
-    def state_change_stopped(self, event):
-        if self.state != PlayerState.Nothing:
-            self.prepared = False
-            self.change_state(PlayerState.Nothing)
-
-    def state_change_end_reached(self, event):
-        if self.state != PlayerState.Ended:
-            if not self.trying_subitems:
-                thread = CustomThread(self.stop, "Stopping player")
-                thread.start()
-                self.change_state(PlayerState.Ended)
-
-    def on_error(self, event):
-        self.trying_subitems = True
-        thread = CustomThread(self.try_play_subitem, "Try play subitem")
-        thread.start()
-
     def try_play_subitem(self):
         media = self.__player.get_media()
         if media is None:
-            self.trying_subitems = False
             self.stop()
             return
 
         subs = media.subitems()
         if subs is None:
-            self.trying_subitems = False
             self.stop()
             return
 
@@ -277,46 +202,64 @@ class VLCPlayer(metaclass=Singleton):
             subs[0].add_options("demux=avformat")
             self.__player.set_media(subs[0])
             self.__player.play()
-            self.trying_subitems = False
 
-    def watch_time_change(self):
-        last_time = 0
+    def observe_player(self):
         while True:
-            this_time = self.__player.get_time()
-            if this_time == 0:
-                time.sleep(0.5)
-                continue
-
-            if this_time - last_time == 0:
-                if self.state == PlayerState.Playing:
-                    self.change_state(PlayerState.Buffering)
+            state = self.get_state().value
+            if state == 6 and self.player_state.state != PlayerState.Nothing:
+                if "youtube" in self.player_state.path and not self.trying_subitems:
+                    Logger().write(LogVerbosity.Debug, "Trying youtube sub items")
+                    self.trying_subitems = True
+                    thread = CustomThread(self.try_play_subitem, "Try play subitem")
+                    thread.start()
+                    continue
             else:
-                if self.state == PlayerState.Buffering or self.state == PlayerState.Opening:
-                    self.change_state(PlayerState.Playing)
-            last_time = this_time
-            time.sleep(1)
+                self.trying_subitems = False
 
-    def change_state(self, new):
-        old = self.state
-        self.state = new
+            if state in [5, 6, 7]:
+                state = 0
 
-        if old == PlayerState.Opening and new == PlayerState.Playing:
-            EventManager.throw_event(EventType.PlayerMediaLoaded, [self.get_length_ms()])
+            new_state = PlayerState(state)
+            if new_state == PlayerState.Nothing and self.player_state.state != PlayerState.Nothing:
+                self.stop_player_thread = CustomThread(self.stop, "Stopping player")
+                self.stop_player_thread.start()
 
-        Logger.write(2, "State change from " + str(old) + " to " + str(new))
-        EventManager.throw_event(EventType.PlayerStateChange, [old, new])
+            self.player_state.start_update()
+            self.player_state.state = new_state
+            self.player_state.playing_for = self.get_position()
+            self.player_state.length = self.get_length()
+            self.player_state.audio_tracks = self.get_audio_tracks()
+            self.player_state.audio_track = self.get_audio_track()
+            self.player_state.sub_delay = self.get_subtitle_delay()
+            self.player_state.sub_track = self.get_selected_sub()
+            self.player_state.sub_tracks = self.get_subtitle_tracks()
+            self.player_state.volume = self.get_volume()
+            self.player_state.stop_update()
 
-        if new == PlayerState.Ended:
-            if self.media.type != "YouTube":
-                thread = CustomThread(self.stop, "Stopping player")
-                thread.start()
+            time.sleep(0.5)
 
 
 class PlayerState(Enum):
-    Nothing = 0,
-    Opening = 1,
-    Buffering = 2,
-    Playing = 3,
-    Paused = 4,
-    Ended = 5
+    Nothing = 0
+    Opening = 1
+    Buffering = 2
+    Playing = 3
+    Paused = 4
+
+
+class PlayerData(Observable):
+
+    def __init__(self):
+        super().__init__("PlayerData", 0.5)
+
+        self.path = None
+        self.state = PlayerState.Nothing
+        self.playing_for = 0
+        self.length = 0
+        self.volume = 0
+        self.sub_delay = 0
+        self.sub_track = 0
+        self.sub_tracks = []
+        self.audio_track = 0
+        self.audio_tracks = []
 

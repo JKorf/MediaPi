@@ -8,10 +8,10 @@ from MediaPlayer.Util.Network import read_ushort
 
 
 def get_file_info(filename):
-    f = open(filename, "rb")
-    first = f.read(65536)
-    f.seek(-65536, os.SEEK_END)
-    last = f.read(65536)
+    with open(filename, "rb") as f:
+        first = f.read(65536)
+        f.seek(-65536, os.SEEK_END)
+        last = f.read(65536)
     return os.path.getsize(filename), first, last
 
 
@@ -86,7 +86,7 @@ def try_parse_season_episode(path):
 
     if season_number == 0:
         if "season" in path:
-            season_index = path.rfind("season") + 6
+            season_index = path.rfind("season") + 6  # season 1
             season_number = try_parse_number(path[season_index: season_index + 3])
 
     if epi_number == 0:
@@ -103,7 +103,7 @@ def try_parse_season_episode(path):
 
     if epi_number == 0:
         if "episode" in path:
-            epi_index = path.rfind("episode") + 7
+            epi_index = path.rfind("episode") + 7  # episode 1
             epi_number = try_parse_number(path[epi_index: epi_index + 3])
 
     return season_number, epi_number

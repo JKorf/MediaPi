@@ -1,62 +1,82 @@
 import os
+import subprocess
 import urllib.parse
-import urllib.request
 
-from Controllers.LightController import LightManager
-from Shared.Events import EventManager
-from Shared.Events import EventType
-from Shared.Logger import Logger
-from Shared.Network import RequestFactory
-from Shared.Settings import Settings as AppSettings
-from Shared.Stats import Stats
-from Shared.Threading import ThreadManager
-from Shared.Util import to_JSON, current_time, write_size
-from Webserver.Models import Info, StartUp
+import sys
+from flask import request
+
+from Shared.Logger import Logger, LogVerbosity
+from Shared.Util import to_JSON, write_size
+from Updater import Updater
+from Webserver.APIController import app, APIController
 
 
 class UtilController:
 
     @staticmethod
-    def info():
-        info = Info(current_time() - Stats.total('start_time'), Stats.total('peers_connect_try'), Stats.total('peers_connect_failed'), Stats.total('peers_connect_success'),
-                    Stats.total('peers_source_dht'), Stats.total('peers_source_udp_tracker'), Stats.total('peers_source_http_tracker'), Stats.total('peers_source_exchange'),
-                    write_size(Stats.total('total_downloaded')), Stats.total('subs_downloaded'), Stats.total('vlc_played'),
-                    write_size(Stats.total('max_download_speed')), Stats.total('peers_source_dht_connected'), Stats.total('peers_source_udp_tracker_connected'), Stats.total('peers_source_http_tracker_connected'),
-                    Stats.total('peers_source_pex_connected'))
-
-        return to_JSON(info)
-
-    @staticmethod
-    async def get_protected_img(url):
-        try:
-            result = await RequestFactory.make_request_async(url)
-            if not result:
-                Logger.write(2, "Couldnt get image: " + urllib.parse.unquote(url))
-                result = open(os.getcwd() + "/Interface/Mobile/Images/unknown.png", "rb").read()
-        except Exception:
-            result = open(os.getcwd() + "/Interface/Mobile/Images/noimage.png", "rb").read()
-        return result
+    @app.route('/util/update', methods=['GET'])
+    def get_update():
+        instance = int(request.args.get("instance"))
+        if instance == 1:
+            return to_JSON(UpdateAvailable(Updater().check_version(), Updater().last_version))
+        else:
+            result = APIController().slave_request(instance, "get_last_version", 10)
+            if result is None:
+                return to_JSON(UpdateAvailable(False, ""))
+            return to_JSON(UpdateAvailable(result[0], result[1]))
 
     @staticmethod
-    def test():
-        Logger.write(2, "============== Test ===============")
-        EventManager.throw_event(EventType.Log, [])
-        with Logger.lock:
-            Logger.write(3, "-- Threads --")
-            for thread in ThreadManager.threads:
-                Logger.write(3, "     " + thread.thread_name + ", running for " + str((current_time() - thread.start_time)/1000) + " seconds")
+    @app.route('/util/update', methods=['POST'])
+    def update():
+        instance = int(request.args.get("instance"))
+        if instance == 1:
+            Updater().update()
+        else:
+            APIController().slave_command(instance, "updater", "update")
+        return "OK"
 
     @staticmethod
-    def shutdown():
-        Logger.write(3, "Shutdown")
-        os.system('sudo shutdown now')
+    @app.route('/util/restart_device', methods=['POST'])
+    def restart_device():
+        instance = int(request.args.get("instance"))
+        if instance == 1:
+            os.system('sudo reboot')
+        else:
+            APIController().slave_command(instance, "system", "restart_device")
+        return "OK"
 
     @staticmethod
-    def restart_pi():
-        Logger.write(3, "Restart")
-        os.system('sudo reboot')
+    @app.route('/util/restart_application', methods=['POST'])
+    def restart_application():
+        instance = int(request.args.get("instance"))
+        if instance == 1:
+            python = sys.executable
+            os.execl(python, python, *sys.argv)
+        else:
+            APIController().slave_command(instance, "system", "restart_application")
+        return "OK"
 
     @staticmethod
-    def startup():
-        return to_JSON(
-            StartUp(AppSettings.get_string("name"), LightManager().enabled))
+    @app.route('/util/log', methods=['POST'])
+    def debug_log():
+        Logger().write(LogVerbosity.Important, "Test")
+        return "OK"
+
+    @staticmethod
+    @app.route('/util/logs', methods=['GET'])
+    def get_log_files():
+        log_files = Logger.get_log_files()
+        return to_JSON([(name, path, write_size(size)) for name, path, size in log_files])
+
+    @staticmethod
+    @app.route('/util/log', methods=['GET'])
+    def get_log_file():
+        file = urllib.parse.unquote(request.args.get('file'))
+        return Logger.get_log_file(file)
+
+
+class UpdateAvailable:
+
+    def __init__(self, available, commit_hash):
+        self.available = available
+        self.hash = commit_hash
