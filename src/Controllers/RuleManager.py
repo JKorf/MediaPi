@@ -246,6 +246,7 @@ class ToggleTvAction:
         # TODO slave?
         if self.on:
             TVManager().turn_tv_on()
+            TVManager().switch_input_to_pi()
         else:
             TVManager().turn_tv_off()
 
