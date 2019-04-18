@@ -24,7 +24,6 @@ class Rule:
         self.conditions = []
         self.actions = []
         self.name = name
-        self.run = False
         self.description = None
 
     def add_action(self, id, type, parameters):
@@ -36,18 +35,17 @@ class Rule:
         self.description = self.get_description()
 
     def check(self):
+        should_execute = True
         for condition in self.conditions:
             if not condition.check():
-                self.run = False
-                return False
+                should_execute = False
 
-        return not self.run
+        return should_execute
 
     def execute(self):
         for action in self.actions:
             action.execute()
         self.last_execution = current_time()
-        self.run = True
 
     def get_description(self):
         result = "If "
@@ -85,11 +83,11 @@ class IsBetweenTimeCondition:
 
     def check(self):
         now = datetime.now()
-        result = self._next_start_time < now < self._next_end_time
-        if not result and now > self._next_end_time:
+        if now > self._next_end_time:
             self._next_start_time = RuleManager.update_check_time(self.start_time_hours, self.start_time_minutes)
             self._next_end_time = RuleManager.update_check_time(self.end_time_hours, self.end_time_minutes)
 
+        result = self._next_start_time < now < self._next_end_time
         return result
 
     def get_description(self):
@@ -176,11 +174,11 @@ class OnComingHomeCondition:
         self.last_home_check = False
 
     def check(self):
-        current_state = PresenceManager().anyone_home
-        if current_state and not self.last_home_check:
-            self.last_home_check = current_state
+        new_check = PresenceManager().anyone_home
+        old_check = self.last_home_check
+        self.last_home_check = new_check
+        if new_check and not old_check:
             return True
-        self.last_home_check = current_state
         return False
 
     def get_description(self):

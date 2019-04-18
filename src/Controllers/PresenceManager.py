@@ -45,11 +45,13 @@ class PresenceManager(metaclass=Singleton):
             if self.anyone_home and len([x for x in self.device_states if x.home_state]) == 0:
                 # left
                 self.anyone_home = False
+                Logger().write(LogVerbosity.Info, "Everybody left home")
                 if self.on_leaving_home is not None:
                     self.on_leaving_home()
             elif not self.anyone_home and len([x for x in self.device_states if x.home_state]) > 0:
                 # returned
                 self.anyone_home = True
+                Logger().write(LogVerbosity.Info, "Someone came home")
                 if self.on_coming_home is not None:
                     self.on_coming_home()
 
