@@ -1,21 +1,21 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-class LightGroupSelector extends Component {
+class TradfriGroupSelector extends Component {
   constructor(props) {
     super(props);
-    this.state = {lights: []};
+    this.state = {groups: []};
 
     this.changeValue = this.changeValue.bind(this);
   }
 
   componentDidMount()
   {
-    axios.get(window.vars.apiBase + 'lighting/groups').then(
+    axios.get(window.vars.apiBase + 'tradfri/groups').then(
         (data) => {
             data = data.data;
             console.log(data);
-            this.setState({lights: data});
+            this.setState({groups: data});
             if (!this.props.value)
                 this.changeValue(data[0].id);
          },
@@ -32,10 +32,10 @@ class LightGroupSelector extends Component {
     return (
       <div className="light-group-selector">
         <select onChange={(e) => this.changeValue(e.target.value)} value={this.props.value}>
-            { this.state.lights.map(lightGroup => <option key={lightGroup.id} value={lightGroup.id}>{lightGroup.name}</option>) }
+            { this.state.groups.map(group => <option key={group.id} value={group.id}>{group.name}</option>) }
         </select>
       </div>)
   }
 }
 
-export default LightGroupSelector;
+export default TradfriGroupSelector;

@@ -185,11 +185,11 @@ class OnComingHomeCondition:
         return "first person comes home"
 
 
-class ToggleLightsAction:
+class ToggleTradfriGroupAction:
 
-    name = "Toggle lights"
-    description = "Turns a light group on or off"
-    parameter_descriptions = [("Light group", "light_group"), ("On/Off", "bool")]
+    name = "Toggle a Tradfri group"
+    description = "Turns a Tradfri group on or off"
+    parameter_descriptions = [("Group", "tradfri_group"), ("On/Off", "bool")]
 
     def __init__(self, id, type, group_ids, on):
         self.id = id
@@ -205,8 +205,8 @@ class ToggleLightsAction:
 
     def get_description(self):
         if self.on:
-            return "turn on the lights for light group " + str(self.parameters[0])
-        return "turn off the lights for light group " + str(self.parameters[0])
+            return "turn on the devices for Tradfri group " + str(self.parameters[0])
+        return "turn off the devices for Tradfri group " + str(self.parameters[0])
 
 
 class SetTemperatureAction:
@@ -288,7 +288,7 @@ class RuleManager(metaclass=Singleton):
         5: OnComingHomeCondition
     }
     actions = {
-        1: ToggleLightsAction,
+        1: ToggleTradfriGroupAction,
         2: SetTemperatureAction,
         3: ToggleTvAction,
         4: PlayRadioAction
