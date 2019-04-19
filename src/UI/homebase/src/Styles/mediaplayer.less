@@ -671,7 +671,7 @@
 
 .player-details-group-content{
     position: relative;
-    background: #colors[item-background];
+    background:  #colors[item-background];
 }
 
 .player-details-img{
@@ -1102,10 +1102,17 @@
 }
 
 .light-group{
-    margin-top: 10px;
+    margin-bottom: 10px;
     vertical-align: top;
-    &:first-child{
-        margin-top: 0;
+    display: inline-block;
+    width: 100%;
+
+    .device-group-devices-header{
+        border-top: 1px solid #colors[borders];
+        padding: 3px;
+        text-align: center;
+        font-size: 12px;
+        color: #colors[text-faded];
     }
 
     .light-group-dimmer{
@@ -1114,17 +1121,63 @@
         vertical-align:top;
     }
 
+    .device-group-controls{
+        margin-top: 2px;
+            padding: 10px;
+
+
+        .light-group-dimmer{
+            display: block;
+            width: 100%;
+        }
+    }
+
     .light-group-state{
-        display:inline-block;
-        width: 70px;
-        vertical-align:top;
-        text-align:right;
+        position: absolute;
+        right: 10px;
+        top: 8px;
 
         .switch{
             display:inline-block;
             vertical-align: top;
             margin-top: 4px;
         }
+    }
+}
+
+.light-group-details{
+    .light-group-state{
+        top: -34px;
+    }
+
+    .info-group-title-change{
+        right: 78px !important;
+        top: 8px !important;
+    }
+
+    .player-details-group-title{
+        line-height:30px;
+    }
+}
+
+@media only screen and (min-device-width: 460px){
+    .light-group{
+        width: calc(50% - 10px);
+        margin: 5px;
+    }
+}
+
+@media only screen and (min-device-width: 600px){
+    .light-group{
+        width: calc(100% / 3 - 10px);
+        margin: 5px;
+    }
+}
+
+@media only screen and (min-device-width: 800px){
+    .light-group{
+        width: calc(25% - 10px);
+        margin: 5px;
     }
 }
 
@@ -1158,51 +1211,31 @@
 }
 
 .light-group-details{
-    border-top: 1px solid #colors[borders];
-    padding: 10px;
+    background: #colors[list-background-alternate];
+
+    .player-details-group-content{
+        background: none;
+    }
 }
+
 
 .light-group-details .player-details-group{
     display: inline-block;
     vertical-align: top;
     width: 100%;
+    margin-bottom: 5px;
+
+    border-top: 1px solid #colors[borders];
 }
 
-@media only screen and (min-device-width: 390px){
-    .light-group-details .player-details-group{
-        width: calc(50% - 10px);
-        margin: 5px;
-    }
-}
-
-@media only screen and (min-device-width: 600px){
-    .light-group-details .player-details-group{
-        width: calc(100% / 3 - 10px);
-        margin: 5px;
-    }
-}
-
-@media only screen and (min-device-width: 800px){
-    .light-group-details .player-details-group{
-        width: calc(25% - 10px);
-        margin: 5px;
-    }
-}
 
 .light-group-light{
-    padding: 10px;
-    background: #colors[list-background-alternate];
+    position: relative;
 }
-
 .light-group-details .player-details-group-title{
-    font-weight: normal;
-    font-size: 12px;
-    background: #434c4f;
+    background: none;
 }
 
-.light-group-details .player-details-group{
-    margin-top: 5px;
-}
 
 .light-group-light .slider-value{
     font-size: 10px;

@@ -52,9 +52,25 @@ class MediaFile:
         self.seen = seen
 
 
+class SocketControl:
+
+    def __init__(self, item_id, name, application_type, last_seen, reachable, items):
+        self.application_type = application_type
+        self.name = name
+        self.last_seen = last_seen
+        self.reachable = reachable
+        self.id = item_id
+        self.items = items
+
+
+class SocketDevice:
+    def __init__(self, state):
+        self.state = state
+
+
 class LightControl:
 
-    def __init__(self, item_id, name, application_type, last_seen, reachable, can_set_dimmer, can_set_temp, can_set_color, lights):
+    def __init__(self, item_id, name, application_type, last_seen, reachable, can_set_dimmer, can_set_temp, can_set_color, items):
         self.application_type = application_type
         self.name = name
         self.last_seen = last_seen
@@ -62,7 +78,7 @@ class LightControl:
         self.can_set_dimmer = can_set_dimmer
         self.can_set_temp = can_set_temp
         self.can_set_color = can_set_color
-        self.lights = lights
+        self.items = items
         self.id = item_id
 
 
@@ -75,13 +91,15 @@ class LightDevice:
         self.hex_color = hex_color
 
 
-class LightGroup:
+class DeviceGroup:
 
-    def __init__(self, item_id, name, state, dimmer):
+    def __init__(self, item_id, name, state, dimmer, device_count):
         self.id = item_id
         self.name = name
         self.state = state
         self.dimmer = dimmer
+        self.device_count = device_count
+        self.devices = []
 
 
 class CecDevice:

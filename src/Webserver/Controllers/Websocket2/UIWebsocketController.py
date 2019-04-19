@@ -14,7 +14,7 @@ class UIWebsocketController(BaseWebsocketController):
 
     @staticmethod
     def init():
-        from Controllers.LightManager import LightManager
+        from Controllers.TradfriManager import TradfriManager
         from MediaPlayer.MediaManager import MediaManager
         from MediaPlayer.Player.VLCPlayer import VLCPlayer
         from Updater import Updater
@@ -22,7 +22,7 @@ class UIWebsocketController(BaseWebsocketController):
         from Shared.Stats import Stats
 
         APIController.slaves.register_callback(lambda old, new: UIWebsocketController.broadcast("slaves", new.data))
-        LightManager().light_state.register_callback(lambda old, new: UIWebsocketController.broadcast("lights", new))
+        TradfriManager().tradfri_state.register_callback(lambda old, new: UIWebsocketController.broadcast("tradfri", new))
         StateManager().state_data.register_callback(lambda old, new: UIWebsocketController.broadcast("1.state", new))
         VLCPlayer().player_state.register_callback(lambda old, new: UIWebsocketController.broadcast("1.player", new))
         MediaManager().media_data.register_callback(lambda old, new: UIWebsocketController.broadcast("1.media", new))

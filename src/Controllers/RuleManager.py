@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import math
 
-from Controllers.LightManager import LightManager
+from Controllers.TradfriManager import TradfriManager
 from Controllers.PresenceManager import PresenceManager
 from Controllers.TVManager import TVManager
 from Controllers.ToonManager import ToonManager
@@ -201,7 +201,7 @@ class ToggleLightsAction:
 
     def execute(self):
         for group_id in self.group_ids:
-            LightManager().set_group_state(group_id, self.on)
+            TradfriManager().set_group_state(group_id, self.on)
 
     def get_description(self):
         if self.on:

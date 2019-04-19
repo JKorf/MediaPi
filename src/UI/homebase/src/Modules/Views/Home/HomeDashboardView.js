@@ -21,7 +21,7 @@ class HomeDashboardView extends Component {
     return (
     <div className="mediaplayer-dashboard">
         <DashboardLink to="/home/heating" img={heatingImg} text="heating"></DashboardLink>
-        <DashboardLink to="/home/lighting" img={lightingImg} text="lighting"></DashboardLink>
+        <DashboardLink to="/home/tradfri" img={lightingImg} text="lights & sockets"></DashboardLink>
         <DashboardLink to="/home/devices" img={deviceImg} text="devices"></DashboardLink>
         <DashboardLink to="/home/rules" img={rulesImg} text="rules"></DashboardLink>
     </div>

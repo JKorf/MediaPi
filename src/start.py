@@ -26,7 +26,7 @@ from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
 
 from Controllers.PresenceManager import PresenceManager
 from Controllers.WiFiController import WiFiController
-from Controllers.LightManager import LightManager
+from Controllers.TradfriManager import TradfriManager
 
 from Shared.Util import current_time
 from Shared.Stats import Stats
@@ -65,7 +65,7 @@ class Program:
         RuleManager().start()
 
         if not self.is_slave:
-            LightManager().init()
+            TradfriManager().init()
             self.file_listener = StreamListener("MasterFileServer", 50015)
             self.file_listener.start_listening()
 

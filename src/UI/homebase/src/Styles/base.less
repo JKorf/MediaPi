@@ -591,6 +591,10 @@ a {
 .player-details-group{
     position: relative;
 
+    .with-icon{
+        padding-left: 26px;
+    }
+
     .info-group-title-change{
         width: 14px;
         height: 14px;
@@ -608,6 +612,20 @@ a {
     .info-group-title-edit{
         input{
             height: 18px;
+        }
+    }
+
+    .info-group-title-icon{
+        width: 18px;
+        height: 18px;
+        position: absolute;
+        left: 6px;
+        top: 6px;
+
+        svg{
+            fill: #colors[images];
+            width: 100%;
+            height: 100%
         }
     }
 }

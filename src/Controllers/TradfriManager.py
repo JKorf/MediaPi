@@ -1,6 +1,5 @@
 import sys
 import uuid
-from threading import Lock
 
 from pytradfri import Gateway
 from pytradfri.api.libcoap_api import APIFactory
@@ -11,10 +10,10 @@ from Shared.Observable import Observable
 from Shared.Settings import Settings, SecureSettings
 from Shared.Threading import CustomThread
 from Shared.Util import Singleton, current_time
-from Webserver.Models import LightGroup, LightDevice, LightControl
+from Webserver.Models import LightDevice, LightControl, SocketDevice, SocketControl, DeviceGroup
 
 
-class LightManager(metaclass=Singleton):
+class TradfriManager(metaclass=Singleton):
 
     api_factory = None
     api = None
@@ -23,7 +22,7 @@ class LightManager(metaclass=Singleton):
     initialized = False
 
     def __init__(self):
-        self.light_state = LightState()
+        self.tradfri_state = TradfriState()
         self.observing_end = 0
         self.observing = False
         self.observe_thread = None
@@ -36,8 +35,8 @@ class LightManager(metaclass=Singleton):
         if sys.platform != "linux" and sys.platform != "linux2":
             Logger().write(LogVerbosity.Info, "Lighting: Not initializing, no coap client available on windows")
             self.initialized = True
-            self.light_state.update_group(LightGroup(1, "Test group", True, 128))
-            self.light_state.update_group(LightGroup(2, "Test group 2", False, 18))
+            self.tradfri_state.update_group(DeviceGroup(1, "Test group", True, 128, 6))
+            self.tradfri_state.update_group(DeviceGroup(2, "Test group 2", False, 18, 6))
             return
 
         Logger().write(LogVerbosity.All, "Start LightManager init")
@@ -77,9 +76,9 @@ class LightManager(metaclass=Singleton):
                 Logger().write(LogVerbosity.Info, "Lighting: Previously saved key found")
                 self.initialized = True
 
-            groups = self.get_light_groups()
+            groups = self.get_device_groups()
             for group in groups:
-                self.light_state.update_group(group)
+                self.tradfri_state.update_group(group)
 
     def start_observing(self):
         Logger().write(LogVerbosity.Debug, "Start observing light data")
@@ -100,7 +99,7 @@ class LightManager(metaclass=Singleton):
     def observe_group(self, group):
         Logger().write(LogVerbosity.All, "Starting observe for group " + group.name)
         self.observe_thread = CustomThread(lambda: self.api(group.observe(
-            self.light_state.update_group,
+            self.tradfri_state.update_group,
             lambda x: self.check_observe(group), duration=30)), "Light group observer", [])
         self.observe_thread.start()
 
@@ -114,58 +113,61 @@ class LightManager(metaclass=Singleton):
         Logger().write(LogVerbosity.Debug, "Stop observing light data")
         self.observing = False
 
-    def get_lights(self):
+    def get_devices(self):
         if not self.check_state():
             return []
 
-        Logger().write(LogVerbosity.All, "Get lights")
+        Logger().write(LogVerbosity.All, "Get devices")
         devices_commands = self.api(self.gateway.get_devices())
-        lights = self.api(devices_commands)
-        [self.parse_light_control(x) for x in lights if x.has_light_control]
+        devices = self.api(devices_commands)
+        [self.parse_device(x) for x in devices]
 
-    def set_light_state(self, light, state):
+    def set_state(self, device_id, state):
         if not self.check_state():
             return
 
-        Logger().write(LogVerbosity.All, "Set light state")
-        device = self.api(self.gateway.get_device(light))
-        self.api(device.light_control.set_state(state))
+        Logger().write(LogVerbosity.All, "Set device state")
+        device = self.api(self.gateway.get_device(device_id))
+        if device.has_light_control:
+            self.api(device.light_control.set_state(state))
+        else:
+            self.api(device.socket_control.set_state(state))
 
-    def set_light_warmth(self, light, warmth):
+    def set_light_warmth(self, device_id, warmth):
         if not self.check_state():
             return
 
         Logger().write(LogVerbosity.All, "Set light warmth")
-        device = self.api(self.gateway.get_device(light))
+        device = self.api(self.gateway.get_device(device_id))
         self.api(device.light_control.set_color_temp(warmth))
 
-    def set_light_dimmer(self, light, amount):
+    def set_light_dimmer(self, device_id, amount):
         if not self.check_state():
             return
 
         Logger().write(LogVerbosity.All, "Set light dimmer")
-        device = self.api(self.gateway.get_device(light))
+        device = self.api(self.gateway.get_device(device_id))
         self.api(device.light_control.set_dimmer(amount))
 
-    def set_light_name(self, light, name):
+    def set_device_name(self, device_id, name):
         if not self.check_state():
             return
 
-        Logger().write(LogVerbosity.All, "Set light name")
-        device = self.api(self.gateway.get_device(light))
+        Logger().write(LogVerbosity.All, "Set device name")
+        device = self.api(self.gateway.get_device(device_id))
         self.api(device.set_name(name))
 
-    def get_light_groups(self):
+    def get_device_groups(self):
         if not self.check_state():
             return []
 
-        Logger().write(LogVerbosity.All, "Get light groups")
+        Logger().write(LogVerbosity.All, "Get device groups")
         groups_commands = self.api(self.gateway.get_groups())
         result = self.api(groups_commands)
-        Logger().write(LogVerbosity.All, "Get light groups: " + str([x.raw for x in result]))
-        return [LightGroup(group.id, group.name, group.state, group.dimmer) for group in result]
+        Logger().write(LogVerbosity.All, "Get device groups: " + str([x.raw for x in result]))
+        return [DeviceGroup(group.id, group.name, group.state, group.dimmer, len(group.member_ids)) for group in result]
 
-    def get_lights_in_group(self, group):
+    def get_devices_in_group(self, group):
         if not self.check_state():
             return []
 
@@ -173,7 +175,7 @@ class LightManager(metaclass=Singleton):
         group = self.api(self.gateway.get_group(group))
         members = group.member_ids
         result = [self.api(self.gateway.get_device(x)) for x in members]
-        return [self.parse_light_control(x) for x in result if x.has_light_control]
+        return [self.parse_device(x) for x in result]
 
     def set_group_name(self, group, name):
         if not self.check_state():
@@ -210,38 +212,50 @@ class LightManager(metaclass=Singleton):
         return True
 
     @staticmethod
-    def parse_light_control(data):
-        lights = []
-        for light in data.light_control.lights:
-            lights.append(LightDevice(
-                light.state,
-                light.dimmer,
-                light.color_temp,
-                light.hex_color))
+    def parse_device(data):
+        if data.has_light_control:
+            lights = []
+            for light in data.light_control.lights:
+                lights.append(LightDevice(
+                    light.state,
+                    light.dimmer,
+                    light.color_temp,
+                    light.hex_color))
 
-        return LightControl(data.id,
-                            data.name,
-                            data.application_type,
-                            data.last_seen.timestamp(),
-                            data.reachable,
-                            data.light_control.can_set_dimmer,
-                            data.light_control.can_set_temp,
-                            data.light_control.can_set_color,
-                            lights)
+            return LightControl(data.id,
+                                data.name,
+                                data.application_type,
+                                data.last_seen.timestamp(),
+                                data.reachable,
+                                data.light_control.can_set_dimmer,
+                                data.light_control.can_set_temp,
+                                data.light_control.can_set_color,
+                                lights)
+
+        elif data.has_socket_control:
+            sockets = []
+            for socket in data.socket_control.sockets:
+                sockets.append(SocketDevice(socket.state))
+
+            return SocketControl(data.id, data.name, data.application_type, data.last_seen.timestamp(), data.reachable, sockets)
 
 
-class LightState(Observable):
+class TradfriState(Observable):
 
     def __init__(self):
-        super().__init__("LightData", 1)
+        super().__init__("TradfriData", 1)
         self.groups = []
 
     def update_group(self, group):
         if hasattr(group, 'raw'):
-            Logger().write(LogVerbosity.Debug, "Light update: " + str(group.raw))
+            Logger().write(LogVerbosity.Debug, "Group update: " + str(group.raw))
 
         if group.id not in [x.id for x in self.groups]:
-            self.groups.append(LightGroup(group.id, group.name, group.state, group.dimmer))
+            if hasattr(group, 'device_count'):
+                device_count = group.device_count
+            else:
+                device_count = len(group.member_ids)
+            self.groups.append(DeviceGroup(group.id, group.name, group.state, group.dimmer, device_count))
         else:
             g = [x for x in self.groups if x.id == group.id][0]
             g.state = group.state

@@ -57,7 +57,7 @@ class APIController(metaclass=Singleton):
         from Webserver.Controllers.MediaPlayer.RadioController import RadioController
         from Webserver.Controllers.MediaPlayer.TorrentController import TorrentController
         from Webserver.Controllers.DataController import DataController
-        from Webserver.Controllers.LightController import LightController
+        from Webserver.Controllers.TradfriController import TradfriController
         from Webserver.Controllers.ToonController import ToonController
         from Webserver.Controllers.UtilController import UtilController
         from Webserver.Controllers.RuleController import RuleController
