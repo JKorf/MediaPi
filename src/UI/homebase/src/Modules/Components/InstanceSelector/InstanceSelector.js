@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 import Socket from "./../../../Socket2.js"
 
 

@@ -6,7 +6,6 @@ import axios from 'axios';
 import Button from './../../Components/Button';
 import CheckBox from './../../Components/CheckBox';
 import TimePicker from './../../Components/TimePicker';
-import ViewLoader from './../../Components/ViewLoader';
 import TradfriGroupSelector from './../../Components/TradfriGroupSelector';
 import InstanceSelector from './../../Components/InstanceSelector';
 import RadioSelector from './../../Components/RadioSelector';
@@ -21,7 +20,7 @@ class RuleView extends Component {
     this.props.functions.changeTitle("Rule");
     this.props.functions.changeRightImage(null);
 
-    this.newRule = this.props.match.params.id == -1
+    this.newRule = this.props.match.params.id === -1
 
     this.saveRule = this.saveRule.bind(this);
     this.getConditionById = this.getConditionById.bind(this);
@@ -68,7 +67,7 @@ class RuleView extends Component {
         return;
     }
 
-    if (this.state.rule.conditions.length == 0){
+    if (this.state.rule.conditions.length === 0){
         alert("Rule needs at least one condition");
         e.preventDefault();
         return;
@@ -85,11 +84,11 @@ class RuleView extends Component {
 
     var conditionLength = this.state.rule.conditions.length;
     var conditionString = "&conditions=" + conditionLength;
-    for (var i = 0; i < conditionLength; i++)
+    for (var k = 0; k < conditionLength; k++)
     {
-        conditionString += "&condition"+i+"_type=" + this.state.rule.conditions[i].type;
-        for (var j = 0; j < this.state.rule.conditions[i].parameters.length; j++)
-            conditionString += "&condition"+i+"_param" + (j + 1) + "=" +this.state.rule.conditions[i].parameters[j];
+        conditionString += "&condition"+i+"_type=" + this.state.rule.conditions[k].type;
+        for (var l = 0; l < this.state.rule.conditions[k].parameters.length; l++)
+            conditionString += "&condition"+k+"_param" + (l + 1) + "=" +this.state.rule.conditions[k].parameters[l];
     }
 
     axios.post(window.vars.apiBase + 'rule/save?id=' + this.state.rule.id +
@@ -105,11 +104,11 @@ class RuleView extends Component {
   }
 
   getConditionById(id){
-    return this.state.conditions.filter(c => c.id == id)[0]
+    return this.state.conditions.filter(c => c.id === id)[0]
   }
 
   getActionById(id){
-    return this.state.actions.filter(c => c.id == id)[0]
+    return this.state.actions.filter(c => c.id === id)[0]
   }
 
   paramChange(item, parameter_index, newValue)
@@ -148,9 +147,9 @@ class RuleView extends Component {
       for (var i = 0; i < item.parameter_description.length; i++)
       {
         var type = item.parameter_description[i][1];
-        if (type == "bool")
+        if (type === "bool")
             result.push(false);
-        else if(type == "int" || type == "time")
+        else if(type === "int" || type === "time")
             result.push(0);
         else
             result.push("");
@@ -168,22 +167,22 @@ class RuleView extends Component {
                     <div className="rule-condition-parameter" key={index}>
                         <div className="rule-condition-parameter-name">{ condition.parameter_description[index][0] }:</div>
                         <div className="rule-condition-parameter-value">
-                            { condition.parameter_description[index][1] == "bool" &&
+                            { condition.parameter_description[index][1] === "bool" &&
                                 <div><CheckBox value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /> </div>
                             }
-                            { condition.parameter_description[index][1] == "int" &&
+                            { condition.parameter_description[index][1] === "int" &&
                                 <div><input type="number" value={ param } onChange={(e) => this.paramChange(cond, index, e.target.value)}/> </div>
                             }
-                            { condition.parameter_description[index][1] == "time" &&
+                            { condition.parameter_description[index][1] === "time" &&
                                 <div><TimePicker hour={Math.floor(param / 60)} minute={param % 60} onHourChange={(newVal) => this.paramHourChange(cond, index, newVal)} onMinuteChange={(newVal) => this.paramMinuteChange(cond, index, newVal)} /></div>
                             }
-                            { condition.parameter_description[index][1] == "tradfri_group" &&
+                            { condition.parameter_description[index][1] === "tradfri_group" &&
                                 <div><TradfriGroupSelector value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /></div>
                             }
-                            { condition.parameter_description[index][1] == "instance" &&
+                            { condition.parameter_description[index][1] === "instance" &&
                                 <div><InstanceSelector value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /></div>
                             }
-                            { condition.parameter_description[index][1] == "radio" &&
+                            { condition.parameter_description[index][1] === "radio" &&
                                 <div><RadioSelector value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /></div>
                             }
                         </div>
@@ -208,22 +207,22 @@ class RuleView extends Component {
                 <div className="rule-condition-parameter" key={index}>
                     <div className="rule-condition-parameter-name">{ action.parameter_description[index][0] }:</div>
                     <div className="rule-condition-parameter-value">
-                        { action.parameter_description[index][1] == "bool" &&
+                        { action.parameter_description[index][1] === "bool" &&
                             <div><CheckBox value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /> </div>
                         }
-                        { action.parameter_description[index][1] == "int" &&
+                        { action.parameter_description[index][1] === "int" &&
                             <div><input className="rule-number-parameter" type="number" value={ param } onChange={(e) => this.paramChange(act, index, e.target.value)}/> </div>
                         }
-                        { action.parameter_description[index][1] == "time" &&
+                        { action.parameter_description[index][1] === "time" &&
                             <div><TimePicker hour={Math.floor(param / 60)} minute={param % 60} onHourChange={(newVal) => this.paramHourChange(act, index, newVal)} onMinuteChange={(newVal) => this.paramMinuteChange(action, index, newVal)} /></div>
                         }
-                        { action.parameter_description[index][1] == "tradfri_group" &&
+                        { action.parameter_description[index][1] === "tradfri_group" &&
                             <div><TradfriGroupSelector value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /></div>
                         }
-                        { action.parameter_description[index][1] == "instance" &&
+                        { action.parameter_description[index][1] === "instance" &&
                             <div><InstanceSelector value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /></div>
                         }
-                        { action.parameter_description[index][1] == "radio" &&
+                        { action.parameter_description[index][1] === "radio" &&
                             <div><RadioSelector value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /></div>
                         }
                     </div>
@@ -254,18 +253,21 @@ class RuleView extends Component {
 
   setName(name)
   {
-    this.state.rule.name = name;
-    this.setState({rule: this.state.rule});
+    var rule = this.state.rule;
+    rule.name = name;
+    this.setState({rule: rule});
   }
 
   setActive(value)
   {
-    this.state.rule.active = value;
+  var rule = this.state.rule;
+    rule.active = value;
+    this.setState({rule: rule});
     this.setState({rule: this.state.rule});
   }
 
   render() {
-    if (this.state.actions.length == 0)
+    if (this.state.actions.length === 0)
         return "";
 
     var actionItems = [];
@@ -274,8 +276,8 @@ class RuleView extends Component {
     }
 
     var conditionItems = [];
-    for(var i = 0; i < this.state.rule.conditions.length; i++){
-        conditionItems.push(this.getConditionItem(this.state.rule.conditions[i]));
+    for(var j = 0; j < this.state.rule.conditions.length; j++){
+        conditionItems.push(this.getConditionItem(this.state.rule.conditions[j]));
     }
 
     return (
@@ -305,7 +307,7 @@ class RuleView extends Component {
             <div className="rule-title">Conditions</div>
             <div className="rule-item-inner">
                 {conditionItems}
-                { this.state.rule.conditions.length == 0 &&
+                { this.state.rule.conditions.length === 0 &&
                     <div className="rule-condition rule-no-item">No conditions yet</div>
                 }
                 <div className="rule-condition-add" onClick={() => { this.setState({showSelectConditionType: true}) }}>
@@ -321,7 +323,7 @@ class RuleView extends Component {
             <div className="rule-title">Actions</div>
             <div className="rule-item-inner">
                 {actionItems}
-                { this.state.rule.actions.length == 0 &&
+                { this.state.rule.actions.length === 0 &&
                     <div className="rule-condition rule-no-item">No actions yet</div>
                 }
                 <div className="rule-condition-add" onClick={() => { this.setState({showSelectActionType: true}) }}>

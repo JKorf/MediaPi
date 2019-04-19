@@ -3,7 +3,6 @@ import axios from 'axios';
 import { Link } from "react-router-dom";
 
 import Button from './../../Components/Button';
-import ViewLoader from './../../Components/ViewLoader';
 import CheckBox from './../../Components/CheckBox';
 
 class RulesView extends Component {
@@ -60,10 +59,10 @@ class RulesView extends Component {
                 <div className="no-rules">No rules yet</div>
               }
               { this.state.currentRules.map(rule =>
-                  <div key={rule.id} className={"current-rule " + (rule.active ? "": "inactive") + (this.state.selectedRule == rule ? "selected": "")}>
+                  <div key={rule.id} className={"current-rule " + (rule.active ? "": "inactive") + (this.state.selectedRule === rule ? "selected": "")}>
                     <div className="current-rule-row">
                         <div className="current-rule-name" onClick={() => this.setState({selectedRule: rule})}>{rule.name}</div>
-                        <div className="current-rule-last-execution">{(rule.last_execution == 0 ? "never": new Intl.DateTimeFormat('en-GB', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(rule.last_execution)))}</div>
+                        <div className="current-rule-last-execution">{(rule.last_execution === 0 ? "never": new Intl.DateTimeFormat('en-GB', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(rule.last_execution)))}</div>
                         <div className="current-rule-active">
                             <CheckBox value={rule.active} readonly />
                         </div>
@@ -72,7 +71,7 @@ class RulesView extends Component {
                             <div className="current-rule-remove" onClick={() => this.removeRule(rule)}>remove</div>
                         </div>
                     </div>
-                    { this.state.selectedRule == rule &&
+                    { this.state.selectedRule === rule &&
                         <div className="current-rule-selected">
                             {rule.description}
                         </div>

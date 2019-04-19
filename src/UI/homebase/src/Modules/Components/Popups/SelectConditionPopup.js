@@ -22,7 +22,7 @@ class SelectConditionPopup extends Component {
   }
 
   getConditionByType(id){
-    return this.props.conditionTypes.filter(c => c.id == id)[0]
+    return this.props.conditionTypes.filter(c => c.id === id)[0]
   }
 
   render() {
