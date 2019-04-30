@@ -231,7 +231,7 @@ class MediaManager(metaclass=Singleton):
             self.play_position = new_state.playing_for
             self.play_length = new_state.length
 
-        if old_state.state != new_state.state and new_state.state == PlayerState.Playing:
+        if old_state.state != PlayerState.Paused and old_state.state != new_state.state and new_state.state == PlayerState.Playing:
             self.update_subtitles(new_state)
             self.next_epi_thread = CustomThread(lambda: self.next_episode_manager.check_next_episode(self.media_data, self.torrent), "Check next episode", [])
             self.next_epi_thread.start()
