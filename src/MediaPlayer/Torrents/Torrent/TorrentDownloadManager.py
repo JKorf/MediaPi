@@ -48,7 +48,7 @@ class TorrentDownloadManager(LogObject):
         EventManager.deregister_event(self._event_id_stopped)
 
     def init_queue(self, old_state, new_state):
-        if not self.init and new_state == TorrentState.Downloading:
+        if not self.init and new_state == TorrentState.Downloading and self.torrent.media_file is not None:
             self.init = True
 
             self.start_piece = self.torrent.media_file.start_piece(self.torrent.piece_length)
