@@ -19,7 +19,7 @@ class PeerConnectionManager(LogObject):
 
     @property
     def ready_for_reading(self):
-        return len(self.buffer) > self._next_message_length
+        return len(self.buffer) >= self._next_message_length
 
     def __init__(self, peer, uri):
         super().__init__(peer, "connection")
@@ -81,6 +81,7 @@ class PeerConnectionManager(LogObject):
             self._last_communication = current_time()
             self.buffer += data
             self.buffer_in_size = len(self.buffer)
+            time.sleep(0.001)
 
     def handle_read(self):
         received_messages = []

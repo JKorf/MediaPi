@@ -56,10 +56,6 @@ class TorrentNetworkManager(LogObject):
 
             # Select in/outputs
             input_peers = self.torrent.peer_manager.get_peers_for_reading()
-            # if len(input_peers) == 0 and len(output_peers) == 0:
-            #     sleep(0.01)
-            #     continue
-
             received_messages = []
             for peer in input_peers:
                 download_speed = self.average_download_counter.get_speed()
