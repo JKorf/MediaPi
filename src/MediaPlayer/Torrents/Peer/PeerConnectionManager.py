@@ -39,7 +39,7 @@ class PeerConnectionManager(LogObject):
         self.buffer_in_size = 0
         self.buffer_out_size = 0
 
-        self._next_message_length = 0
+        self._next_message_length = 1
         self._buffer_position = 0
         self._receive_state = ReceiveState.ReceiveLength
         self._receive_buffer_size = 32768
