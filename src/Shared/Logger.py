@@ -47,7 +47,7 @@ class Logger(metaclass=Singleton):
         self.log_processor.start()
         self.state_log_processor.start()
 
-        self.log_processor.enqueue("Time".ljust(14) + " | "
+        self.log_processor.enqueue("Time".ljust(24) + " | "
                     + "Thread".ljust(30) + " | "
                     + "File/Line number".ljust(35) + " | "
                     + "Function".ljust(25) + " | "
@@ -102,7 +102,7 @@ class Logger(metaclass=Singleton):
 
     @staticmethod
     def format_item(item_time, thread_name, file_name, line, function, priority, message):
-        return item_time.strftime('%H:%M:%S.%f')[:-3].ljust(14) + " | " \
+        return item_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3].ljust(24) + " | " \
             + thread_name.ljust(30) + " | " \
             + (file_name + " #" + str(line)).ljust(35) + " | " \
             + function.ljust(25) + " | " \
