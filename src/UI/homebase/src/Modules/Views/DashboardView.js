@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 
 import FavoriteSeriesWidget from './../Widgets/FavoriteSeriesWidget.js'
 import TempWidget from './../Widgets/TempWidget.js'
-import LightWidget from './../Widgets/LightWidget.js'
+import TradfriWidget from './../Widgets/TradfriWidget.js'
 
 class DashboardView extends Component {
   constructor(props) {
@@ -14,7 +14,7 @@ class DashboardView extends Component {
 
     this.widgetRefs = [
         {
-            component: <LightWidget title="Lights" titleLink={"/home/lighting"} ref={React.createRef()} />,
+            component: <TradfriWidget title="Lights" titleLink={"/home/tradfri"} ref={React.createRef()} />,
             style: {},
             width: 0,
             height: 0,
