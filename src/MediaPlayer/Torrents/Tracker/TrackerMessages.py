@@ -18,7 +18,7 @@ class TrackerConnectionMessage:
     @classmethod
     def for_receive(cls, data):
         if not check_bytes_length(data, 16):
-            return False
+            return None
 
         offset = 0
         offset, action = read_integer(data, offset)
