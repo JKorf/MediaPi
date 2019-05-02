@@ -24,18 +24,12 @@ class FileStructure:
 
 class TorrentModel:
 
-    def __init__(self, title, seeders, leechers, size, url, category):
+    def __init__(self, title, seeders, leechers, size, url):
         self.title = title
         self.seeders = seeders
         self.leechers = leechers
         self.size = size
         self.url = url
-        if "movie" in category.lower():
-            self.category = "movie"
-        elif "show" in category.lower():
-            self.category = "show"
-        else:
-            self.category = "other"
 
 
 class MediaFile:

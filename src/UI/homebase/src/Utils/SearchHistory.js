@@ -1,6 +1,6 @@
 let moviesSearch = {term: "", page: 1, order: "Trending"};
 let showSearch = {term: "", page: 1, order: "Trending"};
-let torrentsSearch = {term: ""};
+let torrentsSearch = {term: "", category: "TV"};
 
 export function updateMoviesSearch(term, page, order){
     moviesSearch.term = term;
@@ -22,8 +22,9 @@ export function getShowsSearch(){
     return showSearch;
 }
 
-export function updateTorrentsSearch(term){
+export function updateTorrentsSearch(term, category){
     torrentsSearch.term = term;
+    torrentsSearch.category = category;
 }
 
 export function getTorrentsSearch(){

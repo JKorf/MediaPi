@@ -8,7 +8,7 @@ from Database.Database import Database
 from MediaPlayer.MediaManager import MediaManager
 from Shared.Logger import Logger, LogVerbosity
 from Webserver.APIController import app, APIController
-from Webserver.Controllers.MediaPlayer.TorrentProvider import Torrent
+from Webserver.Controllers.MediaPlayer.TorrentController import TorrentController
 
 
 class PlayController:
@@ -55,12 +55,13 @@ class PlayController:
         instance = int(request.args.get("instance"))
         title = urllib.parse.unquote(request.args.get("title"))
         url = urllib.parse.unquote(request.args.get("url"))
+        magnet_uri = TorrentController.get_magnet_url(url)
 
         Logger().write(LogVerbosity.Info, "Play torrent " + title + " on " + str(instance))
         if instance == 1:
-            MediaManager().start_torrent(title, Torrent.get_magnet_uri(url))
+            MediaManager().start_torrent(title, magnet_uri)
         else:
-            APIController().slave_command(instance, "media", "start_torrent", title, Torrent.get_magnet_uri(url))
+            APIController().slave_command(instance, "media", "start_torrent", title, magnet_uri)
         return "OK"
 
     @staticmethod

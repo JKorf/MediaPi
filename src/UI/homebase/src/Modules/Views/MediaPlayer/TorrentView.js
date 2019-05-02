@@ -22,7 +22,9 @@ class TorrentView extends Component {
     this.viewRef = React.createRef();
     var prevSearch = getTorrentsSearch();
 
-    this.state = {selectedTorrent: null, searchTerm: this.props.match.params.term || prevSearch.term, loading: true};
+    this.state = {selectedTorrent: null, category: this.props.match.params.category || prevSearch.category, searchTerm: this.props.match.params.term || prevSearch.term, loading: true};
+
+    this.categories = ["TV", "Movies"];
 
     var params = this.props.location.search.replace('?', '').split('&')
     for (var i = 0; i < params.length; i++)
@@ -44,13 +46,13 @@ class TorrentView extends Component {
   }
 
   componentDidMount() {
-    this.getTorrents();
+    this.getTorrents(this.state.category);
   }
 
   componentWillUnmount(){
     if (this.timer)
         clearTimeout(this.timer);
-    updateTorrentsSearch(this.state.searchTerm);
+    updateTorrentsSearch(this.state.searchTerm, this.state.category);
   }
 
   torrentPlay(torrent)
@@ -67,16 +69,16 @@ class TorrentView extends Component {
     if (this.timer)
         clearTimeout(this.timer);
     this.timer = setTimeout(() => {
-        this.getTorrents();
+        this.getTorrents(this.state.category);
     }, 750);
   }
 
-  getTorrents()
+  getTorrents(category)
   {
     this.setState({loading: true});
     if(this.state.searchTerm){
 
-        axios.get(window.vars.apiBase + 'torrents?keywords=' + encodeURIComponent(this.state.searchTerm)).then(data => {
+        axios.get(window.vars.apiBase + 'torrents?keywords=' + encodeURIComponent(this.state.searchTerm) + "&category=" + category).then(data => {
                 console.log(data.data);
                 this.setState({torrents: data.data, loading: false});
             }, err =>{
@@ -85,7 +87,7 @@ class TorrentView extends Component {
             });
     }
     else{
-        axios.get(window.vars.apiBase + 'torrents/top').then(data => {
+        axios.get(window.vars.apiBase + 'torrents/top?category=' + category).then(data => {
                 console.log(data.data);
                 this.setState({torrents: data.data, loading: false});
             }, err =>{
@@ -96,11 +98,16 @@ class TorrentView extends Component {
   }
 
   getTorrentIcon(torrent){
-    if(torrent.category === "movie")
+    if(this.state.category === "Movies")
         return movieImage;
-    if(torrent.category === "show")
+    else
         return showImage;
-    return otherImage;
+  }
+
+  onChangeCategory(newValue)
+  {
+    this.setState({category: newValue});
+    this.getTorrents(newValue);
   }
 
   playTorrent(instance, torrent)
@@ -122,13 +129,19 @@ class TorrentView extends Component {
           <ViewLoader loading={this.state.loading}/>
               { this.state.torrents &&
               <div className="torrents-wrapper">
-                  <div className="torrent-search">
-                        <div className="torrent-search-input"><SearchBox searchTerm={this.state.searchTerm} onChange={this.searchTermChange}/></div>
+                  <div className="media-search">
+                    <div className="media-search-input"><SearchBox searchTerm={this.state.searchTerm} onChange={this.searchTermChange}/></div>
+                    <div className="media-search-order">
+                        <select onChange={(e) => this.onChangeCategory(e.target.value)} value={this.state.category}>
+                            { this.categories.map((option) => <option key={option} value={option}>{option}</option>) }
+                        </select>
                     </div>
+                </div>
+
                   <div className="torrents">
                      { torrents.map((torrent, index) => (
                         <div className={"torrent " + (selectedTorrent === torrent ? "selected" : "")} key={index} onClick={(e) => this.torrentSelected(torrent, e)}>
-                            <SvgImage src={this.getTorrentIcon(torrent)} />
+                            <SvgImage src={this.getTorrentIcon(torrent)} key={this.getTorrentIcon(torrent)} />
                             <div className="torrent-title truncate2">{torrent.title}</div>
                             { selectedTorrent === torrent &&
                                 <div className="torrent-details">
