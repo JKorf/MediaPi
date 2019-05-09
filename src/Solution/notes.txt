@@ -10,8 +10,6 @@
     Tv control goed toepassen
         Also adjust NOOBS /boot/config.txt with hdmi_ignore_cec_init=1
 
-    Multiple pirate bay proxies
-
     Fix seeking back when done
     Remember peers that are known to be good to download from when pausing?
 
@@ -21,3 +19,5 @@
     Tablet mode for tablet on wall
 
     utp
+
+    NextEpisodeQuestion doesn't show up when not connected
