@@ -45,7 +45,7 @@ class MotorController:
         steps = self.steps_per_revolution / (360 / abs(angle))
         if angle < 0:
             steps = -steps
-        self.move_steps(steps)
+        self.move_steps(int(round(steps)))
 
     def __do_step(self, half_step, step_data):
         for pin in range(4):
