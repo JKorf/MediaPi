@@ -54,7 +54,7 @@ class UIWebsocketController(BaseWebsocketController):
     @staticmethod
     def on_get_current_requests():
         for client_request in APIController().ui_websocket_controller.requests:
-            socketio.emit("request", (client_request.request_id, client_request.topic, client_request.data), namespace="/UI", room=request.sid)
+            socketio.emit("request", (client_request.request_id, client_request.topic, to_JSON(client_request.data)), namespace="/UI", room=request.sid)
 
     @staticmethod
     def on_subscribe(topic):

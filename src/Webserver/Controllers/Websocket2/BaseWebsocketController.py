@@ -2,6 +2,7 @@ from flask_socketio import Namespace
 
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Threading import CustomThread
+from Shared.Util import to_JSON
 from Webserver.APIController import APIController, Request
 
 
@@ -24,7 +25,7 @@ class BaseWebsocketController(Namespace):
         Logger().write(LogVerbosity.Debug, "Client command: " + topic + ", command")
         self.emit("command", (topic, command, *args), room=room)
 
-    def on_response(self, request_id, *args):
+    def on_response(self, request_id, args):
         Logger().write(LogVerbosity.Debug, "Client response for id " + str(request_id) + ": " + str(args))
         requests = [x for x in self.requests if x.request_id == request_id]
         if len(requests) == 0:
@@ -38,6 +39,7 @@ class BaseWebsocketController(Namespace):
         request_id = APIController().next_id()
         request_message = Request(request_id, topic, data, room, self._complete_request)
         self.requests.append(request_message)
+        data = to_JSON(data)
         self.emit("request", (request_id, topic, data), room=room)
         return request_message
 

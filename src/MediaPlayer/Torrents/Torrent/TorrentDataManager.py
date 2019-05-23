@@ -102,6 +102,9 @@ class TorrentDataManager(LogObject):
     def clear_pieces(self, from_index, to_index):
         cleared = 0
         cleared_size = 0
+        if from_index not in self._pieces or to_index not in self._pieces:
+            return
+
         for index in range(from_index, to_index):
             piece = self._pieces[index]
             if not piece.cleared and not piece.persistent:

@@ -46,6 +46,8 @@ class TorrentController:
     @staticmethod
     def get_torrents(url):
         search_result = RequestFactory.make_request(url, timeout=10)
+        if search_result is None:
+            return []
         parsed = BeautifulSoup(search_result, "lxml")
         table_rows = parsed.find_all('tr')
         torrent_rows = [row.contents for row in table_rows if len([child for child in row.contents if isinstance(child, Tag) and child.name == "td" and ('name' in child.attrs['class'] or 'seeds' in child.attrs['class'])]) != 0]

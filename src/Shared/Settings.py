@@ -56,7 +56,7 @@ class Settings:
 class SecureSettings:
     @staticmethod
     def get_string(name):
-        for line in open(os.getcwd() + '/Solution/credentials.txt', 'rt'):
+        for line in open(Settings.get_string("base_folder") + '/Solution/credentials.txt', 'rt'):
             l = line.replace('\r', '').replace('\n', '')
             if len(l) == 0 or l.startswith("#") or '=' not in l:
                 continue
