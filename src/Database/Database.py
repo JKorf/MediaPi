@@ -12,16 +12,20 @@ from Webserver.Models import BaseMedia
 
 class Database(metaclass=Singleton):
     def __init__(self):
-        self.path = Settings.get_string("base_folder") + "/Solution/database.data"
+        self.path = Settings.get_string("base_folder") + "Solution/"
+        self.db_name = "database.data"
         self.slave = Settings.get_bool("slave")
         self.current_version = 12
 
     def init_database(self):
         Logger().write(LogVerbosity.Info, "Opening database at " + str(self.path))
-        database_exists = os.path.isfile(self.path)
+        database_exists = os.path.isfile(self.path + self.db_name)
 
         if not database_exists:
             Logger().write(LogVerbosity.Info, "Database not found, creating new")
+            if not os.path.exists(self.path):
+                os.mkdir(self.path)
+
             database, cursor = self.connect()
             with open(str(pathlib.Path(__file__).parent) + '/Migrations/Create.sql', 'r') as script:
                 data = script.read().replace('\n', '')
@@ -34,7 +38,7 @@ class Database(metaclass=Singleton):
         self.check_migration()
 
     def connect(self):
-        database = sqlite3.connect(self.path)
+        database = sqlite3.connect(self.path + self.db_name)
         return database, database.cursor()
 
     def check_migration(self):
@@ -263,7 +267,7 @@ class Database(metaclass=Singleton):
         database.commit()
         database.close()
         if not data:
-            return 0
+            return []
 
         return data
 
