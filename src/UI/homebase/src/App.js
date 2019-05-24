@@ -21,6 +21,8 @@ import HistoryView from './Modules/Views/MediaPlayer/HistoryView.js'
 
 import HomeDashboardView from './Modules/Views/Home/HomeDashboardView.js'
 import HeatingView from './Modules/Views/Home/HeatingView.js'
+import GasView from './Modules/Views/Home/GasView.js'
+import PowerView from './Modules/Views/Home/PowerView.js'
 import TradfriView from './Modules/Views/Home/TradfriView.js'
 import DevicesView from './Modules/Views/Home/DevicesView.js'
 import DeviceView from './Modules/Views/Home/DeviceView.js'
@@ -206,6 +208,8 @@ class App extends Component {
 
                     <Route path="/home/" exact render={(props) => <HomeDashboardView {...props} functions={this.functions}  />} />
                     <Route path="/home/heating" exact render={(props) => <HeatingView {...props} functions={this.functions}  />} />
+                    <Route path="/home/gas" exact render={(props) => <GasView {...props} functions={this.functions}  />} />
+                    <Route path="/home/power" exact render={(props) => <PowerView {...props} functions={this.functions}  />} />
                     <Route path="/home/tradfri" exact render={(props) => <TradfriView {...props} functions={this.functions}  />} />
                     <Route path="/home/devices" exact render={(props) => <DevicesView {...props} functions={this.functions}/>} />
                     <Route path="/home/device/:id" exact render={(props) => <DeviceView {...props} functions={this.functions}  />} />

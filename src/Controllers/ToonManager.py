@@ -25,3 +25,11 @@ class ToonManager(metaclass=Singleton):
     def set_state(self, state):
         Logger().write(LogVerbosity.Debug, "Set toon state:" + str(state))
         self.api.thermostat_state = state
+
+    def get_gas_stats(self, from_date, to_date, interval):
+        Logger().write(LogVerbosity.All, "Get toon gas stats")
+        return self.api.data.graph.get_gas_time_window(from_date, to_date, interval)
+
+    def get_electricity_stats(self, from_date, to_date):
+        Logger().write(LogVerbosity.All, "Get toon electricity stats")
+        return self.api.data.flow.get_power_time_window(from_date, to_date)

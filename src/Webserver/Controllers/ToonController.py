@@ -41,6 +41,24 @@ class ToonController:
         return to_JSON(result)
 
     @staticmethod
+    @app.route('/toon/gas', methods=['GET'])
+    def get_gas_details():
+        start_hours = request.args.get('startHours')
+        end_hours = request.args.get('endHours')
+
+        stats = ToonManager().get_gas_stats(start_hours + " hours ago", end_hours + " hours ago", "hours")
+        return to_JSON(stats)
+
+    @staticmethod
+    @app.route('/toon/electricity', methods=['GET'])
+    def get_electricity_details():
+        start_hours = request.args.get('startHours')
+        end_hours = request.args.get('endHours')
+
+        stats = ToonManager().get_electricity_stats(start_hours + " hours ago", end_hours + " hours ago")
+        return to_JSON(stats)
+
+    @staticmethod
     @app.route('/toon/temperature', methods=['POST'])
     def set_temperature():
         temp = int(request.args.get('temp'))

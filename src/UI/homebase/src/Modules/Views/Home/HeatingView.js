@@ -117,11 +117,13 @@ class HeatingView extends Component {
                             }
                         </div>
 
-                        <div className="heating-state-next">
-                            <div className="heating-state-next-header">next at {nextTime}</div>
-                            <div className="heating-state-next-name">{nextState.name}</div>
-                            <div className="heating-state-next-temp">{this.formatTemperature(nextState.temp)}</div>
-                        </div>
+                        { nextState &&
+                            <div className="heating-state-next">
+                                <div className="heating-state-next-header">next at {nextTime}</div>
+                                <div className="heating-state-next-name">{nextState.name}</div>
+                                <div className="heating-state-next-temp">{this.formatTemperature(nextState.temp)}</div>
+                            </div>
+                        }
                     </div>
                 </div>
             </InfoGroup>
