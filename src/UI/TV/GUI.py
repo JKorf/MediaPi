@@ -299,9 +299,9 @@ class App(tk.Frame):
         self.background_canvas.itemconfig(self.loading_peers_connected_value, text=str(connected_peers))
 
     def media_update(self, old_data, new_data):
-        if old_data.title is None and new_data.title is not None:
+        if new_data.title is not None and self.state == UIState.Home:
             self.state = UIState.Loading
-        if new_data.title is None and old_data.title is not None:
+        if new_data.title is None and self.state != UIState.Home:
             self.state = UIState.Home
 
         if MediaManager().media_data.type == "Radio":
