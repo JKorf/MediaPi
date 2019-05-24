@@ -22,7 +22,6 @@ class PopupController extends Component {
   componentDidMount() {
     Socket.addRequestHandler("SelectMediaFile", this.showSelectMediaFile, this.timeoutSelectMedia);
     Socket.addRequestHandler("SelectNextEpisode", this.showContinueNextEpisode, this.timeoutContinue);
-    Socket.getCurrentRequests();
   }
 
   componentWillUnmount(){

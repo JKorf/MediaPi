@@ -17,6 +17,12 @@ export default class WS {
             console.log("Websocket connected");
             this.socket.emit('init', localStorage.getItem('Client-ID'), sessionStorage.getItem('Session-Key'), (data) => this.processAuthResult(data));
         });
+
+        this.socket.on('reconnect', () =>{
+            console.log("Websocket reconnected");
+            this.getCurrentRequests();
+        });
+
         this.socket.on('disconnect', () => {
             console.log("Websocket disconnected"); // will automatically reconnect when disconnected
         });
@@ -60,6 +66,8 @@ export default class WS {
         for (var i = 0; i < this.subscriptions.length; i++){
             this.socket.emit('subscribe', this.subscriptions[i].topic);
         }
+
+        this.getCurrentRequests();
     }
 
     static subscribe(topic, callback)
