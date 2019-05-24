@@ -22,6 +22,9 @@ class WiFiController(LogObject, metaclass=Singleton):
         if self.pi:
             proc = subprocess.Popen(["iwgetid"], stdout=PIPE, universal_newlines=True)
             out, err = proc.communicate()
+            if ":" not in out:
+                return
+
             network_ssid = out.split(":")[1]
 
             proc = subprocess.Popen(["iwlist", "wlan0", "scan"], stdout=PIPE, universal_newlines=True)

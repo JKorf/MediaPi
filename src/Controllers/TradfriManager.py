@@ -1,3 +1,4 @@
+import subprocess
 import sys
 import uuid
 
@@ -20,6 +21,7 @@ class TradfriManager(metaclass=Singleton):
     gateway = None
     enabled = False
     initialized = False
+    last_init = 0
 
     def __init__(self):
         self.tradfri_state = TradfriState()
@@ -37,6 +39,10 @@ class TradfriManager(metaclass=Singleton):
             self.initialized = True
             self.tradfri_state.update_group(DeviceGroup(1, "Test group", True, 128, 6))
             self.tradfri_state.update_group(DeviceGroup(2, "Test group 2", False, 18, 6))
+            return
+
+        if current_time() - self.last_init < 5000:
+            Logger().write(LogVerbosity.Info, "Tried initialization less than 5s ago")
             return
 
         Logger().write(LogVerbosity.All, "Start LightManager init")
@@ -68,17 +74,19 @@ class TradfriManager(metaclass=Singleton):
                     key = self.api_factory.generate_psk(security_code)
                     Database().update_stat("LightingKey", key)  # Save the new key
                     Logger().write(LogVerbosity.Info, "Lighting: New key retrieved")
-                    self.initialized = True
                 except Exception as e:
                     Logger().write_error(e, "Unhandled exception")
                     return
             else:
                 Logger().write(LogVerbosity.Info, "Lighting: Previously saved key found")
-                self.initialized = True
 
-            groups = self.get_device_groups()
-            for group in groups:
-                self.tradfri_state.update_group(group)
+            try:
+                groups = self.get_device_groups()
+                for group in groups:
+                    self.tradfri_state.update_group(group)
+                self.initialized = True
+            except subprocess.TimeoutExpired as e:
+                Logger().write_error(e, "Failed to get groups from hub")
 
     def start_observing(self):
         Logger().write(LogVerbosity.Debug, "Start observing light data")
