@@ -229,7 +229,7 @@ class App(tk.Frame):
             result = RequestFactory.make_request("https://api.unsplash.com/photos/random/" +
                                                  "?count="+str(amount) +
                                                  "&orientation=landscape" +
-                                                 "&collections=827743" +
+                                                 "&collections=827743,3178572,225,573009" +
                                                  "&client_id=825216e69ea20d24e5b3ddeeab316f6569dcecc4965e16a0725aee3eeb143872")
             if result is None:
                 time.sleep(30)
