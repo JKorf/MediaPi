@@ -181,7 +181,7 @@ class App(tk.Frame):
         self.status_image_frame.pause_image = ImageTk.PhotoImage(Image.open(self.base_image_path + "paused.png"))
         self.pause_image = self.status_image_frame.create_image(10, 10, anchor='nw', image=self.status_image_frame.pause_image)
 
-        self.weather_icon_image = self.background_canvas.create_image(w - 125, h - 350, image=None)
+        self.weather_icon_image = self.background_canvas.create_image(w - 125, h - 370, image=None)
 
         temp_position = h - 296
         self.weather_temp = self.background_canvas.create_text(w - 230, temp_position + 9, anchor="w", font=("Purisa", 28), text="", fill="#444")
@@ -371,7 +371,9 @@ class App(tk.Frame):
             self.background_canvas.itemconfigure(self.weather_sunset, text=str(datetime.fromtimestamp(sunset).strftime("%H:%M")))
             self.background_canvas.itemconfigure(self.weather_sunset, text=str(datetime.fromtimestamp(sunset).strftime("%H:%M")))
 
-            self.background_canvas.weather_icon = ImageTk.PhotoImage(Image.open(self.base_image_path + "Weather/" + icon + ".png"))
+            image = Image.open(self.base_image_path + "Weather/" + icon + ".png")
+            resized = image.resize((140, 140), Image.ANTIALIAS)
+            self.background_canvas.weather_icon = ImageTk.PhotoImage(resized)
             self.background_canvas.itemconfigure(self.weather_icon_image, image=self.background_canvas.weather_icon)
 
             time.sleep(60 * 30)
