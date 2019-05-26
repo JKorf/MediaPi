@@ -81,11 +81,12 @@ class TradfriManager(metaclass=Singleton):
                 Logger().write(LogVerbosity.Info, "Lighting: Previously saved key found")
 
             try:
+                self.initialized = True
                 groups = self.get_device_groups()
                 for group in groups:
                     self.tradfri_state.update_group(group)
-                self.initialized = True
             except subprocess.TimeoutExpired as e:
+                self.initialized = False
                 Logger().write_error(e, "Failed to get groups from hub")
 
     def start_observing(self):
