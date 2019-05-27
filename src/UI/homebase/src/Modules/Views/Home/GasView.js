@@ -3,6 +3,7 @@ import axios from 'axios';
 import { ResponsiveContainer, BarChart, LabelList, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
 
 import ViewLoader from './../../Components/ViewLoader';
+import Button from './../../Components/Button';
 
 class GasView extends Component {
   constructor(props) {
@@ -57,12 +58,12 @@ class GasView extends Component {
         { this.state.gasData &&
             <div>
                  <div className="graph-navigation">
-                    <div className="graph-back" onClick={() => this.back()}>-8 hours</div>
-                    <div className="graph-forward" onClick={() => this.next()}>+8 hours</div>
+                    <div className="graph-back" onClick={() => this.back()}><Button text="-8 hours" classId="secondary"/></div>
+                    <div className="graph-forward" onClick={() => this.next()}><Button text="+8 hours" classId="secondary"/></div>
                 </div>
 
                 <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={this.state.gasData} margin={{top:20,right:10,bottom:20,left:-20}}>
+                    <BarChart data={this.state.gasData} margin={{top:20,right:10,bottom:20,left:0}}>
                       <XAxis angle={60}
                              dy={20}
                              minTickGap={0}

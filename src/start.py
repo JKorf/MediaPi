@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 import eventlet
+eventlet.monkey_patch()
+
 from eventlet import hubs
 from eventlet.green.subprocess import call
 
-from Controllers.RuleManager import RuleManager
-
 hubs.use_hub("selects")
 
-eventlet.monkey_patch()
 
 import os
 os.chdir(os.path.dirname(__file__))
@@ -16,7 +15,8 @@ from datetime import datetime
 import sys
 import time
 
-from Shared.Threading import ThreadManager
+from Shared.Threading import ThreadManager, CustomThread
+from Controllers.RuleManager import RuleManager
 from Updater import Updater
 from Webserver.APIController import APIController
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager

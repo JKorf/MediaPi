@@ -6,6 +6,7 @@ import tempImg from './../../../Images/thermometer.svg'
 import lightingImg from './../../../Images/bulb.svg'
 import deviceImg from './../../../Images/device.svg'
 import rulesImg from './../../../Images/rules.svg'
+import powerImg from './../../../Images/power.svg'
 
 class HomeDashboardView extends Component {
   constructor(props) {
@@ -25,7 +26,7 @@ class HomeDashboardView extends Component {
         <DashboardLink to="/home/heating" img={tempImg} text="heating"></DashboardLink>
 
         <DashboardLink to="/home/gas" img={gasImg} text="gas usage"></DashboardLink>
-        <DashboardLink to="/home/power" img={gasImg} text="power usage"></DashboardLink>
+        <DashboardLink to="/home/power" img={powerImg} text="power usage"></DashboardLink>
 
         <DashboardLink to="/home/devices" img={deviceImg} text="devices"></DashboardLink>
         <DashboardLink to="/home/rules" img={rulesImg} text="rules"></DashboardLink>

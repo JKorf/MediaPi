@@ -60,13 +60,12 @@ class PowerView extends Component {
         { this.state.powerData &&
             <div>
                 <div className="graph-navigation">
-
                     <div className="graph-back" onClick={() => this.back()}><Button text="-8 hours" classId="secondary"/></div>
                     <div className="graph-forward" onClick={() => this.next()}><Button text="+8 hours" classId="secondary"/></div>
                 </div>
 
                 <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={this.state.powerData} margin={{top:20,right:10,bottom:20,left:-20}}>
+                    <LineChart data={this.state.powerData} margin={{top:20,right:10,bottom:20,left:0}}>
                       <XAxis angle={60}
                              dy={20}
                              interval="preserveStartEnd"
