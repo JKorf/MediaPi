@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import { ResponsiveContainer, LineChart, LabelList, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts';
+import { ResponsiveContainer, LineChart, XAxis, YAxis, Tooltip, Line } from 'recharts';
 
 import ViewLoader from './../../Components/ViewLoader';
 
@@ -16,7 +16,7 @@ class PowerUsageGraph extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if(this.props.hoursAgo != prevProps.hoursAgo)
+    if(this.props.hoursAgo !== prevProps.hoursAgo)
         this.getData();
   }
 
@@ -28,7 +28,7 @@ class PowerUsageGraph extends Component {
     axios.get(window.vars.apiBase + 'toon/electricity?startHours=' + -(this.props.hoursAgo - 8) + "&endHours=" + -this.props.hoursAgo).then(
         (data) => {
             this.setState({loading: false});
-            if (data.data.hours.length == 0){
+            if (data.data.hours.length === 0){
                 this.hoursAgo -= 8;
                 return;
             }

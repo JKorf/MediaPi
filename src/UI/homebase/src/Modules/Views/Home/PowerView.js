@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 
 import ViewLoader from './../../Components/ViewLoader';
 import Button from './../../Components/Button';

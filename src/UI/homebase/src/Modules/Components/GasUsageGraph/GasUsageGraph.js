@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import { ResponsiveContainer, BarChart, LabelList, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
+import { ResponsiveContainer, BarChart, LabelList, XAxis, YAxis, Tooltip, Bar } from 'recharts';
 import ViewLoader from './../../Components/ViewLoader';
 
 class GasUsageGraph extends Component {
@@ -15,7 +15,7 @@ class GasUsageGraph extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if(this.props.hoursAgo != prevProps.hoursAgo)
+    if(this.props.hoursAgo !== prevProps.hoursAgo)
         this.getData();
   }
 
@@ -27,7 +27,7 @@ class GasUsageGraph extends Component {
     axios.get(window.vars.apiBase + 'toon/gas?startHours=' + -(this.props.hoursAgo - 8) + "&endHours=" + this.props.hoursAgo).then(
         (data) => {
             this.setState({loading: false});
-            if (!data.data.hours || data.data.hours.length == 0)
+            if (!data.data.hours || data.data.hours.length === 0)
                 return;
 
             this.firstTime = data.data.hours[0].timestamp;

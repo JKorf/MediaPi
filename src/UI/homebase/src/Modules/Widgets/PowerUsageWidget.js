@@ -1,6 +1,4 @@
 import React, { Component } from 'react';
-import { Link } from "react-router-dom";
-import axios from 'axios';
 
 import Widget from './Widget.js';
 import PowerUsageGraph from './../Components/PowerUsageGraph';

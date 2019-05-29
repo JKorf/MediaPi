@@ -10,7 +10,6 @@ import ViewLoader from './../../Components/ViewLoader';
 
 import movieImage from './../../../Images/movie.svg';
 import showImage from './../../../Images/show.svg';
-import otherImage from './../../../Images/other.svg';
 import leechersImage from './../../../Images/leechers.png';
 import seedersImage from './../../../Images/seeders.png';
 
