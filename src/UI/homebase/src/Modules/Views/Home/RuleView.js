@@ -86,7 +86,7 @@ class RuleView extends Component {
     var conditionString = "&conditions=" + conditionLength;
     for (var k = 0; k < conditionLength; k++)
     {
-        conditionString += "&condition"+i+"_type=" + this.state.rule.conditions[k].type;
+        conditionString += "&condition"+k+"_type=" + this.state.rule.conditions[k].type;
         for (var l = 0; l < this.state.rule.conditions[k].parameters.length; l++)
             conditionString += "&condition"+k+"_param" + (l + 1) + "=" +this.state.rule.conditions[k].parameters[l];
     }
