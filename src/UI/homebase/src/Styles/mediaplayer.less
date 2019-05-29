@@ -27,7 +27,7 @@
 }
 
 .radio .media-thumbnail{
-    width: calc(100% / 4 - 10px);
+    width: calc(100% / 3 - 10px);
 }
 
 .media-thumbnail-info-rating{
@@ -37,12 +37,12 @@
 }
 
 .media-thumbnail-info-title{
-    max-width: calc(100% - 40px);
+    max-width: calc(100% - 40px) !important;
     word-break: break-all;
 }
 
 .radio .media-thumbnail-info-title{
-    max-width: 100%;
+    max-width: 100% !important;
     word-break: normal;
 }
 
@@ -58,18 +58,30 @@
 
 @media only screen and (min-device-width: 400px){
     .media-thumbnail{
-        width: calc(100% / 4 - 10px);
+        width: calc(100% / 3 - 10px);
     }
 
     .radio .media-thumbnail{
-        width: calc(100% / 6 - 10px);
+        width: calc(100% / 4 - 10px);
     }
 }
 
 @media only screen and (min-device-width: 600px){
-    .media-thumbnail-info-rating{
-        display:none;
+
+    .media-thumbnail-info-title{
+        max-width: 100%;
     }
+
+    .media-thumbnail{
+        width: calc(100% / 4 - 10px);
+    }
+
+    .radio .media-thumbnail{
+        width: calc(100% / 5 - 10px);
+    }
+}
+
+@media only screen and (min-device-width: 800px){
 
     .media-thumbnail-info-title{
         max-width: 100%;
@@ -83,6 +95,7 @@
         width: calc(100% / 8 - 10px);
     }
 }
+
 
 
 .media-thumbnail-img {
@@ -650,6 +663,10 @@
 .player-details{
     margin: 10px;
     height: calc(100% - 20px);
+
+    .info-group-box{
+        padding: 10px;
+    }
 
     .switch-box{
         margin-bottom: 10px;
