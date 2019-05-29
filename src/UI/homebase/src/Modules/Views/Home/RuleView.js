@@ -20,7 +20,7 @@ class RuleView extends Component {
     this.props.functions.changeTitle("Rule");
     this.props.functions.changeRightImage(null);
 
-    this.newRule = this.props.match.params.id === -1
+    this.newRule = this.props.match.params.id === "-1";
 
     this.saveRule = this.saveRule.bind(this);
     this.getConditionById = this.getConditionById.bind(this);
