@@ -46,7 +46,7 @@ class GasUsageGraph extends Component {
     return (<div>
         <ViewLoader loading={this.state.loading}/>
         <ResponsiveContainer minHeight={this.props.height}>
-            <BarChart data={this.state.gasData} margin={{top:20,right:10,bottom:20,left:0}}>
+            <BarChart data={this.state.gasData} margin={{top:30,right:10,bottom:20,left:0}}>
               <XAxis angle={60}
                      dy={20}
                      minTickGap={0}

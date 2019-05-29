@@ -105,7 +105,7 @@ class Slider extends Component {
             }
             <div className={"slider-content " + iconClass}>
                 <div className="slider-tooltip" style={toolTipStyle}>{newValueStr}</div>
-                <div className="slider-info">
+                <div className="slider-info" onTouchStart={this.touchStartBackground} onTouchMove={this.touchMove} onTouchEnd={this.touchEnd}>
                     <div className="slider-value">{(this.props.leftValue === "value" ? valueStr: minStr)}</div>
                     <div className="slider-max">{(this.props.rightValue === "left" ? leftStr: maxStr)}</div>
                 </div>
