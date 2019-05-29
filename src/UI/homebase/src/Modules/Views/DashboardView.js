@@ -3,6 +3,8 @@ import React, { Component } from 'react';
 import FavoriteSeriesWidget from './../Widgets/FavoriteSeriesWidget.js'
 import TempWidget from './../Widgets/TempWidget.js'
 import TradfriWidget from './../Widgets/TradfriWidget.js'
+import GasUsageWidget from './../Widgets/GasUsageWidget.js'
+import PowerUsageWidget from './../Widgets/PowerUsageWidget.js'
 
 class DashboardView extends Component {
   constructor(props) {
@@ -32,13 +34,31 @@ class DashboardView extends Component {
             index: 1
         },
         {
-            component: <FavoriteSeriesWidget title="favorites" ref={React.createRef()} />,
+            component: <PowerUsageWidget title="Power usage" titleLink={"/home/power"} ref={React.createRef()} />,
             style: {},
             width: 0,
             height: 0,
             x: -1,
             y: -1,
             index: 2
+        },
+        {
+            component: <GasUsageWidget title="Gas usage" titleLink={"/home/gas"} ref={React.createRef()} />,
+            style: {},
+            width: 0,
+            height: 0,
+            x: -1,
+            y: -1,
+            index: 3
+        },
+        {
+            component: <FavoriteSeriesWidget title="favorites" ref={React.createRef()} />,
+            style: {},
+            width: 0,
+            height: 0,
+            x: -1,
+            y: -1,
+            index: 4
         }
     ];
 
