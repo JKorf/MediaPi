@@ -129,7 +129,7 @@ class TradfriManager(metaclass=Singleton):
         Logger().write(LogVerbosity.All, "Get devices")
         devices_commands = self.api(self.gateway.get_devices())
         devices = self.api(devices_commands)
-        [self.parse_device(x) for x in devices]
+        return [d for d in [self.parse_device(x) for x in devices] if d is not None]
 
     def set_state(self, device_id, state):
         if not self.check_state():
@@ -184,7 +184,7 @@ class TradfriManager(metaclass=Singleton):
         group = self.api(self.gateway.get_group(group))
         members = group.member_ids
         result = [self.api(self.gateway.get_device(x)) for x in members]
-        return [self.parse_device(x) for x in result]
+        return [d for d in [self.parse_device(x) for x in result] if d is not None]
 
     def set_group_name(self, group, name):
         if not self.check_state():
