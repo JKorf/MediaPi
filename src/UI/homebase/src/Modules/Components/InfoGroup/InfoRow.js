@@ -1,7 +1,7 @@
 import React from 'react';
 
 const InfoRow = ({name, value}) => (
-    <div className="player-details-group-items label-row">
+    <div className="info-group-box-items label-row">
         <div className="label-field">{name}</div>
         <div className="label-value truncate">{value}</div>
     </div>

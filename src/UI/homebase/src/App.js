@@ -35,6 +35,7 @@ import Socket2 from './Socket2.js'
 import PopupController from './Modules/PopupController.js'
 
 import './Styles/base.less';
+import './Styles/components.less';
 import './Styles/mediaplayer.less';
 import './Styles/rules.less';
 

@@ -44,9 +44,10 @@ class ToonController:
     @app.route('/toon/gas', methods=['GET'])
     def get_gas_details():
         start_hours = request.args.get('startHours')
-        end_hours = request.args.get('endHours')
-
-        stats = ToonManager().get_gas_stats(start_hours + " hours ago", end_hours + " hours ago", "hours")
+        end_hours = int(request.args.get('endHours'))
+        if end_hours == 0:
+            end_hours = 0.001
+        stats = ToonManager().get_gas_stats(start_hours + " hours ago", str(end_hours) + " hours ago", "hours")
         return to_JSON(stats)
 
     @staticmethod

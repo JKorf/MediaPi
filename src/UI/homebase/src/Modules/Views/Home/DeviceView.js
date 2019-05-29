@@ -327,7 +327,7 @@ class DeviceView extends Component {
         if (this.state.torrentData.state === 6) download_state = " (waiting)";
 
         torrentComponent = (
-                <div className="player-group-details">
+                <div className="info-group-box">
                     <InfoRow name="Buffer ready" value={this.writeSize(this.state.torrentData.buffer_size)} />
                     <InfoRow name="Total streamed" value={this.writeSize(this.state.torrentData.total_streamed)} />
                     <InfoRow name="Download speed" value={this.writeSpeed(this.state.torrentData.download_speed) + download_state} />
@@ -354,7 +354,7 @@ class DeviceView extends Component {
 
             { this.state.currentView === "Media" &&
 
-                <div className="player-group-details">
+                <div className="info-group-box">
                     { this.state.mediaData.title &&
                         <div>
                             <div className="player-details-top">
@@ -388,7 +388,7 @@ class DeviceView extends Component {
                             { this.state.playerData.sub_tracks.length > 0 &&
                                 <div className={"player-details-subtitle-select"}>
                                     <InfoGroup title="Subtitles">
-                                        <div className="player-group-details">
+                                        <div className="info-group-box">
                                             { this.state.playerData.sub_tracks.map((o) => (
                                                 <div key={o[0]} className="selection-box-option" onClick={() => this.subChange(o[0])}>
                                                     <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.sub_track === o[0]} /></div>
@@ -407,7 +407,7 @@ class DeviceView extends Component {
                             { this.state.playerData.audio_tracks.length > 2 &&
                                 <div className={"player-details-subtitle-select"}>
                                     <InfoGroup title="Audio">
-                                        <div className="player-group-details">
+                                        <div className="info-group-box">
                                         { this.state.playerData.audio_tracks.map((o) => (
                                             <div  key={o[0]} className="selection-box-option" onClick={() => this.audioChange(o[0])}>
                                                 <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.audio_track === o[0]} /></div>
@@ -428,7 +428,7 @@ class DeviceView extends Component {
             }
 
             { this.state.currentView === "Statistics" &&
-                <div className="player-group-details">
+                <div className="info-group-box">
                  <InfoRow name="Max download speed" value={this.writeSpeed(this.state.statData["max_download_speed"])}></InfoRow>
                  <InfoRow name="Total downloaded" value={this.writeSize(this.state.statData["total_downloaded"])}></InfoRow>
 
@@ -441,7 +441,7 @@ class DeviceView extends Component {
              }
 
              { this.state.currentView === "Config" &&
-                <div className="player-group-details">
+                <div className="info-group-box">
                     <div className="device-config-subtitle">version</div>
                     <div className="device-config-item">
                          <InfoRow name="Current version" value={this.state.currentVersion}></InfoRow>

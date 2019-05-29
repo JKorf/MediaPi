@@ -79,7 +79,7 @@ class HeatingView extends Component {
         { this.state.thermostatData &&
             <div className="heating-view-content">
             <InfoGroup title="Temperature">
-                <div className="player-group-details">
+                <div className="info-group-box">
                      <div className="heating-current-temp">
                         <div className="heating-current-header">current</div>
                         <div className="heating-current-value">{this.formatTemperature(this.state.thermostatData.current_display_temp)}</div>
@@ -99,7 +99,7 @@ class HeatingView extends Component {
             </InfoGroup>
 
             <InfoGroup title="State">
-                <div className="player-group-details">
+                <div className="info-group-box">
                     <div className="heating-states">
                         { this.state.thermostatData.states.map(state =>
                             <div key={state.id} className={"heating-state " + (state.id === this.state.thermostatData.active_state ? "selected": "")} onClick={() => this.setActiveState(state)}>{state.name}</div>

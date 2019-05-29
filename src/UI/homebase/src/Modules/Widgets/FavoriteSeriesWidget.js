@@ -34,7 +34,7 @@ class FavoriteSeriesWidget extends Component {
       <Widget {...this.props} loading={!this.state.favorites}>
         { this.state.favorites &&
             <div className="favorites-widget">
-            { this.state.favorites.length == 0 &&
+            { this.state.favorites.length === 0 &&
                 <div className="favorite-none">No favorites yet</div>
             }
             { this.state.favorites.map((fav) =>
