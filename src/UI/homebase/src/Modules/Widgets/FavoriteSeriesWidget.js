@@ -30,13 +30,14 @@ class FavoriteSeriesWidget extends Component {
   }
 
   render() {
-    var shows = this.state.favorites;
-
     return (
       <Widget {...this.props} loading={!this.state.favorites}>
         { this.state.favorites &&
             <div className="favorites-widget">
-            { shows.map((fav) =>
+            { this.state.favorites.length == 0 &&
+                <div className="favorite-none">No favorites yet</div>
+            }
+            { this.state.favorites.map((fav) =>
                 <Link to={"/mediaplayer/shows/" + fav.id} key={fav.id}>
                     <div className="favorite-item">
                         <div className="favorite-item-image"><img alt="Favorite poster" src={fav.image} /></div>
