@@ -145,6 +145,9 @@ class Peer(TorrentManager):
         self.peer_stop_task.start()
 
     def stop(self):
+        if self.state == PeerState.Stopped:
+            return
+
         self.state = PeerState.Stopping
         Logger().write(LogVerbosity.All, str(self.id) + ' Peer stopping')
         if self.peer_state_task is not None:
