@@ -45,16 +45,16 @@ class TVManager(metaclass=Singleton):
         return self.__request(self.__construct_request(TVManager.pi_source, TVManager.decoder_source, '44:'+str(key)))
 
     def switch_input_to_pi(self):
-        return self.__request(self.__construct_request(TVManager.pi_source, TVManager.tv_source, '82:' + TVManager.pi_source + '0:00'))
+        return self.__request('echo "as" | cec-client -s')
 
     def switch_input_to_tv(self):
-        return self.__request(self.__construct_request(TVManager.pi_source, TVManager.tv_source, '82:' + TVManager.decoder_source + '0:00'))
+        return self.__request('echo "is" | cec-client -s')
 
     def turn_tv_on(self):
         return self.__request('echo "on ' + TVManager.tv_source + '" | cec-client -s')
 
     def turn_tv_off(self):
-        return self.__request(self.__construct_request(TVManager.pi_source, TVManager.tv_source, "36"))
+        return self.__request('echo "standby ' + TVManager.tv_source + '" | cec-client -s')
 
     def get_inputs(self):
         data = self.__request('echo "scan" | cec-client RPI -s')
