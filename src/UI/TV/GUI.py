@@ -353,7 +353,7 @@ class App(tk.Frame):
             url = "http://api.openweathermap.org/data/2.5/group?id=2750947&units=metric&appid=" + api_key
             result = RequestFactory.make_request(url)
             if not result:
-                Logger().write(2, "Failed to get weather data")
+                Logger().write(LogVerbosity.Info, "Failed to get weather data")
                 return
 
             data = json.loads(result.decode('utf8'))
