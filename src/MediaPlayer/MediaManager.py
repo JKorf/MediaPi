@@ -7,6 +7,7 @@ import gc
 
 import objgraph
 
+from Controllers.TVManager import TVManager
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Torrents.Torrent.Torrent import Torrent
 
@@ -246,6 +247,7 @@ class MediaManager(metaclass=Singleton):
             self.update_subtitles(new_state)
             self.next_epi_thread = CustomThread(lambda: self.next_episode_manager.check_next_episode(self.media_data, self.torrent), "Check next episode", [])
             self.next_epi_thread.start()
+            TVManager().switch_input_to_pi()
 
         if old_state.state != new_state.state and new_state.state == PlayerState.Nothing:
             self.history_id = 0
