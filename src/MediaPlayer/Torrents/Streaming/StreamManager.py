@@ -2,15 +2,15 @@ import math
 
 from MediaPlayer.Player.VLCPlayer import PlayerState, VLCPlayer
 from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
+from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState, DownloadMode
 from Shared.Events import EventManager, EventType
-from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Util import write_size
 
 
-class StreamManager(LogObject):
+class StreamManager(TorrentManager):
 
     @property
     def stream_speed(self):
@@ -151,9 +151,11 @@ class StreamManager(LogObject):
             self.torrent.download_manager.download_mode = DownloadMode.Full
 
     def stop(self):
-        self.torrent = None
         EventManager.deregister_event(self._event_id_torrent_state)
         self.listener.stop()
+        if self.buffer:
+            self.buffer.stop()
+        super().stop()
 
 
 class StreamBuffer:
@@ -240,3 +242,7 @@ class StreamBuffer:
 
         self.last_consecutive_piece = start
         self.last_check_start_piece = self.stream_manager.stream_position_piece_index
+
+    def stop(self):
+        self.stream_manager = None
+        self.data_ready = []

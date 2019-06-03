@@ -4,16 +4,16 @@ from MediaPlayer.Torrents.Peer.PeerMessages import ChokeMessage, BasePeerMessage
     UninterestedMessage, HaveMessage, RequestMessage, PieceMessage, CancelMessage, PortMessage, BitfieldMessage, \
     ExtensionHandshakeMessage, PeerExchangeMessage, MetadataMessage, KeepAliveMessage, HaveAllMessage, HaveNoneMessage, \
     AllowedFastMessage, SuggestPieceMessage, RejectRequestMessage, HandshakeMessage
+from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from MediaPlayer.Util import Bencode
 from MediaPlayer.Util.Bencode import BTFailure
 from MediaPlayer.Util.Enums import PeerSource, PeerChokeState, PeerInterestedState, MetadataMessageType, PeerState
 from Shared.Events import EventManager, EventType
-from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Timing import Timing
 
 
-class TorrentMessageProcessor(LogObject):
+class TorrentMessageProcessor(TorrentManager):
 
     def __init__(self, torrent):
         super().__init__(torrent, "message processor")
@@ -203,3 +203,7 @@ class TorrentMessageProcessor(LogObject):
                 peer.protocol_logger.update("Received Metadata rejected")
                 Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received metadata reject message ' + str(message.piece_index))
             return
+
+    def stop(self):
+        super().stop()
+        self.metadata_wait_list = []

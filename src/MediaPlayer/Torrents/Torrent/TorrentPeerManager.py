@@ -1,21 +1,18 @@
+import time
 from random import Random
 from urllib.parse import urlparse
 
-from pympler import asizeof
-
-from MediaPlayer.Torrents.Peer.PeerMessages import HaveMessage
-
 from MediaPlayer.Torrents.Peer.Peer import Peer
+from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import PeerSource, TorrentState, PeerSpeed, PeerState
 from Shared.Events import EventManager, EventType
-from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Stats import Stats
 from Shared.Util import current_time, write_size
 
 
-class TorrentPeerManager(LogObject):
+class TorrentPeerManager(TorrentManager):
     __peer_id = 0
 
     def __init__(self, torrent):
@@ -156,15 +153,14 @@ class TorrentPeerManager(LogObject):
             self.__peer_id += 1
             new_peer = Peer(self.__peer_id, self.torrent, peer[0], peer[1])
             new_peer.start()
+            self.connecting_peers.append(new_peer)
 
         self.potential_peers_log = len(self.potential_peers)
         self.disconnected_peers_log = len(self.disconnected_peers)
         return True
 
     def update_peer(self, peer, from_state, to_state):
-        if from_state == PeerState.Initial and to_state == PeerState.Starting:
-            self.connecting_peers.append(peer)
-        elif from_state == PeerState.Starting and to_state == PeerState.Started:
+        if from_state == PeerState.Starting and to_state == PeerState.Started:
             self.connecting_peers.remove(peer)
             self.connected_peers.append(peer)
         elif from_state == PeerState.Starting and to_state == PeerState.Stopping:
@@ -185,6 +181,9 @@ class TorrentPeerManager(LogObject):
         self.disconnected_peers_log = len(self.disconnected_peers)
 
     def should_stop_peers(self):
+        if self.torrent is None:
+            return True
+
         if self.torrent.state != TorrentState.Downloading and self.torrent.state != TorrentState.DownloadingMetaData:
             return False
 
@@ -229,11 +228,11 @@ class TorrentPeerManager(LogObject):
         return self.high_speed_peers > 0 or self.medium_speed_peers > 1
 
     def stop(self):
-        for peer in self.connecting_peers:
-            peer.stop_async("Stopping torrent")
+        while len(self.connecting_peers) != 0:
+            time.sleep(0.5)
 
-        for peer in self.connected_peers:
-            peer.stop_async("Stopping torrent")
+        for peer in list(self.connected_peers):
+            peer.stop()
 
         self.complete_peer_list.clear()
         self.potential_peers.clear()
@@ -245,3 +244,4 @@ class TorrentPeerManager(LogObject):
         self.connected_peers_log = 0
         self.cant_connect_peers_log = 0
         self.disconnected_peers_log = 0
+        super().stop()

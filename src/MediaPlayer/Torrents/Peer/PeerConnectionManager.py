@@ -54,8 +54,12 @@ class PeerConnectionManager(LogObject):
 
         if not self.connection.connect():
             Stats.add('peers_connect_failed', 1)
-            Logger().write(LogVerbosity.All, str(self.peer.id) + ' could not connect to ' + str(self.uri.netloc))
-            self.peer.stop_async("Can't connect")
+            if self.peer is not None:
+                Logger().write(LogVerbosity.All, str(self.peer.id) + ' could not connect to ' + str(self.uri.netloc))
+                self.peer.stop_async("Can't connect")
+            return
+
+        if self.peer.state is not PeerState.Starting:
             return
 
         self.connected_on = current_time()
@@ -150,4 +154,5 @@ class PeerConnectionManager(LogObject):
         if self.in_thread is not None:
             self.in_thread.join()
         self.buffer.clear()
+        self.peer = None
 

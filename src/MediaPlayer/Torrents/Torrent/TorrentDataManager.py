@@ -4,9 +4,9 @@ import math
 from pympler import asizeof
 
 from MediaPlayer.Torrents.Data import Bitfield, Piece
+from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState
 from Shared.Events import EventManager, EventType
-from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Stats import Stats
@@ -14,7 +14,7 @@ from Shared.Timing import Timing
 from Shared.Util import current_time, write_size
 
 
-class TorrentDataManager(LogObject):
+class TorrentDataManager(TorrentManager):
 
     def __init__(self, torrent):
         super().__init__(torrent, "data")
@@ -244,3 +244,9 @@ class TorrentDataManager(LogObject):
 
         actual_hash = hashlib.sha1(data).digest()
         return expected_hash[0] == actual_hash[0] and expected_hash[8] == actual_hash[8] and expected_hash[19] == actual_hash[19]
+
+    def stop(self):
+        super().stop()
+        self.bitfield = None
+        self._pieces = []
+        self.persistent_pieces = []

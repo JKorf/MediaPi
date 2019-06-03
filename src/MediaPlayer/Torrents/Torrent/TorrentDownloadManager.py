@@ -1,5 +1,6 @@
 import math
 
+from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 from Shared.Events import EventManager, EventType
 from Shared.LogObject import LogObject
@@ -9,7 +10,7 @@ from Shared.Timing import Timing
 from Shared.Util import current_time
 
 
-class TorrentDownloadManager(LogObject):
+class TorrentDownloadManager(TorrentManager):
 
     def __init__(self, torrent):
         super().__init__(torrent, "download")
@@ -328,3 +329,7 @@ class TorrentDownloadManager(LogObject):
 
         dif_bytes = dif*self.torrent.piece_length
         return max(10, round(100 - (dif_bytes / 1000 / 1000), 4))
+
+    def stop(self):
+        super().stop()
+        self.queue = []

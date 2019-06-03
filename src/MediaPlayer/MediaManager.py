@@ -5,6 +5,8 @@ import urllib.parse
 
 import gc
 
+import objgraph
+
 from MediaPlayer.NextEpisodeManager import NextEpisodeManager
 from MediaPlayer.Torrents.Torrent.Torrent import Torrent
 
@@ -47,6 +49,7 @@ class MediaManager(metaclass=Singleton):
         EventManager.register_event(EventType.NoPeers, self.stop_torrent)
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.media_selection_required)
         EventManager.register_event(EventType.TorrentMediaFileSet, lambda x: self._start_playing_torrent())
+        EventManager.register_event(EventType.TorrentStopped, lambda: self.on_torrent_stopped())
 
         VLCPlayer().player_state.register_callback(self.player_state_change)
         self.torrent_observer = CustomThread(self.observe_torrent, "Torrent observer")
@@ -146,7 +149,6 @@ class MediaManager(metaclass=Singleton):
         VLCPlayer().set_subtitle_delay(delay)
 
     def stop_play(self):
-        collect = self.torrent is not None
         stop_torrent = False
         if VLCPlayer().player_state.state == PlayerState.Nothing:
             stop_torrent = True
@@ -155,8 +157,19 @@ class MediaManager(metaclass=Singleton):
             self.stop_torrent()
 
         self.media_data.reset()
-        if collect:
-            gc.collect()
+
+    @staticmethod
+    def on_torrent_stopped():
+        time.sleep(2)
+        gc.collect()
+        time.sleep(1)
+
+        obj = objgraph.by_type('Torrent')
+        obj2 = objgraph.by_type('Peer')
+        if len(obj) != 0:
+            Logger().write(LogVerbosity.Important, "Torrent not disposed!")
+        else:
+            Logger().write(LogVerbosity.Info, "Torrent disposed")
 
     def play_next_episode(self, continue_next):
         if continue_next:
@@ -219,9 +232,7 @@ class MediaManager(metaclass=Singleton):
         else:
             Logger().write(LogVerbosity.Important, "Invalid torrent")
             EventManager.throw_event(EventType.Error, ["torrent_error", "Invalid torrent"])
-            if self.torrent is not None:
-                self.torrent.stop()
-                self.torrent = None
+            self.stop_torrent()
 
     def player_state_change(self, old_state, new_state):
         if old_state.state != new_state.state:
@@ -285,7 +296,8 @@ class MediaManager(metaclass=Singleton):
 
     def stop_torrent(self):
         if self.torrent:
-            self.torrent.stop()
+            thread = CustomThread(self.torrent.stop, "Torrent stopper")
+            thread.start()
             self.torrent = None
 
     def observe_torrent(self):

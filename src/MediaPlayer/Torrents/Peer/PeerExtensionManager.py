@@ -45,3 +45,6 @@ class PeerExtensionManager(LogObject):
         if name in self.supported_peer_extensions:
             return self.supported_peer_extensions[name]
         return None
+
+    def stop(self):
+        self.peer = None

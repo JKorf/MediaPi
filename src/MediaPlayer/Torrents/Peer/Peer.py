@@ -6,8 +6,9 @@ from MediaPlayer.Torrents.Peer.PeerExtensionManager import PeerExtensionManager
 from MediaPlayer.Torrents.Peer.PeerMetaDataManager import PeerMetaDataManager
 
 from MediaPlayer.Torrents.Data import Bitfield
+from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from MediaPlayer.Util.Counter import AverageCounter
-from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState, PeerSource, PeerState, TorrentState
+from MediaPlayer.Util.Enums import PeerSpeed, PeerChokeState, PeerInterestedState, PeerSource, PeerState
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Stats import Stats
@@ -15,7 +16,7 @@ from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
 
-class Peer(LogObject):
+class Peer(TorrentManager):
     @property
     def bitfield(self):
         # Only create a new bitfield when we actually have metadata for it
@@ -69,7 +70,7 @@ class Peer(LogObject):
         self.peer_state_task = None
         self.peer_stop_task = None
 
-        self.stop_reason = None
+        self.stop_reason = "Torrent stopping"
         self.protocol_logger = ProtocolLogger(self)
 
     def adjust_round_trip_time(self, time):
@@ -145,16 +146,20 @@ class Peer(LogObject):
 
     def stop(self):
         self.state = PeerState.Stopping
-
         Logger().write(LogVerbosity.All, str(self.id) + ' Peer stopping')
+        if self.peer_state_task is not None:
+            self.peer_state_task.join()
+
         self.download_manager.stop()
         self.connection_manager.disconnect()
+        self.extension_manager.stop()
+        self.metadata_manager.stop()
 
         self.state = PeerState.Stopped
         self.peer_start_task.join()
-        if self.peer_state_task is not None:
-            self.peer_state_task.join()
-        self.torrent = None
+
+        self.protocol_logger = None
+        super().stop()
         self.finish()
         Logger().write(LogVerbosity.Debug, str(self.id) + ' Peer stopped: ' + self.stop_reason)
 

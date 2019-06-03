@@ -369,10 +369,16 @@ class Torrent(LogObject):
         self.network_manager.stop()
         self.metadata_manager.stop()
         self.stream_manager.stop()
+        self.message_processor.stop()
+        self.download_manager.stop()
+        self.data_manager.stop()
         Logger().write(LogVerbosity.Debug, 'Torrent managers stopped')
 
         for file in self.files:
             file.close()
+
+        self.files = []
+        self.media_file = None
 
         self.finish()
         EventManager.throw_event(EventType.TorrentStopped, [])

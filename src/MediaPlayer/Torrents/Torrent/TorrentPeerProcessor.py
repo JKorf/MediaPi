@@ -1,14 +1,15 @@
 import time
 
+from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from Shared.Threading import CustomThread
 from Shared.Timing import Timing
 from Shared.Util import current_time
 
 
-class TorrentPeerProcessor:
+class TorrentPeerProcessor(TorrentManager):
 
     def __init__(self, torrent):
-        self.torrent = torrent
+        TorrentManager.__init__(self, torrent, "Peer processor")
 
         self.running = False
         self.process_thread = CustomThread(self.process, "Peer processor")
@@ -20,6 +21,7 @@ class TorrentPeerProcessor:
     def stop(self):
         self.running = False
         self.process_thread.join()
+        super().stop()
 
     def process(self):
         while self.running:

@@ -124,7 +124,6 @@ class TrackerManager:
     def __init__(self):
         self.trackers = []
         self.initialized = False
-        self.running = True
 
         self.request_peers_id = EventManager.register_event(EventType.RequestPeers, self.request_peers)
 
@@ -150,5 +149,4 @@ class TrackerManager:
             Logger().write(LogVerbosity.Debug, 'Tracker ok: ' + tracker.host)
 
     def stop(self):
-        self.running = False
         EventManager.deregister_event(self.request_peers_id)

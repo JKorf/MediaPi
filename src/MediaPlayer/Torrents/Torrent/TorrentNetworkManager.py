@@ -1,10 +1,9 @@
 import select
 from time import sleep
 
+from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from MediaPlayer.Util.Counter import AverageCounter
-from MediaPlayer.Util.Enums import PeerState
 from Shared.Events import EventManager, EventType
-from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Threading import CustomThread
@@ -12,7 +11,7 @@ from Shared.Timing import Timing
 from Shared.Util import current_time
 
 
-class TorrentNetworkManager(LogObject):
+class TorrentNetworkManager(TorrentManager):
 
     @property
     def max_download_speed(self):
@@ -89,4 +88,4 @@ class TorrentNetworkManager(LogObject):
     def stop(self):
         self.running = False
         self.thread.join()
-        self.torrent = None
+        super().stop()

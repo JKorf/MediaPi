@@ -1,9 +1,9 @@
-from MediaPlayer.Torrents.Peer.PeerMessages import RequestMessage, CancelMessage
+from MediaPlayer.Torrents.Peer.PeerMessages import RequestMessage
 from MediaPlayer.Util.Enums import PeerInterestedState, PeerChokeState, PeerState, PeerSpeed
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
-from Shared.Util import current_time, write_size
+from Shared.Util import current_time
 
 
 class PeerDownloadManager(LogObject):
@@ -95,7 +95,7 @@ class PeerDownloadManager(LogObject):
         downloading_block[0].remove_downloader(self.peer)
 
     def update_timeout(self):
-        if self.peer.state != PeerState.Started:
+        if self.peer is None or self.peer.state != PeerState.Started:
             return True
 
         canceled = 0
@@ -151,4 +151,5 @@ class PeerDownloadManager(LogObject):
             block.remove_downloader(self.peer)
         self.downloading.clear()
         self.downloading_log = ""
+        self.peer = None
 

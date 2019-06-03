@@ -1,13 +1,12 @@
 import math
-from threading import Lock
 
-from Shared.LogObject import LogObject
+from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from MediaPlayer.Util.Bencode import bdecode
 
 
-class TorrentMetadataManager(LogObject):
+class TorrentMetadataManager(TorrentManager):
 
     def __init__(self, torrent):
         super().__init__(torrent, "meta")
@@ -91,7 +90,8 @@ class TorrentMetadataManager(LogObject):
         return [x for x in self.metadata_blocks if not x.done]
 
     def stop(self):
-        self.torrent = None
+        super().stop()
+        self.metadata_blocks = []
 
 
 class MetadataBlock:
