@@ -152,8 +152,8 @@ class TorrentPeerManager(TorrentManager):
         for peer in selected_peers:
             self.__peer_id += 1
             new_peer = Peer(self.__peer_id, self.torrent, peer[0], peer[1])
-            new_peer.start()
             self.connecting_peers.append(new_peer)
+            new_peer.start()
 
         self.potential_peers_log = len(self.potential_peers)
         self.disconnected_peers_log = len(self.disconnected_peers)
