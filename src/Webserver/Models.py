@@ -96,15 +96,6 @@ class DeviceGroup:
         self.devices = []
 
 
-class CecDevice:
-
-    def __init__(self):
-        self.address = None
-        self.active = False
-        self.vendor = None
-        self.osd = None
-
-
 class Media:
 
     def __init__(self, media_type, item_id, title, path, file, image, start_time, season=0, episode=0):
