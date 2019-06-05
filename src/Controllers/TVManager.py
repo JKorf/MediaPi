@@ -1,8 +1,9 @@
 import subprocess
+import sys
 
 from Shared.Logger import Logger, LogVerbosity
+from Shared.Threading import CustomThread
 from Shared.Util import Singleton
-from Webserver.Models import CecDevice
 
 
 class TVManager(metaclass=Singleton):
@@ -12,94 +13,57 @@ class TVManager(metaclass=Singleton):
     # 3,6,7,A - Tuner 1/2/3/4
     # 4,8,B - Playback 1/2/3
 
-    pi_source = "1"
-    tv_source = "0"
-    decoder_source = "2"  # ??
-    debug_level = "1"
-
-    key_map = {
-        "channel_up": 30,
-        "channel_down": 31,
-        "0": 20,
-        "1": 21,
-        "2": 22,
-        "3": 23,
-        "4": 24,
-        "5": 25,
-        "6": 26,
-        "7": 27,
-        "8": 28,
-        "9": 29,
-     }
-
-    def channel_up(self):
-        return self.__send_key(TVManager.key_map['channel_up'])
-
-    def channel_down(self):
-        return self.__send_key(TVManager.key_map['channel_down'])
-
-    def channel_number(self, number):
-        return self.__send_key(TVManager.key_map[str(number)])
-
-    def __send_key(self, key):
-        return self.__request(self.__construct_request(TVManager.pi_source, TVManager.decoder_source, '44:'+str(key)))
+    def __init__(self):
+        self.pi_source = "1"
+        self.tv_source = "0"
+        self.debug_level = "1"
+        self.cec_process = None
+        self.pi_is_active = False
+        self.pi = sys.platform == "linux" or sys.platform == "linux2"
 
     def switch_input_to_pi(self):
-        return self.__request('echo "as" | cec-client -s')
+        if not self.pi or self.pi_is_active:
+            return
+
+        self.pi_is_active = True
+        self.__request('as')
 
     def switch_input_to_tv(self):
-        return self.__request('echo "is" | cec-client -s')
+        if not self.pi or not self.pi_is_active:
+            return
+
+        self.pi_is_active = False
+        self.__request('is')
 
     def turn_tv_on(self):
-        return self.__request('echo "on ' + TVManager.tv_source + '" | cec-client -s')
+        if not self.pi:
+            return
+
+        self.__request('on ' + self.tv_source)
 
     def turn_tv_off(self):
-        return self.__request('echo "standby ' + TVManager.tv_source + '" | cec-client -s')
+        if not self.pi:
+            return
 
-    def get_inputs(self):
-        data = self.__request('echo "scan" | cec-client RPI -s')
-        if not data:
-            return []
+        self.__request('standby ' + self.tv_source)
 
-        return self.__process_devices(data)
+    def __read_cec(self):
+        for line in iter(self.cec_process.stdout.readline, b''):
+            Logger().write(LogVerbosity.All, "CEC: " + line.decode('utf-8'))
+
+    def start(self):
+        if not self.pi:
+            return
+
+        self.cec_process = subprocess.Popen(['cec-client', '-u'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        t = CustomThread(self.__read_cec, "Cec reader", [])
+        t.start()
 
     @staticmethod
     def __construct_request(source, destination, command):
         return 'echo "tx ' + source + destination + ":" + command + '" | cec-client -s'
 
-    @staticmethod
-    def __process_devices(data):
-        result = []
-        lines = data.split('\n')
-        current_device = None
-        for line in lines:
-            if line.startswith("device #"):
-                # new device
-                current_device = CecDevice()
-
-            if line.startswith("address: "):
-                current_device.address = line.split(" ")[-1]
-            if line.startswith("active source: "):
-                current_device.active = line.split(" ")[-1] == "yes"
-            if line.startswith("vendor: "):
-                current_device.vendor = line.split(" ")[-1]
-            if line.startswith("osd string: "):
-                current_device.osd = line.split(" ")[-1]
-            if not line:
-                if current_device:
-                    result.append(current_device)
-                    current_device = None
-
-        return result
-
-    @staticmethod
-    def __request(command):
-        try:
-            Logger().write(LogVerbosity.Debug, "TV manager sending command: " + command)
-            result = subprocess.check_output(command + ' -d ' + TVManager.debug_level, shell=True).decode("utf8")
-            Logger().write(LogVerbosity.Debug, "TV manager result: " + str(result))
-            return result
-        except subprocess.TimeoutExpired:
-            Logger().write(LogVerbosity.Info, "TV manager request failed by timeout")
-        except subprocess.CalledProcessError as err:
-            Logger().write(LogVerbosity.Info, "TV manager request failed: {}".format(err))
+    def __request(self, command):
+        Logger().write(LogVerbosity.Debug, "TV manager sending command: " + command)
+        self.cec_process.stdin.write(command.encode('utf-8') + b'\n')
+        self.cec_process.stdin.flush()

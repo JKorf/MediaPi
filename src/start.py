@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import eventlet
+
 eventlet.monkey_patch()
 
 from eventlet import hubs
@@ -27,6 +28,7 @@ from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
 from Controllers.PresenceManager import PresenceManager
 from Controllers.WiFiController import WiFiController
 from Controllers.TradfriManager import TradfriManager
+from Controllers.TVManager import TVManager
 
 from Shared.Util import current_time
 from Shared.Stats import Stats
@@ -63,6 +65,7 @@ class Program:
         Stats().start()
         PresenceManager().start()
         RuleManager().start()
+        TVManager().start()
 
         if not self.is_slave:
             TradfriManager().init()

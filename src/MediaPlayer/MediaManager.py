@@ -74,6 +74,7 @@ class MediaManager(metaclass=Singleton):
         self.media_data.url = url
         self.media_data.image = None
         self.media_data.stop_update()
+        TVManager().switch_input_to_pi()
 
     def start_radio(self, name, url):
         self.stop_play()
@@ -83,6 +84,7 @@ class MediaManager(metaclass=Singleton):
         self.media_data.title = name
         self.media_data.image = None
         self.media_data.stop_update()
+        TVManager().switch_input_to_pi()
 
     def start_episode(self, id, season, episode, title, url, image, position):
         self.stop_play()
@@ -128,6 +130,7 @@ class MediaManager(metaclass=Singleton):
         self.media_data.type = "Url"
         self.media_data.title = title
         self.media_data.stop_update()
+        TVManager().switch_input_to_pi()
 
     def pause_resume(self):
         VLCPlayer().pause_resume()
@@ -230,6 +233,7 @@ class MediaManager(metaclass=Singleton):
                 self.torrent.set_selected_media_file(media_file)
             torrent.start()
             self.last_torrent_start = current_time()
+            TVManager().switch_input_to_pi()
         else:
             Logger().write(LogVerbosity.Important, "Invalid torrent")
             EventManager.throw_event(EventType.Error, ["torrent_error", "Invalid torrent"])
@@ -247,7 +251,6 @@ class MediaManager(metaclass=Singleton):
             self.update_subtitles(new_state)
             self.next_epi_thread = CustomThread(lambda: self.next_episode_manager.check_next_episode(self.media_data, self.torrent), "Check next episode", [])
             self.next_epi_thread.start()
-            TVManager().switch_input_to_pi()
 
         if old_state.state != new_state.state and new_state.state == PlayerState.Nothing:
             self.history_id = 0
