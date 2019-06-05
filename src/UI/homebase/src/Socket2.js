@@ -1,5 +1,5 @@
 import newId from './Utils/id.js'
-import openSocket from 'socket.io-client';
+import connect from 'socket.io-client';
 
 export default class WS {
 
@@ -12,7 +12,7 @@ export default class WS {
     }
 
     static connect(){
-        this.socket = openSocket(window.vars.websocketBase, { transports: ['websocket'] });
+        this.socket = connect(window.vars.websocketBase, { reconnectionDelayMax: 1000, timeout: 1000, transports: ['websocket'] });
         this.socket.on('connect', () => {
             console.log("Websocket connected");
             this.socket.emit('init', localStorage.getItem('Client-ID'), sessionStorage.getItem('Session-Key'), (data) => this.processAuthResult(data));
