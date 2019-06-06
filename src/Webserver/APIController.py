@@ -68,6 +68,7 @@ class APIController(metaclass=Singleton):
         self.ui_websocket_controller = UIWebsocketController("/UI")
         self.slave_websocket_controller = SlaveWebsocketController("/Slave")
         UIWebsocketController.init()
+        YouTubeController.init()
 
         socketio.on_namespace(self.ui_websocket_controller)
         socketio.on_namespace(self.slave_websocket_controller)

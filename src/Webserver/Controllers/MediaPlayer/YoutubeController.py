@@ -6,24 +6,28 @@ from youtube import API
 
 from Database.Database import Database
 from Shared.Logger import Logger, LogVerbosity
+from Shared.Settings import SecureSettings
 from Shared.Util import to_JSON
 from Webserver.APIController import app
 from Webserver.Models import BaseMedia
 
 
 class YouTubeController:
-    api_key = "AIzaSyBNirVB6B3RAUBLez9lG-1tZdzrRY3TWj8"
-    client_id = "316920146043-j2ubrtkbjs1dv59nil18tegpg6o1lmbn.apps.googleusercontent.com"
-    client_secret = "chxG487PFTQbb0XwmMWODgor"
-
     # Generate token: https://developers.google.com/oauthplayground/
-    refresh_token = "1/WGEZijOfaHvhJ9Cdp6bQwdJASsu2az-37FCQotH5HaY"
+    refresh_token = None
 
     subscriptions = []
-    api = API(client_id=client_id, client_secret=client_secret, api_key=api_key)
+    api = None
 
     min_activity_range = None
     max_activity_range = None
+
+    @staticmethod
+    def init():
+        YouTubeController.refresh_token = SecureSettings.get_string("youtube_refresh_token")
+        YouTubeController.api = API(client_id=SecureSettings.get_string("youtube_client_id"),
+                                    client_secret=SecureSettings.get_string("youtube_client_secret"),
+                                    api_key=SecureSettings.get_string("youtube_api_key"))
 
     @staticmethod
     @app.route('/youtube', methods=['GET'])
