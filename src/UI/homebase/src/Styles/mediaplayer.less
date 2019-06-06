@@ -291,6 +291,7 @@
 
 .show-synopsis{
     margin: 0 10px;
+    white-space: pre-wrap;
 }
 
 .show-image{
@@ -320,7 +321,7 @@
     width: 60%;
 }
 
-.show-image img, .movie-image img{
+.show-image img, .movie-image img, .youtube-image img{
     width: 100%;
 }
 
@@ -1397,4 +1398,18 @@
 .youtube-channel-title{
     color: #colors[text-faded];
     font-size: 11px;
+}
+
+.youtube-image{
+    width: calc(100% - 10px);
+    padding-right: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+    float: left;
+}
+
+@media only screen and (min-device-width: 600px){
+    .youtube-image{
+        width: 50%;
+    }
 }

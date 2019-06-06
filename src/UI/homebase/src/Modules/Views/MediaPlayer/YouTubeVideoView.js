@@ -30,6 +30,7 @@ class YouTubeVideoView extends Component {
     axios.get(window.vars.apiBase + 'youtube/video?id=' + this.props.match.params.id).then(data => {
         console.log(data.data);
         this.setState({video: data.data, loading: false});
+        console.log(data.data.description);
         this.props.functions.changeTitle(data.data.title);
     }, err => {
         this.setState({ loading: false});
@@ -79,7 +80,7 @@ class YouTubeVideoView extends Component {
           <ViewLoader loading={this.state.loading}/>
           { this.state.video &&
               <div className="show">
-                <div className="show-image">
+                <div className="youtube-image">
                     <img alt="Show poster" src={this.state.video.poster} />
                 </div>
                 <div className="show-details">
@@ -88,8 +89,7 @@ class YouTubeVideoView extends Component {
                         <div className="label-value"></div>
                     </div>
                 </div>
-                <div className="show-synopsis">
-                    {this.state.video.description}
+                <div className="show-synopsis" dangerouslySetInnerHTML={{__html: this.state.video.description}}>
                 </div>
 
                 <div className="movie-play-buttons">

@@ -32,9 +32,9 @@ class YouTubeController:
     @staticmethod
     @app.route('/youtube', methods=['GET'])
     def youtube_main():
-        page = int(request.args.get('page', 1))
-        YouTubeController.api.refresh_token(YouTubeController.refresh_token)
+        YouTubeController.check_token()
 
+        page = int(request.args.get('page', 1))
         if len(YouTubeController.subscriptions) == 0:
             YouTubeController.__request_subscriptions(None)
 
@@ -77,6 +77,10 @@ class YouTubeController:
         return to_JSON(YouTubeController.subscriptions)
 
     @staticmethod
+    def check_token():
+        YouTubeController.api.refresh_token(YouTubeController.refresh_token)
+
+    @staticmethod
     def __request_subscriptions(next_page_token):
         result = YouTubeController.api.get('subscriptions', mine=True, maxResults=50, pageToken=next_page_token)
         for item in result['items']:
@@ -87,6 +91,7 @@ class YouTubeController:
     @staticmethod
     @app.route('/youtube/video', methods=['GET'])
     def youtube_video():
+        YouTubeController.check_token()
         id = request.args.get('id')
         video_data = YouTubeController.api.get('videos', id=id, part="contentDetails,statistics,snippet")
         video = video_data['items'][0]
