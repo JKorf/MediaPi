@@ -6,7 +6,7 @@ from enum import Enum
 import sys
 
 from MediaPlayer.Player import vlc
-from MediaPlayer.Player.vlc import libvlc_get_version, Media
+from MediaPlayer.Player.vlc import libvlc_get_version, Media, MediaList
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Observable import Observable
@@ -25,12 +25,12 @@ class VLCPlayer(metaclass=Singleton):
 
         self.media = None
         self.__player = self.__vlc_instance.media_player_new()
+        self.__list_player = self.__vlc_instance.media_list_player_new()
+        self.__list_player.set_media_player(self.__player)
 
         self.__event_manager = self.__player.event_manager()
 
         self.set_volume(75)
-
-        self.trying_subitems = False
 
         EventManager.register_event(EventType.SetSubtitleFiles, self.set_subtitle_files)
         EventManager.register_event(EventType.StopPlayer, self.stop)
@@ -58,8 +58,14 @@ class VLCPlayer(metaclass=Singleton):
         self.player_state.stop_update()
 
         self.media = Media(url, *parameters)
-        self.__player.set_media(self.media)
-        self.__player.play()
+        if 'youtube' in url:
+            media_list = MediaList()
+            media_list.add_media(self.media)
+            self.__list_player.set_media_list(media_list)
+            self.__list_player.play()
+        else:
+            self.__player.set_media(self.media)
+            self.__player.play()
 
     @staticmethod
     def get_instance_parameters():
@@ -204,15 +210,6 @@ class VLCPlayer(metaclass=Singleton):
     def observe_player(self):
         while True:
             state = self.get_state().value
-            if state == 6 and self.player_state.state != PlayerState.Nothing:
-                if "youtube" in self.player_state.path and not self.trying_subitems:
-                    Logger().write(LogVerbosity.Debug, "Trying youtube sub items")
-                    self.trying_subitems = True
-                    thread = CustomThread(self.try_play_subitem, "Try play subitem")
-                    thread.start()
-                    continue
-            else:
-                self.trying_subitems = False
 
             if state in [5, 6, 7]:
                 state = 0

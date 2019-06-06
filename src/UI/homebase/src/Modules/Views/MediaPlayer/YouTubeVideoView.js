@@ -56,6 +56,22 @@ class YouTubeVideoView extends Component {
         );
   }
 
+   writeTimespan(duration)
+  {
+     duration = Math.round(duration);
+     var seconds = parseInt((duration / 1000) % 60),
+      minutes = parseInt((duration / (1000 * 60)) % 60),
+      hours = parseInt((duration / (1000 * 60 * 60)) % 24);
+
+      hours = (hours < 10) ? "0" + hours : hours;
+      minutes = (minutes < 10) ? "0" + minutes : minutes;
+      seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+      if (hours > 0)
+        return hours + ":" + minutes + ":" + seconds;
+      return minutes + ":" + seconds;
+  }
+
   render() {
 
     return (
@@ -77,7 +93,7 @@ class YouTubeVideoView extends Component {
                 </div>
 
                 <div className="movie-play-buttons">
-                { this.state.video.played_for > 1000 * 60 &&
+                { this.state.video.played_for > 1000 * 5 &&
                     <Button text={"Continue from " + this.writeTimespan(this.state.video.played_for)} onClick={(e) => this.play( this.state.video.played_for)} classId="secondary"></Button>
                 }
                 <Button text={"Play" } onClick={(e) => this.play(0)} classId="secondary" />
