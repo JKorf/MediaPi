@@ -8,6 +8,7 @@
     zigbee
 
     Tv control goed toepassen
+        pi_is_active bijwerken door interpreten cec messages
         Also adjust NOOBS /boot/config.txt with hdmi_ignore_cec_init=1
 
     Fix seeking back when done

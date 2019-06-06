@@ -139,6 +139,20 @@ class Database(metaclass=Singleton):
         database.close()
         return cursor.lastrowid
 
+    def add_watched_youtube(self, title, url, watched_at):
+        if self.slave:
+            raise PermissionError("Cant call add_watched_youtube on slave")
+
+        Logger().write(LogVerbosity.Debug, "Database add watched youtube")
+        sql = "INSERT INTO History (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
+        parameters = ["YouTube", title, url, watched_at]
+
+        database, cursor = self.connect()
+        cursor.execute(sql, parameters)
+        database.commit()
+        database.close()
+        return cursor.lastrowid
+
     def add_watched_url(self, url, watched_at):
         if self.slave:
             raise PermissionError("Cant call add_watched_url on slave")

@@ -36,7 +36,12 @@ class MediaOverview extends Component {
           {
             this.props.media.map((media) =>
                 <Link key={media.id} to={this.props.link + media.id}>
-                    <MediaThumbnail img={media.poster} title={media.title} rating={media.rating} />
+                    { this.props.getMediaItem &&
+                        this.props.getMediaItem(media)
+                    }
+                    { !this.props.getMediaItem &&
+                        <MediaThumbnail img={media.poster} title={media.title} rating={media.rating} />
+                    }
                 </Link>)
           }
         </div>

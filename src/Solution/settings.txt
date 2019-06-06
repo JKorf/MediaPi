@@ -46,7 +46,7 @@ network_caching=15000
 # Logging
 log_level=1
 max_log_file_size=10000000
-vlc_log_level=1
+vlc_log_level=3
 state_logging=True
 
 # DHT

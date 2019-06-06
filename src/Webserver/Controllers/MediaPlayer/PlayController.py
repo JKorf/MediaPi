@@ -31,6 +31,21 @@ class PlayController:
         return "OK"
 
     @staticmethod
+    @app.route('/play/youtube', methods=['POST'])
+    def play_youtube():
+        instance = int(request.args.get("instance"))
+        title = urllib.parse.unquote(request.args.get("title"))
+        url = urllib.parse.unquote(request.args.get("url"))
+        position = int(request.args.get("position"))
+
+        Logger().write(LogVerbosity.Info, "Play youtube " + title + " on " + str(instance))
+        if instance == 1:
+            MediaManager().start_youtube(title, url, position)
+        else:
+            APIController().slave_command(instance, "media", "start_youtube", title, url, position)
+        return "OK"
+
+    @staticmethod
     @app.route('/play/episode', methods=['POST'])
     def play_episode():
         instance = int(request.args.get("instance"))

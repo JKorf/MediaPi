@@ -1,183 +1,142 @@
-from datetime import timedelta, date
+from datetime import datetime, timedelta
 
-import json
-import time
-from urllib.parse import urlencode, unquote
+import dateutil
+from flask import request
+from youtube import API
 
-from Shared.Events import EventManager, EventType
-from Shared.Logger import Logger
-from Shared.Network import RequestFactory
-from Shared.Util import current_time, to_JSON
-from Webserver.Models import Media
+from Database.Database import Database
+from Shared.Logger import Logger, LogVerbosity
+from Shared.Util import to_JSON
+from Webserver.APIController import app
+from Webserver.Models import BaseMedia
 
 
-class YoutubeController:
-    api = "https://www.googleapis.com/youtube/v3/"
-    auth_server = "https://accounts.google.com/o/oauth2/token"
+class YouTubeController:
+    api_key = "AIzaSyBNirVB6B3RAUBLez9lG-1tZdzrRY3TWj8"
+    client_id = "316920146043-j2ubrtkbjs1dv59nil18tegpg6o1lmbn.apps.googleusercontent.com"
+    client_secret = "chxG487PFTQbb0XwmMWODgor"
 
-    access_token = None
-    token_expires = 0
-    token_received = 0
-    refresh_token = "1/0WokTKPz95NA7bMxC7yzdjacrR4P6Tf7Tw_AGB7rhSU"
-    client_id = "93109173237-15qivi295udpj1gsmi9d6vh5ubrutrbf.apps.googleusercontent.com"
-    client_secret = "5x1UVlRMWS9j3uHMRTq1UxpL"
-    headers = None
+    # Generate token: https://developers.google.com/oauthplayground/
+    refresh_token = "1/WGEZijOfaHvhJ9Cdp6bQwdJASsu2az-37FCQotH5HaY"
 
-    @staticmethod
-    async def search(query, type):
-        Logger().write(2, "Searching youtube for " + query)
-        path = "search?part=snippet&q=" + query + "&type=video,channel&maxResults=20"
+    subscriptions = []
+    api = API(client_id=client_id, client_secret=client_secret, api_key=api_key)
 
-        data = await YoutubeController.internal_make_request(path)
-        if data is None:
-            return
-        result = []
-        if type == "videos":
-            for video in [x for x in data['items'] if x['id']['kind'] == "youtube#video"]:
-                result.append({'title': video['snippet']['title'],
-                               'id': video['id']['videoId'],
-                               'uploaded': video['snippet']['publishedAt'],
-                               'channel_id': video['snippet']['channelId'],
-                               'channel_title': video['snippet']['channelTitle'],
-                               'thumbnail': video['snippet']['thumbnails']['medium']['url'],
-                               'type': 'video'})
-        else:
-            for channel in [x for x in data['items'] if x['id']['kind'] == "youtube#channel"]:
-                result.append({
-                    'id': channel['snippet']['channelId'],
-                    'title': channel['snippet']['title'],
-                    'description': channel['snippet']['description'],
-                    'thumbnail': channel['snippet']['thumbnails']['medium']['url'],
-                    'type': 'channel'
-                })
-
-        return to_JSON(result).encode('utf8')
+    min_activity_range = None
+    max_activity_range = None
 
     @staticmethod
-    async def home():
-        path = "subscriptions?part=snippet&mine=true&maxResults=50"
-        subscriptions = await YoutubeController.internal_make_request(path)
-        if subscriptions is None:
-            return
-        channel_ids = []
-        for sub in subscriptions['items']:
-            channel_ids.append(sub['snippet']['resourceId']['channelId'])
+    @app.route('/youtube', methods=['GET'])
+    def youtube_main():
+        page = int(request.args.get('page', 1))
+        YouTubeController.api.refresh_token(YouTubeController.refresh_token)
 
-        uploads = []
+        if len(YouTubeController.subscriptions) == 0:
+            YouTubeController.__request_subscriptions(None)
 
-        futures = []
-        for channel_id in channel_ids:
-            futures.append(YoutubeController.uploads_for_channel(channel_id, uploads, 7))
+        before_date = datetime.utcnow() - timedelta(days=3 * (page - 1))
+        after_date = datetime.utcnow() - timedelta(days=3 * page)
 
-        for future in futures:
-            await future
-
-        uploads.sort(key=lambda x: x['uploaded'], reverse=True)
-
-        return to_JSON(uploads).encode('utf8')
-
-    @staticmethod
-    async def channel_info(channel_id):
-        path = "channels?part=snippet%2CcontentDetails%2Cstatistics&id=" + channel_id
-        channel_info = await YoutubeController.internal_make_request(path)
-
-        videos = []
-        await YoutubeController.uploads_for_channel(channel_id, videos, 28)
-        result = {
-            'title': channel_info["items"][0]["snippet"]["title"],
-            'description': channel_info["items"][0]["snippet"]["description"],
-            'published': channel_info["items"][0]["snippet"]["publishedAt"],
-            'thumbnail': channel_info["items"][0]["snippet"]["thumbnails"]["medium"]["url"],
-            'views': channel_info["items"][0]["statistics"]["viewCount"],
-            'subs': channel_info["items"][0]["statistics"]["subscriberCount"],
-            'video_count': channel_info["items"][0]["statistics"]["videoCount"],
-            'videos': videos
-        }
-
-        return to_JSON(result).encode('utf8')
-
-    @staticmethod
-    async def channel_feed(channel_id):
-        videos = []
-        await YoutubeController.uploads_for_channel(channel_id, videos, 28)
-        return to_JSON(videos).encode('utf8')
-
-    @staticmethod
-    async def uploads_for_channel(channel_id, uploads, time):
-        last_week = date.today() - timedelta(days=time)
-        date_string = last_week.strftime("%Y-%m-%d")
-        path = "activities?part=contentDetails,snippet&channelId=" + channel_id + "&maxResults=50&publishedAfter=" + date_string + "T00:00:00.000Z"
-        channel_activities = await YoutubeController.internal_make_request(path)
-        if channel_activities is None:
-            return
-        for activity in channel_activities['items']:
-            if activity['snippet']['type'] == 'upload':
-                uploads.append({'title': activity['snippet']['title'],
-                                'id': activity['contentDetails']['upload']['videoId'],
-                                'uploaded': activity['snippet']['publishedAt'],
-                                'channel_id': activity['snippet']['channelId'],
-                                'channel_title': activity['snippet']['channelTitle'],
-                                'thumbnail': activity['snippet']['thumbnails']['medium']['url'],
-                                'type': 'video'})
-
-    @staticmethod
-    def play_youtube(id, title):
-        Logger().write(2, "Play youtube: " + title)
-
-        EventManager.throw_event(EventType.StopTorrent, [])
-        time.sleep(0.2)
-        EventManager.throw_event(EventType.PreparePlayer, [Media("YouTube", id, unquote(title), 'http://www.youtube.com/watch?v=' + id, None, None, 0)])
-        EventManager.throw_event(EventType.StartPlayer, [])
-
-    @staticmethod
-    def play_youtube_url(url, title):
-        Logger().write(2, "Play youtube url: " + unquote(title))
-
-        EventManager.throw_event(EventType.StopTorrent, [])
-        time.sleep(0.2)
-        EventManager.throw_event(EventType.PreparePlayer, [Media("YouTube", None, unquote(title), unquote(url), None, None, 0)])
-        EventManager.throw_event(EventType.StartPlayer, [])
-
-    @staticmethod
-    async def internal_make_request(uri):
-        if YoutubeController.access_token is None:
-            refreshed = await YoutubeController.internal_do_refresh_token()
-            if not refreshed:
-                return None
-
-            data = await YoutubeController.internal_make_request(uri)
-            return data
-
-        Logger().write(1, "Requesting " + YoutubeController.api + uri)
-        response = await RequestFactory.make_request_async(YoutubeController.api + uri, "GET", None, YoutubeController.headers, 15, 15)
-        if response is None:
-            if YoutubeController.token_received + (YoutubeController.token_expires * 1000) < current_time():
-                await YoutubeController.internal_do_refresh_token()
-                data = await YoutubeController.internal_make_request(uri)
-                return data
+        if YouTubeController.max_activity_range is not None and before_date < YouTubeController.max_activity_range \
+                and before_date > YouTubeController.min_activity_range:
+            if after_date < YouTubeController.min_activity_range:
+                before_date = YouTubeController.min_activity_range
             else:
-                return None
+                after_date = YouTubeController.max_activity_range
 
-        return json.loads(response.decode())
+        if YouTubeController.max_activity_range is not None and after_date > YouTubeController.min_activity_range \
+                and after_date < YouTubeController.max_activity_range:
+            if before_date > YouTubeController.max_activity_range:
+                after_date = YouTubeController.max_activity_range
+            else:
+                before_date = YouTubeController.min_activity_range
+
+        if YouTubeController.max_activity_range is None:
+            YouTubeController.max_activity_range = before_date
+            YouTubeController.min_activity_range = after_date
+        else:
+            YouTubeController.max_activity_range = max(before_date, YouTubeController.max_activity_range)
+            YouTubeController.min_activity_range = min(after_date, YouTubeController.min_activity_range)
+
+        if before_date != after_date:
+            Logger().write(LogVerbosity.Debug, "Requesting activity from {} to {}".format(after_date, before_date))
+
+            iso_unix_time = dateutil.parser.isoparse("1970-01-01T00:00:00.000Z")
+            for sub in YouTubeController.subscriptions:
+                result = YouTubeController.api.get('activities', maxResults=50, channelId=sub.channelId, publishedAfter=after_date.isoformat() +"Z", publishedBefore=before_date.isoformat() +"Z", part="contentDetails,snippet")
+                for act in [x for x in result['items'] if x['snippet']['type'] == 'upload']:
+                    upload_time = act['snippet']['publishedAt']
+                    upload_time = dateutil.parser.isoparse(upload_time)
+                    upload_time = (upload_time - iso_unix_time) / timedelta(milliseconds=1)
+                    sub.uploads.append(YouTubeMedia(act['contentDetails']['upload']['videoId'], act['snippet']['thumbnails']['medium']['url'], act['snippet']['title'], upload_time, sub.channelId, sub.title))
+
+        return to_JSON(YouTubeController.subscriptions)
 
     @staticmethod
-    async def internal_do_refresh_token():
-        Logger().write(2, "Refreshing token")
+    def __request_subscriptions(next_page_token):
+        result = YouTubeController.api.get('subscriptions', mine=True, maxResults=50, pageToken=next_page_token)
+        for item in result['items']:
+            YouTubeController.subscriptions.append(Subscription(item['snippet']['resourceId']['channelId'], item['snippet']['title']))
+        if 'nextPageToken' in result:
+            YouTubeController.__request_subscriptions(result['nextPageToken'])
 
-        fields = {"client_id": YoutubeController.client_id,
-                  "client_secret": YoutubeController.client_secret,
-                  "refresh_token": YoutubeController.refresh_token,
-                  "grant_type": "refresh_token"}
+    @staticmethod
+    @app.route('/youtube/video', methods=['GET'])
+    def youtube_video():
+        id = request.args.get('id')
+        video_data = YouTubeController.api.get('videos', id=id, part="contentDetails,statistics,snippet")
+        video = video_data['items'][0]
+        data = YouTubeVideo(id,
+                            "https://youtube.com/watch?v=" + id,
+                            video['snippet']['thumbnails']['medium']['url'],
+                            video['snippet']['title'],
+                            video['snippet']['publishedAt'],
+                            video['snippet']['channelId'],
+                            video['snippet']['channelTitle'],
+                            video['snippet']['description'],
+                            video['contentDetails']['duration'],
+                            video['statistics']['viewCount'],
+                            video['statistics']['likeCount'],
+                            video['statistics']['dislikeCount'])
 
-        req = await RequestFactory.make_request_async(YoutubeController.auth_server, "POST", urlencode(fields).encode())
-        if not req:
-            return False
+        seen = Database().get_history_for_url(data.url)
+        data.seen = len(seen) > 0
+        if len(seen) > 0:
+            seen = seen[-1]
+            data.played_for = seen.played_for
 
-        json_data = req.decode()
-        data = json.loads(json_data)
-        YoutubeController.access_token = data["access_token"]
-        YoutubeController.token_expires = int(data["expires_in"])
-        YoutubeController.token_received = current_time()
-        YoutubeController.headers = {"Authorization": "Bearer " + YoutubeController.access_token}
-        Logger().write(2, "Token refreshed")
-        return True
+        return to_JSON(data)
+
+
+class Subscription:
+
+    def __init__(self, channel_id, title):
+        self.channelId = channel_id
+        self.title = title
+        self.uploads = []
+
+
+class YouTubeMedia(BaseMedia):
+
+    def __init__(self, video_id, thumbnail, title, upload_date, channel_id, channel_title):
+        super().__init__(video_id, thumbnail, title)
+        self.upload_date = upload_date
+        self.channel_id = channel_id
+        self.channel_title = channel_title
+
+
+class YouTubeVideo(BaseMedia):
+
+    def __init__(self, video_id, url, thumbnail, title, upload_date, channel_id, channel_title, description, duration, views, likes, dislikes):
+        super().__init__(video_id, thumbnail, title)
+        self.url = url
+        self.upload_date = upload_date
+        self.channel_id = channel_id
+        self.channel_title = channel_title
+        self.description = description
+        self.duration = duration
+        self.views = views
+        self.likes = likes
+        self.dislikes = dislikes
+        self.seen = False
+        self.played_for = 0

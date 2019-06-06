@@ -25,8 +25,6 @@ class VLCPlayer(metaclass=Singleton):
 
         self.media = None
         self.__player = self.__vlc_instance.media_player_new()
-        # if sys.platform == "linux" or sys.platform == "linux2":
-        #     self.__player.set_fullscreen(True)
 
         self.__event_manager = self.__player.event_manager()
 

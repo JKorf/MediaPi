@@ -119,6 +119,20 @@ class MediaManager(metaclass=Singleton):
         self.media_data.start_from = position
         self.media_data.stop_update()
 
+    def start_youtube(self, title, url, position):
+        self.stop_play()
+        VLCPlayer().play(url, position)
+        if Settings.get_bool("slave"):
+            self.history_id, = SlaveClientController.request_master("add_watched_youtube", 5, title, url, current_time())
+        else:
+            self.history_id = Database().add_watched_youtube(title, url, current_time())
+        self.media_data.start_update()
+        self.media_data.type = "YouTube"
+        self.media_data.url = url
+        self.media_data.title = title
+        self.media_data.stop_update()
+        TVManager().switch_input_to_pi()
+
     def start_url(self, title, url):
         self.stop_play()
         VLCPlayer().play(url, 0)

@@ -17,6 +17,8 @@ import MovieView from './Modules/Views/MediaPlayer/MovieView.js'
 import HDView from './Modules/Views/MediaPlayer/HDView.js'
 import RadioView from './Modules/Views/MediaPlayer/RadioView.js'
 import TorrentView from './Modules/Views/MediaPlayer/TorrentView.js'
+import YouTubeMainView from './Modules/Views/MediaPlayer/YouTubeMainView.js'
+import YouTubeVideoView from './Modules/Views/MediaPlayer/YouTubeVideoView.js'
 import HistoryView from './Modules/Views/MediaPlayer/HistoryView.js'
 
 import HomeDashboardView from './Modules/Views/Home/HomeDashboardView.js'
@@ -204,6 +206,8 @@ class App extends Component {
                     <Route path="/mediaplayer/hd" exact render={(props) => <HDView {...props} functions={this.functions}/>} />
                     <Route path="/mediaplayer/radio" exact render={(props) => <RadioView {...props} functions={this.functions}  />} />
                     <Route path="/mediaplayer/torrents" exact render={(props) => <TorrentView {...props} functions={this.functions}  />} />
+                    <Route path="/mediaplayer/youtube" exact render={(props) => <YouTubeMainView {...props} functions={this.functions}  />} />
+                    <Route path="/mediaplayer/youtube/:id" exact render={(props) => <YouTubeVideoView {...props} functions={this.functions}  />} />
 
                     <Route path="/mediaplayer/history" exact render={(props) => <HistoryView {...props} functions={this.functions}  />} />
 
