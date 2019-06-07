@@ -15,20 +15,20 @@ class YouTubeMainView extends Component {
     ];
 
     var prevSearch = getYouTubeSearch();
-    this.state = {videos: [], loading: true, order: prevSearch.order, searchTerm: prevSearch.term, page: prevSearch.page};
+    this.state = {videos: [], channels: [], loading: true, order: prevSearch.order, searchTerm: prevSearch.term, page: prevSearch.page};
 
     this.props.functions.changeBack({to: "/mediaplayer/" });
     this.props.functions.changeTitle("YouTube");
     this.props.functions.changeRightImage(null);
 
-    this.getVideos = this.getVideos.bind(this);
+    this.getData = this.getData.bind(this);
     this.changeSearchTerm = this.changeSearchTerm.bind(this);
     this.changeOrder = this.changeOrder.bind(this);
     this.changePage = this.changePage.bind(this);
   }
 
   componentDidMount() {
-    this.getVideos(this.state.page, this.state.order, this.state.searchTerm, true);
+    this.getData(this.state.page, this.state.order, this.state.searchTerm, true);
   }
 
   componentWillUnmount(){
@@ -37,26 +37,42 @@ class YouTubeMainView extends Component {
     updateYouTubeSearch(this.state.searchTerm, this.state.page, this.state.order);
   }
 
-  getVideos(page, order, searchTerm, include_previous_pages){
+  getData(page, order, searchTerm, include_previous_pages){
     this.setState({loading: true});
 
     if(searchTerm){
         var url = window.vars.apiBase + 'youtube/search?page='+page+'&type='+encodeURIComponent(order)+'&keywords='+encodeURIComponent(searchTerm);
         if (page != 1 && this.state.token)
             url += "&token=" + this.state.token;
-        axios.get(url).then(data => {
-            var newVideos = data.data.search_result;
-            if (page != 1){
-                var newVideos = this.state.videos;
-                for(var i = 0; i < data.data.search_result.length; i++){
-                    if(newVideos.some(e => e.id === data.data.search_result[i].id))
-                        continue;
-                    newVideos.push(data.data.search_result[i]);
-                }
-            }
 
-            this.setState({videos: newVideos, loading: false, token: data.data.token});
+        axios.get(url).then(data => {
             console.log(data.data);
+
+            if (order == "Video"){
+                var newVideos = data.data.search_result;
+                if (page != 1){
+                    var newVideos = this.state.videos;
+                    for(var i = 0; i < data.data.search_result.length; i++){
+                        if(newVideos.some(e => e.id === data.data.search_result[i].id))
+                            continue;
+                        newVideos.push(data.data.search_result[i]);
+                    }
+                }
+
+                this.setState({channels: [], videos: newVideos, loading: false, token: data.data.token});
+            }else{
+                var newChannels = data.data.search_result;
+                if (page != 1){
+                    var newChannels = this.state.channels;
+                    for(var i = 0; i < data.data.search_result.length; i++){
+                        if(newChannels.some(e => e.id === data.data.search_result[i].id))
+                            continue;
+                        newChannels.push(data.data.search_result[i]);
+                    }
+                }
+                console.log(newChannels);
+                this.setState({videos: [], channels: newChannels, loading: false, token: data.data.token});
+            }
         }, err =>{
             this.setState({loading: false});
             console.log(err);
@@ -89,13 +105,17 @@ class YouTubeMainView extends Component {
         clearTimeout(this.timer);
     this.timer = setTimeout(() => {
         this.setState({shows: []});
-        this.getVideos(this.state.page, this.state.order, this.state.searchTerm);
+        this.getData(this.state.page, this.state.order, this.state.searchTerm);
     }, 750);
   }
 
   changeOrder(order){
-    this.setState({order: order, shows: [], page: 1});
-    this.getVideos(1, order, this.state.searchTerm);
+    this.setState({order: order});
+
+    if (this.state.searchTerm){
+        this.setState({videos: [], page: 1});
+        this.getData(1, order, this.state.searchTerm);
+    }
   }
 
   changePage(){
@@ -104,7 +124,7 @@ class YouTubeMainView extends Component {
 
     var newPage = this.state.page + 1;
     this.setState({page: newPage});
-    this.getVideos(newPage, this.state.order, this.state.searchTerm);
+    this.getData(newPage, this.state.order, this.state.searchTerm);
   }
 
   getMediaItem(item){
@@ -123,9 +143,22 @@ class YouTubeMainView extends Component {
     return (
         <div className="media-view-wrapper">
             <ViewLoader loading={this.state.loading}/>
-            { this.state.videos &&
+            { this.state.videos.length > 0 &&
                 <MediaOverview media={this.state.videos}
-                    link="/mediaplayer/youtube/"
+                    link="/mediaplayer/youtube/v/"
+                    searchTerm={this.state.searchTerm}
+                    order={this.state.order}
+                    onSearchTermChange={this.changeSearchTerm}
+                    onChangeOrder={this.changeOrder}
+                    onScrollBottom={this.changePage}
+                    orderOptions={this.orderOptions}
+                    getMediaItem={this.getMediaItem}
+                    />
+            }
+
+            { this.state.channels.length > 0 &&
+                <MediaOverview media={this.state.channels}
+                    link="/mediaplayer/youtube/c/"
                     searchTerm={this.state.searchTerm}
                     order={this.state.order}
                     onSearchTermChange={this.changeSearchTerm}

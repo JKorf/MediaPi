@@ -320,7 +320,7 @@
     width: 60%;
 }
 
-.show-image img, .movie-image img, .youtube-image img{
+.show-image img, .movie-image img, .youtube-image img, .youtube-channel-image img{
     width: 100%;
 }
 
@@ -1408,8 +1408,19 @@
     float: left;
 }
 
+.youtube-channel-image{
+    width: calc(50% - 10px);
+    padding-right: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    float: left;
+}
+
 .youtube-details{
     padding: 10px;
+
+
 
     .label-row{
         font-size: 14px;
@@ -1454,6 +1465,10 @@
     }
 }
 
+.channel-details .label-row{
+    margin-left: 50%;
+}
+
 .youtube-synopsis{
     max-height: 200px;
     overflow-y: auto;
@@ -1465,6 +1480,14 @@
 @media only screen and (min-device-width: 600px){
     .youtube-image{
         width: 50%;
+    }
+
+    .channel-details .label-row{
+        margin-left: 25%;
+    }
+
+    .youtube-channel-image{
+        width: 25%;
     }
 
      .label-row{

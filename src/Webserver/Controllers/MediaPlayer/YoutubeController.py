@@ -80,6 +80,8 @@ class YouTubeController:
     @staticmethod
     @app.route('/youtube/search', methods=['GET'])
     def youtube_search():
+        YouTubeController.check_token()
+
         keywords = urllib.parse.unquote(request.args.get('keywords'))
         page_token = request.args.get('token', None)
         type = request.args.get('type').lower()
@@ -90,18 +92,26 @@ class YouTubeController:
         iso_unix_time = dateutil.parser.isoparse("1970-01-01T00:00:00.000Z")
 
         for search_result in search_data['items']:
-            upload_time = search_result['snippet']['publishedAt']
-            upload_time = dateutil.parser.isoparse(upload_time)
-            upload_time = (upload_time - iso_unix_time) / timedelta(milliseconds=1)
-            result.append(YouTubeMedia(
-                search_result['id']['videoId'],
-                search_result['snippet']['thumbnails']['medium']['url'],
-                search_result['snippet']['title'],
-                upload_time,
-                search_result['snippet']['channelId'],
-                search_result['snippet']['channelTitle']))
+            if type == "video":
+                upload_time = search_result['snippet']['publishedAt']
+                upload_time = dateutil.parser.isoparse(upload_time)
+                upload_time = (upload_time - iso_unix_time) / timedelta(milliseconds=1)
+                result.append(YouTubeMedia(
+                    search_result['id']['videoId'],
+                    search_result['snippet']['thumbnails']['medium']['url'],
+                    search_result['snippet']['title'],
+                    upload_time,
+                    search_result['snippet']['channelId'],
+                    search_result['snippet']['channelTitle']))
+            else:
+                result.append(BaseMedia(search_result['id']['channelId'],
+                                        search_result['snippet']['thumbnails']['medium']['url'],
+                                        search_result['snippet']['title']))
 
-        return to_JSON(SearchResult(result, search_data['nextPageToken']))
+        token = None
+        if 'nextPageToken' in search_data:
+            token = search_data['nextPageToken']
+        return to_JSON(SearchResult(result, token))
 
     @staticmethod
     def check_token():
@@ -143,6 +153,42 @@ class YouTubeController:
 
         return to_JSON(data)
 
+    @staticmethod
+    @app.route('/youtube/channel', methods=['GET'])
+    def youtube_channel():
+        YouTubeController.check_token()
+        id = request.args.get('id')
+
+        page = request.args.get('page')
+        token = request.args.get('token', None)
+
+        channel_data = YouTubeController.api.get('channels', id=id, part="contentDetails,statistics,snippet")
+        channel = channel_data['items'][0]
+        result = YouTubeChannel(id,
+                                channel['snippet']['title'],
+                                channel['snippet']['thumbnails']['medium']['url'],
+                                channel['snippet']['description'],
+                                channel['statistics']['viewCount'],
+                                channel['statistics']['subscriberCount'],
+                                channel['statistics']['videoCount'])
+        play_list = channel['contentDetails']['relatedPlaylists']['uploads']
+        uploads = YouTubeController.api.get('playlistItems', playlistId=play_list, maxResults=50, page=page, pageToken=token, part="snippet")
+        iso_unix_time = dateutil.parser.isoparse("1970-01-01T00:00:00.000Z")
+
+        for item in uploads['items']:
+            upload_time = item['snippet']['publishedAt']
+            upload_time = dateutil.parser.isoparse(upload_time)
+            upload_time = (upload_time - iso_unix_time) / timedelta(milliseconds=1)
+            result.uploads.append(YouTubeMedia(item['snippet']['resourceId']['videoId'],
+                                               item['snippet']['thumbnails']['medium']['url'],
+                                               item['snippet']['title'],
+                                               upload_time,
+                                               item['snippet']['channelId'],
+                                               item['snippet']['channelTitle']))
+        if 'nextPageToken' in uploads:
+            result.token = uploads['nextPageToken']
+        return to_JSON(result)
+
 
 class Subscription:
 
@@ -183,3 +229,17 @@ class SearchResult:
     def __init__(self, search_result, token):
         self.search_result = search_result
         self.token = token
+
+
+class YouTubeChannel:
+
+    def __init__(self, id, title, thumbnail, description, views, subs, videos):
+        self.id = id
+        self.title = title
+        self.thumbnail = thumbnail
+        self.description = description
+        self.views = views
+        self.subs = subs
+        self.videos = videos
+        self.token = None
+        self.uploads = []

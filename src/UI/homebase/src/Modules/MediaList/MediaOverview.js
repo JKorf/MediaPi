@@ -24,14 +24,16 @@ class MediaOverview extends Component {
    render() {
         return (
         <div className="media-list" onScroll={this.handleScroll}>
-            <div className="media-search">
-                <div className="media-search-input"><SearchBox searchTerm={this.props.searchTerm} onChange={this.props.onSearchTermChange}/></div>
-                <div className="media-search-order">
-                    <select onChange={(e) => this.props.onChangeOrder(e.target.value)} value={this.props.order}>
-                        { this.props.orderOptions.map((option) => <option key={option} value={option}>{option}</option>) }
-                    </select>
+            { !this.props.noSearch &&
+                <div className="media-search">
+                    <div className="media-search-input"><SearchBox searchTerm={this.props.searchTerm} onChange={this.props.onSearchTermChange}/></div>
+                    <div className="media-search-order">
+                        <select onChange={(e) => this.props.onChangeOrder(e.target.value)} value={this.props.order}>
+                            { this.props.orderOptions.map((option) => <option key={option} value={option}>{option}</option>) }
+                        </select>
+                    </div>
                 </div>
-            </div>
+            }
             <div className="media-overview">
           {
             this.props.media.map((media) =>

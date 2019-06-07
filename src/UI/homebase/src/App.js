@@ -19,6 +19,7 @@ import RadioView from './Modules/Views/MediaPlayer/RadioView.js'
 import TorrentView from './Modules/Views/MediaPlayer/TorrentView.js'
 import YouTubeMainView from './Modules/Views/MediaPlayer/YouTubeMainView.js'
 import YouTubeVideoView from './Modules/Views/MediaPlayer/YouTubeVideoView.js'
+import YouTubeChannelView from './Modules/Views/MediaPlayer/YouTubeChannelView.js'
 import HistoryView from './Modules/Views/MediaPlayer/HistoryView.js'
 
 import HomeDashboardView from './Modules/Views/Home/HomeDashboardView.js'
@@ -207,7 +208,8 @@ class App extends Component {
                     <Route path="/mediaplayer/radio" exact render={(props) => <RadioView {...props} functions={this.functions}  />} />
                     <Route path="/mediaplayer/torrents" exact render={(props) => <TorrentView {...props} functions={this.functions}  />} />
                     <Route path="/mediaplayer/youtube" exact render={(props) => <YouTubeMainView {...props} functions={this.functions}  />} />
-                    <Route path="/mediaplayer/youtube/:id" exact render={(props) => <YouTubeVideoView {...props} functions={this.functions}  />} />
+                    <Route path="/mediaplayer/youtube/v/:id" exact render={(props) => <YouTubeVideoView {...props} functions={this.functions}  />} />
+                    <Route path="/mediaplayer/youtube/c/:id" exact render={(props) => <YouTubeChannelView {...props} functions={this.functions}  />} />
 
                     <Route path="/mediaplayer/history" exact render={(props) => <HistoryView {...props} functions={this.functions}  />} />
 

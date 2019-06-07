@@ -7,7 +7,6 @@ import Button from './../../Components/Button';
 import SvgImage from './../../Components/SvgImage';
 import ColorIndicator from './../../Components/ColorIndicator';
 import ViewLoader from './../../Components/ViewLoader/ViewLoader'
-import FadeBox from './../../Components/FadeBox'
 
 import favoriteImage from './../../../Images/favorite.svg';
 import favoriteFullImage from './../../../Images/favorite-full.svg';
@@ -33,7 +32,6 @@ class YouTubeVideoView extends Component {
     axios.get(window.vars.apiBase + 'youtube/video?id=' + this.props.match.params.id).then(data => {
         console.log(data.data);
         this.setState({video: data.data, loading: false});
-        console.log(data.data.description);
         this.props.functions.changeTitle(data.data.title);
     }, err => {
         this.setState({ loading: false});
@@ -128,7 +126,7 @@ class YouTubeVideoView extends Component {
                     </div>
                     <div className="label-row">
                         <div className="label-field">Channel</div>
-                        <div className="label-value">{this.state.video.channel_title}</div>
+                        <Link to={"/mediaplayer/youtube/c/" + this.state.video.channel_id }><div className="label-value">{this.state.video.channel_title}</div></Link>
                     </div>
                     <div className="label-row">
                         <div className="label-field">Duration</div>
