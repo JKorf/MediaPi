@@ -7,10 +7,13 @@ import Button from './../../Components/Button';
 import SvgImage from './../../Components/SvgImage';
 import ColorIndicator from './../../Components/ColorIndicator';
 import ViewLoader from './../../Components/ViewLoader/ViewLoader'
+import FadeBox from './../../Components/FadeBox'
 
 import favoriteImage from './../../../Images/favorite.svg';
 import favoriteFullImage from './../../../Images/favorite-full.svg';
 import seenImage from './../../../Images/watched.svg';
+import likeImage from './../../../Images/like.svg';
+import dislikeImage from './../../../Images/dislike.svg';
 
 class YouTubeVideoView extends Component {
   constructor(props) {
@@ -73,6 +76,25 @@ class YouTubeVideoView extends Component {
       return minutes + ":" + seconds;
   }
 
+  parseLength(data){
+     var a = data.match(/\d+H|\d+M|\d+S/g),
+        result = 0;
+
+    var d = { 'H': 3600, 'M': 60, 'S': 1 },
+        num,
+        type;
+
+    for (var i = 0; i < a.length; i++) {
+        num = a[i].slice(0, a[i].length - 1);
+        type = a[i].slice(a[i].length - 1, a[i].length);
+        result += num + ":";
+    }
+    if (result[0] == "0")
+        result = result.substring(1, result.length);
+
+    return result.substring(0, result.length-1);
+  }
+
   render() {
 
     return (
@@ -83,13 +105,38 @@ class YouTubeVideoView extends Component {
                 <div className="youtube-image">
                     <img alt="Show poster" src={this.state.video.poster} />
                 </div>
-                <div className="show-details">
+                <div className="youtube-details">
+                    <div className="label-row youtube-stats-row">
+                        <div className="label-field">
+                            <div className="youtube-stats-img"><SvgImage src={seenImage} /></div>
+                            <div className="youtube-stats-text">{this.state.video.views}</div>
+                        </div>
+                        <div className="label-value">
+                            <div className="youtube-stats-col">
+                                <div className="youtube-stats-img"><SvgImage src={likeImage} /></div>
+                                <div className="youtube-stats-text">{this.state.video.likes}</div>
+                            </div>
+                            <div className="youtube-stats-col">
+                                <div className="youtube-stats-img"><SvgImage src={dislikeImage} /></div>
+                                <div className="youtube-stats-text">{this.state.video.dislikes}</div>
+                            </div>
+                        </div>
+                    </div>
                     <div className="label-row">
-                        <div className="label-field">Airs</div>
-                        <div className="label-value"></div>
+                        <div className="label-field">Uploaded</div>
+                        <div className="label-value">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour:'2-digit', minute: '2-digit' }).format(Date.parse(this.state.video.upload_date))}</div>
+                    </div>
+                    <div className="label-row">
+                        <div className="label-field">Channel</div>
+                        <div className="label-value">{this.state.video.channel_title}</div>
+                    </div>
+                    <div className="label-row">
+                        <div className="label-field">Duration</div>
+                        <div className="label-value">{this.parseLength(this.state.video.duration)}</div>
                     </div>
                 </div>
-                <div className="show-synopsis" dangerouslySetInnerHTML={{__html: this.state.video.description}}>
+
+                <div className="youtube-synopsis" dangerouslySetInnerHTML={{__html: this.state.video.description}}>
                 </div>
 
                 <div className="movie-play-buttons">

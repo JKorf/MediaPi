@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import dateutil
+import urllib.parse
 from flask import request
 from youtube import API
 
@@ -62,7 +63,7 @@ class YouTubeController:
             YouTubeController.max_activity_range = max(before_date, YouTubeController.max_activity_range)
             YouTubeController.min_activity_range = min(after_date, YouTubeController.min_activity_range)
 
-        if before_date != after_date:
+        if before_date - after_date > timedelta(minutes=15):
             Logger().write(LogVerbosity.Debug, "Requesting activity from {} to {}".format(after_date, before_date))
 
             iso_unix_time = dateutil.parser.isoparse("1970-01-01T00:00:00.000Z")
@@ -75,6 +76,32 @@ class YouTubeController:
                     sub.uploads.append(YouTubeMedia(act['contentDetails']['upload']['videoId'], act['snippet']['thumbnails']['medium']['url'], act['snippet']['title'], upload_time, sub.channelId, sub.title))
 
         return to_JSON(YouTubeController.subscriptions)
+
+    @staticmethod
+    @app.route('/youtube/search', methods=['GET'])
+    def youtube_search():
+        keywords = urllib.parse.unquote(request.args.get('keywords'))
+        page_token = request.args.get('token', None)
+        type = request.args.get('type').lower()
+        Logger().write(LogVerbosity.Debug, "Searching youtube for {} of type {}".format(keywords, type))
+
+        search_data = YouTubeController.api.get('search', q=keywords, type=type, maxResults=50, pageToken=page_token)
+        result = []
+        iso_unix_time = dateutil.parser.isoparse("1970-01-01T00:00:00.000Z")
+
+        for search_result in search_data['items']:
+            upload_time = search_result['snippet']['publishedAt']
+            upload_time = dateutil.parser.isoparse(upload_time)
+            upload_time = (upload_time - iso_unix_time) / timedelta(milliseconds=1)
+            result.append(YouTubeMedia(
+                search_result['id']['videoId'],
+                search_result['snippet']['thumbnails']['medium']['url'],
+                search_result['snippet']['title'],
+                upload_time,
+                search_result['snippet']['channelId'],
+                search_result['snippet']['channelTitle']))
+
+        return to_JSON(SearchResult(result, search_data['nextPageToken']))
 
     @staticmethod
     def check_token():
@@ -149,3 +176,10 @@ class YouTubeVideo(BaseMedia):
         self.dislikes = dislikes
         self.seen = False
         self.played_for = 0
+
+
+class SearchResult:
+
+    def __init__(self, search_result, token):
+        self.search_result = search_result
+        self.token = token

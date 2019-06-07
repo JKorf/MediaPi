@@ -1,6 +1,6 @@
 let moviesSearch = {term: "", page: 1, order: "Trending"};
 let showSearch = {term: "", page: 1, order: "Trending"};
-let youTubeSearch = {term: "", page: 1, order: "Trending"};
+let youTubeSearch = {term: "", page: 1, order: "Video"};
 let torrentsSearch = {term: "", category: "TV"};
 
 export function updateMoviesSearch(term, page, order){

@@ -10,7 +10,8 @@ class YouTubeMainView extends Component {
   constructor(props) {
     super(props);
     this.orderOptions = [
-        "Trending"
+        "Video",
+        "Channel"
     ];
 
     var prevSearch = getYouTubeSearch();
@@ -38,23 +39,48 @@ class YouTubeMainView extends Component {
 
   getVideos(page, order, searchTerm, include_previous_pages){
     this.setState({loading: true});
-    axios.get(window.vars.apiBase + 'youtube?page='+page+'&orderby='+encodeURIComponent(order)+'&keywords='+encodeURIComponent(searchTerm)).then(data => {
-        var newVideos = this.state.videos;
-        for(var i = 0; i < data.data.length; i++){
-            for(var i2 = 0; i2 < data.data[i].uploads.length; i2++){
-                if(newVideos.some(e => e.id === data.data[i].uploads[i2].id))
-                    continue;
-                newVideos.push(data.data[i].uploads[i2]);
-            }
-        }
 
-        newVideos = newVideos.sort(function(a, b) {  return b.upload_date - a.upload_date; });
-        this.setState({videos: newVideos, loading: false});
-        console.log(data.data);
-    }, err =>{
-        this.setState({loading: false});
-        console.log(err);
-    });
+    if(searchTerm){
+        var url = window.vars.apiBase + 'youtube/search?page='+page+'&type='+encodeURIComponent(order)+'&keywords='+encodeURIComponent(searchTerm);
+        if (page != 1 && this.state.token)
+            url += "&token=" + this.state.token;
+        axios.get(url).then(data => {
+            var newVideos = data.data.search_result;
+            if (page != 1){
+                var newVideos = this.state.videos;
+                for(var i = 0; i < data.data.search_result.length; i++){
+                    if(newVideos.some(e => e.id === data.data.search_result[i].id))
+                        continue;
+                    newVideos.push(data.data.search_result[i]);
+                }
+            }
+
+            this.setState({videos: newVideos, loading: false, token: data.data.token});
+            console.log(data.data);
+        }, err =>{
+            this.setState({loading: false});
+            console.log(err);
+        });
+    }
+    else{
+        axios.get(window.vars.apiBase + 'youtube?page='+page).then(data => {
+            var newVideos = this.state.videos;
+            for(var i = 0; i < data.data.length; i++){
+                for(var i2 = 0; i2 < data.data[i].uploads.length; i2++){
+                    if(newVideos.some(e => e.id === data.data[i].uploads[i2].id))
+                        continue;
+                    newVideos.push(data.data[i].uploads[i2]);
+                }
+            }
+
+            newVideos = newVideos.sort(function(a, b) {  return b.upload_date - a.upload_date; });
+            this.setState({videos: newVideos, loading: false});
+            console.log(data.data);
+        }, err =>{
+            this.setState({loading: false});
+            console.log(err);
+        });
+    }
   }
 
   changeSearchTerm(term){
