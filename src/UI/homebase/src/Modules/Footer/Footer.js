@@ -103,7 +103,7 @@ class Footer extends Component
     pausePlayClick(instance, e){
         axios.post(window.vars.apiBase + 'player/pause_resume?instance=' + instance.id);
         var data = this.state.slaveData;
-        if(data[0].playerData.state == 4)
+        if(data[0].playerData.state === 4)
             data[0].playerData.state = 3;
         else
             data[0].playerData.state = 4;

@@ -5,11 +5,8 @@ import { Link } from "react-router-dom";
 import MediaPlayerView from './MediaPlayerView.js';
 import Button from './../../Components/Button';
 import SvgImage from './../../Components/SvgImage';
-import ColorIndicator from './../../Components/ColorIndicator';
 import ViewLoader from './../../Components/ViewLoader/ViewLoader'
 
-import favoriteImage from './../../../Images/favorite.svg';
-import favoriteFullImage from './../../../Images/favorite-full.svg';
 import seenImage from './../../../Images/watched.svg';
 import likeImage from './../../../Images/like.svg';
 import dislikeImage from './../../../Images/dislike.svg';
@@ -78,16 +75,12 @@ class YouTubeVideoView extends Component {
      var a = data.match(/\d+H|\d+M|\d+S/g),
         result = 0;
 
-    var d = { 'H': 3600, 'M': 60, 'S': 1 },
-        num,
-        type;
-
+    var num;
     for (var i = 0; i < a.length; i++) {
         num = a[i].slice(0, a[i].length - 1);
-        type = a[i].slice(a[i].length - 1, a[i].length);
         result += num + ":";
     }
-    if (result[0] == "0")
+    if (result[0] === "0")
         result = result.substring(1, result.length);
 
     return result.substring(0, result.length-1);

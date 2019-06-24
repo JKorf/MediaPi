@@ -1,3 +1,5 @@
+/*eslint no-loop-func: "off"*/
+
 import React, { Component } from 'react';
 import axios from 'axios'
 
@@ -42,16 +44,16 @@ class YouTubeMainView extends Component {
 
     if(searchTerm){
         var url = window.vars.apiBase + 'youtube/search?page='+page+'&type='+encodeURIComponent(order)+'&keywords='+encodeURIComponent(searchTerm);
-        if (page != 1 && this.state.token)
+        if (page !== 1 && this.state.token)
             url += "&token=" + this.state.token;
 
         axios.get(url).then(data => {
             console.log(data.data);
 
-            if (order == "Video"){
+            if (order === "Video"){
                 var newVideos = data.data.search_result;
-                if (page != 1){
-                    var newVideos = this.state.videos;
+                if (page !== 1){
+                    newVideos = this.state.videos;
                     for(var i = 0; i < data.data.search_result.length; i++){
                         if(newVideos.some(e => e.id === data.data.search_result[i].id))
                             continue;
@@ -62,12 +64,12 @@ class YouTubeMainView extends Component {
                 this.setState({channels: [], videos: newVideos, loading: false, token: data.data.token});
             }else{
                 var newChannels = data.data.search_result;
-                if (page != 1){
-                    var newChannels = this.state.channels;
-                    for(var i = 0; i < data.data.search_result.length; i++){
-                        if(newChannels.some(e => e.id === data.data.search_result[i].id))
+                if (page !== 1){
+                    newChannels = this.state.channels;
+                    for(var j = 0; j < data.data.search_result.length; j++){
+                        if(newChannels.some(e => e.id === data.data.search_result[j].id))
                             continue;
-                        newChannels.push(data.data.search_result[i]);
+                        newChannels.push(data.data.search_result[j]);
                     }
                 }
                 console.log(newChannels);

@@ -1,19 +1,11 @@
+/*eslint no-loop-func: "off"*/
+
 import React, { Component } from 'react';
 import axios from 'axios';
-import { Link } from "react-router-dom";
 
 import MediaPlayerView from './MediaPlayerView.js';
-import Button from './../../Components/Button';
-import SvgImage from './../../Components/SvgImage';
-import ColorIndicator from './../../Components/ColorIndicator';
 import ViewLoader from './../../Components/ViewLoader/ViewLoader'
 import MediaOverview from './../../MediaList/MediaOverview.js'
-
-import favoriteImage from './../../../Images/favorite.svg';
-import favoriteFullImage from './../../../Images/favorite-full.svg';
-import seenImage from './../../../Images/watched.svg';
-import likeImage from './../../../Images/like.svg';
-import dislikeImage from './../../../Images/dislike.svg';
 
 class YouTubeChannelView extends Component {
   constructor(props) {
@@ -34,13 +26,13 @@ class YouTubeChannelView extends Component {
 
   getData(page){
     var url =window.vars.apiBase + 'youtube/channel?id=' + this.props.match.params.id + "&page=" + page;
-    if (page != 1)
+    if (page !== 1)
         url += "&token=" + this.state.channel.token;
 
     axios.get(url).then(data => {
         console.log(data.data);
 
-        if (page != 1){
+        if (page !== 1){
             var newVideos = this.state.channel.uploads;
             for(var i = 0; i < data.data.uploads.length; i++){
                 if(newVideos.some(e => e.id === data.data.uploads[i].id))
