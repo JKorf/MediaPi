@@ -107,6 +107,8 @@ class YouTubeChannelView extends Component {
                 <div className="youtube-synopsis" dangerouslySetInnerHTML={{__html: this.state.channel.description}}>
                 </div>
 
+                <div className="youtube-sub-title">Videos</div>
+
                 { this.state.channel &&
                 <MediaOverview media={this.state.channel.uploads}
                     link="/mediaplayer/youtube/v/"
