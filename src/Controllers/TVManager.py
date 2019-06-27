@@ -55,7 +55,7 @@ class TVManager(metaclass=Singleton):
         if not self.pi:
             return
 
-        self.cec_process = subprocess.Popen(['cec-client', '-u'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        self.cec_process = subprocess.Popen(['cec-client'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         t = CustomThread(self.__read_cec, "Cec reader", [])
         t.start()
 
@@ -65,5 +65,5 @@ class TVManager(metaclass=Singleton):
 
     def __request(self, command):
         Logger().write(LogVerbosity.Debug, "TV manager sending command: " + command)
-        self.cec_process.stdin.write(command.encode('utf-8') + b'\n')
-        self.cec_process.stdin.flush()
+        result = subprocess.check_output('echo "' + command + '" | cec-client -s -d ' + self.debug_level, shell=True).decode("utf8")
+        Logger().write(LogVerbosity.Debug, "TV manager result: " + str(result))
