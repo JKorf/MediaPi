@@ -3,7 +3,7 @@
         https://eltechs.com/run-spotify-on-raspberry-pi/
         
 --- TODO ---
-    TV
+    IPTV
 
     zigbee
 
@@ -22,8 +22,9 @@
     utp
 
     Youtube
-	Track watched videos (youtube response?)
-	Channel favorites
+	    Track watched videos (youtube response?)
+	    Channel favorites
 
     Fix back going a page back instead of to base menu
+
 
