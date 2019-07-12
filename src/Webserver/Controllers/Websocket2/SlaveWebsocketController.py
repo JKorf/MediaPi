@@ -112,6 +112,10 @@ class SlaveWebsocketController(BaseWebsocketController):
             history_id = Database().add_watched_url(*data)
             Logger().write(LogVerbosity.Debug, "Slave response: " + str(history_id))
             socketio.emit("response", (request_id, history_id), namespace="/Slave", room=request.sid)
+        elif topic == "add_watched_youtube":
+            history_id = Database().add_watched_youtube(*data)
+            Logger().write(LogVerbosity.Debug, "Slave response: " + str(history_id))
+            socketio.emit("response", (request_id, history_id), namespace="/Slave", room=request.sid)
         elif topic == "get_file_info":
             size, first_64k, last_64k = get_file_info(*data)
             Logger().write(LogVerbosity.Debug, "Slave response: " + str(size))
