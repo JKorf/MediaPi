@@ -70,6 +70,9 @@ class TorrentMessageProcessor(TorrentManager):
         Timing().stop_timing("process_messages")
 
     def handle_message(self, peer, message, timestamp):
+        if peer.protocol_logger is None:
+            return
+
         if isinstance(message, PieceMessage):
             Logger().write(LogVerbosity.All, str(peer.id) + ' Received piece message: ' + str(message.index) + ', offset ' + str(message.offset))
             peer.protocol_logger.update("Sending/receiving requests", True)
