@@ -1,3 +1,5 @@
+import time
+
 from toonapilib import Toon
 
 from Shared.Logger import Logger, LogVerbosity
@@ -12,7 +14,17 @@ class ToonManager(metaclass=Singleton):
 
     def get_status(self):
         Logger().write(LogVerbosity.All, "Get toon status")
-        return self.api.thermostat_info
+        result = None
+        for i in range(3):
+            try:
+                result = self.api.thermostat_info
+            except Exception as e:
+                Logger().write(LogVerbosity.Info, "Toon thermostat_info failed attempt " + str(i) + ": " + str(e))
+
+            if result is not None:
+                return result
+            time.sleep(1)
+        return None
 
     def get_states(self):
         Logger().write(LogVerbosity.All, "Get toon states")
@@ -28,8 +40,28 @@ class ToonManager(metaclass=Singleton):
 
     def get_gas_stats(self, from_date, to_date, interval):
         Logger().write(LogVerbosity.All, "Get toon gas stats")
-        return self.api.data.graph.get_gas_time_window(from_date, to_date, interval)
+        result = None
+        for i in range(3):
+            try:
+                result = self.api.data.graph.get_gas_time_window(from_date, to_date, interval)
+            except Exception as e:
+                Logger().write(LogVerbosity.Info, "Toon get_gas_stats failed attempt " + str(i) + ": " + str(e))
+
+            if result is not None:
+                return result
+            time.sleep(1)
+        return None
 
     def get_electricity_stats(self, from_date, to_date):
         Logger().write(LogVerbosity.All, "Get toon electricity stats")
-        return self.api.data.flow.get_power_time_window(from_date, to_date)
+        result = None
+        for i in range(3):
+            try:
+                result = self.api.data.flow.get_power_time_window(from_date, to_date)
+            except Exception as e:
+                Logger().write(LogVerbosity.Info, "Toon get_electricity_stats failed attempt " + str(i) + ": " + str(e))
+
+            if result is not None:
+                return result
+            time.sleep(1)
+        return None
