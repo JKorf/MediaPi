@@ -71,6 +71,9 @@ class PlayController:
         title = urllib.parse.unquote(request.args.get("title"))
         url = urllib.parse.unquote(request.args.get("url"))
         magnet_uri = TorrentController.get_magnet_url(url)
+        if magnet_uri is None:
+            Logger().write(LogVerbosity.Error, "Failed to find torrent magnet uri")
+            return "OK"
 
         Logger().write(LogVerbosity.Info, "Play torrent " + title + " on " + str(instance))
         if instance == 1:

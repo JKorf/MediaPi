@@ -13,6 +13,11 @@ class SelectMediaPopup extends Component {
     this.selectionChange = this.selectionChange.bind(this);
 
     this.orderedFiles = this.groupBy(this.props.files, "season");
+        console.log(this.orderedFiles);
+
+    for (var i = 0; i < this.orderedFiles.length; i++){
+        this.orderedFiles[i] = this.orderedFiles[i].sort((a,b) => (a.episode > b.episode) ? 1 : ((b.episode > a.episode) ? -1 : 0));
+    }
 
     console.log(this.orderedFiles);
   }

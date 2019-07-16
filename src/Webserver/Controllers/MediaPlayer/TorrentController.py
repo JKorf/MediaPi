@@ -1,3 +1,5 @@
+import re
+
 from bs4 import Tag
 from flask import request
 from bs4 import BeautifulSoup
@@ -34,14 +36,10 @@ class TorrentController:
     def get_magnet_url(url):
         torrent_result = RequestFactory.make_request(TorrentController.base_url + url, timeout=10)
         parsed = BeautifulSoup(torrent_result, "lxml")
-        links = parsed.find_all('ul', class_="download-links-dontblock")
-        children = [x for x in links[0].contents if isinstance(x, Tag)]
-        for child in children:
-            items = [x for x in child.contents if isinstance(x, Tag)]
-            for item in items:
-                if item.attrs['href'].startswith("magnet:"):
-                    return item.attrs['href']
-        return None
+        magnet_link = parsed.findAll('a', href=re.compile('^magnet:\?xt=urn:btih:'))
+        if len(magnet_link) == 0:
+            return None
+        return magnet_link[0].attrs['href']
 
     @staticmethod
     def get_torrents(url):
