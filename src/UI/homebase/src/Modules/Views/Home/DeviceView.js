@@ -19,9 +19,6 @@ import playImage from './../../../Images/play.svg';
 import speakerImage from './../../../Images/speaker.svg';
 import plusImage from './../../../Images/plus.svg';
 import minusImage from './../../../Images/minus.svg';
-import cpuImage from './../../../Images/cpu.svg';
-import memoryImage from './../../../Images/memory.svg';
-import tempImage from './../../../Images/thermometer.svg';
 
 class DeviceView extends Component {
   constructor(props) {
@@ -349,11 +346,12 @@ class DeviceView extends Component {
             <SwitchBox>
                 <SwitchBoxItem selected={this.state.currentView === "Media"} text="Media" onClick={() => this.setState({currentView: "Media"})} />
                 <SwitchBoxItem selected={this.state.currentView === "Statistics"} text="Statistics" onClick={() => this.setState({currentView: "Statistics"})} />
+                <SwitchBoxItem selected={this.state.currentView === "Status"} text="Status" onClick={() => this.setState({currentView: "Status"})} />
                 <SwitchBoxItem selected={this.state.currentView === "Config"} text="Config" onClick={() => this.setState({currentView: "Config"})} />
             </SwitchBox>
 
+            <div className="device-content">
             { this.state.currentView === "Media" &&
-
                 <div className="info-group-box">
                     { this.state.mediaData.title &&
                         <div>
@@ -388,7 +386,7 @@ class DeviceView extends Component {
                             { this.state.playerData.sub_tracks.length > 0 &&
                                 <div className={"player-details-subtitle-select"}>
                                     <InfoGroup title="Subtitles">
-                                        <div className="info-group-box">
+                                        <div className="info-group-box subtitle-box">
                                             { this.state.playerData.sub_tracks.map((o) => (
                                                 <div key={o[0]} className="selection-box-option" onClick={() => this.subChange(o[0])}>
                                                     <div className="selection-box-option-radio"><input value={o[0]} type="radio" checked={this.state.playerData.sub_track === o[0]} /></div>
@@ -440,6 +438,14 @@ class DeviceView extends Component {
                 </div>
              }
 
+             { this.state.currentView === "Status" &&
+                <div className="info-group-box">
+                     <InfoRow name="CPU" value={this.state.stateData.cpu + "%"}></InfoRow>
+                     <InfoRow name="Memory" value={this.state.stateData.memory + "%"}></InfoRow>
+                     <InfoRow name="Temperature" value={this.state.stateData.temperature}></InfoRow>
+                </div>
+             }
+
              { this.state.currentView === "Config" &&
                 <div className="info-group-box">
                     <div className="device-config-subtitle">version</div>
@@ -470,22 +476,7 @@ class DeviceView extends Component {
                     </div>
                 </div>
              }
-
-            <div className="system-state">
-                <div className="system-state-item">
-                    <div className="system-state-item-text">{this.state.stateData.cpu + "%"}</div>
-                    <div className="system-state-item-icon"><SvgImage src={cpuImage} /></div>
-                </div>
-                 <div className="system-state-item">
-                    <div className="system-state-item-text">{this.state.stateData.memory + "%"}</div>
-                    <div className="system-state-item-icon"><SvgImage src={memoryImage} /></div>
-                </div>
-                 <div className="system-state-item">
-                    <div className="system-state-item-text">{this.state.stateData.temperature}</div>
-                    <div className="system-state-item-icon"><SvgImage src={tempImage} /></div>
-                </div>
-            </div>
-
+             </div>
             { this.state.state === this.states[0] &&
                 <Popup loading={true} />
             }

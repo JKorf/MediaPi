@@ -2,9 +2,8 @@
 
 .media-overview{
     overflow-y: auto;
-    margin: 10px;
 
-    width: calc(100% - 20px);
+    width: 100%;
     height: 100%;
     max-width: 100%;
     max-height: 100%;
@@ -17,17 +16,28 @@
 
 .media-thumbnail {
     display: inline-block;
-    width: calc(50% - 10px);
+    width: calc(50% - 16px);
     min-height: 100px;
     position:relative;
-    margin: 5px;
+    margin: 8px;
     vertical-align:top;
     background: #colors[item-background];
     font-size: 14px;
+    border-radius: 8px;
+    overflow:hidden;
+    box-shadow: 4px 4px #666;
+    border: 1px solid #colors[borders];
+}
+
+.media-thumbnail.pointer-down{
+    box-shadow: 2px 2px #666;
+
+    margin-bottom: 3px;
+    margin-top: 7px;
 }
 
 .radio .media-thumbnail{
-    width: calc(100% / 3 - 10px);
+    width: calc(100% / 3 - 16px);
 }
 
 .media-thumbnail-info-rating{
@@ -44,6 +54,14 @@
 .radio .media-thumbnail-info-title{
     max-width: 100% !important;
     word-break: normal;
+
+    line-height: 36px;
+    height: 36px;
+    span{
+        display: inline-block;
+      vertical-align: middle;
+      line-height: normal;
+    }
 }
 
 .media-thumbnail-info{
@@ -53,16 +71,15 @@
 }
 
 .radio .media-thumbnail-info{
-    min-height: 0;
 }
 
 @media only screen and (min-device-width: 400px){
     .media-thumbnail{
-        width: calc(100% / 3 - 10px);
+        width: calc(100% / 3 - 16px);
     }
 
     .radio .media-thumbnail{
-        width: calc(100% / 4 - 10px);
+        width: calc(100% / 4 - 16px);
     }
 }
 
@@ -73,11 +90,11 @@
     }
 
     .media-thumbnail{
-        width: calc(100% / 4 - 10px);
+        width: calc(100% / 4 - 16px);
     }
 
     .radio .media-thumbnail{
-        width: calc(100% / 5 - 10px);
+        width: calc(100% / 5 - 16px);
     }
 }
 
@@ -124,24 +141,6 @@
 
 .mediaplayer-dashboard{
     margin: 10px;
-}
-
-.mediaplayer-dashboard .dashboard-link{
-    display:inline-block;
-    width: calc(25% - 10px);
-    margin: 2.5px 5px;
-}
-
-@media only screen and (max-device-width: 400px){
-    .mediaplayer-dashboard .dashboard-link{
-        width: calc(33.33% - 10px);
-    }
-}
-
-@media only screen and (min-device-width: 768px){
-    .mediaplayer-dashboard .dashboard-link{
-        width: calc(20% - 10px);
-    }
 }
 
 .mediaplayer-widget{
@@ -279,26 +278,29 @@
     overflow-y: auto;
     height: 100%;
     width: 100%;
+    background: #colors[item-background];
+    padding: 10px;
 }
 
 .show-details{
-    padding: 10px;
-
     .label-field{
         color: #colors[text-faded];
     }
 }
 
 .show-synopsis{
-    margin: 0 10px;
+    margin-top: 10px;
 }
 
 .show-image{
-    width: calc(40% - 8px);
+    width: 40%;
     padding-right: 10px;
-    margin-left: 10px;
-    margin-top: 10px;
     float: left;
+
+    img{
+        border-radius: 8px;
+        border: 1px solid #colors[borders];
+    }
 }
 
 .show-title{
@@ -327,28 +329,30 @@
 .show-episode-selection{
     position:relative;
     clear: left;
-    margin: 10px;
-    width: calc(100% - 20px);
+    margin-top: 10px;
 }
 
 .show-seasons{
-    display:inline-block;
-    vertical-align: top;
+    width: 100%;
 }
 
 .show-season{
-    padding: 4px 8px;
-    border: 1px solid #colors[primary-header];
-    width: 100px;
+    padding: 4px 0;
+    border-bottom: 1px solid #colors[borders];
+}
+
+.show-season:last-child{
+    border-bottom: none;
 }
 
 .show-season.selected{
-    background: #colors[primary-header];
-}
+    width: 100%;
 
-.show-season-episodes{
-    font-size: 12px;
-    color: #colors[text-faded];
+    background: linear-gradient(to  bottom right, #colors[item-background], #colors[sub-item-background], #colors[item-background]);
+
+    .show-season-title{
+        font-weight: bold;
+    }
 }
 
 .show-episode-title{
@@ -361,19 +365,18 @@
 }
 
 .show-episodes{
-    vertical-align: top;
-    display:inline-block;
-    margin-left: -1px;
-    max-width: calc(100% - 99px);
-    width: calc(100% - 99px);
+    padding: 0 10px;
 }
 
 .show-episode{
     padding-top: 4px;
     padding-bottom: 4px;
-    padding-left: 18px;
-    border: 1px solid #colors[primary-header];
-    border-left: 8px solid #colors[primary-header];
+    color: #colors[text-faded];
+    border-bottom: 1px solid #colors[borders];
+}
+
+.show-episode:last-child{
+    border-bottom: none;
 }
 
 .show-episode.selected .show-episode-title{
@@ -416,6 +419,7 @@
     width: 100%;
     height: 100%;
     overflow-y: auto;
+    background: #colors[item-background];
 }
 
 .movie-details{
@@ -436,6 +440,11 @@
     margin-left: 10px;
     margin-top: 10px;
     float: left;
+
+    img{
+        border-radius: 8px;
+        border: 1px solid #colors[borders];
+    }
 }
 
 .movie-title{
@@ -457,7 +466,7 @@
     width: 60%;
 }
 
-.movie-play-buttons{
+.play-buttons{
     margin: 5px;
 
     .button{
@@ -466,10 +475,9 @@
 }
 
 .torrents{
-    margin-top: 15px;
     overflow-y: auto;
     width: 100%;
-    height: calc(100% - 55px);
+    height: calc(100% - 38px);
 }
 
 .torrents-wrapper{
@@ -506,8 +514,7 @@
     }
 
     &.selected{
-        background: #colors[highlight];
-
+        background: linear-gradient(to  bottom right, #colors[list-background], #colors[sub-item-background], #colors[list-background]);
         .torrent-title{
             font-weight:bold;
         }
@@ -527,8 +534,8 @@
 
     .torrent-title{
         line-height: 20px;
-        padding-top: 6px;
-        padding-bottom: 6px;
+        padding-top: 5px;
+        padding-bottom: 5px;
         margin-left: 44px;
         max-width: calc(100% - 50px);
     }
@@ -568,6 +575,11 @@
             bottom: 40px;
         }
     }
+}
+
+.torrent:first-child
+{
+    border-top: none;
 }
 
 .media-file-select{
@@ -669,10 +681,11 @@
 
     .info-group-box{
         padding: 10px;
+        background: #colors[item-background];
     }
 
     .switch-box{
-        margin-bottom: 10px;
+        border-bottom: 1px solid #ddd;
     }
 }
 
@@ -758,17 +771,11 @@
 }
 
 .player-details-subtitle-select{
-    .info-group-box{
-        background: #colors[list-background-alternate] !important;
-    }
+    margin-bottom: 10px;
 }
 
-.player-details-subtitle-select{
-    margin-bottom: 10px;
-
-    .info-group-box{
-        background: #colors[list-background-alternate] !important;
-    }
+.subtitle-box{
+    background: linear-gradient(to  bottom right, #colors[item-background], #colors[sub-item-background], #colors[item-background]) !important;
 }
 
 .player-details-delay-slider{
@@ -795,9 +802,10 @@
 }
 
 .media-search{
-    height: 40px;
+    height: 38px;
     position: relative;
-    padding: 15px;
+    padding: 6px;
+    border-bottom: 1px solid #colors[borders];
 
     .media-search-input{
         width: calc(100% - 120px);
@@ -989,6 +997,14 @@
     margin: 10px;
 }
 
+.heating-view-content .info-group-box{
+    margin-bottom: 10px;
+}
+
+.heating-box{
+    padding: 10px;
+}
+
 .heating-states{
     width: calc(100% + 10px);
     margin: -5px;
@@ -1000,6 +1016,7 @@
         background: #colors[buttons];
         padding: 10px;
         margin: 5px;
+        border-radius: 8px;
 
         &.selected{
             background: #colors[highlight];
@@ -1161,6 +1178,9 @@
 }
 
 .light-group-details{
+    background: linear-gradient(to  bottom right, #colors[item-background], #colors[sub-item-background], #colors[item-background]);
+
+
     .light-group-state{
         top: -34px;
     }
@@ -1238,7 +1258,6 @@
     display: inline-block;
     vertical-align: top;
     width: 100%;
-    margin-bottom: 5px;
 
     border-top: 1px solid #colors[borders];
 }
@@ -1403,27 +1422,30 @@
 }
 
 .youtube-image{
-    width: calc(100% - 10px);
-    padding-right: 10px;
-    margin-left: 10px;
-    margin-top: 10px;
+    width: 100%;
     margin-bottom: 4px;
     float: left;
+
+    img{
+        border-radius: 8px;
+        border: 1px solid #colors[borders];
+    }
 }
 
 .youtube-channel-image{
     width: calc(50% - 10px);
-    padding-right: 10px;
-    margin-left: 10px;
-    margin-top: 10px;
+    margin-right: 10px;
     margin-bottom: 4px;
     float: left;
+
+    img{
+        border-radius: 8px;
+        border: 1px solid #colors[borders];
+    }
 }
 
 .youtube-details{
-    padding: 10px;
-
-
+    padding-top: 10px;
 
     .label-row{
         font-size: 14px;
@@ -1472,22 +1494,35 @@
     margin-left: 50%;
 }
 
+.youtube-play-buttons{
+    border-bottom: 1px solid #colors[borders];
+    padding-bottom: 10px;
+    margin-top: 10px;
+}
+
 .youtube-synopsis{
-    max-height: 200px;
     overflow-y: auto;
     white-space: pre-wrap;
-    padding: 10px;
+    padding: 10px 0;
     clear: left;
 }
 
 .youtube-sub-title{
-    margin: 0 10px;
     border-bottom: 1px solid #colors[text];
 }
 
 @media only screen and (min-device-width: 600px){
     .youtube-image{
         width: 50%;
+        padding-right: 10px;
+    }
+
+    .youtube-play-buttons{
+        border-bottom: none;
+    }
+
+    .youtube-details{
+        padding-top: 0px;
     }
 
     .youtube-details .label-row{
@@ -1502,4 +1537,27 @@
         width: 25%;
     }
 
+}
+
+.gas-view{
+    padding: 10px;
+    background: #colors[item-background];
+}
+
+.gas-graph-container{
+    width: calc(100% - 20px);
+}
+
+.power-view{
+    padding: 10px;
+    background: #colors[item-background];
+}
+
+.power-graph-container{
+    width: calc(100% - 20px);
+}
+
+.device-content{
+    border: 1px solid #colors[borders];
+    border-top: none;
 }

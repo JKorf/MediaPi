@@ -49,6 +49,7 @@ class PowerUsageGraph extends Component {
     return (<div>
         <ViewLoader loading={this.state.loading}/>
         { this.state.powerData &&
+            <div className="gas-graph-container">
             <ResponsiveContainer width="100%" height={this.props.height}>
                 <LineChart data={this.state.powerData} margin={{top:20,right:10,bottom:20,left:0}}>
                   <XAxis angle={60}
@@ -61,6 +62,7 @@ class PowerUsageGraph extends Component {
 
                 </LineChart>
             </ResponsiveContainer>
+            </div>
         }
     </div>);
   }

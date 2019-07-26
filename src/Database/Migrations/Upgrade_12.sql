@@ -15,5 +15,5 @@ INSERT INTO Radios (Title, Poster, Url) VALUES("Sky radio", "skyradio", "http://
 INSERT INTO Radios (Title, Poster, Url) VALUES("Veronica", "veronica", "http://playerservices.streamtheworld.com/api/livestream-redirect/VERONICA");
 INSERT INTO Radios (Title, Poster, Url) VALUES("Veronica Rock", "veronicarockradio", "http://20403.live.streamtheworld.com/SRGSTR11.mp3");
 INSERT INTO Radios (Title, Poster, Url) VALUES("Veronica Top 1000", "top1000", "http://19373.live.streamtheworld.com/SRGSTR10.mp3");
-INSERT INTO Radios (Title, Poster, Url) VALUES("Arrow classic rock", "arrowclassicrock", "http://stream-nederland.arrow.nl//;stream/1");
+INSERT INTO Radios (Title, Poster, Url) VALUES("Arrow classic rock", "arrowclassicrock", "https://stream.gal.io/arrow");
 INSERT INTO Radios (Title, Poster, Url) VALUES("Slam FM", "slam", "http://stream.slam.nl/slam");

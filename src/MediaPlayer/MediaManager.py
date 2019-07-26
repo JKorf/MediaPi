@@ -183,7 +183,6 @@ class MediaManager(metaclass=Singleton):
         time.sleep(1)
 
         obj = objgraph.by_type('Torrent')
-        obj2 = objgraph.by_type('Peer')
         if len(obj) != 0:
             Logger().write(LogVerbosity.Important, "Torrent not disposed!")
         else:

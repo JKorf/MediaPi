@@ -35,8 +35,9 @@ body, html{
     }
 
     height:40px;
-    background: #colors[primary-header];
+    background: linear-gradient(-70deg, #colors[primary-header], #colors[primary-header2]);
     border-bottom: 2px solid #colors[borders];
+
     flex-grow:0;
     flex-shrink: 0;
 
@@ -83,18 +84,16 @@ body, html{
 }
 
 .footer{
-    background: #colors[primary-header];
+    background: linear-gradient(-70deg, #colors[primary-header2], #colors[primary-header]);
 }
 
 .footer-links{
     height: 50px;
-    border-top: 1px solid #colors[borders];
 }
 
 .footer-players{
     position:relative;
     overflow:hidden;
-    background: #colors[secondary-header];
     border-top: 2px solid #colors[borders];
     max-height: 122px;
     overflow-y: auto;
@@ -112,7 +111,7 @@ body, html{
 }
 
 a {
-  color: #eee;
+  color: #colors[text-link];
   text-decoration: none; /* no underline */
 }
 

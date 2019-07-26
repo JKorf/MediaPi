@@ -45,21 +45,23 @@ class GasUsageGraph extends Component {
   render() {
     return (<div>
         <ViewLoader loading={this.state.loading}/>
-        <ResponsiveContainer minHeight={this.props.height}>
-            <BarChart data={this.state.gasData} margin={{top:30,right:10,bottom:20,left:0}}>
-              <XAxis angle={60}
-                     dy={20}
-                     minTickGap={0}
-                     interval={0}
-                     tickCount={8}
-                     tickFormatter = {(hour) => new Intl.DateTimeFormat('en-GB', {hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.firstTime + hour * (1000*60*60)))}/>
-              <YAxis dataKey="value" unit="L" />
-              <Tooltip />
-              <Bar dataKey="value" fill="#8884d8" animationDuration={500}>
-                <LabelList fill="#EEE" dataKey="value" position="top"  offset={10} />
-              </Bar>
-            </BarChart>
-        </ResponsiveContainer>
+        <div className="gas-graph-container">
+            <ResponsiveContainer minHeight={this.props.height}>
+                <BarChart data={this.state.gasData} margin={{top:30,right:10,bottom:20,left:0}}>
+                  <XAxis angle={60}
+                         dy={20}
+                         minTickGap={0}
+                         interval={0}
+                         tickCount={8}
+                         tickFormatter = {(hour) => new Intl.DateTimeFormat('en-GB', {hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.firstTime + hour * (1000*60*60)))}/>
+                  <YAxis dataKey="value" unit="L" />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#8884d8" animationDuration={500}>
+                    <LabelList fill="#222" dataKey="value" position="top"  offset={10} />
+                  </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
     </div>);
   }
 }

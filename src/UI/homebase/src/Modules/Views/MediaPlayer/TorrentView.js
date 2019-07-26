@@ -59,8 +59,16 @@ class TorrentView extends Component {
       this.viewRef.current.play(torrent);
   }
 
-  torrentSelected(torrent){
-      this.setState({selectedTorrent: torrent});
+  torrentSelected(torrent, evnt){
+
+      if(this.state.selectedTorrent === torrent){
+          if(evnt.target.className.indexOf("torrent-title") === -1)
+            return;
+
+          this.setState({selectedTorrent: null});
+      }
+      else
+        this.setState({selectedTorrent: torrent});
   }
 
   searchTermChange(value){

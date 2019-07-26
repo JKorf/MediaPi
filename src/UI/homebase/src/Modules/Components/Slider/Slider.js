@@ -64,6 +64,7 @@ class Slider extends Component {
     let maxStr = max;
     let valueStr = value;
     let leftStr = max - value;
+    if (leftStr < 0) leftStr = 0;
     let newValueStr = this.newValue;
     if(this.props.format){
         if (this.props.formatMinMax) minStr = this.props.formatMinMax(minStr);

@@ -127,15 +127,15 @@ class YouTubeVideoView extends Component {
                     </div>
                 </div>
 
-                <div className="youtube-synopsis" dangerouslySetInnerHTML={{__html: this.state.video.description}}>
-                </div>
-
-                <div className="movie-play-buttons">
+                <div className="youtube-play-buttons">
                 { this.state.video.played_for > 1000 * 5 &&
                     <Button text={"Continue from " + this.writeTimespan(this.state.video.played_for)} onClick={(e) => this.play( this.state.video.played_for)} classId="secondary"></Button>
                 }
                 <Button text={"Play" } onClick={(e) => this.play(0)} classId="secondary" />
               </div>
+
+                <div className="youtube-synopsis" dangerouslySetInnerHTML={{__html: this.state.video.description}}>
+                </div>
           </div>
           }
       </MediaPlayerView>

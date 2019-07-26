@@ -1,5 +1,5 @@
 import radio1 from './radio1.png'
-import radio2 from './radio2.gif'
+import radio2 from './radio2.png'
 import radio3 from './3fm.gif'
 import radio538 from './538.gif'
 import arrowclassicrock from './arrowclassicrock.gif'

@@ -81,7 +81,7 @@ class YouTubeChannelView extends Component {
                 <div className="youtube-channel-image">
                     <img alt="Show poster" src={this.state.channel.thumbnail} />
                 </div>
-                <div className="youtube-details channel-details">
+                <div className="channel-details">
                     <div className="label-row">
                         <div className="label-field">Views</div>
                         <div className="label-value">{this.state.channel.views}</div>

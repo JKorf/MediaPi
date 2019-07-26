@@ -33,12 +33,11 @@ class SelectConditionPopup extends Component {
          </div>
     )
     return (
-    <Popup title="New condition type" loading={false} buttons={buttons}>
-        Condition type:
+    <Popup title={"New " + this.props.actionType} loading={false} buttons={buttons}>
         <select defaultValue={this.props.conditionTypes[0].id} onChange={(e) => this.setState({selectedType: parseInt(e.target.value)})}>
             { this.props.conditionTypes.map(type => <option value={type.id} key={type.id}>{type.name}</option>) }
         </select>
-        { this.getConditionByType(this.state.selectedType).description }
+        <div className="rule-select-action-description">{ this.getConditionByType(this.state.selectedType).description }</div>
     </Popup>
     )
   }

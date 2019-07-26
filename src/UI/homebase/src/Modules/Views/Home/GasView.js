@@ -27,7 +27,7 @@ class GasView extends Component {
   render() {
 
     return (
-      <div className="heating-view">
+      <div className="gas-view">
          <div className="graph-navigation">
             <div className="graph-back" onClick={() => this.back()}><Button text="-8 hours" classId="secondary"/></div>
             <div className="graph-forward" onClick={() => this.next()}><Button text="+8 hours" classId="secondary"/></div>

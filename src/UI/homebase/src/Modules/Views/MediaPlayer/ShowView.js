@@ -46,11 +46,26 @@ class ShowView extends Component {
   }
 
   seasonSelect(evnt, season){
-    this.setState({selectedSeason: season});
+      if(this.state.selectedSeason === season){
+          var cn = evnt.target.className;
+          if(cn !== 'show-season-title' && cn !== 'show-season-episodes')
+            return;
+          this.setState({selectedSeason: -1});
+      }
+      else
+          this.setState({selectedSeason: season});
   }
 
   episodeSelect(evnt, episode){
-    this.setState({selectedEpisode: episode.episode});
+    if(this.state.selectedEpisode === episode.episode)
+    {
+        var cn = evnt.target.className;
+        if(cn.indexOf('show-episode-title-text') === -1 && cn !== 'show-episode-title-date')
+            return;
+        this.setState({selectedEpisode: -1});
+    }
+    else
+        this.setState({selectedEpisode: episode.episode});
   }
 
   toggleFavorite(){
@@ -153,37 +168,40 @@ class ShowView extends Component {
                 <div className="show-seasons">
                     { Object.entries(show.seasons).map(([season, episodes]) =>
                         <div key={season} className={"show-season " + (this.state.selectedSeason === season ? 'selected' : '')} onClick={(e) => this.seasonSelect(e, season)}>
-                            <div className="show-season-title">Season {season}</div>
-                            <div className="show-season-episodes">{episodes.length} episodes</div>
+                            <div className="season-info">
+                                <div className="show-season-title">Season {season}</div>
+                                <div className="show-season-episodes">{episodes.length} episodes</div>
+                            </div>
+                            {selectedSeason === season &&
+                                <div className="show-episodes">
+                                    { show.seasons[selectedSeason].map((episode, index) => (
+                                        <div key={index} className={"show-episode " + (this.state.selectedEpisode === episode.episode ? 'selected' : '')} onClick={(e) => this.episodeSelect(e, episode)}>
+                                            <div className="show-episode-title">
+                                                <div className={"show-episode-title-text truncate " + (episode.seen ? "seen": "")}>{episode.episode} - {episode.title}</div>
+                                                <div className="show-episode-title-date">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(1970, 0, 0).setSeconds(episode.first_aired))}</div>
+                                                { episode.seen && <div className="show-episode-title-seen"><SvgImage src={seenImage} /></div> }
+                                            </div>
+                                            { selectedEpisode === episode.episode &&
+                                                <div className="show-episode-selected">
+                                                    <div className="show-episode-synopsis">
+                                                        {episode.overview}
+                                                    </div>
+                                                    <div className="show-episode-play">
+                                                         { episode.torrents['480p'] && <Button text="Play 480p" onClick={(e) => this.play(episode, 0, episode.torrents['480p'])} classId="secondary"></Button> }
+                                                         { episode.torrents['720p'] && <Button text="Play 720p" onClick={(e) => this.play(episode, 0, episode.torrents['720p'])} classId="secondary"></Button> }
+                                                         { episode.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(episode.played_for)} onClick={(e) => this.play(episode, episode.played_for)} classId="secondary"></Button> }
+                                                         <Link to={"/mediaplayer/torrents?term=" + encodeURIComponent(show.title + " S" + this.addLeadingZero(episode.season) + "E" + this.addLeadingZero(episode.episode))}><Button text="Search torrents" onClick={(e) => {}} classId="secondary"></Button></Link>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    )) }
+                                </div>
+                            }
                         </div>
                     )}
                 </div>
-                {selectedSeason !== -1 &&
-                    <div className="show-episodes">
-                        { show.seasons[selectedSeason].map((episode, index) => (
-                            <div key={index} className={"show-episode " + (this.state.selectedEpisode === episode.episode ? 'selected' : '')} onClick={(e) => this.episodeSelect(e, episode)}>
-                                <div className="show-episode-title">
-                                    <div className={"show-episode-title-text truncate " + (episode.seen ? "seen": "")}>{episode.episode} - {episode.title}</div>
-                                    <div className="show-episode-title-date">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(1970, 0, 0).setSeconds(episode.first_aired))}</div>
-                                    { episode.seen && <div className="show-episode-title-seen"><SvgImage src={seenImage} /></div> }
-                                </div>
-                                { selectedEpisode === episode.episode &&
-                                    <div className="show-episode-selected">
-                                        <div className="show-episode-synopsis">
-                                            {episode.overview}
-                                        </div>
-                                        <div className="show-episode-play">
-                                             { episode.torrents['480p'] && <Button text="Play 480p" onClick={(e) => this.play(episode, 0, episode.torrents['480p'])} classId="secondary"></Button> }
-                                             { episode.torrents['720p'] && <Button text="Play 720p" onClick={(e) => this.play(episode, 0, episode.torrents['720p'])} classId="secondary"></Button> }
-                                             { episode.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(episode.played_for)} onClick={(e) => this.play(episode, episode.played_for)} classId="secondary"></Button> }
-                                             <Link to={"/mediaplayer/torrents?term=" + encodeURIComponent(show.title + " S" + this.addLeadingZero(episode.season) + "E" + this.addLeadingZero(episode.episode))}><Button text="Search torrents" onClick={(e) => {}} classId="secondary"></Button></Link>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        )) }
-                    </div>
-                }
+
             </div>
           </div>
       </MediaPlayerView>

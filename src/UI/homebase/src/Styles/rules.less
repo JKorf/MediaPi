@@ -2,10 +2,13 @@
 
 .rules-view{
     position: relative;
+    background: #colors[item-background];
+    padding-bottom: 10px;
 }
 
 .rules-header{
     background: #colors[item-background];
+    border-bottom: 1px solid #colors[borders];
 }
 
 .rules-header-column{
@@ -28,6 +31,10 @@
     width: 36px;
 }
 
+.current-rules{
+
+}
+
 .current-rule{
     width: 100%;
     border-bottom: 1px solid #colors[borders];
@@ -47,6 +54,7 @@
 .current-rule-selected{
     padding: 8px;
     font-size: 12px;
+    border-top: 1px solid #colors[borders];
 }
 
 .current-rule-name{
@@ -87,7 +95,7 @@
 
 .rule-enabled-checkbox{
     position: absolute;
-    bottom: 4px;
+    bottom: 14px;
     right: 8px;
 
     .rule-enabled-checkbox-label{
@@ -100,6 +108,11 @@
         display:inline-block;
         vertical-align: top;
     }
+}
+
+.rule-view{
+    background: #colors[item-background];
+    padding: 10px;
 }
 
 .rule-condition{
@@ -117,7 +130,7 @@
 .rule-title{
     border-bottom: 1px solid #colors[text-faded];
     font-size: 12px;
-    padding: 4px 8px;
+
 }
 
 .rule-condition-parameter{
@@ -221,4 +234,8 @@
 
 .rule-general-item:first-child{
     margin-top: 0;
+}
+
+.rule-select-action-description{
+    margin-top: 6px;
 }

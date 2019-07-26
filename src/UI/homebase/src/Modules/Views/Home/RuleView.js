@@ -314,7 +314,7 @@ class RuleView extends Component {
                     + add condition
                 </div>
                 { this.state.showSelectConditionType &&
-                    <SelectConditionPopup conditionTypes={this.state.conditions} onCancel={() => { this.setState({showSelectConditionType: false}) }} onSelect={(selected) => {this.addNewCondition(selected)}} />
+                    <SelectConditionPopup actionType="action" conditionTypes={this.state.conditions} onCancel={() => { this.setState({showSelectConditionType: false}) }} onSelect={(selected) => {this.addNewCondition(selected)}} />
                 }
             </div>
         </div>
@@ -330,7 +330,7 @@ class RuleView extends Component {
                     + add action
                 </div>
                 { this.state.showSelectActionType &&
-                    <SelectConditionPopup conditionTypes={this.state.actions} onCancel={() => { this.setState({showSelectActionType: false}) }} onSelect={(selected) => {this.addNewAction(selected)}} />
+                    <SelectConditionPopup actionType="action" conditionTypes={this.state.actions} onCancel={() => { this.setState({showSelectActionType: false}) }} onSelect={(selected) => {this.addNewAction(selected)}} />
                 }
             </div>
         </div>
