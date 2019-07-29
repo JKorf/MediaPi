@@ -55,7 +55,7 @@ class GasUsageGraph extends Component {
                          tickCount={8}
                          tickFormatter = {(hour) => new Intl.DateTimeFormat('en-GB', {hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.firstTime + hour * (1000*60*60)))}/>
                   <YAxis dataKey="value" unit="L" />
-                  <Tooltip />
+                  <Tooltip labelFormatter={(value, name, props) => new Intl.DateTimeFormat('en-GB', {hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.firstTime + value * (1000*60*60)))} />
                   <Bar dataKey="value" fill="#8884d8" animationDuration={500}>
                     <LabelList fill="#222" dataKey="value" position="top"  offset={10} />
                   </Bar>

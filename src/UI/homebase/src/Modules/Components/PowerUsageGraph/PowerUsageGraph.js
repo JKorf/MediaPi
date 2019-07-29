@@ -58,7 +58,7 @@ class PowerUsageGraph extends Component {
                          tickFormatter = {(min5) => new Intl.DateTimeFormat('en-GB', {hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.firstTime + min5 * (1000*60*5)))}/>
                   <YAxis dataKey="value" unit={this.state.powerData[0].unit} />
                   <Line dataKey="value" stroke="#8884d8" dot={false} animationDuration={500} />
-                                        <Tooltip />
+                  <Tooltip labelFormatter={(value, name, props) => new Intl.DateTimeFormat('en-GB', {hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.firstTime + value * (1000*60*5)))} />
 
                 </LineChart>
             </ResponsiveContainer>
