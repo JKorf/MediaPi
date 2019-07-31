@@ -9,6 +9,7 @@ from flask import request
 
 from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
+from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Util import to_JSON, write_size, current_time
 from Updater import Updater
@@ -19,6 +20,8 @@ from Webserver.Controllers.MediaPlayer.TorrentController import TorrentControlle
 
 
 class UtilController:
+
+    health_cache = dict()
 
     @staticmethod
     @app.route('/util/update', methods=['GET'])
@@ -112,26 +115,40 @@ class UtilController:
             all_torrents += arr
         torrent = max(all_torrents, key=lambda t: t.seeds / t.peers)
         Logger().write(LogVerbosity.Info,
-                       "System health selected torrent at " + torrent.quality + ", " + str(torrent.peers) +"/" + str(torrent.seeds) + " l/s")
+                       "System health selected torrent at " + torrent.quality + ", " + str(torrent.peers) + "/" + str(torrent.seeds) + " l/s")
 
         MediaManager().start_movie(0, "Health check", torrent.url, None, 0)
 
         created = UtilController.wait_for(2000, lambda: MediaManager().torrent is not None)
-        if not created: result.torrent_creating_result.fail("Didn't create torrent")
+        if not created:
+            result.torrent_starting_result.fail("Didn't create torrent")
+            return result
 
         executing = UtilController.wait_for(10000, lambda: MediaManager().torrent.is_preparing or MediaManager().torrent.is_executing)
-        if not executing: result.torrent_starting_result.fail("Torrent isn't executing")
+        if not executing:
+            result.torrent_starting_result.fail("Torrent isn't executing")
+            return result
 
         downloading = UtilController.wait_for(10000, lambda: MediaManager().torrent.network_manager.average_download_counter.total > 0)
         if not downloading: result.torrent_downloading_result.fail("No bytes downloaded at all")
 
-        playing = UtilController.wait_for(30000, lambda: VLCPlayer().player_state.playing_for > 0)
-        if not playing: result.torrent_playing_result.fail("Didn't start playing torrent")
+        playing = False
+        if downloading:
+            playing = UtilController.wait_for(30000, lambda: VLCPlayer().player_state.playing_for > 0)
+            if not playing: result.torrent_playing_result.fail("Didn't start playing torrent")
+
+        if playing:
+            MediaManager().seek(1000 * 60 * 5) # seek to 5 minutes in
+            playing = UtilController.wait_for(10000, lambda: VLCPlayer().player_state.playing_for > 1000 * 60 * 5)
+            if not playing: result.torrent_playing_after_seek_result.fail("Didn't start playing torrent")
 
         MediaManager().stop_play()
 
-        disposed = UtilController.wait_for(20000, lambda: len(objgraph.by_type('MediaPlayer.Torrents.Torrent.Torrent.Torrent')) == 0)
-        if not disposed: result.torrent_disposing_result.fail("Torrent not disposed after stopping")
+        disposed = UtilController.wait_for_event(20000, EventType.TorrentStopped)
+        if not disposed: result.torrent_disposing_result.fail("Torrent stopped event not received")
+        else:
+            disposed = UtilController.wait_for(5000, lambda: len(objgraph.by_type('MediaPlayer.Torrents.Torrent.Torrent.Torrent')) == 0)
+            if not disposed: result.torrent_disposing_result.fail("Torrent not disposed after stopping")
 
         return result
 
@@ -143,6 +160,18 @@ class UtilController:
                 return True
             time.sleep(0.5)
         return False
+
+    @staticmethod
+    def wait_for_event(max_time, event):
+        UtilController.health_cache[event] = False
+        evnt = EventManager.register_event(event, lambda *x: UtilController.assign(event))
+        result = UtilController.wait_for(max_time, lambda: UtilController.health_cache[event])
+        EventManager.deregister_event(evnt)
+        return result
+
+    @staticmethod
+    def assign(name):
+        UtilController.health_cache[name] = True
 
 
 class UpdateAvailable:
@@ -158,10 +187,11 @@ class HealthTestResult:
         self.request_movies_result = HealthTestResultItem("Fetch movies")
         self.request_shows_result = HealthTestResultItem("Fetch shows")
         self.request_torrents_result = HealthTestResultItem("Fetch torrents")
-        self.torrent_creating_result = HealthTestResultItem("Creating torrent")
+
         self.torrent_starting_result = HealthTestResultItem("Starting torrent")
         self.torrent_downloading_result = HealthTestResultItem("Downloading torrent")
         self.torrent_playing_result = HealthTestResultItem("Playing torrent")
+        self.torrent_playing_after_seek_result = HealthTestResultItem("Playing after seek")
         self.torrent_disposing_result = HealthTestResultItem("Disposing torrent")
 
 

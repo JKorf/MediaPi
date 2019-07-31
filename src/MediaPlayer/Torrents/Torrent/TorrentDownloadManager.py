@@ -289,7 +289,7 @@ class TorrentDownloadManager(TorrentManager):
 
         self.requeue(new_piece_index)
 
-        Logger().write(LogVerbosity.Debug, "Seeking done in " + str(current_time() - start_time) + "ms, post-seek queue has " + str(len(self.queue)) + " items")
+        Logger().write(LogVerbosity.Info, "Seeking done in " + str(current_time() - start_time) + "ms, post-seek queue has " + str(len(self.queue)) + " items")
 
     def redownload_piece(self, piece):
         self.torrent.left += piece.length
