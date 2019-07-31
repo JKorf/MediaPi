@@ -30,6 +30,9 @@ class Observable(LogObject):
         self.__callbacks.append(cb)
         cb(self, self)
 
+    def remove_callback(self, cb):
+        self.__callbacks.remove(cb)
+
     def start_update(self):
         self.__start_state = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
 

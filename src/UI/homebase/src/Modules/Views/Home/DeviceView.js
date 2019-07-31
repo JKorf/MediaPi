@@ -7,6 +7,7 @@ import SvgImage from './../../Components/SvgImage';
 import Button from './../../Components/Button';
 import Slider from './../../Components/Slider';
 import StopPopup from './../../Components/Popups/StopPopup'
+import SystemHealthCheckPopup from './../../Components/Popups/SystemHealthCheckPopup'
 import Popup from './../../Components/Popups/Popup'
 import { InfoGroup, InfoRow } from './../../Components/InfoGroup'
 import { SwitchBox, SwitchBoxItem } from './../../Components/SwitchBox'
@@ -308,6 +309,12 @@ class DeviceView extends Component {
     this.delayChange(value);
   }
 
+  systemHealthCheck(){
+    if(window.confirm("Do you want to execute a system health check?")){
+        this.setState({systemHealthCheck: true});
+    }
+
+  }
 
   render() {
 
@@ -341,6 +348,9 @@ class DeviceView extends Component {
 
     return (
         <div className="player-details">
+            { this.state.systemHealthCheck &&
+                <SystemHealthCheckPopup onClose={() => this.setState({systemHealthCheck: false})} />
+            }
             <ViewLoader loading={this.state.loading || this.state.updateState !== "Idle"} text={(this.state.updateState !== "Idle" ? this.state.updateState: null)}/>
 
             <SwitchBox>
@@ -443,6 +453,7 @@ class DeviceView extends Component {
                      <InfoRow name="CPU" value={this.state.stateData.cpu + "%"}></InfoRow>
                      <InfoRow name="Memory" value={this.state.stateData.memory + "%"}></InfoRow>
                      <InfoRow name="Temperature" value={this.state.stateData.temperature}></InfoRow>
+                     <Button text="Run system health check" onClick={() => this.systemHealthCheck()}/>
                 </div>
              }
 

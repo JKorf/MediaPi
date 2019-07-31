@@ -1,5 +1,4 @@
 import math
-from threading import Lock
 
 from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
@@ -112,7 +111,7 @@ class Piece(LogObject):
             self.initialized = True
         return self._blocks
 
-    def __init__(self, parent, index, block_start_index, start_byte, length, persistent):
+    def __init__(self, parent, index, block_start_index, start_byte, length):
         super().__init__(parent, "piece " + str(index))
 
         self.index = index
@@ -121,6 +120,7 @@ class Piece(LogObject):
         self.end_byte = start_byte + length
         self.length = length
         self.done = False
+        self.written = False
         self.cleared = False
 
         self._data = None
@@ -132,7 +132,6 @@ class Piece(LogObject):
         self.total_blocks = 0
         self.block_size = Settings.get_int("block_size")
         self.priority = 0
-        self.persistent = persistent
 
     def init_blocks(self):
         Logger().write(LogVerbosity.Debug, "Initializing blocks for piece " + str(self.index))
@@ -184,9 +183,6 @@ class Piece(LogObject):
         return self._data
 
     def clear(self):
-        if self.persistent:
-            raise Exception("Can't clear persistent pieces")
-
         self._blocks = dict()
         self.cleared = True
         self._data = None

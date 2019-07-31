@@ -2,7 +2,6 @@ import os
 import socket
 import sys
 import urllib.parse
-from threading import Lock
 
 import time
 
@@ -26,10 +25,6 @@ class StreamListener(LogObject):
         ".srt": "json"
     }
 
-    @property
-    def stream_speed(self):
-        return max([x.stream_speed for x in self.sockets_writing_data], default=0)
-
     def __init__(self, name, port, arg=None):
         super().__init__(arg, name)
 
@@ -46,9 +41,6 @@ class StreamListener(LogObject):
         self.running = False
         self.bytes_send = 0
         self.id = 0
-
-    def seek(self):
-        pass
 
     def start_listening(self):
         self.thread = CustomThread(self.server.start, "Listener: " + self.name)
@@ -152,7 +144,7 @@ class StreamListener(LogObject):
                 return
 
             self.write_data(socket, header.range_start, header.range_end - header.range_start + 1,
-                            self.torrent.get_data_bytes_for_stream)
+                            self.torrent.get_data)
         else:
             Logger().write(LogVerbosity.Debug, self.name + ' request with range')
             success = self.write_header_with_content(socket, "206 Partial Content", header.range_start, header.range_end,
@@ -162,7 +154,7 @@ class StreamListener(LogObject):
                 return
 
             self.write_data(socket, header.range_start, header.range_end - header.range_start + 1,
-                            self.torrent.get_data_bytes_for_stream)
+                            self.torrent.get_data)
 
     def write_header(self, socket, status):
         response_header = HttpHeader()
@@ -280,9 +272,9 @@ class StreamListener(LogObject):
             # check if socket is still open
             readable, writeable, exceptional = select.select([socket], [socket], [socket], 0)
             if len(readable) == 1:
-                read = 0
+                read = []
                 try:
-                    read = socket.recv(1)
+                    read = socket.recv(1024)
                 except Exception as e:
                     Logger().write(LogVerbosity.Debug, "Request socket closed with exception: " + str(e))
 
@@ -291,7 +283,7 @@ class StreamListener(LogObject):
                     writer.close()
                     return False
                 else:
-                    Logger().write(LogVerbosity.Info, self.name + " recv received data??")
+                    Logger().write(LogVerbosity.Info, self.name + " recv received data?? - " + str(read.decode("utf-8'")))
 
             if len(writeable) == 0:
                 # not currently writeable, wait for it to become available again

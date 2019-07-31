@@ -151,8 +151,6 @@ class MediaManager(metaclass=Singleton):
 
     def seek(self, position):
         VLCPlayer().set_time(position)
-        if self.torrent is not None:
-            self.torrent.stream_manager.listener.seek()
 
     def change_subtitle(self, track):
         VLCPlayer().set_subtitle_track(track)
@@ -182,7 +180,7 @@ class MediaManager(metaclass=Singleton):
         gc.collect()
         time.sleep(1)
 
-        obj = objgraph.by_type('Torrent')
+        obj = objgraph.by_type('MediaPlayer.Torrents.Torrent.Torrent.Torrent')
         if len(obj) != 0:
             Logger().write(LogVerbosity.Important, "Torrent not disposed!")
         else:
@@ -338,12 +336,11 @@ class MediaManager(metaclass=Singleton):
 
             self.torrent_data.buffer_position = self.torrent.stream_buffer_position
             self.torrent_data.buffer_total = self.torrent.bytes_total_in_buffer
-            self.torrent_data.buffer_size = self.torrent.bytes_ready_in_buffer
             self.torrent_data.stream_position = self.torrent.stream_position
+            self.torrent_data.buffer_size = self.torrent.bytes_ready_in_buffer
             self.torrent_data.total_streamed = self.torrent.bytes_streamed
 
             self.torrent_data.state = self.torrent.state
-            self.torrent_data.max_download_speed = self.torrent.network_manager.max_download_speed
 
             self.torrent_data.potential = len(self.torrent.peer_manager.potential_peers)
             self.torrent_data.connecting = len(self.torrent.peer_manager.connecting_peers)

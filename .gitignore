@@ -105,3 +105,4 @@ test.txt
 *.srt
 trackers.txt
 credentials.txt
+src/Solution/cache.tmp

@@ -153,8 +153,11 @@ class Peer(TorrentManager):
         if self.peer_state_task is not None:
             self.peer_state_task.join()
 
-        self.download_manager.stop()
+        if self.state == PeerState.Stopped:
+            return
+
         self.connection_manager.disconnect()
+        self.download_manager.stop()
         self.extension_manager.stop()
         self.metadata_manager.stop()
 

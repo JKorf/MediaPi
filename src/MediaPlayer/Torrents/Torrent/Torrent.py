@@ -7,6 +7,7 @@ import urllib.request
 from pympler import asizeof
 
 from MediaPlayer.Torrents.Streaming.StreamManager import StreamManager
+from MediaPlayer.Torrents.Torrent.TorrentCacheManager import TorrentCacheManager
 from MediaPlayer.Torrents.Torrent.TorrentDataManager import TorrentDataManager
 from MediaPlayer.Torrents.Torrent.TorrentDownloadManager import TorrentDownloadManager
 from MediaPlayer.Torrents.Torrent.TorrentMessageProcessor import TorrentMessageProcessor
@@ -30,16 +31,12 @@ from Shared.Util import headers, write_size
 class Torrent(LogObject):
 
     @property
-    def stream_speed(self):
-        return self.stream_manager.stream_speed
+    def bytes_total_in_buffer(self):
+        return self.data_manager.get_bytes_in_buffer(self.stream_manager.stream_position_piece_index)
 
     @property
     def bytes_ready_in_buffer(self):
-        return self.stream_manager.consecutive_pieces_total_length
-
-    @property
-    def bytes_total_in_buffer(self):
-        return self.stream_manager.bytes_in_buffer
+        return (self.stream_buffer_position - self.stream_position) * self.piece_length
 
     @property
     def stream_position(self):
@@ -47,7 +44,7 @@ class Torrent(LogObject):
 
     @property
     def stream_buffer_position(self):
-        return self.stream_manager.consecutive_pieces_last_index
+        return self.data_manager.stream_buffer_position(self.stream_manager.stream_position_piece_index)
 
     @property
     def bytes_streamed(self):
@@ -78,8 +75,7 @@ class Torrent(LogObject):
 
     @property
     def is_preparing(self):
-        return self.__state == TorrentState.Initial \
-               or self.__state == TorrentState.DownloadingMetaData \
+        return self.__state == TorrentState.DownloadingMetaData \
                or self.__state == TorrentState.WaitingUserFileSelection
 
     def __init__(self, id, uri):
@@ -118,6 +114,7 @@ class Torrent(LogObject):
         self.network_manager = TorrentNetworkManager(self)
         self.message_processor = TorrentMessageProcessor(self)
         self.peer_processor = TorrentPeerProcessor(self)
+        self.cache_manager = TorrentCacheManager(self)
 
     def check_size(self):
         for key, value, size in sorted([(key, value, asizeof.asizeof(value)) for key, value in self.__dict__.items()], key=lambda key_value: key_value[2], reverse=True):
@@ -129,7 +126,7 @@ class Torrent(LogObject):
     def create_torrent(cls, id, url):
         if url.startswith("magnet:"):
             return Torrent.from_magnet(id, url)
-        elif url.startswith("http://"):
+        elif url.startswith("http://") or url.startswith("https://"):
             return Torrent.from_torrent_url(id, url)
         else:
             return Torrent.from_file(id, url)
@@ -207,6 +204,7 @@ class Torrent(LogObject):
         self.engine.add_work_item("peer_manager_stop_slowest", 10000, self.peer_manager.stop_slowest_peer)
         self.engine.add_work_item("torrent_download_manager_prio", 5000, self.download_manager.update_priority)
         self.engine.add_work_item("check_download_speed", 1000, self.check_download_speed)
+        self.engine.add_work_item("check_buffer", 1000, self.stream_manager.update)
 
         self.engine.start()
         self.network_manager.start()
@@ -282,6 +280,8 @@ class Torrent(LogObject):
         Logger().write(LogVerbosity.Info, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
 
         self.data_manager.set_piece_info(self.piece_length, self.piece_hashes)
+        self.cache_manager.init(self.piece_length, self.media_file.length, self.media_file.start_byte)
+
         self.__set_state(TorrentState.Downloading)
         self.left = self.data_manager.get_piece_by_offset(self.media_file.end_byte).end_byte - self.data_manager.get_piece_by_offset(self.media_file.start_byte).start_byte
         Logger().write(LogVerbosity.Info, "To download: " + str(self.left) + " (" + str(self.left - self.media_file.length) + " overhead), piece length: " + str(self.piece_length))
@@ -339,11 +339,8 @@ class Torrent(LogObject):
         self.__state = value
         EventManager.throw_event(EventType.TorrentStateChange, [old, value])
 
-    def get_data_bytes_for_stream(self, start_byte, length):
-        return self.stream_manager.get_data_for_stream(start_byte + self.media_file.start_byte, length)
-
-    def get_data_bytes_for_hash(self, start_byte, length):
-        return self.data_manager.get_data_bytes_for_hash(start_byte + self.media_file.start_byte, length)
+    def get_data(self, start_byte, length):
+        return self.stream_manager.get_data(start_byte, length)
 
     def check_download_speed(self):
         current_max = Stats.total('max_download_speed')
@@ -372,6 +369,7 @@ class Torrent(LogObject):
         self.message_processor.stop()
         self.download_manager.stop()
         self.data_manager.stop()
+        self.cache_manager.stop()
         Logger().write(LogVerbosity.Debug, 'Torrent managers stopped')
 
         for file in self.files:

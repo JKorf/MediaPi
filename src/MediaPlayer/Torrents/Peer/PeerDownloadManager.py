@@ -9,7 +9,7 @@ from Shared.Util import current_time
 class PeerDownloadManager(LogObject):
     @property
     def max_blocks(self):
-        if self.peer.peer_speed != PeerSpeed.Low and not self.peer.torrent.network_manager.throttling:
+        if self.peer.peer_speed != PeerSpeed.Low:
             self.peer.max_blocks_log = self._fast_peer_max_blocks
             return self._fast_peer_max_blocks
         self.peer.max_blocks_log = self._low_peer_max_blocks

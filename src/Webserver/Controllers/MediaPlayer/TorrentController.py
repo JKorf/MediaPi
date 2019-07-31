@@ -5,6 +5,7 @@ from flask import request
 from bs4 import BeautifulSoup
 
 from Shared.Network import RequestFactory
+from Shared.Settings import Settings
 from Shared.Util import to_JSON
 from Webserver.APIController import app
 from Webserver.Models import TorrentModel
@@ -12,7 +13,7 @@ from Webserver.Models import TorrentModel
 
 class TorrentController:
 
-    base_url = "https://1337x.to"
+    base_url = Settings.get_string("torrent_api")
 
     @staticmethod
     @app.route('/torrents/top', methods=['GET'])

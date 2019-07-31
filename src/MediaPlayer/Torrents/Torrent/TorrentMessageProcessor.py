@@ -99,7 +99,7 @@ class TorrentMessageProcessor(TorrentManager):
             return
 
         elif isinstance(message, InterestedMessage):
-            Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received interested message')
+            Logger().write(LogVerbosity.Info, str(peer.id) + ' Received interested message')
             peer.protocol_logger.update("Received Interested")
             peer.communication_state.in_interest = PeerInterestedState.Interested
             return
@@ -125,7 +125,7 @@ class TorrentMessageProcessor(TorrentManager):
             return
 
         elif isinstance(message, RequestMessage):
-            Logger().write(LogVerbosity.Debug, str(peer.id) + ' Received request message')
+            Logger().write(LogVerbosity.Info, str(peer.id) + ' Received request message')
             peer.protocol_logger.update("Received Request")
             return
 

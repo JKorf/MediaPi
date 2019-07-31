@@ -3,7 +3,6 @@ import math
 from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import TorrentState, PeerSpeed, DownloadMode
 from Shared.Events import EventManager, EventType
-from Shared.LogObject import LogObject
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Timing import Timing
@@ -21,7 +20,6 @@ class TorrentDownloadManager(TorrentManager):
         self.prio = False
         self.last_get_result = 0, 0
         self.last_get_time = 0
-        self.upped_prios = []
 
         self.queue = []
         self.slow_peer_piece_offset = 0
@@ -106,14 +104,12 @@ class TorrentDownloadManager(TorrentManager):
         Logger().write(LogVerbosity.All, "Starting download queue queuing")
         start_time = current_time()
         left = 0
-        for piece in self.torrent.data_manager._pieces.values():
-            if piece.start_byte > self.torrent.media_file.end_byte or piece.index < start_position or piece.end_byte < self.torrent.media_file.start_byte:
+        self.queue.clear()
+        for piece in self.torrent.data_manager.get_pieces_after_index(start_position):
+            if piece.written:
                 continue
 
-            if piece.persistent and piece.done:
-                continue
-
-            if not piece.cleared and piece.done and piece.index < start_position + (10000000 // self.torrent.data_manager.piece_length):
+            if piece.start_byte > self.torrent.media_file.end_byte or piece.end_byte < self.torrent.media_file.start_byte:
                 continue
 
             piece.reset()
@@ -129,6 +125,8 @@ class TorrentDownloadManager(TorrentManager):
         self.slow_peer_piece_offset = 15000000 // self.torrent.data_manager.piece_length # TODO Setting
         Logger().write(LogVerbosity.Debug, "Queueing took " + str(current_time() - start_time) + "ms for " + str(len(self.queue)) + " items")
         self.torrent.left = left
+        if self.torrent.left > 0 and self.torrent.state == TorrentState.Done:
+            self.torrent.restart_downloading()
 
         self.update_priority(True)
 
@@ -289,9 +287,6 @@ class TorrentDownloadManager(TorrentManager):
             first = str(self.queue[0].index)
         self.queue_log = "length: " + str(length) + ", first: " + first
 
-        if self.torrent.state == TorrentState.Done:
-            self.torrent.restart_downloading()
-
         self.requeue(new_piece_index)
 
         Logger().write(LogVerbosity.Debug, "Seeking done in " + str(current_time() - start_time) + "ms, post-seek queue has " + str(len(self.queue)) + " items")
@@ -304,9 +299,6 @@ class TorrentDownloadManager(TorrentManager):
         self.queue_log = "length: " + str(length) + ", first: " + first
 
     def prioritize_piece_index(self, piece_index):
-        if piece_index in self.torrent.download_manager.upped_prios:
-            return 100
-
         if piece_index < self.start_piece or piece_index > self.end_piece:
             return 0
 

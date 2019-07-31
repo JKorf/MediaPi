@@ -13,24 +13,12 @@ from Shared.Util import current_time
 
 class TorrentNetworkManager(TorrentManager):
 
-    @property
-    def max_download_speed(self):
-        if self.torrent.bytes_ready_in_buffer > self.throttle_limit:
-            return max(self.torrent.stream_speed, self.min_download_speed)
-        else:
-            return 0
-
     def __init__(self, torrent):
         super().__init__(torrent, "network")
 
         self.running = True
-
-        self.throttle_limit = Settings.get_int("start_throttling_buffer_size")
-        self.min_download_speed = Settings.get_int("min_download_speed")
         self.torrent = torrent
 
-        self.throttling = False
-        self.last_throttle = 0
         self.speed_log = 0
 
         self.average_download_counter = AverageCounter(self, 3)
@@ -49,23 +37,10 @@ class TorrentNetworkManager(TorrentManager):
     def execute(self):
         while self.running:
             Timing().start_timing("IO")
-            if self.throttling and current_time() - self.last_throttle > 2000:
-                Logger().write(LogVerbosity.Debug, "No longer throttling")
-                self.throttling = False  # has not throttled in last 2 seconds
-
             # Select in/outputs
             input_peers = self.torrent.peer_manager.get_peers_for_reading()
             received_messages = []
             for peer in input_peers:
-                download_speed = self.average_download_counter.get_speed()
-                if self.max_download_speed != 0 and download_speed > self.max_download_speed:
-                    self.last_throttle = current_time()
-                    if not self.throttling:
-                        self.throttling = True
-                        Logger().write(LogVerbosity.Debug, "Start throttling at " + str(self.max_download_speed))
-                    sleep(0.05)
-                    break
-
                 messages_size, messages = peer.connection_manager.handle_read()
                 if messages_size > 0:
                     self.average_download_counter.add_value(messages_size)

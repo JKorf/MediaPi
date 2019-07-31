@@ -28,3 +28,5 @@
     Fix back going a page back instead of to base menu
 
 
+    Refactoring to file buffer
+        - Can also offer pieces now

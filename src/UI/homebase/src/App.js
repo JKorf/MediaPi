@@ -77,7 +77,6 @@ class App extends Component {
     var apiPort = 50021;
     var location = window.location.hostname + ":" + apiPort;
     window.vars = {
-        apiPort: 50021,
         websocketBase: "ws://" + location + "/UI",
         apiBase: "http://" + location + "/"
     };

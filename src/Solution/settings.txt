@@ -6,8 +6,8 @@ UI=False
 # Paths
 serie_api=https://tv-v2.api-fetch.website/
 movie_api=https://tv-v2.api-fetch.website/
+torrent_api=https://1337x.to
 base_folder=C:/home/pi/Scripts/
-tpb_api=https://unblockpirate.org
 master_ip=127.0.0.1
 api_port=50021
 tradfri_hub_ip=192.168.2.73
@@ -24,10 +24,8 @@ low_peer_max_download_buffer=100000
 medium_peer_max_download_buffer=300000
 fast_peer_max_download_buffer=400000
 metadata_block_size=16384
-start_throttling_buffer_size=30000000
-min_download_speed=100000
-important_only_start_threshold=30000000
-important_only_stop_threshold=20000000
+important_only_start_threshold=70000000
+important_only_stop_threshold=40000000
 
 # Trackers
 tracker_peer_request_amount=200
@@ -36,18 +34,15 @@ peer_request_interval_no_potential=30000
 
 # Streaming
 max_chunk_size=250000
-max_bytes_ready_in_buffer=75000000
-max_bytes_reached_threshold=25000000
 stream_start_buffer=5000000
-stream_pause_tolerance=30000000
 stream_end_buffer_tolerance=5000000
 network_caching=15000
 
 # Logging
-log_level=1
+log_level=2
 max_log_file_size=10000000
-vlc_log_level=3
-state_logging=True
+vlc_log_level=1
+state_logging=False
 
 # DHT
 dht=False

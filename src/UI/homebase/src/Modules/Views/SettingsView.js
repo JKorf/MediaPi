@@ -21,8 +21,8 @@ class SettingsView extends Component {
 
   render() {
     return <div className="settings-view">
-        <InfoGroup title="Appearance">
-            Test
+        <InfoGroup title=".">
+
         </InfoGroup>
     </div>
   }
