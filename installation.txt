@@ -37,7 +37,21 @@ sudo pip3 install eventlet flask flask_cors flask_socketio socketIO-client psuti
 
 
 *  (Master) Configure nginix
-sudo nano /etc/nginx/sites-available/default -> set port and folder
+sudo nano /etc/nginx/sites-available/default -> set port and folder:
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        root /home/pi/Scripts/UI/Web;
+
+        index index.html;
+
+        server_name _;
+
+        location / {
+                try_files $uri $uri/ /index.html;
+        }
+}
 
 *  (Master) Portforward to PI
 
