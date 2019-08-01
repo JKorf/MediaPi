@@ -31,6 +31,8 @@ class StateManager(metaclass=Singleton):
         self.memory_thread.start()
 
     def update_state(self):
+        boot_time = psutil.boot_time()
+
         while True:
             self.state_data.start_update()
             self.state_data.memory = psutil.virtual_memory().percent
@@ -42,6 +44,7 @@ class StateManager(metaclass=Singleton):
             self.state_data.disk_used = disk_info.used
             self.state_data.disk_free = disk_info.free
             self.state_data.disk_percentage = disk_info.percent
+            self.state_data.boot_time = boot_time
             self.state_data.stop_update()
             time.sleep(1)
 
@@ -72,3 +75,8 @@ class StateData(Observable):
         self.temperature = 0
         self.cpu = 0
         self.threads = 0
+        self.disk_used = 0
+        self.disk_total = 0
+        self.disk_percentage = 0
+        self.disk_free = 0
+        self.boot_time = 0

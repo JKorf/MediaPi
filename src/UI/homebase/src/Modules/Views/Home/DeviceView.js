@@ -452,6 +452,7 @@ class DeviceView extends Component {
 
              { this.state.currentView === "Status" &&
                 <div className="info-group-box">
+                     <InfoRow name="Boot time" value={new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(this.state.stateData.boot_time * 1000)}></InfoRow>
                      <InfoRow name="CPU" value={this.state.stateData.cpu + "%"}></InfoRow>
                      <InfoRow name="Memory" value={this.state.stateData.memory + "%"}></InfoRow>
                      <InfoRow name="Disk usage" value={this.writeSize(this.state.stateData.disk_used) + "/" + this.writeSize(this.state.stateData.disk_total) + "(" + this.state.stateData.disk_percentage + "%)"}></InfoRow>
