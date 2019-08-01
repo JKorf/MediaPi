@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { Link } from "react-router-dom";
+import { writeTimespan, formatTime } from './../../../Utils/Util.js';
 
 import MediaPlayerView from './MediaPlayerView.js'
 
@@ -41,22 +42,6 @@ class MovieView extends Component {
       this.viewRef.current.play({type: "trailer", url: url, title: this.state.movie.title + " Trailer"});
   }
 
-  writeTimespan(duration)
-  {
-     duration = Math.round(duration);
-     var seconds = parseInt((duration / 1000) % 60),
-      minutes = parseInt((duration / (1000 * 60)) % 60),
-      hours = parseInt((duration / (1000 * 60 * 60)) % 24);
-
-      hours = (hours < 10) ? "0" + hours : hours;
-      minutes = (minutes < 10) ? "0" + minutes : minutes;
-      seconds = (seconds < 10) ? "0" + seconds : seconds;
-
-      if (hours > 0)
-        return hours + ":" + minutes + ":" + seconds;
-      return minutes + ":" + seconds;
-  }
-
   playMedia(instance, media)
   {
     this.setState({loading: true});
@@ -91,7 +76,6 @@ class MovieView extends Component {
     const torrents = Object.entries(movie.torrents.en).sort((a, b) => a[0] < b[0]);
     if (movie.released)
         releaseDate.setTime(movie.released * 1000);
-    const releaseString = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }).format(releaseDate);
     const showPopup = this.state.showPopup;
     const loading = this.state.loading;
 
@@ -105,7 +89,7 @@ class MovieView extends Component {
             <div className="movie-details">
                 <div className="label-row">
                     <div className="label-field">Released</div>
-                    <div className="label-value">{releaseString}</div>
+                    <div className="label-value">{formatTime(releaseDate, true, true, true)}</div>
                 </div>
                 <div className="label-row">
                     <div className="label-field">Length</div>
@@ -121,7 +105,7 @@ class MovieView extends Component {
             </div>
             <div className="play-buttons">
                 <Button text="Play trailer" onClick={(e) => this.play_trailer(movie.trailer)} classId="secondary"/>
-                 { movie.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(movie.played_for)} onClick={(e) => this.play_torrent(torrents[0][1], movie.played_for)} classId="secondary"></Button> }
+                 { movie.played_for > 1000 * 60 && <Button text={"Continue from " + writeTimespan(movie.played_for)} onClick={(e) => this.play_torrent(torrents[0][1], movie.played_for)} classId="secondary"></Button> }
                 { torrents.map(([res, torrent]) => <Button key={res} text={"Play " + res } onClick={(e) => this.play_torrent(torrent, 0)} classId="secondary" />)}
                 <Link to={"/mediaplayer/torrents?term=" + encodeURIComponent(movie.title)}><Button text="Search torrents" onClick={(e) => {}} classId="secondary"></Button></Link>
             </div>

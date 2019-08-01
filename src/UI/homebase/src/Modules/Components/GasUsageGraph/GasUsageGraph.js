@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import { ResponsiveContainer, BarChart, LabelList, XAxis, YAxis, Tooltip, Bar } from 'recharts';
 import ViewLoader from './../../Components/ViewLoader';
+import { formatTime } from './../../../Utils/Util.js';
 
 class GasUsageGraph extends Component {
   constructor(props){
@@ -53,11 +54,11 @@ class GasUsageGraph extends Component {
                          minTickGap={0}
                          interval={0}
                          tickCount={8}
-                         tickFormatter = {(hour) => new Intl.DateTimeFormat('en-GB', {hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.firstTime + hour * (1000*60*60)))}/>
+                         tickFormatter = {(hour) => formatTime(this.firstTime + hour * (1000*60*60), false, false, false, true, true)}/>
                   <YAxis dataKey="value" unit="L" />
-                  <Tooltip labelFormatter={(value, name, props) => new Intl.DateTimeFormat('en-GB', {hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.firstTime + value * (1000*60*60)))} />
+                  <Tooltip labelFormatter={(value, name, props) => formatTime(this.firstTime + value * (1000*60*60), false, true, true, true, true)} />
                   <Bar dataKey="value" fill="#8884d8" animationDuration={500}>
-                    <LabelList fill="#222" dataKey="value" position="top"  offset={10} />
+                    <LabelList fill="#222" dataKey="value" position="top" offset={10} />
                   </Bar>
                 </BarChart>
             </ResponsiveContainer>

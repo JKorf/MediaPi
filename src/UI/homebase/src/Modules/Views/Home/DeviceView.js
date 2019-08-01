@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 
 import Socket from './../../../Socket2.js';
+import { writeSize, writeNumber, writeSpeed, writeTimespan, formatTime } from './../../../Utils/Util.js';
 
 import SvgImage from './../../Components/SvgImage';
 import Button from './../../Components/Button';
@@ -254,53 +255,6 @@ class DeviceView extends Component {
      }
   }
 
-  writeSize(value){
-    if (value < 1000)
-        return Math.round(value) + "b";
-    if (value < 1000 * 1000)
-        return Math.round(value / 1000) + "kb";
-    if (value < 1000 * 1000 * 1000)
-        return Math.round(value / (1000 * 1000) * 100) / 100 + "mb";
-    if (value < 1000 * 1000 * 1000 * 1000)
-        return Math.round(value / (1000 * 1000 * 1000) * 100) / 100 + "gb";
-    return Math.round(value / (1000 * 1000 * 1000 * 1000) * 100) / 100 + "tb";
-  }
-
-  writeSpeed(value)
-  {
-    return this.writeSize(value) + "ps";
-  }
-
-  writeTimespan(duration)
-  {
-     duration = Math.round(duration);
-     var seconds = parseInt((duration / 1000) % 60),
-      minutes = parseInt((duration / (1000 * 60)) % 60),
-      hours = parseInt((duration / (1000 * 60 * 60)) % 24);
-
-      hours = (hours < 10) ? "0" + hours : hours;
-      minutes = (minutes < 10) ? "0" + minutes : minutes;
-      seconds = (seconds < 10) ? "0" + seconds : seconds;
-
-      if (hours > 0)
-        return hours + ":" + minutes + ":" + seconds;
-      return minutes + ":" + seconds;
-  }
-
-  writeNumber(value){
-    if (isNaN(value))
-        return 0;
-
-    var f = Math.round(parseFloat(value));
-    if(f > 1000)
-        f = (Math.round(f / 100) / 10) + "k";
-    return f;
-  }
-
-  capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
-
   increaseSubDelay(){
     var value = this.state.playerData.sub_delay + 0.2 * 1000 * 1000;
     this.delayChange(value);
@@ -315,7 +269,6 @@ class DeviceView extends Component {
     if(window.confirm("Do you want to execute a system health check?")){
         this.setState({systemHealthCheck: true});
     }
-
   }
 
   render() {
@@ -325,7 +278,7 @@ class DeviceView extends Component {
     {
         var download_state = "";
         if (this.state.torrentData.state === 3 && this.state.torrentData.max_download_speed !== 0)
-            download_state = " (max " + this.writeSpeed(this.state.torrentData.max_download_speed) + ")";
+            download_state = " (max " + writeSpeed(this.state.torrentData.max_download_speed) + ")";
 
         if (this.state.torrentData.state === 2) download_state = " (metadata)";
         if (this.state.torrentData.state === 4) download_state = " (paused)";
@@ -334,10 +287,10 @@ class DeviceView extends Component {
 
         torrentComponent = (
                 <div className="info-group-box">
-                    <InfoRow name="Buffer ready" value={this.writeSize(this.state.torrentData.buffer_size)} />
-                    <InfoRow name="Total streamed" value={this.writeSize(this.state.torrentData.total_streamed)} />
-                    <InfoRow name="Download speed" value={this.writeSpeed(this.state.torrentData.download_speed) + download_state} />
-                    <InfoRow name="Left" value={this.writeSize(this.state.torrentData.left) + " / " + this.writeSize(this.state.torrentData.size)} />
+                    <InfoRow name="Buffer ready" value={writeSize(this.state.torrentData.buffer_size)} />
+                    <InfoRow name="Total streamed" value={writeSize(this.state.torrentData.total_streamed)} />
+                    <InfoRow name="Download speed" value={writeSpeed(this.state.torrentData.download_speed) + download_state} />
+                    <InfoRow name="Left" value={writeSize(this.state.torrentData.left) + " / " + writeSize(this.state.torrentData.size)} />
                     <InfoRow name="Peers available" value={this.state.torrentData.potential} />
                     <InfoRow name="Peers connected" value={this.state.torrentData.connected} />
                 </div>
@@ -385,7 +338,7 @@ class DeviceView extends Component {
                                             </div>
                                         </div>
                                         <div className="player-details-slider">
-                                            <Slider leftValue="value" rightValue="left" format={this.writeTimespan} min={0} max={this.state.playerData.length} value={this.state.playerData.playing_for} onChange={this.seek} />
+                                            <Slider leftValue="value" rightValue="left" format={writeTimespan} min={0} max={this.state.playerData.length} value={this.state.playerData.playing_for} onChange={this.seek} />
                                         </div>
                                     </div>
                                 </div>
@@ -439,23 +392,23 @@ class DeviceView extends Component {
 
             { this.state.currentView === "Statistics" &&
                 <div className="info-group-box">
-                 <InfoRow name="Max download speed" value={this.writeSpeed(this.state.statData["max_download_speed"])}></InfoRow>
-                 <InfoRow name="Total downloaded" value={this.writeSize(this.state.statData["total_downloaded"])}></InfoRow>
+                 <InfoRow name="Max download speed" value={writeSpeed(this.state.statData["max_download_speed"])}></InfoRow>
+                 <InfoRow name="Total downloaded" value={writeSize(this.state.statData["total_downloaded"])}></InfoRow>
 
-                 <InfoRow name="Peers connected" value={this.writeNumber(this.state.statData["peers_connect_success"]) + " / " + this.writeNumber(this.state.statData["peers_connect_failed"])}></InfoRow>
-                 <InfoRow name="DHT peers" value={this.writeNumber(this.state.statData["peers_source_dht"])}></InfoRow>
-                 <InfoRow name="Exchange peers" value={this.writeNumber(this.state.statData["peers_source_exchange"])}></InfoRow>
-                 <InfoRow name="UDP tracker peers" value={this.writeNumber(this.state.statData["peers_source_udp_tracker"])}></InfoRow>
-                 <InfoRow name="Subtitles downloaded" value={this.writeNumber(this.state.statData["subs_downloaded"])}></InfoRow>
+                 <InfoRow name="Peers connected" value={writeNumber(this.state.statData["peers_connect_success"]) + " / " + writeNumber(this.state.statData["peers_connect_failed"])}></InfoRow>
+                 <InfoRow name="DHT peers" value={writeNumber(this.state.statData["peers_source_dht"])}></InfoRow>
+                 <InfoRow name="Exchange peers" value={writeNumber(this.state.statData["peers_source_exchange"])}></InfoRow>
+                 <InfoRow name="UDP tracker peers" value={writeNumber(this.state.statData["peers_source_udp_tracker"])}></InfoRow>
+                 <InfoRow name="Subtitles downloaded" value={writeNumber(this.state.statData["subs_downloaded"])}></InfoRow>
                 </div>
              }
 
              { this.state.currentView === "Status" &&
                 <div className="info-group-box">
-                     <InfoRow name="Boot time" value={new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(this.state.stateData.boot_time * 1000)}></InfoRow>
+                     <InfoRow name="Boot time" value={formatTime(this.state.stateData.boot_time * 1000, true, true, true, true, true)}></InfoRow>
                      <InfoRow name="CPU" value={this.state.stateData.cpu + "%"}></InfoRow>
                      <InfoRow name="Memory" value={this.state.stateData.memory + "%"}></InfoRow>
-                     <InfoRow name="Disk usage" value={this.writeSize(this.state.stateData.disk_used) + "/" + this.writeSize(this.state.stateData.disk_total) + "(" + this.state.stateData.disk_percentage + "%)"}></InfoRow>
+                     <InfoRow name="Disk usage" value={writeSize(this.state.stateData.disk_used) + "/" + writeSize(this.state.stateData.disk_total) + "(" + this.state.stateData.disk_percentage + "%)"}></InfoRow>
                      <InfoRow name="Temperature" value={this.state.stateData.temperature}></InfoRow>
                      <Button text="Run system health check" onClick={() => this.systemHealthCheck()}/>
                 </div>
@@ -466,7 +419,7 @@ class DeviceView extends Component {
                     <div className="device-config-subtitle">version</div>
                     <div className="device-config-item">
                          <InfoRow name="Current version" value={this.state.currentVersion}></InfoRow>
-                         <InfoRow name="Installed at" value={new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.state.lastUpdate))}></InfoRow>
+                         <InfoRow name="Installed at" value={formatTime(this.state.lastUpdate, true, true, true, true, true)}></InfoRow>
 
                         <div className="device-config-button"><Button text="Check for updates" onClick={() => this.checkUpdates()}/></div>
                     </div>

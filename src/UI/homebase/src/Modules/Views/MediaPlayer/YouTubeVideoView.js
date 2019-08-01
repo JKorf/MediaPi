@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { Link } from "react-router-dom";
+import { writeTimespan, formatTime } from './../../../Utils/Util.js';
 
 import MediaPlayerView from './MediaPlayerView.js';
 import Button from './../../Components/Button';
@@ -55,22 +56,6 @@ class YouTubeVideoView extends Component {
         );
   }
 
-   writeTimespan(duration)
-  {
-     duration = Math.round(duration);
-     var seconds = parseInt((duration / 1000) % 60),
-      minutes = parseInt((duration / (1000 * 60)) % 60),
-      hours = parseInt((duration / (1000 * 60 * 60)) % 24);
-
-      hours = (hours < 10) ? "0" + hours : hours;
-      minutes = (minutes < 10) ? "0" + minutes : minutes;
-      seconds = (seconds < 10) ? "0" + seconds : seconds;
-
-      if (hours > 0)
-        return hours + ":" + minutes + ":" + seconds;
-      return minutes + ":" + seconds;
-  }
-
   parseLength(data){
      var a = data.match(/\d+H|\d+M|\d+S/g),
         result = 0;
@@ -115,7 +100,7 @@ class YouTubeVideoView extends Component {
                     </div>
                     <div className="label-row">
                         <div className="label-field">Uploaded</div>
-                        <div className="label-value">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour:'2-digit', minute: '2-digit' }).format(Date.parse(this.state.video.upload_date))}</div>
+                        <div className="label-value">{formatTime(Date.parse(this.state.video.upload_date), true, true, true, true, true)}</div>
                     </div>
                     <div className="label-row">
                         <div className="label-field">Channel</div>
@@ -129,7 +114,7 @@ class YouTubeVideoView extends Component {
 
                 <div className="youtube-play-buttons">
                 { this.state.video.played_for > 1000 * 5 &&
-                    <Button text={"Continue from " + this.writeTimespan(this.state.video.played_for)} onClick={(e) => this.play( this.state.video.played_for)} classId="secondary"></Button>
+                    <Button text={"Continue from " + writeTimespan(this.state.video.played_for)} onClick={(e) => this.play( this.state.video.played_for)} classId="secondary"></Button>
                 }
                 <Button text={"Play" } onClick={(e) => this.play(0)} classId="secondary" />
               </div>

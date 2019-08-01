@@ -2,6 +2,7 @@
 
 import React, { Component } from 'react';
 import axios from 'axios';
+import { formatTime } from './../../../Utils/Util.js';
 
 import MediaPlayerView from './MediaPlayerView.js';
 import ViewLoader from './../../Components/ViewLoader/ViewLoader'
@@ -56,7 +57,7 @@ class YouTubeChannelView extends Component {
             <img className="media-thumbnail-img" alt="Media thumbnail" src={item.poster} />
             <div className="media-thumbnail-info">
                 <div className="youtube-thumbnail-info-title truncate2">{item.title}</div>
-                <div className="youtube-channel-title">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(1970, 0, 0).setMilliseconds(item.upload_date))}</div>
+                <div className="youtube-channel-title">{formatTime(item.upload_date, true, true, true)}</div>
             </div>
           </div>
      );

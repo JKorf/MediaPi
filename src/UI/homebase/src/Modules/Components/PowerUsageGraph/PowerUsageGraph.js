@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { ResponsiveContainer, LineChart, XAxis, YAxis, Tooltip, Line } from 'recharts';
+import { formatTime } from './../../../Utils/Util.js';
 
 import ViewLoader from './../../Components/ViewLoader';
 
@@ -55,10 +56,10 @@ class PowerUsageGraph extends Component {
                   <XAxis angle={60}
                          dy={20}
                          interval="preserveStartEnd"
-                         tickFormatter = {(min5) => new Intl.DateTimeFormat('en-GB', {hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.firstTime + min5 * (1000*60*5)))}/>
+                         tickFormatter = {(min5) => formatTime(this.firstTime + min5 * (1000*60*5), false, false, false, true, true)}/>
                   <YAxis dataKey="value" unit={this.state.powerData[0].unit} />
                   <Line dataKey="value" stroke="#8884d8" dot={false} animationDuration={500} />
-                  <Tooltip labelFormatter={(value, name, props) => new Intl.DateTimeFormat('en-GB', {hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(this.firstTime + value * (1000*60*5)))} />
+                  <Tooltip labelFormatter={(value, name, props) => formatTime(this.firstTime + value * (1000*60*5), false, true, true, true, true)} />
 
                 </LineChart>
             </ResponsiveContainer>

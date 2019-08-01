@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { Link } from "react-router-dom";
+import { writeTimespan, formatTime } from './../../../Utils/Util.js';
 
 import MediaPlayerView from './MediaPlayerView.js';
 import Button from './../../Components/Button';
@@ -115,22 +116,6 @@ class ShowView extends Component {
         );
   }
 
-  writeTimespan(duration)
-  {
-     duration = Math.round(duration);
-     var seconds = parseInt((duration / 1000) % 60),
-      minutes = parseInt((duration / (1000 * 60)) % 60),
-      hours = parseInt((duration / (1000 * 60 * 60)) % 24);
-
-      hours = (hours < 10) ? "0" + hours : hours;
-      minutes = (minutes < 10) ? "0" + minutes : minutes;
-      seconds = (seconds < 10) ? "0" + seconds : seconds;
-
-      if (hours > 0)
-        return hours + ":" + minutes + ":" + seconds;
-      return minutes + ":" + seconds;
-  }
-
   render() {
     const show = this.state.show;
     const selectedSeason = this.state.selectedSeason;
@@ -178,7 +163,7 @@ class ShowView extends Component {
                                         <div key={index} className={"show-episode " + (this.state.selectedEpisode === episode.episode ? 'selected' : '')} onClick={(e) => this.episodeSelect(e, episode)}>
                                             <div className="show-episode-title">
                                                 <div className={"show-episode-title-text truncate " + (episode.seen ? "seen": "")}>{episode.episode} - {episode.title}</div>
-                                                <div className="show-episode-title-date">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(1970, 0, 0).setSeconds(episode.first_aired))}</div>
+                                                <div className="show-episode-title-date">{formatTime(episode.first_aired * 1000, true, true, true)}</div>
                                                 { episode.seen && <div className="show-episode-title-seen"><SvgImage src={seenImage} /></div> }
                                             </div>
                                             { selectedEpisode === episode.episode &&
@@ -189,7 +174,7 @@ class ShowView extends Component {
                                                     <div className="show-episode-play">
                                                          { episode.torrents['480p'] && <Button text="Play 480p" onClick={(e) => this.play(episode, 0, episode.torrents['480p'])} classId="secondary"></Button> }
                                                          { episode.torrents['720p'] && <Button text="Play 720p" onClick={(e) => this.play(episode, 0, episode.torrents['720p'])} classId="secondary"></Button> }
-                                                         { episode.played_for > 1000 * 60 && <Button text={"Continue from " + this.writeTimespan(episode.played_for)} onClick={(e) => this.play(episode, episode.played_for)} classId="secondary"></Button> }
+                                                         { episode.played_for > 1000 * 60 && <Button text={"Continue from " + writeTimespan(episode.played_for)} onClick={(e) => this.play(episode, episode.played_for)} classId="secondary"></Button> }
                                                          <Link to={"/mediaplayer/torrents?term=" + encodeURIComponent(show.title + " S" + this.addLeadingZero(episode.season) + "E" + this.addLeadingZero(episode.episode))}><Button text="Search torrents" onClick={(e) => {}} classId="secondary"></Button></Link>
                                                     </div>
                                                 </div>

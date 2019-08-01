@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import videoFile from './../../../Images/video_file.png';
 import ViewLoader from './../../Components/ViewLoader';
+import { formatTime } from './../../../Utils/Util.js';
 
 class HistoryView extends Component {
   constructor(props) {
@@ -39,7 +40,7 @@ class HistoryView extends Component {
                                 <div className="history-item-title truncate2">{history.title}</div>
                                 <div className="history-item-type">{history.type}</div>
                                 { history.watched_at &&
-                                    <div className="history-item-time">{new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(history.watched_at))}</div>
+                                    <div className="history-item-time">{formatTime(history.watched_at, true, true, true, true, true)}</div>
                                 }
                             </div>
                         </div>)}) }

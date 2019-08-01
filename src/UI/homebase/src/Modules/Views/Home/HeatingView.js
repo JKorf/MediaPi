@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
+import { formatTemperature, formatTime } from './../../../Utils/Util.js';
 import { InfoGroup } from './../../Components/InfoGroup';
 import ViewLoader from './../../Components/ViewLoader';
 
@@ -55,10 +56,6 @@ class HeatingView extends Component {
     )
   }
 
-  formatTemperature(value){
-     return (Math.round(value / 10) / 10) + "°C";
-  }
-
   render() {
     var currentState = {};
     var nextState = {};
@@ -67,7 +64,7 @@ class HeatingView extends Component {
     if(this.state.thermostatData){
         var date = new Date(0);
         date.setUTCSeconds(this.state.thermostatData.next_time);
-        nextTime = new Intl.DateTimeFormat('en-GB', { hour: 'numeric', minute: 'numeric' }).format(date);
+        nextTime = formatTime(date, false, false, false, true, true);
         currentState = this.state.thermostatData.states.filter(x => x.id === this.state.thermostatData.active_state)[0];
         if(!currentState)
             currentState = {id: -1, temp: this.state.thermostatData.real_setpoint, name: "Manual"};
@@ -82,13 +79,13 @@ class HeatingView extends Component {
                 <div className="info-group-box heating-box">
                      <div className="heating-current-temp">
                         <div className="heating-current-header">current</div>
-                        <div className="heating-current-value">{this.formatTemperature(this.state.thermostatData.current_display_temp)}</div>
+                        <div className="heating-current-value">{formatTemperature(this.state.thermostatData.current_display_temp)}</div>
                     </div>
                     <div className="heating-set-temp">
 
                         <div className="heating-current-setpoint">
                             <div className="heating-current-setpoint-header">target</div>
-                            <div className="heating-current-setpoint-value">{this.formatTemperature(this.state.thermostatData.current_setpoint)}</div>
+                            <div className="heating-current-setpoint-value">{formatTemperature(this.state.thermostatData.current_setpoint)}</div>
                         </div>
                         <div className="heating-current-controls">
                             <div className="heating-increase-temp" onClick={() => this.changeTemp(50)}>+</div>
@@ -112,7 +109,7 @@ class HeatingView extends Component {
                                 <div>
                                     <div className="heating-state-current-header">current</div>
                                     <div className="heating-state-current-name">{currentState.name}</div>
-                                    <div className="heating-state-current-temp">{this.formatTemperature(currentState.temp)}</div>
+                                    <div className="heating-state-current-temp">{formatTemperature(currentState.temp)}</div>
                                 </div>
                             }
                         </div>
@@ -121,7 +118,7 @@ class HeatingView extends Component {
                             <div className="heating-state-next">
                                 <div className="heating-state-next-header">next at {nextTime}</div>
                                 <div className="heating-state-next-name">{nextState.name}</div>
-                                <div className="heating-state-next-temp">{this.formatTemperature(nextState.temp)}</div>
+                                <div className="heating-state-next-temp">{formatTemperature(nextState.temp)}</div>
                             </div>
                         }
                     </div>

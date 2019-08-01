@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { Link } from "react-router-dom";
+import { formatTime } from './../../../Utils/Util.js';
 
 import Button from './../../Components/Button';
 import CheckBox from './../../Components/CheckBox';
@@ -62,7 +63,7 @@ class RulesView extends Component {
                   <div key={rule.id} className={"current-rule " + (rule.active ? "": "inactive") + (this.state.selectedRule === rule ? "selected": "")}>
                     <div className="current-rule-row">
                         <div className="current-rule-name" onClick={() => this.setState({selectedRule: rule})}>{rule.name}</div>
-                        <div className="current-rule-last-execution">{(rule.last_execution === 0 ? "never": new Intl.DateTimeFormat('en-GB', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(1970, 0, 0).setTime(rule.last_execution)))}</div>
+                        <div className="current-rule-last-execution">{(rule.last_execution === 0 ? "never": formatTime(rule.last_execution, false, true, true, true))}</div>
                         <div className="current-rule-active">
                             <CheckBox value={rule.active} readonly />
                         </div>
