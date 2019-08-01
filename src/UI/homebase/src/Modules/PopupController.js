@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 
+import MessagePopup from './Components/Popups/MessagePopup.js';
 import SelectMediaPopup from './Components/Popups/SelectMediaPopup.js';
 import ContinueNextEpisodePopup from './Components/Popups/ContinueNextEpisodePopup.js';
 import Socket from './../Socket2.js';
@@ -7,7 +8,13 @@ import Socket from './../Socket2.js';
 class PopupController extends Component {
   constructor(props) {
     super(props);
-    this.state = { mediaSelect: {show: false, files: [], id: 0 }, continueNextEpisode:{show: false}, currentPopup: null, popups: [] };
+    this.state = {
+        mediaSelect: {show: false, files: [], id: 0 },
+        continueNextEpisode:{show: false},
+        message: {show: false},
+        currentPopup: null,
+        popups: [] };
+
     this.showSelectMediaFile = this.showSelectMediaFile.bind(this);
     this.showContinueNextEpisode = this.showContinueNextEpisode.bind(this);
 
@@ -15,6 +22,7 @@ class PopupController extends Component {
     this.timeoutContinue = this.timeoutContinue.bind(this);
     this.selectMediaFile = this.selectMediaFile.bind(this);
     this.cancelMediaSelect = this.cancelMediaSelect.bind(this);
+    this.showMessage = this.showMessage.bind(this);
 
     this.continueNextEpisode = this.continueNextEpisode.bind(this);
   }
@@ -22,9 +30,15 @@ class PopupController extends Component {
   componentDidMount() {
     Socket.addRequestHandler("SelectMediaFile", this.showSelectMediaFile, this.timeoutSelectMedia);
     Socket.addRequestHandler("SelectNextEpisode", this.showContinueNextEpisode, this.timeoutContinue);
+    Socket.addRequestHandler("message", this.showMessage);
   }
 
   componentWillUnmount(){
+  }
+
+  showMessage(title, message)
+  {
+    this.setState({message: {show: true, title: title, message: message}});
   }
 
   showSelectMediaFile(id, files){
@@ -107,6 +121,10 @@ class PopupController extends Component {
   {
     return (
         <div>
+        { this.state.message.show === true &&
+            <MessagePopup title={this.state.message.title} message={this.state.message.message} onClose={() => this.setState({message: {show: false}})}></MessagePopup>
+        }
+
         { this.state.mediaSelect.show === true &&
             <SelectMediaPopup files={this.state.mediaSelect.files} onSelect={this.selectMediaFile} onCancel={this.cancelMediaSelect} />
         }

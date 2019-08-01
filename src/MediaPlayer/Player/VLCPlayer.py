@@ -34,7 +34,6 @@ class VLCPlayer(metaclass=Singleton):
 
         EventManager.register_event(EventType.SetSubtitleFiles, self.set_subtitle_files)
         EventManager.register_event(EventType.StopPlayer, self.stop)
-        EventManager.register_event(EventType.NoPeers, self.stop)
 
         self.player_observer = CustomThread(self.observe_player, "Player observer")
         self.player_observer.start()

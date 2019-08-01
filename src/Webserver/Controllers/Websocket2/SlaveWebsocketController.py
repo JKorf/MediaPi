@@ -124,6 +124,10 @@ class SlaveWebsocketController(BaseWebsocketController):
             socketio.emit("response", (request_id, size, encoded_first, encoded_last), namespace="/Slave", room=request.sid)
 
     @staticmethod
+    def on_ui_message(title, message):
+        APIController().ui_message(title, message)
+
+    @staticmethod
     def on_ui_request(request_id, topic, data, timeout):
         slave = APIController.slaves.get_slave_by_sid(request.sid)
         if slave is None:

@@ -135,6 +135,14 @@ class APIController(metaclass=Singleton):
         else:
             self.ui_websocket_controller.request_cb(topic, callback, timeout, None, args)
 
+    def ui_message(self, title, message):
+        from Webserver.Controllers.Websocket2.SlaveClientController import SlaveClientController
+
+        if self.slave:
+            SlaveClientController.message_ui(title, message)
+        else:
+            self.ui_websocket_controller.message(title, message, None)
+
     def slave_command(self, instance, topic, command, *args):
         slave = APIController.slaves.get_slave_by_id(instance)
         self.slave_websocket_controller.send_no_wait(topic, command, slave._client.sid, args)

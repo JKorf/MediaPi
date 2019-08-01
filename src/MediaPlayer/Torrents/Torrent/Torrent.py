@@ -276,6 +276,10 @@ class Torrent(LogObject):
         self.selected_media_file = file
 
     def set_media_file(self, path):
+        if "x265" in path.lower():
+            self.abort("HVEC x265 files not supported")
+            return
+
         self.media_file = [x for x in self.files if x.path == path][0]
         Logger().write(LogVerbosity.Info, "Media file: " + str(self.media_file.name) + ", " + str(self.media_file.start_byte) + " - " + str(self.media_file.end_byte) + "/" + str(self.total_size))
 
@@ -348,6 +352,10 @@ class Torrent(LogObject):
         if current_speed > current_max:
             Stats.set('max_download_speed', current_speed)
         return True
+
+    def abort(self, reason):
+        Logger().write(LogVerbosity.Important, "Aborting torrent: " + reason)
+        EventManager.throw_event(EventType.AbortingTorrent, [reason])
 
     def stop(self):
         if self.__state == TorrentState.Stopping:

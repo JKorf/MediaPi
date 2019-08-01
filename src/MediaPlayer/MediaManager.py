@@ -47,7 +47,7 @@ class MediaManager(metaclass=Singleton):
             self.dht = DHTEngine()
             self.dht.start()
 
-        EventManager.register_event(EventType.NoPeers, self.stop_torrent)
+        EventManager.register_event(EventType.AbortingTorrent, self.aborting_torrent)
         EventManager.register_event(EventType.TorrentMediaSelectionRequired, self.media_selection_required)
         EventManager.register_event(EventType.TorrentMediaFileSet, lambda x: self._start_playing_torrent())
         EventManager.register_event(EventType.TorrentStopped, lambda: self.on_torrent_stopped())
@@ -173,6 +173,11 @@ class MediaManager(metaclass=Singleton):
             self.stop_torrent()
 
         self.media_data.reset()
+
+    def aborting_torrent(self, reason):
+        APIController().ui_message("Aborting torrent", reason)
+        self.stop_play()
+
 
     @staticmethod
     def on_torrent_stopped():

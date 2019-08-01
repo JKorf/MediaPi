@@ -112,8 +112,7 @@ class TorrentPeerManager(TorrentManager):
             self.checked_no_peers = True
 
             if len(self.potential_peers) == 0 and currently_connecting == 0 and currently_connected == 0:
-                Logger().write(LogVerbosity.Important, "No peers found for torrent, stopping")
-                EventManager.throw_event(EventType.NoPeers, [])
+                self.torrent.abort("No peers available")
                 return False
 
         if currently_connected >= self.max_peers_connected:

@@ -58,6 +58,10 @@ class SlaveClientController:
             SlaveClientController.slave_ns.emit("update", topic, data)
 
     @staticmethod
+    def message_ui(title, message):
+        SlaveClientController.slave_ns.emit("ui_message", title, message)
+
+    @staticmethod
     def request_ui_cb(topic, callback, timeout, *args):
         data = to_JSON(args)
         request = SlaveClientController._send_ui_request(topic, data, timeout)

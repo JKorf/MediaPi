@@ -18,9 +18,9 @@ class EventType(Enum):
     Log = 30
     TorrentMediaSelectionRequired = 32
     TorrentMediaFileSelection = 33
-    NoPeers = 38
     PeersFound = 40
     RequestPeers = 41
+    AbortingTorrent = 42
 
 
 class EventManager:

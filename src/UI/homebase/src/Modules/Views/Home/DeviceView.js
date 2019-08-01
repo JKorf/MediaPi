@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 
 import Socket from './../../../Socket2.js';
-import { writeSize, writeNumber, writeSpeed, writeTimespan, formatTime } from './../../../Utils/Util.js';
+import { writeSize, writeNumber, writeSpeed, writeTimespan, capitalizeFirstLetter, formatTime } from './../../../Utils/Util.js';
 
 import SvgImage from './../../Components/SvgImage';
 import Button from './../../Components/Button';
@@ -324,7 +324,7 @@ class DeviceView extends Component {
                                 <div className="player-details-img"><img alt="Media poster" src={(this.state.mediaData.image ? this.state.mediaData.image: videoFile)} /></div>
                                 <div className="player-details-media">
                                     <div className="player-details-title truncate">{this.state.mediaData.title}</div>
-                                    <div className="player-details-type">{this.capitalizeFirstLetter(this.state.mediaData.type)}</div>
+                                    <div className="player-details-type">{capitalizeFirstLetter(this.state.mediaData.type)}</div>
                                     <div className="player-details-bot">
                                         <div className="player-details-controls">
                                             <div className="player-details-control" onClick={this.pausePlayClick}>

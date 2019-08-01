@@ -21,6 +21,9 @@ class BaseWebsocketController(Namespace):
         thread = CustomThread(self.wait_for_request_response, "Request callback " + topic, [request_message, timeout, callback])
         thread.start()
 
+    def message(self, title, message, room):
+        self.emit("message", (title, message), room=room)
+
     def send_no_wait(self, topic, command, room, args):
         Logger().write(LogVerbosity.Debug, "Client command: " + topic + ", command")
         self.emit("command", (topic, command, *args), room=room)

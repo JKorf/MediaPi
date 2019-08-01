@@ -49,6 +49,17 @@ export default class WS {
             handler.data_callback(id, ...data);
         });
 
+        this.socket.on('message', (title, message) => {
+            console.log("Received message: " + title + ", message: " + message);
+            var handler = this.request_handlers.find(el => el.name === "message");
+            if (!handler){
+                console.log("No handler for message found");
+                return
+            }
+
+            handler.data_callback(title, message);
+        });
+
         this.socket.on('timeout', (id) => {
             console.log("Received timeout: " + id);
 
