@@ -37,6 +37,11 @@ class StateManager(metaclass=Singleton):
             self.state_data.cpu = psutil.cpu_percent()
             self.state_data.threads = ThreadManager().thread_count
             self.state_data.temperature = self.get_temperature()
+            disk_info = psutil.disk_usage("/" if self.monitoring else "C:/")
+            self.state_data.disk_total = disk_info.total
+            self.state_data.disk_used = disk_info.used
+            self.state_data.disk_free = disk_info.free
+            self.state_data.disk_percentage = disk_info.percent
             self.state_data.stop_update()
             time.sleep(1)
 

@@ -261,7 +261,9 @@ class DeviceView extends Component {
         return Math.round(value / 1000) + "kb";
     if (value < 1000 * 1000 * 1000)
         return Math.round(value / (1000 * 1000) * 100) / 100 + "mb";
-    return Math.round(value / (1000 * 1000 * 1000) * 100) / 100 + "gb";
+    if (value < 1000 * 1000 * 1000 * 1000)
+        return Math.round(value / (1000 * 1000 * 1000) * 100) / 100 + "gb";
+    return Math.round(value / (1000 * 1000 * 1000 * 1000) * 100) / 100 + "tb";
   }
 
   writeSpeed(value)
@@ -452,6 +454,7 @@ class DeviceView extends Component {
                 <div className="info-group-box">
                      <InfoRow name="CPU" value={this.state.stateData.cpu + "%"}></InfoRow>
                      <InfoRow name="Memory" value={this.state.stateData.memory + "%"}></InfoRow>
+                     <InfoRow name="Disk usage" value={this.writeSize(this.state.stateData.disk_used) + "/" + this.writeSize(this.state.stateData.disk_total) + "(" + this.state.stateData.disk_percentage + "%)"}></InfoRow>
                      <InfoRow name="Temperature" value={this.state.stateData.temperature}></InfoRow>
                      <Button text="Run system health check" onClick={() => this.systemHealthCheck()}/>
                 </div>
