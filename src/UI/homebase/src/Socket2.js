@@ -12,7 +12,14 @@ export default class WS {
     }
 
     static connect(){
-        this.socket = connect(window.vars.websocketBase, { reconnectionDelayMax: 1000, timeout: 3000, transports: ['websocket'] });
+        console.log(window.vars.websocketBase);
+        this.socket = connect(
+            window.vars.websocketBase,
+            {
+                reconnectionDelayMax: 1000,
+                timeout: 10000,
+                transports: ['websocket']
+            });
         this.socket.on('connect', () => {
             console.log("Websocket connected");
             this.socket.emit('init', localStorage.getItem('Client-ID'), sessionStorage.getItem('Session-Key'), (data) => this.processAuthResult(data));
