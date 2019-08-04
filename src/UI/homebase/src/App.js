@@ -72,13 +72,12 @@ class App extends Component {
     });
   }
 
-  componentWillMount() {
-
-    var apiPort = 50021;
-    var location = window.location.hostname + ":" + apiPort;
+  componentWillMount()
+  {
+    var location = window.location.hostname;
     window.vars = {
-        websocketBase: "ws://" + location + "/UI",
-        apiBase: "http://" + location + "/"
+        websocketBase: "https://" + location + "/",
+        apiBase: "https://api." + location + "/"
     };
 
     Socket2.init();
