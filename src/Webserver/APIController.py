@@ -75,7 +75,7 @@ class APIController(metaclass=Singleton):
 
         APIController.slaves.add_slave(SlaveClient(1, Settings.get_string("name"), None))
 
-        socketio.run(app, host='0.0.0.0', port=int(Settings.get_string("api_port")), log_output=True)
+        socketio.run(app, host='127.0.0.1', port=int(Settings.get_string("api_port")), log_output=True)
 
     @staticmethod
     def internal_start_slave():
@@ -87,7 +87,6 @@ class APIController(metaclass=Singleton):
     @staticmethod
     @app.before_request
     def before_req():
-        return
         if request.method == "OPTIONS" \
                 or request.path.startswith("/auth/") \
                 or request.path.startswith("/ws")\
@@ -111,6 +110,12 @@ class APIController(metaclass=Singleton):
     def handle_internal_server_error(e):
         Logger().write_error(e, "Error in API request")
         return str(e), 500
+
+    @staticmethod
+    @app.errorhandler(400)
+    def handle_internal_server_error(e):
+        Logger().write_error(e, "Error in API request")
+        return str(e), 400
 
     @staticmethod
     def get_salt():
