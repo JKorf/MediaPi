@@ -4,7 +4,7 @@ import axios from 'axios';
 
 import Widget from './Widget.js';
 
-class FavoriteSeriesWidget extends Component {
+class FavoriteChannelsWidget extends Component {
   constructor(props) {
     super(props);
 
@@ -12,20 +12,18 @@ class FavoriteSeriesWidget extends Component {
     this.getSize = this.getSize.bind(this);
   }
 
+  shouldShow(){
+    return this.state.favorites.length > 0;
+  }
 
   getSize(){
-     return {width: 250, height: 34 + 150};
+     return {width: 180, height: 34 + 80};
   }
-
-  shouldShow(){
-     return this.state.favorites.length > 0;
-  }
-
 
   componentDidMount() {
     axios.get(window.vars.apiBase + 'data/favorites').then(data => {
             console.log(data.data);
-            this.setState({favorites: data.data.filter(f => f.type === "Show")});
+            this.setState({favorites: data.data.filter(f => f.type === "YouTube")});
         }, err =>{
             console.log(err);
         });
@@ -43,7 +41,7 @@ class FavoriteSeriesWidget extends Component {
                 <div className="favorite-none">No favorites yet</div>
             }
             { this.state.favorites.map((fav) =>
-                <Link to={"/mediaplayer/shows/" + fav.id} key={fav.id}>
+                <Link to={"/mediaplayer/youtube/c/" + fav.id} key={fav.id}>
                     <div className="favorite-item">
                         <div className="favorite-item-image"><img alt="Favorite poster" src={fav.image} /></div>
                     </div>
@@ -56,4 +54,4 @@ class FavoriteSeriesWidget extends Component {
   }
 };
 
-export default FavoriteSeriesWidget;
+export default FavoriteChannelsWidget;

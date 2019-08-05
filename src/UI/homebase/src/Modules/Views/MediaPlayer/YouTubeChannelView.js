@@ -7,6 +7,8 @@ import { formatTime } from './../../../Utils/Util.js';
 import MediaPlayerView from './MediaPlayerView.js';
 import ViewLoader from './../../Components/ViewLoader/ViewLoader'
 import MediaOverview from './../../MediaList/MediaOverview.js'
+import favoriteImage from './../../../Images/favorite.svg';
+import favoriteFullImage from './../../../Images/favorite-full.svg';
 
 class YouTubeChannelView extends Component {
   constructor(props) {
@@ -15,11 +17,14 @@ class YouTubeChannelView extends Component {
 
     this.state = {loading: true, page: 1};
     this.props.functions.changeBack({to: "/mediaplayer/youtube/" });
-    this.props.functions.changeRightImage(null);
 
     this.changePage = this.changePage.bind(this);
+    this.toggleFavorite = this.toggleFavorite.bind(this);
     this.getData = this.getData.bind(this);
+
+    this.props.functions.changeRightImage({image: favoriteImage, click: this.toggleFavorite});
   }
+
 
   componentDidMount() {
     this.getData(1);
@@ -45,10 +50,23 @@ class YouTubeChannelView extends Component {
 
         this.setState({channel: data.data, loading: false});
         this.props.functions.changeTitle(data.data.title);
+        this.props.functions.changeRightImage({image: (data.data.favorite? favoriteFullImage: favoriteImage), click: this.toggleFavorite});
     }, err => {
         this.setState({ loading: false});
         console.log(err);
     });
+  }
+
+  toggleFavorite(){
+    var channel = this.state.channel;
+    channel.favorite = !channel.favorite;
+    this.setState({channel: channel});
+    this.props.functions.changeRightImage({image: (channel.favorite? favoriteFullImage: favoriteImage), click: this.toggleFavorite});
+
+    if(channel.favorite)
+        axios.post(window.vars.apiBase + 'youtube/favorite?id=' + this.props.match.params.id + "&title=" + encodeURIComponent(channel.title) + "&image=" + encodeURIComponent(channel.thumbnail));
+    else
+        axios.delete(window.vars.apiBase + 'youtube/favorite?id=' + this.props.match.params.id);
   }
 
   getMediaItem(item){

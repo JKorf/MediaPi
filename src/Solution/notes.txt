@@ -11,13 +11,20 @@
         pi_is_active bijwerken door interpreten cec messages
         Also adjust NOOBS /boot/config.txt with hdmi_ignore_cec_init=1
 
-    Fix seeking back when done
     Remember peers that are known to be good to download from when pausing?
 
     SSL certificates
-        https://www.nginx.com/blog/using-free-ssltls-certificates-from-lets-encrypt-with-nginx/
+    try:
+        gzip off;
+        client_max_body_size 50M;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
-    Tablet mode for tablet on wall
+        proxy_set_header X-Frame-Options SAMEORIGIN;
+        proxy_pass http://192.168.2.100:50021;
 
     utp
 
@@ -27,6 +34,7 @@
 
     Fix back going a page back instead of to base menu
 
-
     Refactoring to file buffer
         - Can also offer pieces now
+
+    Extend gas/power usage graphs

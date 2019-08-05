@@ -79,7 +79,7 @@ class App extends Component {
 
     if (!local){
         window.vars = {
-            websocketBase: "https://" + location + "/",
+            websocketBase: "https://api." + location + "/UI",
             apiBase: "https://api." + location + "/"
         };
     }
@@ -87,7 +87,7 @@ class App extends Component {
     {
         var port = 50021;
         window.vars = {
-            websocketBase: "ws://" + location + ":" + port + "/UI",
+            websocketBase: "http://" + location + ":" + port + "/UI",
             apiBase: "http://" + location + ":" + port + "/"
         };
     }

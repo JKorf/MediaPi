@@ -171,6 +171,7 @@ class YouTubeController:
                                 channel['statistics']['viewCount'],
                                 channel['statistics']['subscriberCount'],
                                 channel['statistics']['videoCount'])
+        result.favorite = id in [x.id for x in Database().get_favorites()]
         play_list = channel['contentDetails']['relatedPlaylists']['uploads']
         uploads = YouTubeController.api.get('playlistItems', playlistId=play_list, maxResults=50, page=page, pageToken=token, part="snippet")
         iso_unix_time = dateutil.parser.isoparse("1970-01-01T00:00:00.000Z")
@@ -188,6 +189,26 @@ class YouTubeController:
         if 'nextPageToken' in uploads:
             result.token = uploads['nextPageToken']
         return to_JSON(result)
+
+    @staticmethod
+    @app.route('/youtube/favorite', methods=['POST'])
+    def add_favorite_youtube():
+        channel_id = request.args.get('id')
+        title = urllib.parse.unquote(request.args.get('title'))
+        image = urllib.parse.unquote(request.args.get('image'))
+
+        Logger().write(LogVerbosity.Info, "Add youtube channel favorite: " + channel_id)
+        Database().add_favorite(channel_id, "YouTube", title, image)
+        return "OK"
+
+    @staticmethod
+    @app.route('/youtube/favorite', methods=['DELETE'])
+    def remove_favorite_youtube():
+        youtube_id = request.args.get('id')
+
+        Logger().write(LogVerbosity.Info, "Remove youtube favorite: " + youtube_id)
+        Database().remove_favorite(youtube_id)
+        return "OK"
 
 
 class Subscription:
@@ -243,3 +264,4 @@ class YouTubeChannel:
         self.videos = videos
         self.token = None
         self.uploads = []
+        self.favorite = False

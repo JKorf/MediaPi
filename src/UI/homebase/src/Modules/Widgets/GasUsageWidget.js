@@ -11,6 +11,10 @@ class GasUsageWidget extends Component {
     this.getSize = this.getSize.bind(this);
   }
 
+  shouldShow(){
+    return true;
+  }
+
 
   getSize(){
      return {width: 250, height: 34 + 150};

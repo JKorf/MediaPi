@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import FavoriteSeriesWidget from './../Widgets/FavoriteSeriesWidget.js'
+import FavoriteChannelsWidget from './../Widgets/FavoriteChannelsWidget.js'
 import TempWidget from './../Widgets/TempWidget.js'
 import TradfriWidget from './../Widgets/TradfriWidget.js'
 import GasUsageWidget from './../Widgets/GasUsageWidget.js'
@@ -12,55 +13,15 @@ class DashboardView extends Component {
     this.props.functions.changeBack({});
     this.props.functions.changeTitle("Home base");
     this.props.functions.changeRightImage(null);
+    this.widgetIndex = 0;
 
-
-    this.widgetRefs = [
-        {
-            component: <TradfriWidget title="Lights" titleLink={"/home/tradfri"} ref={React.createRef()} />,
-            style: {},
-            width: 0,
-            height: 0,
-            x: -1,
-            y: -1,
-            index: 0
-        },
-        {
-            component: <TempWidget title="Temperature" titleLink={"/home/heating"} ref={React.createRef()} />,
-            style: {},
-            width: 0,
-            height: 0,
-            x: -1,
-            y: -1,
-            index: 1
-        },
-        {
-            component: <PowerUsageWidget title="Power usage" titleLink={"/home/power"} ref={React.createRef()} />,
-            style: {},
-            width: 0,
-            height: 0,
-            x: -1,
-            y: -1,
-            index: 2
-        },
-        {
-            component: <GasUsageWidget title="Gas usage" titleLink={"/home/gas"} ref={React.createRef()} />,
-            style: {},
-            width: 0,
-            height: 0,
-            x: -1,
-            y: -1,
-            index: 3
-        },
-        {
-            component: <FavoriteSeriesWidget title="favorites" ref={React.createRef()} />,
-            style: {},
-            width: 0,
-            height: 0,
-            x: -1,
-            y: -1,
-            index: 4
-        }
-    ];
+    this.widgetRefs = [];
+    this.addWidget(<TradfriWidget title="Lights" titleLink={"/home/tradfri"} ref={React.createRef()} />);
+    this.addWidget(<TempWidget title="Temperature" titleLink={"/home/heating"} ref={React.createRef()} />);
+    this.addWidget(<PowerUsageWidget title="Power usage" titleLink={"/home/power"} ref={React.createRef()} />);
+    this.addWidget(<GasUsageWidget title="Gas usage" titleLink={"/home/gas"} ref={React.createRef()} />);
+    this.addWidget(<FavoriteSeriesWidget title="Shows" ref={React.createRef()} />);
+    this.addWidget(<FavoriteChannelsWidget title="Channels" ref={React.createRef()} />);
 
     for(var i = 0; i < this.widgetRefs.length; i++)
         this.widgetRefs[i].ref = this.widgetRefs[i].component.ref;
@@ -73,25 +34,57 @@ class DashboardView extends Component {
     this.dashboardRef = React.createRef();
     this.maxColumns = 4;
     this.rowHeight = 50;
+    this.addWidget = this.addWidget.bind(this);
+    this.checkWidgets = this.checkWidgets.bind(this);
+  }
+
+  addWidget(component){
+    this.widgetRefs.push({
+        component: component,
+        style: {},
+        width: 0,
+        height: 0,
+        x: -1,
+        y: -1,
+        show: false,
+        index: this.widgetIndex
+    });
+    this.widgetIndex += 1;
   }
 
   componentDidMount() {
       window.addEventListener("resize", this.resizeUpdate);
+      this.updateInterval = setInterval(this.checkWidgets, 1000);
 
       this.initDashboard(false);
   }
 
   componentWillUnmount() {
+    clearInterval(this.updateInterval);
     window.removeEventListener('resize', this.resizeUpdate)
+  }
+
+  checkWidgets(){
+     var changed = false;
+     for(var i = 0; i < this.widgetRefs.length; i++){
+        var widget = this.widgetRefs[i];
+        var old = widget.show;
+        widget.show = widget.ref.current.shouldShow();
+        if(old !== widget.show)
+            changed = true;
+     }
+
+     if(changed){
+        this.initDashboard();
+     }
   }
 
   resizeUpdate(){
     this.initDashboard();
-    this.forceUpdate();
   }
 
   findFreeSpot(width, height){
-    for(var y = 0; y < 20; y++){
+    for(var y = 0; y < 30; y++){
         for(var x = 0; x <= this.maxColumns - width; x++){
             var result = this.getWidgetsInArea(x, y, width, height);
             if (result.length === 0)
@@ -157,6 +150,7 @@ class DashboardView extends Component {
 
             widget.x = -1;
             widget.y = -1;
+            widget.show = widget.ref.current.shouldShow();
             widget.width = columns;
             widget.height = rows;
             widget.style = {
@@ -169,6 +163,9 @@ class DashboardView extends Component {
 
         for(var j = 0; j < this.widgetRefs.length; j++){
             var widgetj = this.widgetRefs[j];
+            if (!widgetj.show)
+                continue;
+
             var pos = this.findFreeSpot(widgetj.width, widgetj.height);
             widgetj.x = pos.x;
             widgetj.y = pos.y;
@@ -176,6 +173,10 @@ class DashboardView extends Component {
 
         for(var k = 0; k < this.widgetRefs.length; k++){
             var widgetk = this.widgetRefs[k];
+            if (!widgetk.show){
+                widgetk.style.display = "none";
+                continue;
+            }
             widgetk.style.left = (widgetk.x * columnWidth) + "px";
             widgetk.style.width = (widgetk.width * columnWidth) + "px";
             widgetk.style.top = (widgetk.y * this.rowHeight) + "px";
