@@ -74,11 +74,23 @@ class App extends Component {
 
   componentWillMount()
   {
+    var local = true;
     var location = window.location.hostname;
-    window.vars = {
-        websocketBase: "https://" + location + "/",
-        apiBase: "https://api." + location + "/"
-    };
+
+    if (!local){
+        window.vars = {
+            websocketBase: "https://" + location + "/",
+            apiBase: "https://api." + location + "/"
+        };
+    }
+    else
+    {
+        var port = 50021;
+        window.vars = {
+            websocketBase: "ws://" + location + ":" + port + "/UI",
+            apiBase: "http://" + location + ":" + port + "/"
+        };
+    }
 
     Socket2.init();
     this.authenticate();

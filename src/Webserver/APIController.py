@@ -65,7 +65,7 @@ class APIController(metaclass=Singleton):
         from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
         from Webserver.Controllers.Websocket2.SlaveWebsocketController import SlaveWebsocketController
 
-        self.ui_websocket_controller = UIWebsocketController("/")
+        self.ui_websocket_controller = UIWebsocketController("/UI")
         self.slave_websocket_controller = SlaveWebsocketController("/Slave")
         UIWebsocketController.init()
         YouTubeController.init()
