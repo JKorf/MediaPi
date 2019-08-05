@@ -87,14 +87,10 @@ class APIController(metaclass=Singleton):
     @staticmethod
     @app.before_request
     def before_req():
-        Logger().write(LogVerbosity.Info, "Request: " + request.url)
-        Logger().write(LogVerbosity.Info, "Headers: " + str(request.headers))
-
         if request.method == "OPTIONS" \
                 or request.path.startswith("/auth/") \
-                or request.path.startswith("/ws") \
-                or request.path.startswith("/Slave")\
-                or request.host.startswith("socket."):
+                or request.path.startswith("/ws")\
+                or request.path.startswith("/Slave"):
             return
 
         session_key = request.headers.get('Session-Key', None)

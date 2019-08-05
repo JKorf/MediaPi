@@ -73,11 +73,12 @@ class App extends Component {
   }
 
   componentWillMount() {
-    var location = "api." + window.location.hostname;
-    var socketLocation = "socket." + window.location.hostname;
+
+    var apiPort = 50021;
+    var location = window.location.hostname + ":" + apiPort;
     window.vars = {
-        websocketBase: "wss://" + socketLocation + "/UI",
-        apiBase: "https://" + location + "/"
+        websocketBase: "ws://" + location + "/UI",
+        apiBase: "http://" + location + "/"
     };
 
     Socket2.init();
