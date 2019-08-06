@@ -75,7 +75,12 @@ class APIController(metaclass=Singleton):
 
         APIController.slaves.add_slave(SlaveClient(1, Settings.get_string("name"), None))
 
-        socketio.run(app, host='0.0.0.0', port=int(Settings.get_string("api_port")), log_output=True)
+        socketio.run(app,
+                     cors_allowed_origins="*",
+                     host='0.0.0.0',
+                     port=int(Settings.get_string("api_port")),
+                     engineio_logger=True,
+                     log_output=True)
 
     @staticmethod
     def internal_start_slave():
