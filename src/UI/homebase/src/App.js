@@ -41,6 +41,7 @@ import './Styles/base.less';
 import './Styles/components.less';
 import './Styles/mediaplayer.less';
 import './Styles/rules.less';
+import './Styles/settings.less';
 
 class App extends Component {
   constructor(props) {

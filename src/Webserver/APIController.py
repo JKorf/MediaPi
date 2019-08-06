@@ -18,7 +18,7 @@ from Shared.Util import Singleton, to_JSON, current_time
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
-socketio = SocketIO(app)
+socketio = SocketIO(app, engineio_logger=True, cors_allowed_origins="*")
 
 
 class APIController(metaclass=Singleton):
@@ -76,10 +76,8 @@ class APIController(metaclass=Singleton):
         APIController.slaves.add_slave(SlaveClient(1, Settings.get_string("name"), None))
 
         socketio.run(app,
-                     cors_allowed_origins="*",
                      host='0.0.0.0',
                      port=int(Settings.get_string("api_port")),
-                     engineio_logger=True,
                      log_output=True)
 
     @staticmethod

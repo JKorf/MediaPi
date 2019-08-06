@@ -11,6 +11,7 @@ from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from Shared.Events import EventManager, EventType
 from Shared.Logger import Logger, LogVerbosity
+from Shared.Network import RequestFactory
 from Shared.Util import to_JSON, write_size, current_time
 from Updater import Updater
 from Webserver.APIController import app, APIController
@@ -83,6 +84,18 @@ class UtilController:
     def get_log_file():
         file = urllib.parse.unquote(request.args.get('file'))
         return Logger.get_log_file(file)
+
+    @staticmethod
+    @app.route('/util/shelly', methods=['POST'])
+    def shelly():
+        ip = request.args.get("ip")
+        state = "on" if request.args.get("state") == "true" else "off"
+
+        Logger().write(LogVerbosity.Info, "Set shelly " + ip + " to " + state)
+        result = RequestFactory.make_request("http://" + ip + "?state=" + state)
+        if result is not None:
+            Logger().write(LogVerbosity.Info, result)
+        return "OK"
 
     @staticmethod
     @app.route('/util/system_health_check', methods=['POST'])
