@@ -66,4 +66,6 @@ git submodule update --init --recursive
 make
 sudo make install
 
+* pyenv? 
+https://askubuntu.com/questions/865554/how-do-i-install-python-3-6-using-apt-get
 	
