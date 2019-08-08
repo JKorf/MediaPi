@@ -3,6 +3,7 @@ from threading import Lock
 import time
 
 from Database.Database import Database
+from Shared.Logger import Logger, LogVerbosity
 from Shared.Observable import Observable
 from Shared.Threading import CustomThread
 from Shared.Util import Singleton
@@ -44,12 +45,13 @@ class Stats(metaclass=Singleton):
 
     @staticmethod
     def save_stats():
-        copy = Stats.cache.statistics.copy()
+        while True:
+            copy = Stats.cache.statistics.copy()
+            Logger().write(LogVerbosity.Debug, "Saving stats")
+            for key, val in copy.items():
+                Database().update_stat(key, val)
 
-        for key, val in copy.items():
-            Database().update_stat(key, val)
-
-        time.sleep(15)
+            time.sleep(15)
 
     @staticmethod
     def add(name, value):
