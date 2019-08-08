@@ -221,10 +221,16 @@ class TorrentPeerManager(TorrentManager):
 
     def stop(self):
         while len(self.connecting_peers) != 0:
+            # Wait for connecting peers to finish
             time.sleep(0.5)
 
         for peer in list(self.connected_peers):
-            peer.stop()
+            # Start stopping each peer
+            peer.stop_async("stopping torrent")
+
+        while len(self.connected_peers) != 0:
+            # Wait for each peer to be stopped
+            time.sleep(0.5)
 
         self.complete_peer_list.clear()
         self.potential_peers.clear()

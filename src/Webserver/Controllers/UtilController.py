@@ -114,9 +114,9 @@ class UtilController:
         shows = ShowController.request_shows(ShowController.shows_api_path + "shows/1?sort=Trending")
         torrents = TorrentController.get_torrents(TorrentController.base_url + "/top-100-movies")
 
-        if len(movies) == 0: result.request_movies_result.fail("No movies returned")
-        elif len(shows) == 0: result.request_shows_result.fail("No shows returned")
-        elif len(torrents) == 0: result.request_torrents_result.fail("No torrents returned")
+        result.request_movies_result.set_result(len(movies) != 0, "No movies returned")
+        result.request_shows_result.set_result(len(shows) != 0, "No shows returned")
+        result.request_torrents_result.set_result(len(torrents) != 0, "No torrents returned")
 
         return result
 
@@ -126,42 +126,46 @@ class UtilController:
         all_torrents = []
         for arr in [x.torrents for x in best_movie_torrents]:
             all_torrents += arr
-        torrent = max(all_torrents, key=lambda t: t.seeds / t.peers)
+
+        if len(all_torrents) == 0:
+            return
+
+        torrent = max(all_torrents, key=lambda t: t.seeds / (t.peers or 1))
         Logger().write(LogVerbosity.Info,
                        "System health selected torrent at " + torrent.quality + ", " + str(torrent.peers) + "/" + str(torrent.seeds) + " l/s")
 
         MediaManager().start_movie(0, "Health check", torrent.url, None, 0)
 
         created = UtilController.wait_for(2000, lambda: MediaManager().torrent is not None)
+        result.torrent_starting_result.set_result(created, "Didn't create torrent")
         if not created:
-            result.torrent_starting_result.fail("Didn't create torrent")
             return result
 
         executing = UtilController.wait_for(10000, lambda: MediaManager().torrent.is_preparing or MediaManager().torrent.is_executing)
+        result.torrent_starting_result.set_result(executing, "Torrent isn't executing")
         if not executing:
-            result.torrent_starting_result.fail("Torrent isn't executing")
             return result
 
         downloading = UtilController.wait_for(10000, lambda: MediaManager().torrent.network_manager.average_download_counter.total > 0)
-        if not downloading: result.torrent_downloading_result.fail("No bytes downloaded at all")
+        result.torrent_downloading_result.set_result(downloading, "No bytes downloaded at all")
 
         playing = False
         if downloading:
             playing = UtilController.wait_for(30000, lambda: VLCPlayer().player_state.playing_for > 0)
-            if not playing: result.torrent_playing_result.fail("Didn't start playing torrent")
+            result.torrent_playing_result.set_result(playing, "Didn't start playing torrent")
 
         if playing:
             MediaManager().seek(1000 * 60 * 5) # seek to 5 minutes in
             playing = UtilController.wait_for(10000, lambda: VLCPlayer().player_state.playing_for > 1000 * 60 * 5)
-            if not playing: result.torrent_playing_after_seek_result.fail("Didn't start playing torrent")
+            result.torrent_playing_after_seek_result.set_result(playing, "Didn't start playing torrent after seeking")
 
         MediaManager().stop_play()
 
-        disposed = UtilController.wait_for_event(20000, EventType.TorrentStopped)
-        if not disposed: result.torrent_disposing_result.fail("Torrent stopped event not received")
-        else:
+        stopped_event = UtilController.wait_for_event(20000, EventType.TorrentStopped)
+        result.torrent_disposing_result.set_result(stopped_event, "Torrent stopped event not received")
+        if stopped_event:
             disposed = UtilController.wait_for(5000, lambda: len(objgraph.by_type('MediaPlayer.Torrents.Torrent.Torrent.Torrent')) == 0)
-            if not disposed: result.torrent_disposing_result.fail("Torrent not disposed after stopping")
+            result.torrent_disposing_result.set_result(disposed, "Torrent not disposed after stopping")
 
         return result
 
@@ -213,8 +217,10 @@ class HealthTestResultItem:
     def __init__(self, name):
         self.name = name
         self.result = True
+        self.run = False
         self.reason = None
 
-    def fail(self, reason):
-        self.result = False
+    def set_result(self, result, reason):
+        self.result = result
+        self.run = True
         self.reason = reason

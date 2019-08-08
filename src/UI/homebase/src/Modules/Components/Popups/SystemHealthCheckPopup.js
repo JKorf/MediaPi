@@ -5,6 +5,7 @@ import SvgImage from "./../SvgImage"
 
 import failImage from "./../../../Images/fail.svg";
 import successImage from "./../../../Images/success.svg";
+import notRunImage from "./../../../Images/notrun.svg";
 
 import Popup from "./Popup.js"
 
@@ -48,8 +49,15 @@ class SystemHealthCheckPopup extends Component {
           Object.keys(this.state.result).map((key) =>
                 <div key={key} className="system-health-item">
                     <div className="system-health-key">{this.state.result[key].name}</div>
-                    <div className="system-health-value"><SvgImage src={(this.state.result[key].result ? successImage: failImage)} /></div>
-                    {!this.state.result[key].result && <div className="system-health-reason">{this.state.result[key].reason}</div> }
+                    { this.state.result[key].run &&
+                        <div className="system-health-value">
+                            <SvgImage src={(this.state.result[key].result ? successImage: failImage)} />
+                            {!this.state.result[key].result && <div className="system-health-reason">{this.state.result[key].reason}</div> }
+                        </div>
+                    }
+                    { !this.state.result[key].run &&
+                        <div className="system-health-value"><SvgImage src={notRunImage} /></div>
+                    }
                 </div>)
           }
      </Popup>

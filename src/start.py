@@ -43,6 +43,7 @@ class Program:
     def __init__(self):
         Logger().start(Settings.get_int("log_level"))
         Logger().write(LogVerbosity.Info, "Starting")
+        Logger().write(LogVerbosity.Info, "Python version " + str(sys.version_info[0]) + "." + str(sys.version_info[1]) + "." + str(sys.version_info[2]))
         sys.excepthook = self.handle_exception
 
         self.pi = sys.platform == "linux" or sys.platform == "linux2"
