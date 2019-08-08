@@ -171,6 +171,8 @@ class MediaManager(metaclass=Singleton):
         VLCPlayer().stop()
         if stop_torrent:
             self.stop_torrent()
+        while self.torrent is not None:
+            time.sleep(0.2)
 
         self.media_data.reset()
 
