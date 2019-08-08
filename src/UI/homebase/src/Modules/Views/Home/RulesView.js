@@ -63,7 +63,7 @@ class RulesView extends Component {
                   <div key={rule.id} className={"current-rule " + (rule.active ? "": "inactive") + (this.state.selectedRule === rule ? "selected": "")}>
                     <div className="current-rule-row">
                         <div className="current-rule-name" onClick={() => this.setState({selectedRule: rule})}>{rule.name}</div>
-                        <div className="current-rule-last-execution">{(rule.last_execution === 0 ? "never": formatTime(rule.last_execution, false, true, true, true))}</div>
+                        <div className="current-rule-last-execution">{(rule.last_execution === 0 ? "never": formatTime(rule.last_execution, false, true, true, true, true))}</div>
                         <div className="current-rule-active">
                             <CheckBox value={rule.active} readonly />
                         </div>
