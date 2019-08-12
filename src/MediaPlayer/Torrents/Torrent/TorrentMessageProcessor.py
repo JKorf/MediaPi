@@ -33,6 +33,9 @@ class TorrentMessageProcessor(TorrentManager):
             self.metadata_wait_list_log = 0
 
         for peer, message_bytes, timestamp in messages:
+            if peer.state != PeerState.Started:
+                continue
+
             if not peer.metadata_manager.handshake_successful:
                 # Handshake is the first message we should receive
                 handshake = HandshakeMessage.from_bytes(message_bytes)

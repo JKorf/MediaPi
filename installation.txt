@@ -15,7 +15,7 @@
 *  Copy over scripts
 
 *  Install dependencies:
-sudo apt-get install vlc libxml2-dev libxslt-dev cec-utils python3-pil python3-pil.imagetk rng-tools arping (nginx for master)
+sudo apt-get install vlc libxml2-dev libxslt-dev cec-utils libjpeg-dev pillow rng-tools arping (nginx for master)
 sudo pip3 install eventlet flask flask_cors flask_socketio socketIO-client psutil lxml purl pytradfri toonapilib beautifulsoup4 youtube-python pympler objgraph
 
 *  Adjust boot config: sudo nano /boot/config.txt

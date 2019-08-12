@@ -1,6 +1,7 @@
 import os
 
 from MediaPlayer.Torrents.TorrentManager import TorrentManager
+from Shared.Settings import Settings
 
 
 class TorrentCacheManager(TorrentManager):
@@ -12,8 +13,7 @@ class TorrentCacheManager(TorrentManager):
         self.total_length = 0
         self.media_start_byte = 0
         self.media_start_piece_offset = 0
-        self.path = os.getcwd() + '\\Solution\\cache\\'
-
+        self.path = Settings.get_string("base_folder") + "Solution/cache/"
         self.bytes_written = 0
 
     def init(self, piece_length, total_length, media_start_byte):
