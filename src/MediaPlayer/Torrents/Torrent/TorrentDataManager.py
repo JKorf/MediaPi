@@ -113,7 +113,7 @@ class TorrentDataManager(TorrentManager):
         self.write_block(piece, block, data)
 
         self.torrent.left -= block.length
-        Stats.add('total_downloaded', block.length)
+        Stats().add('total_downloaded', block.length)
 
         if self.init_done:
             if self.torrent.state != TorrentState.Done:

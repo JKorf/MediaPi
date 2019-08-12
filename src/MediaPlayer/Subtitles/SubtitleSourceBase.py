@@ -12,5 +12,5 @@ class SubtitleSourceBase:
         with open(filename, "wb") as f:
             f.write(data)
         f.close()
-        Stats.add("subs_downloaded", 1)
+        Stats().add("subs_downloaded", 1)
         return filename

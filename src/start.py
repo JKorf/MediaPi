@@ -53,7 +53,6 @@ class Program:
         Database().init_database()
         self.init_singletons()
 
-        Stats.set('start_time', current_time())
         self.running = True
 
         self.init_sound()
@@ -64,6 +63,8 @@ class Program:
 
         WiFiController().check_wifi()
         Stats().start()
+        Stats().set('start_time', current_time())
+
         PresenceManager().start()
         RuleManager().start()
         TVManager().start()

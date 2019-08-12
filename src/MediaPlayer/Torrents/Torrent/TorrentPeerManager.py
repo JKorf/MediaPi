@@ -81,13 +81,13 @@ class TorrentPeerManager(TorrentManager):
     @staticmethod
     def add_potential_peer_stat(source):
         if source == PeerSource.DHT:
-            Stats.add('peers_source_dht', 1)
+            Stats().add('peers_source_dht', 1)
         elif source == PeerSource.HttpTracker:
-            Stats.add('peers_source_http_tracker', 1)
+            Stats().add('peers_source_http_tracker', 1)
         elif source == PeerSource.UdpTracker:
-            Stats.add('peers_source_udp_tracker', 1)
+            Stats().add('peers_source_udp_tracker', 1)
         elif source == PeerSource.PeerExchange:
-            Stats.add('peers_source_exchange', 1)
+            Stats().add('peers_source_exchange', 1)
 
     def piece_done(self, piece):
         Logger().write(LogVerbosity.Debug, "Sending have messages for piece " + str(piece.index))

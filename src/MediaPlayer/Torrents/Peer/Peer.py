@@ -127,13 +127,13 @@ class Peer(TorrentManager):
     @staticmethod
     def add_connected_peer_stat(source):
         if source == PeerSource.DHT:
-            Stats.add('peers_source_dht_connected', 1)
+            Stats().add('peers_source_dht_connected', 1)
         elif source == PeerSource.HttpTracker:
-            Stats.add('peers_source_http_tracker_connected', 1)
+            Stats().add('peers_source_http_tracker_connected', 1)
         elif source == PeerSource.UdpTracker:
-            Stats.add('peers_source_udp_tracker_connected', 1)
+            Stats().add('peers_source_udp_tracker_connected', 1)
         elif source == PeerSource.PeerExchange:
-            Stats.add('peers_source_exchange_connected', 1)
+            Stats().add('peers_source_exchange_connected', 1)
 
     def stop_async(self, reason):
         if self.state != PeerState.Started and self.state != PeerState.Starting:

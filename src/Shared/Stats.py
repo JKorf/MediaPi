@@ -30,41 +30,40 @@ class Stats(metaclass=Singleton):
     cache = StatList()
 
     def __init__(self):
+        self.changed = False
         self.work_thread = CustomThread(self.save_stats, "Stat saver", [])
 
     def start(self):
         stats = Database().get_stats()
         for key, value, last_change in stats:
-            Stats.cache.update(key, value)
+            self.cache.update(key, value)
 
         self.work_thread.start()
 
-    @staticmethod
-    def _update_stat(name, value):
-        Stats.cache.update(name, value)
+    def _update_stat(self, name, value):
+        self.cache.update(name, value)
+        self.changed = True
 
-    @staticmethod
-    def save_stats():
+    def save_stats(self):
         while True:
-            copy = Stats.cache.statistics.copy()
-            Logger().write(LogVerbosity.Debug, "Saving stats")
-            for key, val in copy.items():
-                Database().update_stat(key, val)
+            if self.changed:
+                self.changed = False
+                copy = self.cache.statistics.copy()
+                Logger().write(LogVerbosity.Debug, "Saving stats")
+                for key, val in copy.items():
+                    Database().update_stat(key, val)
 
             time.sleep(15)
 
-    @staticmethod
-    def add(name, value):
-        stat = Stats.cache.get(name)
+    def add(self, name, value):
+        stat = self.cache.get(name)
         if stat == 0:
-            Stats._update_stat(name, value)
+            self._update_stat(name, value)
         else:
-            Stats._update_stat(name, stat + value)
+            self._update_stat(name, stat + value)
 
-    @staticmethod
-    def total(name):
-        return Stats.cache.get(name)
+    def total(self, name):
+        return self.cache.get(name)
 
-    @staticmethod
-    def set(name, value):
-        Stats._update_stat(name, value)
+    def set(self, name, value):
+        self._update_stat(name, value)
