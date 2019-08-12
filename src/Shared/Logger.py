@@ -3,6 +3,7 @@ import glob
 import inspect
 import ntpath
 import os
+import shutil
 import threading
 import traceback
 from enum import Enum
@@ -11,7 +12,7 @@ import time
 import sys
 
 from Shared.Settings import Settings
-from Shared.Util import Singleton
+from Shared.Util import Singleton, current_time
 
 
 class Logger(metaclass=Singleton):
@@ -38,6 +39,8 @@ class Logger(metaclass=Singleton):
 
         print("Log path: " + self.log_path)
 
+        Logger.cleanup_logging()
+
         if self.raspberry:
             sys.stdout = StdOutWriter(self.write_print)
             sys.stderr = StdOutWriter(self.write_print)
@@ -54,6 +57,15 @@ class Logger(metaclass=Singleton):
                     + "Priority".ljust(9) + " | "
                     + "Message\r\n"
                     + "-" * 140)
+
+    @staticmethod
+    def cleanup_logging():
+        base_path = Settings.get_string("base_folder") + "/Logs/"
+        for f in os.listdir(base_path):
+            file_path = base_path + f
+            creation_time = os.stat(file_path).st_mtime
+            if (current_time() / 1000 - creation_time) >= 60 * 60 * 24 * 7:
+                shutil.rmtree(file_path, True)
 
     def stop(self):
         self.log_processor.stop()
