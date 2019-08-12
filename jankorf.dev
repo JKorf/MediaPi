@@ -1,0 +1,25 @@
+server {
+        listen 80;
+        server_name jankorf.dev;
+        return 301 https://$server_name$request_uri;
+}
+
+server {
+        listen 443;
+        server_name jankorf.dev;
+
+        add_header Strict-Transport-Security "max-age=31536000";
+
+        ssl on;
+        ssl_certificate /home/pi/ (path to certs);
+        ssl_certificate_key /home/pi/c (path to private key);
+
+        access_log /home/pi/certs/nginx.vhost.access.log;
+        error_log /home/pi/certs/nginx.vhost.error.log;
+
+        root /home/pi/Scripts/UI/Web/;
+
+        location / {
+                try_files $uri $uri/ /index.html;
+        }
+}
