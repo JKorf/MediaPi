@@ -3,9 +3,8 @@ from flask_socketio import join_room, leave_room, emit
 
 from Database.Database import Database
 from Shared.Logger import LogVerbosity, Logger
-from Shared.Threading import CustomThread
 from Shared.Util import current_time, to_JSON
-from Webserver.APIController import socketio, APIController, WebsocketClient, Request
+from Webserver.APIController import socketio, APIController, WebsocketClient
 from Webserver.Controllers.Websocket2.BaseWebsocketController import BaseWebsocketController
 
 
@@ -53,11 +52,21 @@ class UIWebsocketController(BaseWebsocketController):
 
     @staticmethod
     def on_get_current_requests():
+        authenticated = [x for x in UIWebsocketController.clients if x.sid == request.sid][0].authenticated
+        if not authenticated:
+            Logger().write(LogVerbosity.Info, "Unauthenticated socket request for current requests")
+            return
+
         for client_request in APIController().ui_websocket_controller.requests:
             socketio.emit("request", (client_request.request_id, client_request.topic, to_JSON(client_request.data)), namespace="/UI", room=request.sid)
 
     @staticmethod
     def on_subscribe(topic):
+        authenticated = [x for x in UIWebsocketController.clients if x.sid == request.sid][0].authenticated
+        if not authenticated:
+            Logger().write(LogVerbosity.Info, "Unauthenticated socket request subscribing")
+            return
+
         Logger().write(LogVerbosity.Info, "UI client subscribing to " + topic)
         join_room(topic)
         if topic in APIController.last_data:
@@ -65,6 +74,11 @@ class UIWebsocketController(BaseWebsocketController):
 
     @staticmethod
     def on_unsubscribe(topic):
+        authenticated = [x for x in UIWebsocketController.clients if x.sid == request.sid][0].authenticated
+        if not authenticated:
+            Logger().write(LogVerbosity.Info, "Unauthenticated socket request for unsubscribing")
+            return
+
         Logger().write(LogVerbosity.Info, "UI client unsubscribing from " + topic)
         leave_room(topic)
 
