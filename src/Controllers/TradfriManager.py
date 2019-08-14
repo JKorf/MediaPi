@@ -2,7 +2,7 @@ import subprocess
 import sys
 import uuid
 
-from pytradfri import Gateway
+from pytradfri import Gateway, RequestError
 from pytradfri.api.libcoap_api import APIFactory
 
 from Database.Database import Database
@@ -85,8 +85,11 @@ class TradfriManager(metaclass=Singleton):
                 groups = self.get_device_groups()
                 for group in groups:
                     self.tradfri_state.update_group(group)
-            except subprocess.TimeoutExpired as e:
+            except Exception as e:
+                Logger().write(LogVerbosity.Info, "Failed to init tradfri, clearing previous key to try generate new")
                 self.initialized = False
+                Database().remove_stat("LightingId")
+                Database().remove_stat("LightingKey")
                 Logger().write_error(e, "Failed to get groups from hub")
 
     def start_observing(self):
