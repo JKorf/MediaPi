@@ -32,7 +32,9 @@ import DeviceView from './Modules/Views/Home/DeviceView.js'
 import RulesView from './Modules/Views/Home/RulesView.js'
 import RuleView from './Modules/Views/Home/RuleView.js'
 
-import SettingsView from './Modules/Views/SettingsView.js'
+import ConfigurationDashboardView from './Modules/Views/Configuration/ConfigurationDashboardView.js'
+import TestView from './Modules/Views/Configuration/TestView.js'
+import AccessView from './Modules/Views/Configuration/AccessView.js'
 
 import Socket2 from './Socket2.js'
 import PopupController from './Modules/PopupController.js'
@@ -234,7 +236,9 @@ class App extends Component {
                     <Route path="/home/rules" exact render={(props) => <RulesView {...props} functions={this.functions}  />} />
                     <Route path="/home/rule/:id" exact render={(props) => <RuleView {...props} functions={this.functions}  />} />
 
-                    <Route path="/settings" exact render={(props) => <SettingsView {...props} functions={this.functions}  />} />
+                    <Route path="/configuration" exact render={(props) => <ConfigurationDashboardView {...props} functions={this.functions}  />} />
+                    <Route path="/configuration/test" exact render={(props) => <TestView {...props} functions={this.functions}  />} />
+                    <Route path="/configuration/access" exact render={(props) => <AccessView {...props} functions={this.functions}  />} />
                 </View>
                 <Footer functions={this.functions} />
                 <PopupController ref={this.popupControllerRef} />

@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import { InfoGroup } from './../Components/InfoGroup'
-import Button from './../Components/Button'
+import { InfoGroup } from './../../Components/InfoGroup'
+import Button from './../../Components/Button'
 
-class SettingsView extends Component {
+class ConfigurationDashboardView extends Component {
   constructor(props) {
     super(props);
 
@@ -40,4 +40,4 @@ class SettingsView extends Component {
   }
 };
 
-export default SettingsView;
+export default ConfigurationDashboardView;

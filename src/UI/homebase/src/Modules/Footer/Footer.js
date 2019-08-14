@@ -171,7 +171,7 @@ class Footer extends Component
             <FooterLink to="/" exact={true} img={dashboardImage} />
             <FooterLink to="/mediaplayer" img={entertainmentImage} />
             <FooterLink to="/home" img={homeImage} />
-            <FooterLink to="/settings" img={settingsImage} />
+            <FooterLink to="/configuration" img={settingsImage} />
         </div>
       </div>
     )};
