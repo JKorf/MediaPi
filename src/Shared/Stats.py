@@ -1,5 +1,3 @@
-from threading import Lock
-
 import time
 
 from Database.Database import Database
@@ -27,9 +25,8 @@ class StatList(Observable):
 
 class Stats(metaclass=Singleton):
 
-    cache = StatList()
-
     def __init__(self):
+        self.cache = StatList()
         self.changed = False
         self.work_thread = CustomThread(self.save_stats, "Stat saver", [])
 

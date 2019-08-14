@@ -42,49 +42,64 @@ class Program:
 
     def __init__(self):
         Logger().start(Settings.get_int("log_level"))
-        Logger().write(LogVerbosity.Info, "Starting")
-        Logger().write(LogVerbosity.Info, "Python version " + str(sys.version_info[0]) + "." + str(sys.version_info[1]) + "." + str(sys.version_info[2]))
         sys.excepthook = self.handle_exception
 
-        self.pi = sys.platform == "linux" or sys.platform == "linux2"
-
-        self.is_slave = Settings.get_bool("slave")
-
-        Database().init_database()
-        self.init_singletons()
-
+        Logger().write(LogVerbosity.Info, "Starting")
         self.running = True
 
-        self.init_sound()
-        self.init_folders()
-
-        APIController().start()
         self.version = datetime.fromtimestamp(self.get_latest_change()).strftime("%Y-%m-%d %H:%M:%S")
+        self.is_slave = Settings.get_bool("slave")
+        self.pi = sys.platform == "linux" or sys.platform == "linux2"
 
-        WiFiController().check_wifi()
-        Stats().start()
-        Stats().set('start_time', current_time())
-
-        PresenceManager().start()
-        RuleManager().start()
-        TVManager().start()
-
-        if not self.is_slave:
-            TradfriManager().init()
-            self.file_listener = StreamListener("MasterFileServer", 50015)
-            self.file_listener.start_listening()
-
+        Logger().write(LogVerbosity.Info, "Python version " + str(sys.version_info[0]) + "." + str(sys.version_info[1]) + "." + str(sys.version_info[2]))
         Logger().write(LogVerbosity.Info, "MediaPlayer build [" + self.version + "]")
         Logger().write(LogVerbosity.Info, "Slave: " + str(self.is_slave))
         if self.is_slave:
             Logger().write(LogVerbosity.Info, "Master ip: " + str(Settings.get_string("master_ip")))
         Logger().write(LogVerbosity.Info, "Pi: " + str(self.pi))
+        Logger().write(LogVerbosity.Info, "UI: " + str(Settings.get_bool("UI")))
+
+        Logger().write(LogVerbosity.Debug, "Initializing database")
+        Database().init_database()
+
+        Logger().write(LogVerbosity.Debug, "Initializing singletons")
+        self.init_singletons()
+
+        Logger().write(LogVerbosity.Debug, "Initializing sounds and folders")
+        self.init_sound()
+        self.init_folders()
+
+        Logger().write(LogVerbosity.Debug, "Initializing API")
+        APIController().start()
+
+        Logger().write(LogVerbosity.Debug, "Initializing WiFi controller")
+        WiFiController().check_wifi()
+
+        Logger().write(LogVerbosity.Debug, "Initializing stats")
+        Stats().start()
+        Stats().set('start_time', current_time())
+
+        Logger().write(LogVerbosity.Debug, "Initializing presence manager")
+        PresenceManager().start()
+
+        Logger().write(LogVerbosity.Debug, "Initializing rule manager")
+        RuleManager().start()
+
+        Logger().write(LogVerbosity.Debug, "Initializing TV manager")
+        TVManager().start()
+
+        if not self.is_slave:
+            Logger().write(LogVerbosity.Debug, "Initializing TradeFriManager")
+            TradfriManager().init()
+
+            Logger().write(LogVerbosity.Debug, "Initializing master file server")
+            self.file_listener = StreamListener("MasterFileServer", 50015)
+            self.file_listener.start_listening()
 
         Logger().write(LogVerbosity.Important, "Started")
         if Settings.get_bool("UI"):
             from UI.TV.GUI import App
             self.gui = App.initialize()
-
         else:
             while self.running:
                 time.sleep(5)

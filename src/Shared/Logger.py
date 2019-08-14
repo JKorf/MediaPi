@@ -39,7 +39,7 @@ class Logger(metaclass=Singleton):
 
         print("Log path: " + self.log_path)
 
-        Logger.cleanup_logging()
+        self.cleanup_logging()
 
         if self.raspberry:
             sys.stdout = StdOutWriter(self.write_print)
@@ -58,14 +58,16 @@ class Logger(metaclass=Singleton):
                     + "Message\r\n"
                     + "-" * 140)
 
-    @staticmethod
-    def cleanup_logging():
-        base_path = Settings.get_string("base_folder") + "/Logs/"
-        for f in os.listdir(base_path):
-            file_path = base_path + f
-            creation_time = os.stat(file_path).st_mtime
-            if (current_time() / 1000 - creation_time) >= 60 * 60 * 24 * 7:
-                shutil.rmtree(file_path, True)
+    def cleanup_logging(self):
+        try:
+            base_path = Settings.get_string("base_folder") + "/Logs/"
+            for f in os.listdir(base_path):
+                file_path = base_path + f
+                creation_time = os.stat(file_path).st_mtime
+                if (current_time() / 1000 - creation_time) >= 60 * 60 * 24 * 7:
+                    shutil.rmtree(file_path, True)
+        except Exception as e:
+            self.write_error(e, "Log cleaning failed")
 
     def stop(self):
         self.log_processor.stop()
