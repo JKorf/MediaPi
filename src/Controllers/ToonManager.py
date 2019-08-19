@@ -1,3 +1,4 @@
+import json
 import time
 
 from toonapilib import Toon
@@ -32,7 +33,13 @@ class ToonManager(metaclass=Singleton):
 
     def set_temperature(self, temp):
         Logger().write(LogVerbosity.Debug, "Set toon temperature: " + str(temp))
-        self.api.thermostat = temp
+        for i in range(3):
+            try:
+                self.api.thermostat = temp
+                return
+            except json.decoder.JSONDecodeError as e:
+                Logger().write_error(e, "Toon set temp error, try " + str(i + 1))
+                time.sleep(1)
 
     def set_state(self, state):
         Logger().write(LogVerbosity.Debug, "Set toon state:" + str(state))
