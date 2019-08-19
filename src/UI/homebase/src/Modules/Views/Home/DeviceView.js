@@ -255,6 +255,14 @@ class DeviceView extends Component {
      }
   }
 
+  closeApplication()
+  {
+    if(window.confirm("Do you want to close the application?"))
+     {
+        axios.post(window.vars.apiBase + 'util/close_application?instance=' + this.props.match.params.id);
+     }
+  }
+
   increaseSubDelay(){
     var value = this.state.playerData.sub_delay + 0.2 * 1000 * 1000;
     this.delayChange(value);
@@ -441,6 +449,7 @@ class DeviceView extends Component {
                     <div className="device-config-item">
                         <div className="device-config-button"><Button text="Restart device" classId="secondary" onClick={() => this.restartDevice()}/></div>
                         <div className="device-config-button"><Button text="Restart application" classId="secondary" onClick={() => this.restartApplication()}/></div>
+                        <div className="device-config-button"><Button text="Close application" classId="secondary" onClick={() => this.closeApplication()}/></div>
                     </div>
                 </div>
              }

@@ -68,6 +68,16 @@ class UtilController:
         return "OK"
 
     @staticmethod
+    @app.route('/util/close_application', methods=['POST'])
+    def close_application():
+        instance = int(request.args.get("instance"))
+        if instance == 1:
+            sys.exit()
+        else:
+            APIController().slave_command(instance, "system", "close_application")
+        return "OK"
+
+    @staticmethod
     @app.route('/util/log', methods=['POST'])
     def debug_log():
         Logger().write(LogVerbosity.Important, "Test")

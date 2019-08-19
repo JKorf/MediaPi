@@ -124,6 +124,8 @@ class SlaveClientController:
             if command == "restart_application":
                 python = sys.executable
                 os.execl(python, python, *sys.argv)
+            if command == "close_application":
+                sys.exit()
 
         if method is not None:
             cb_thread = CustomThread(method, "Master command", args)
