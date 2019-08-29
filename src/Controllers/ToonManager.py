@@ -36,9 +36,12 @@ class ToonManager(metaclass=Singleton):
         for i in range(3):
             try:
                 self.api.thermostat = temp
+                Logger().write(LogVerbosity.Debug, "Temp set")
                 return
             except json.decoder.JSONDecodeError as e:
-                Logger().write_error(e, "Toon set temp error, try " + str(i + 1))
+                Logger().write(LogVerbosity.Info, "Toon set temp error, try " + str(i + 1))
+                if i == 2:
+                    Logger().write_error(e, "Toon set temp error")
                 time.sleep(1)
 
     def set_state(self, state):
