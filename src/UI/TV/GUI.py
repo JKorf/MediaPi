@@ -118,11 +118,7 @@ class App(tk.Frame):
         self.weather_max = None
         self.weather_min = None
         self.weather_temp = None
-        self.weather_sunrise = None
-        self.weather_sunset = None
         self.weather_icon_image = None
-        self.weather_sunrise_image = None
-        self.weather_sunset_image = None
 
         self.init_UI()
 
@@ -156,52 +152,36 @@ class App(tk.Frame):
         self.background_image = self.set_canvas_image(self.background_canvas, "background.jpg", 0, 0, w, h)
 
         self.info_background = self.create_rectangle(self.background_canvas, w - 250, 0, w, h, fill="#FFF", alpha=0.7, outline="#AAA")
-        self.name_label = self.background_canvas.create_text(w - 220, 30, anchor="nw", font=("Purisa", 26), text=Settings.get_string("name"), fill="#444")
+        self.name_label = self.background_canvas.create_text(w - 125, 30, anchor="n", font=("Purisa", 20), text=Settings.get_string("name"), fill="#444")
 
         playing_position = 96
         self.playing_label = self.background_canvas.create_text(w - 220, playing_position, anchor="nw", font=("Purisa", 14), text="", fill="#999")
         self.playing_value = self.background_canvas.create_text(w - 220, playing_position + 22, anchor="nw", font=("Purisa", 16), text="", fill="#444")
 
-        self.time_label = self.background_canvas.create_text(w - 125, h - 90, font=("Purisa", 36), text=time.strftime('%H:%M'), fill="#444")
-        self.date_label = self.background_canvas.create_text(w - 125, h - 40, font=("Purisa", 26), text=time.strftime('%a %d %b'), fill="#444")
+        self.time_label = self.background_canvas.create_text(w - 125, h - 80, font=("Purisa", 28), text=time.strftime('%H:%M'), fill="#444")
+        self.date_label = self.background_canvas.create_text(w - 125, h - 40, font=("Purisa", 20), text=time.strftime('%a %d %b'), fill="#444")
 
-        loading_position = 120
-        self.loading_speed_label = self.background_canvas.create_text(w - 230, loading_position, anchor="nw", font=("Purisa", 18), text="Speed:", fill="#444", state="hidden")
-        self.loading_buffered_label = self.background_canvas.create_text(w - 230, loading_position + 24, anchor="nw", font=("Purisa", 18), text="Buffered:", fill="#444", state="hidden")
-        self.loading_peers_connected_label = self.background_canvas.create_text(w - 230, loading_position + 48, anchor="nw", font=("Purisa", 18), text="Connected:", fill="#444", state="hidden")
-        self.loading_peers_available_label = self.background_canvas.create_text(w - 230, loading_position + 72, anchor="nw", font=("Purisa", 18), text="Available:", fill="#444", state="hidden")
+        loading_position = 96
+        self.loading_speed_label = self.background_canvas.create_text(w - 230, loading_position, anchor="nw", font=("Purisa", 16), text="Speed:", fill="#444", state="hidden")
+        self.loading_buffered_label = self.background_canvas.create_text(w - 230, loading_position + 24, anchor="nw", font=("Purisa", 16), text="Buffered:", fill="#444", state="hidden")
+        self.loading_peers_connected_label = self.background_canvas.create_text(w - 230, loading_position + 48, anchor="nw", font=("Purisa", 16), text="Connected:", fill="#444", state="hidden")
+        self.loading_peers_available_label = self.background_canvas.create_text(w - 230, loading_position + 72, anchor="nw", font=("Purisa", 16), text="Available:", fill="#444", state="hidden")
 
-        self.loading_speed_value = self.background_canvas.create_text(w - 20, loading_position, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
-        self.loading_buffered_value = self.background_canvas.create_text(w - 20, loading_position + 24, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
-        self.loading_peers_connected_value = self.background_canvas.create_text(w - 20, loading_position + 48, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
-        self.loading_peers_available_value = self.background_canvas.create_text(w - 20, loading_position + 72, anchor="ne", font=("Purisa", 18), text="", fill="#444", state="hidden")
+        self.loading_speed_value = self.background_canvas.create_text(w - 20, loading_position, anchor="ne", font=("Purisa", 16), text="", fill="#444", state="hidden")
+        self.loading_buffered_value = self.background_canvas.create_text(w - 20, loading_position + 24, anchor="ne", font=("Purisa", 16), text="", fill="#444", state="hidden")
+        self.loading_peers_connected_value = self.background_canvas.create_text(w - 20, loading_position + 48, anchor="ne", font=("Purisa", 16), text="", fill="#444", state="hidden")
+        self.loading_peers_available_value = self.background_canvas.create_text(w - 20, loading_position + 72, anchor="ne", font=("Purisa", 16), text="", fill="#444", state="hidden")
 
         self.player_frame = tk.Frame(self.parent, width=w, height=h, highlightthickness=0, background="black")
         self.status_image_frame = tk.Canvas(self.parent, width=84, height=84, highlightthickness=0, background="#DDD")
         self.status_image_frame.pause_image = ImageTk.PhotoImage(Image.open(self.base_image_path + "paused.png"))
         self.pause_image = self.status_image_frame.create_image(10, 10, anchor='nw', image=self.status_image_frame.pause_image)
 
-        self.weather_icon_image = self.background_canvas.create_image(w - 125, h - 370, image=None)
+        self.weather_icon_image = self.background_canvas.create_image(w - 125, h - 230, image=None)
+        self.weather_temp = self.background_canvas.create_text(w - 125, h - 150, font=("Purisa", 20), text="", fill="#444")
 
-        temp_position = h - 296
-        self.weather_temp = self.background_canvas.create_text(w - 230, temp_position + 9, anchor="w", font=("Purisa", 28), text="", fill="#444")
-        self.weather_max = self.background_canvas.create_text(w - 20, temp_position, anchor="e", font=("Purisa", 15), text="", fill="#cc3030")
-        self.weather_min = self.background_canvas.create_text(w - 20, temp_position + 20, anchor="e", font=("Purisa", 15), text="", fill="#689cc1")
-
-        sunrise_position = h - 226
-        self.weather_sunrise = self.background_canvas.create_text(w - 67, sunrise_position, font=("Purisa", 20), text="", fill="#444")
-        sunrise_img = ImageTk.PhotoImage(Image.open(self.base_image_path + "sunrise.png").resize((64, 64), Image.ANTIALIAS))
-        self.images.append(sunrise_img)
-        self.weather_sunrise_image = self.background_canvas.create_image(w - 192, sunrise_position, anchor="w", image=sunrise_img)
-
-        self.weather_sunset = self.background_canvas.create_text(w - 67, sunrise_position + 60, font=("Purisa", 20), text="", fill="#444")
-        sunset_img = ImageTk.PhotoImage(Image.open(self.base_image_path + "sunset.png").resize((64, 64), Image.ANTIALIAS))
-        self.images.append(sunset_img)
-        self.weather_sunset_image = self.background_canvas.create_image(w - 192, sunrise_position + 60, anchor="w", image=sunset_img)
-
-        self.background_canvas.create_line(w - 240, 80, w - 10, 80, fill="#888")
-        self.background_canvas.create_line(w - 240, h - 130, w - 10, h - 130, fill="#888")
-        self.background_canvas.create_line(w - 240, h - 260, w - 10, h - 260, fill="#888")
+        self.background_canvas.create_line(w - 240, 70, w - 10, 70, fill="#888")
+        self.background_canvas.create_line(w - 240, h - 120, w - 10, h - 120, fill="#888")
 
         self.state = UIState.Home
 
@@ -358,18 +338,9 @@ class App(tk.Frame):
 
             data = json.loads(result.decode('utf8'))
             current_temp = data['list'][0]['main']['temp']
-            min_temp = data['list'][0]['main']['temp_min']
-            max_temp = data['list'][0]['main']['temp_max']
             icon = data['list'][0]['weather'][0]['icon'].replace('n', 'd')
-            sunrise = data['list'][0]['sys']['sunrise']
-            sunset = data['list'][0]['sys']['sunset']
 
             self.background_canvas.itemconfigure(self.weather_temp, text=str(round(current_temp, 1)) + "°C")
-            self.background_canvas.itemconfigure(self.weather_min, text=str(round(min_temp, 1)) + "°C")
-            self.background_canvas.itemconfigure(self.weather_max, text=str(round(max_temp, 1)) + "°C")
-            self.background_canvas.itemconfigure(self.weather_sunrise, text=str(datetime.fromtimestamp(sunrise).strftime("%H:%M")))
-            self.background_canvas.itemconfigure(self.weather_sunset, text=str(datetime.fromtimestamp(sunset).strftime("%H:%M")))
-            self.background_canvas.itemconfigure(self.weather_sunset, text=str(datetime.fromtimestamp(sunset).strftime("%H:%M")))
 
             image = Image.open(self.base_image_path + "Weather/" + icon + ".png")
             resized = image.resize((140, 140), Image.ANTIALIAS)
