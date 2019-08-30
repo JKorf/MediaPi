@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { Link } from "react-router-dom";
-import { writeTimespan, formatTime } from './../../../Utils/Util.js';
+import { writeTimespan, formatTime, writeNumber } from './../../../Utils/Util.js';
 
 import MediaPlayerView from './MediaPlayerView.js';
 import Button from './../../Components/Button';
@@ -85,16 +85,16 @@ class YouTubeVideoView extends Component {
                     <div className="label-row youtube-stats-row">
                         <div className="label-field">
                             <div className="youtube-stats-img"><SvgImage src={seenImage} /></div>
-                            <div className="youtube-stats-text">{this.state.video.views}</div>
+                            <div className="youtube-stats-text">{writeNumber(this.state.video.views)}</div>
                         </div>
                         <div className="label-value">
                             <div className="youtube-stats-col">
                                 <div className="youtube-stats-img"><SvgImage src={likeImage} /></div>
-                                <div className="youtube-stats-text">{this.state.video.likes}</div>
+                                <div className="youtube-stats-text">{writeNumber(this.state.video.likes)}</div>
                             </div>
                             <div className="youtube-stats-col">
                                 <div className="youtube-stats-img"><SvgImage src={dislikeImage} /></div>
-                                <div className="youtube-stats-text">{this.state.video.dislikes}</div>
+                                <div className="youtube-stats-text">{writeNumber(this.state.video.dislikes)}</div>
                             </div>
                         </div>
                     </div>

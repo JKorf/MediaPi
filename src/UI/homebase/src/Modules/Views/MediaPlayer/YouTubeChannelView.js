@@ -2,7 +2,7 @@
 
 import React, { Component } from 'react';
 import axios from 'axios';
-import { formatTime } from './../../../Utils/Util.js';
+import { formatTime, writeNumber } from './../../../Utils/Util.js';
 
 import MediaPlayerView from './MediaPlayerView.js';
 import ViewLoader from './../../Components/ViewLoader/ViewLoader'
@@ -103,11 +103,11 @@ class YouTubeChannelView extends Component {
                 <div className="channel-details">
                     <div className="label-row">
                         <div className="label-field">Views</div>
-                        <div className="label-value">{this.state.channel.views}</div>
+                        <div className="label-value">{writeNumber(this.state.channel.views)}</div>
                     </div>
                     <div className="label-row">
                         <div className="label-field">Subs</div>
-                        <div className="label-value">{this.state.channel.subs}</div>
+                        <div className="label-value">{writeNumber(this.state.channel.subs)}</div>
                     </div>
                     <div className="label-row">
                         <div className="label-field">Videos</div>

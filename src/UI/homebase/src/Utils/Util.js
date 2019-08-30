@@ -38,9 +38,12 @@ export function writeNumber(value)
         return 0;
 
     var f = Math.round(parseFloat(value));
+    if(f > 1000000)
+        return Math.round(f / 100000) / 10 + "m";
     if(f > 1000)
-        f = (Math.round(f / 100) / 10) + "k";
-    return f;
+        return Math.round(f / 1000) / 10 + "k";
+
+    return value;
 }
 
 export function capitalizeFirstLetter(string) {
