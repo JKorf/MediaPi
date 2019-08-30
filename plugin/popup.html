@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html style="width:300px;min-height:100px;">
+  <head>
+  <style>
+	
+	.title{
+		font-weight: bold;
+		margin-bottom: 6px;
+	}
+	
+	.loader-text{
+		text-align: center;
+	}
+	
+	.video-result{
+		width: 100%;
+		margin-bottom: 6px;
+	}
+	
+	.video-url{
+		width: calc(100% - 40px);
+		display: inline-block;
+		vertical-align: top;
+	}
+	
+	.url-copy{
+		display: inline-block;
+		vertical-align: top;
+		margin-left: 10px;
+		width: 30px;
+	}
+	
+	.frames-info{
+		font-size: 12px;
+		color: #bbb;
+		margin-top: 10px;
+		text-align: right;
+	}
+	
+	input{
+		width: 100%;
+	}
+	
+	img{
+		width: 24px;
+		heigth: 24px;
+	}
+  </style>
+  </head>
+  <body>
+    <div id="videos">
+		<div class="loader">
+			<img style="width: 100px; height: 100px;margin-left: 100px;" src="loader.svg" />
+			<div class="loader-text">Scanning page</div>
+		</div>
+	</div>
+    <script type="text/javascript" src="popup.js"></script>
+	<script type="text/javascript" src="jquery-3.3.1.js"></script>
+  </body>
+</html>
