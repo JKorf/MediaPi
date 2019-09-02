@@ -4,6 +4,9 @@ var framesReturned = 0;
 var changed = false;
 
 function add_sources (results){
+	if(results === undefined)
+		return;
+	
 	framesReturned += 1;
 	results = results + "";
 	var srcs = results.split(",");
@@ -11,6 +14,7 @@ function add_sources (results){
 	for(var i =0 ; i < srcs.length; i++){
 		if(srcs[i].length === 0)
 			continue;
+		
 		allSrcs.push(srcs[i]);
 	}
 	changed = true;
