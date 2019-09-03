@@ -1,6 +1,3 @@
-import base64
-import hashlib
-import hmac
 import uuid
 
 from flask import request
@@ -19,12 +16,15 @@ class AuthController:
     def login():
         client_id = request.headers.get('Client-ID', None)
         p = request.args.get('p')
-        success, key = AuthController.validate(client_id, p)
+        ip_addr = request.headers.get('HTTP_X_FORWARDED_FOR', None) or request.remote_addr
+        user_agent = request.user_agent.string
+        success, key = AuthController.validate(client_id, p, ip_addr, user_agent)
 
         Logger().write(LogVerbosity.Info, str(client_id) + " log on result: " + str(success))
 
         status = 200
         if not success:
+            Database().add_login_attempt(ip_addr, user_agent, "Login")
             status = 401
         return to_JSON(AuthResult(success, key)), status
 
@@ -33,22 +33,26 @@ class AuthController:
     def refresh():
         client_id = request.headers.get('Client-ID', None)
         client_key = APIController.get_salted(client_id)
-        client_known = Database().check_client_key(client_key)
+        client_known = Database().client_known(client_key)
+        ip_addr = request.headers.get('HTTP_X_FORWARDED_FOR', None) or request.remote_addr
+        user_agent = request.user_agent.string
+
         if not client_known:
             Logger().write(LogVerbosity.Info, str(client_id) + " failed to refresh")
+            Database().add_login_attempt(ip_addr, user_agent, "Refresh")
             return to_JSON(AuthResult(False, None)), 401
 
         session_key = AuthController.generate_session_key()
-        Database().refresh_session_key(client_key, session_key)
+        Database().refresh_session_key(client_key, session_key, ip_addr, user_agent)
         Logger().write(LogVerbosity.Debug, str(client_id) + " successfully refreshed")
         return to_JSON(AuthResult(True, session_key)), 200
 
     @staticmethod
-    def validate(client_id, p):
+    def validate(client_id, p, ip, user_agent):
         if APIController.get_salted(p) == SecureSettings.get_string("api_password"):
             client_key = APIController.get_salted(client_id)
             session_key = AuthController.generate_session_key()
-            Database().add_client(client_key, session_key)
+            Database().add_client(client_key, session_key, ip, user_agent)
             return True, session_key
 
         return False, None

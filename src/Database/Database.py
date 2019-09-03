@@ -324,36 +324,49 @@ class Database(metaclass=Singleton):
         Logger().write(LogVerbosity.All, "Database check session key")
 
         database, cursor = self.connect()
-        cursor.execute("SELECT ClientKey FROM Keys WHERE SessionKey=? AND ClientKey=?", [session_key, client_key])
+        cursor.execute("SELECT ClientKey FROM Clients WHERE SessionKey=? AND ClientKey=?", [session_key, client_key])
         data = cursor.fetchall()
         database.commit()
         database.close()
         return data is not None and len(data) > 0
 
-    def check_client_key(self, client_key):
+    def client_known(self, client_key):
         if self.slave:
-            raise PermissionError("Cant call check_client_key on slave")
+            raise PermissionError("Cant call client_known on slave")
 
         Logger().write(LogVerbosity.All, "Database check client key")
 
         database, cursor = self.connect()
-        cursor.execute("SELECT ClientKey FROM Keys WHERE ClientKey=?", [client_key])
+        cursor.execute("SELECT ClientKey FROM Clients WHERE ClientKey=?", [client_key])
         data = cursor.fetchall()
         database.commit()
         database.close()
         return data is not None and len(data) > 0
 
-    def refresh_session_key(self, client_key, new_session_key):
+    def refresh_session_key(self, client_key, new_session_key, ip, user_agent):
         if self.slave:
             raise PermissionError("Cant call refresh_session_key on slave")
 
         Logger().write(LogVerbosity.All, "Database refresh session key")
         database, cursor = self.connect()
-        cursor.execute("UPDATE Keys SET SessionKey=?, LastSeen=? WHERE ClientKey=?", [new_session_key, current_time(), client_key])
+        cursor.execute("UPDATE Clients SET SessionKey=?, LastSeen=? WHERE ClientKey=?", [new_session_key, current_time(), client_key])
+        cursor.execute("INSERT INTO AuthorizeAttempts (ClientKey, IP, UserAgent, Timestamp, Type, Successful) VALUES (?, ?, ?, ?, ?, ?)",
+                       [client_key, ip, user_agent, current_time(), "Refresh", True])
         database.commit()
         database.close()
 
-    def add_client(self, client_key, session_key):
+    def add_login_attempt(self, ip, user_agent, type):
+        if self.slave:
+            raise PermissionError("Cant call add_login_attempt on slave")
+        Logger().write(LogVerbosity.All, "Database refresh session key")
+        database, cursor = self.connect()
+        cursor.execute(
+            "INSERT INTO AuthorizeAttempts (ClientKey, IP, UserAgent, Timestamp, Type, Successful) VALUES (?, ?, ?, ?, ?, ?)",
+            ["", ip, user_agent, current_time(), type, False])
+        database.commit()
+        database.close()
+
+    def add_client(self, client_key, session_key, ip, user_agent):
         if self.slave:
             raise PermissionError("Cant call add_client on slave")
 
@@ -361,7 +374,10 @@ class Database(metaclass=Singleton):
 
         database, cursor = self.connect()
         time = current_time()
-        cursor.execute("INSERT INTO Keys (ClientKey, SessionKey, Issued, LastSeen) Values (?, ?, ?, ?)", [client_key, session_key, time, time])
+        cursor.execute("INSERT INTO Clients (ClientKey, SessionKey, Issued, LastSeen) Values (?, ?, ?, ?)", [client_key, session_key, time, time])
+        cursor.execute(
+            "INSERT INTO AuthorizeAttempts (ClientKey, IP, UserAgent, Timestamp, Type, Successful) VALUES (?, ?, ?, ?, ?, ?)",
+            [client_key, ip, user_agent, current_time(), "Login", True])
         database.commit()
         database.close()
 

@@ -11,3 +11,16 @@ CREATE TABLE `ActionHistory` (
 	`Param3`    TEXT,
 	PRIMARY KEY(`Id`)
 );
+
+ALTER TABLE `Keys` RENAME TO `Clients`;
+
+CREATE TABLE `AuthorizeAttempts` (
+    `Id`        INTEGER,
+	`IP`	    TEXT,
+	`UserAgent`   TEXT,
+	`Timestamp`   TEXT,
+	`ClientKey`   TEXT,
+	`Type`        TEXT,
+	`Successful`   INTEGER,
+	PRIMARY KEY(`Id`)
+);
