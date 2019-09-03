@@ -7,6 +7,7 @@ import sys
 import objgraph
 from flask import request
 
+from Database.Database import Database
 from MediaPlayer.MediaManager import MediaManager
 from MediaPlayer.Player.VLCPlayer import VLCPlayer
 from Shared.Events import EventManager, EventType
@@ -35,6 +36,15 @@ class UtilController:
             if result is None:
                 return to_JSON(UpdateAvailable(False, ""))
             return to_JSON(UpdateAvailable(result[0], result[1]))
+
+    @staticmethod
+    @app.route('/util/get_action_history', methods=['GET'])
+    def get_action_history():
+        topic = request.args.get("topic")
+        start_time = int(request.args.get("start"))
+        end_time = int(request.args.get("end"))
+
+        return to_JSON(Database().get_action_history(topic, start_time, end_time))
 
     @staticmethod
     @app.route('/util/update', methods=['POST'])

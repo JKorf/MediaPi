@@ -2,7 +2,6 @@ import os
 import pathlib
 
 import sqlite3
-from threading import Lock
 
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
@@ -15,7 +14,7 @@ class Database(metaclass=Singleton):
         self.path = Settings.get_string("base_folder") + "Solution/"
         self.db_name = "database.data"
         self.slave = Settings.get_bool("slave")
-        self.current_version = 12
+        self.current_version = 13
 
     def init_database(self):
         Logger().write(LogVerbosity.Info, "Opening database at " + str(self.path))
@@ -87,7 +86,7 @@ class Database(metaclass=Singleton):
 
         Logger().write(LogVerbosity.All, "Database get history")
         database, cursor = self.connect()
-        cursor.execute('SELECT * FROM History')
+        cursor.execute('SELECT * FROM ViewHistory')
         data = cursor.fetchall()
         database.close()
         return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]) for x in data]
@@ -98,7 +97,7 @@ class Database(metaclass=Singleton):
 
         Logger().write(LogVerbosity.All, "Database get history for id " + str(item_id))
         database, cursor = self.connect()
-        cursor.execute('SELECT * FROM History WHERE ImdbId = ?', [item_id])
+        cursor.execute('SELECT * FROM ViewHistory WHERE ImdbId = ?', [item_id])
         data = cursor.fetchall()
         database.close()
         return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]) for x in data]
@@ -109,7 +108,7 @@ class Database(metaclass=Singleton):
 
         Logger().write(LogVerbosity.All, "Database get history for url " + str(url))
         database, cursor = self.connect()
-        cursor.execute('SELECT * FROM History WHERE URL = ?', [url])
+        cursor.execute('SELECT * FROM ViewHistory WHERE URL = ?', [url])
         data = cursor.fetchall()
         database.close()
         return [History(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]) for x in data]
@@ -120,7 +119,7 @@ class Database(metaclass=Singleton):
 
         Logger().write(LogVerbosity.All, "Database get watched torrent files")
         database, cursor = self.connect()
-        cursor.execute('SELECT * FROM History WHERE URL = ?', [uri])
+        cursor.execute('SELECT * FROM ViewHistory WHERE URL = ?', [uri])
         data = cursor.fetchall()
         database.close()
         return data
@@ -130,7 +129,7 @@ class Database(metaclass=Singleton):
             raise PermissionError("Cant call add_watched_file on slave")
 
         Logger().write(LogVerbosity.Debug, "Database add watched file")
-        sql = "INSERT INTO History (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
+        sql = "INSERT INTO ViewHistory (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
         parameters = ["File", url, url, watched_at]
 
         database, cursor = self.connect()
@@ -144,7 +143,7 @@ class Database(metaclass=Singleton):
             raise PermissionError("Cant call add_watched_youtube on slave")
 
         Logger().write(LogVerbosity.Debug, "Database add watched youtube")
-        sql = "INSERT INTO History (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
+        sql = "INSERT INTO ViewHistory (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
         parameters = ["YouTube", title, url, watched_at]
 
         database, cursor = self.connect()
@@ -158,7 +157,7 @@ class Database(metaclass=Singleton):
             raise PermissionError("Cant call add_watched_url on slave")
 
         Logger().write(LogVerbosity.Debug, "Database add watched url")
-        sql = "INSERT INTO History (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
+        sql = "INSERT INTO ViewHistory (Type, Title, URL, WatchedAt) VALUES (?, ?, ?, ?)"
         parameters = ["Url", url, url, watched_at]
 
         database, cursor = self.connect()
@@ -173,7 +172,7 @@ class Database(metaclass=Singleton):
 
         Logger().write(LogVerbosity.Debug, "Database add watched torrent")
         database, cursor = self.connect()
-        cursor.execute("INSERT INTO History (Type, ImdbId, Title, Image, URL, MediaFile, Season, Episode, WatchedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        cursor.execute("INSERT INTO ViewHistory (Type, ImdbId, Title, Image, URL, MediaFile, Season, Episode, WatchedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                        [media_type, show_id, title, image, url, media_file, season, episode, watched_at])
         database.commit()
         database.close()
@@ -185,7 +184,7 @@ class Database(metaclass=Singleton):
 
         Logger().write(LogVerbosity.Debug, "Database remove watched")
         database, cursor = self.connect()
-        cursor.execute("DELETE FROM History WHERE Id=?", [item_id])
+        cursor.execute("DELETE FROM ViewHistory WHERE Id=?", [item_id])
 
         database.commit()
         database.close()
@@ -255,7 +254,7 @@ class Database(metaclass=Singleton):
 
         Logger().write(LogVerbosity.All, "Database update watching items")
         database, cursor = self.connect()
-        cursor.execute("UPDATE History SET PlayedFor=?, Length=?, WatchedAt=? WHERE Id=?", [playing_for, length, time, history_id])
+        cursor.execute("UPDATE ViewHistory SET PlayedFor=?, Length=?, WatchedAt=? WHERE Id=?", [playing_for, length, time, history_id])
         database.commit()
         database.close()
 
@@ -319,6 +318,9 @@ class Database(metaclass=Singleton):
         database.close()
 
     def check_session_key(self, client_key, session_key):
+        if self.slave:
+            raise PermissionError("Cant call check_session_key on slave")
+
         Logger().write(LogVerbosity.All, "Database check session key")
 
         database, cursor = self.connect()
@@ -329,6 +331,9 @@ class Database(metaclass=Singleton):
         return data is not None and len(data) > 0
 
     def check_client_key(self, client_key):
+        if self.slave:
+            raise PermissionError("Cant call check_client_key on slave")
+
         Logger().write(LogVerbosity.All, "Database check client key")
 
         database, cursor = self.connect()
@@ -339,6 +344,9 @@ class Database(metaclass=Singleton):
         return data is not None and len(data) > 0
 
     def refresh_session_key(self, client_key, new_session_key):
+        if self.slave:
+            raise PermissionError("Cant call refresh_session_key on slave")
+
         Logger().write(LogVerbosity.All, "Database refresh session key")
         database, cursor = self.connect()
         cursor.execute("UPDATE Keys SET SessionKey=?, LastSeen=? WHERE ClientKey=?", [new_session_key, current_time(), client_key])
@@ -346,6 +354,9 @@ class Database(metaclass=Singleton):
         database.close()
 
     def add_client(self, client_key, session_key):
+        if self.slave:
+            raise PermissionError("Cant call add_client on slave")
+
         Logger().write(LogVerbosity.Debug, "Database add client")
 
         database, cursor = self.connect()
@@ -355,6 +366,9 @@ class Database(metaclass=Singleton):
         database.close()
 
     def get_rules(self):
+        if self.slave:
+            raise PermissionError("Cant call get_rules on slave")
+
         database, cursor = self.connect()
         cursor.execute("SELECT * FROM Rules")
         rules = cursor.fetchall()
@@ -373,6 +387,9 @@ class Database(metaclass=Singleton):
         return result
 
     def update_rule(self, rule):
+        if self.slave:
+            raise PermissionError("Cant call update_rule on slave")
+
         database, cursor = self.connect()
 
         cursor.execute("UPDATE Rules SET LastExecution=? WHERE Id=?",
@@ -382,6 +399,9 @@ class Database(metaclass=Singleton):
         database.close()
 
     def save_rule(self, rule):
+        if self.slave:
+            raise PermissionError("Cant call save_rule on slave")
+
         database, cursor = self.connect()
         cursor.execute("DELETE FROM RuleLinks WHERE RuleId=?", [rule.id])
 
@@ -403,6 +423,9 @@ class Database(metaclass=Singleton):
         database.close()
 
     def _add_rule_link(self, cursor, rule_id, item, type):
+        if self.slave:
+            raise PermissionError("Cant call _add_rule_link on slave")
+
         none_params = 5 - len(item.parameters)
         action_params = item.parameters + ([None] * none_params)
 
@@ -411,6 +434,9 @@ class Database(metaclass=Singleton):
         item.id = cursor.lastrowid
 
     def remove_rule(self, rule_id):
+        if self.slave:
+            raise PermissionError("Cant call remove_rule on slave")
+
         database, cursor = self.connect()
         cursor.execute("DELETE FROM Rules WHERE Id=?", [rule_id])
         cursor.execute("DELETE FROM RuleLinks WHERE RuleId=?", [rule_id])
@@ -429,6 +455,45 @@ class Database(metaclass=Singleton):
             return []
 
         return [Radio(x[0], x[1], x[2], x[3]) for x in data]
+
+    def add_action_history(self, topic, action, caller, param1=None, param2=None, param3=None):
+        if self.slave:
+            raise PermissionError("Cant call add_action_history on slave")
+
+        Logger().write(LogVerbosity.Debug, "Database add action history")
+
+        database, cursor = self.connect()
+        time = current_time()
+        cursor.execute("INSERT INTO ActionHistory (Topic, Action, Caller, Timestamp, Param1, Param2, Param3) Values (?, ?, ?, ?, ?, ? ,?)",
+                       [topic, action, caller, time, param1, param2, param3])
+        database.commit()
+        database.close()
+
+    def get_action_history(self, topic, start_time, end_time):
+        Logger().write(LogVerbosity.All, "Database get action history")
+
+        database, cursor = self.connect()
+        cursor.execute("SELECT * FROM ActionHistory WHERE Topic=? AND Timestamp>? AND Timestamp<?", [topic, start_time, end_time])
+        data = cursor.fetchall()
+        database.commit()
+        database.close()
+        if not data:
+            return []
+
+        return [ActionHistory(int(x[0]), x[1], x[2], x[3], int(x[4]), x[5], x[6], x[7]) for x in data]
+
+
+class ActionHistory:
+
+    def __init__(self, id, topic, action, caller, timestamp, param1, param2, param3):
+        self.id = id
+        self.topic = topic
+        self.action = action
+        self.caller = caller
+        self.timestamp = timestamp
+        self.param1 = param1
+        self.param2 = param2
+        self.param3 = param3
 
 
 class RuleRecord:

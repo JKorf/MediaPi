@@ -9,6 +9,7 @@ from Controllers.TVManager import TVManager
 from Controllers.ToonManager import ToonManager
 from Database.Database import Database
 from Shared.Logger import LogVerbosity, Logger
+from Shared.Settings import Settings
 from Shared.Threading import CustomThread
 from Shared.Util import Singleton, current_time, add_leading_zero
 
@@ -222,7 +223,7 @@ class SetTemperatureAction:
         self.temp = int(temp)
 
     def execute(self):
-        ToonManager().set_temperature(self.temp)
+        ToonManager().set_temperature(self.temp, "rule")
 
     def get_description(self):
         return "set the temperature to " + str(self.temp) + "°C"
@@ -303,6 +304,9 @@ class RuleManager(metaclass=Singleton):
         self.enabled = bool(enabled)
 
     def start(self):
+        if Settings.get_bool("slave"):
+            return
+
         self.running = True
         self.check_thread.start()
 

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { formatTemperature, formatTime } from './../../../Utils/Util.js';
 import { InfoGroup } from './../../Components/InfoGroup';
 import ViewLoader from './../../Components/ViewLoader';
+import { ResponsiveContainer, LineChart, XAxis, YAxis, Tooltip, Line } from 'recharts';
 
 class HeatingView extends Component {
   constructor(props) {
@@ -26,21 +27,36 @@ class HeatingView extends Component {
          },
         (error) => { console.log(error) }
     )
-  }
 
-  changeTemp(delta){
-    var newTemp = this.state.thermostatData.current_setpoint + delta;
-    var old = this.state.thermostatData;
-    old.current_setpoint = newTemp;
-    old.active_state = -1;
-    this.setState({thermostatData: old});
-
-    axios.post(window.vars.apiBase + 'toon/temperature?temperature=' + newTemp).then(
+    var end = (new Date).getTime();
+    var start = end - 1000 * 60 * 60 * 24 * 7;
+    axios.get(window.vars.apiBase + 'util/get_action_history?topic=temperature&start=' + start + "&end=" + end).then(
         (data) => {
-            console.log(data);
+            for (var i = 0; i < data.data.length; i++)
+                data.data[i].param1 = parseInt(data.data[i].param1);
+            this.setState({historyData: data.data});
          },
         (error) => { console.log(error) }
     )
+  }
+
+  changeTemp(delta){
+       var newTemp = this.state.thermostatData.current_setpoint + delta;
+       var old = this.state.thermostatData;
+       old.current_setpoint = newTemp;
+       old.active_state = -1;
+       this.setState({thermostatData: old});
+
+        if (this.timer)
+            clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
+            axios.post(window.vars.apiBase + 'toon/temperature?temperature=' + this.state.thermostatData.current_setpoint).then(
+                (data) => {
+                    console.log(data);
+                 },
+                (error) => { console.log(error) }
+            )
+        }, 750);
   }
 
   setActiveState(state){
@@ -124,11 +140,46 @@ class HeatingView extends Component {
                     </div>
                 </div>
             </InfoGroup>
+
+            <InfoGroup title="History">
+                { this.state.historyData &&
+                    <ResponsiveContainer width="100%" height={200}>
+                        <LineChart data={this.state.historyData} margin={{top:20,right:30,bottom:30,left:-10}}>
+                          <XAxis angle={20}
+                                 dy={20}
+                                 interval="preserveStartEnd"
+                                 dataKey="timestamp"
+                                 tickFormatter = {(timestamp) => formatTime(timestamp, false, true, true, true, true)}
+                                 />
+                          <YAxis dataKey="param1" type="number" domain={['dataMin - 2', 'dataMax + 2']}/>
+                          <Line dataKey="param1" stroke="#8884d8" dot={false} animationDuration={500} />
+                          <Tooltip content={<CustomTooltip />} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                }
+            </InfoGroup>
             </div>
         }
       </div>
     );
   }
+};
+
+const CustomTooltip = ({ active, payload, label }) => {
+	if (active) {
+		return (
+			<div className="custom-tooltip">
+				<div className="label">{formatTime(label, false, true, true, true, true)}</div>
+				<div>{payload[0].value}°C</div>
+				<div className="desc">
+				{ payload[0].payload.caller == "user" && <span>Set by user</span> }
+				{ payload[0].payload.caller == "rule" && <span>Set by rule</span> }
+				</div>
+			</div>
+		);
+	}
+
+	return null;
 };
 
 export default HeatingView;

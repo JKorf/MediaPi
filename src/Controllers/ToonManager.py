@@ -3,6 +3,7 @@ import time
 
 from toonapilib import Toon
 
+from Database.Database import Database
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import SecureSettings
 from Shared.Util import Singleton
@@ -31,12 +32,13 @@ class ToonManager(metaclass=Singleton):
         Logger().write(LogVerbosity.All, "Get toon states")
         return self.api.thermostat_states
 
-    def set_temperature(self, temp):
+    def set_temperature(self, temp, src):
         Logger().write(LogVerbosity.Debug, "Set toon temperature: " + str(temp))
         for i in range(3):
             try:
                 self.api.thermostat = temp
                 Logger().write(LogVerbosity.Debug, "Temp set")
+                Database().add_action_history("temperature", "set", src, temp)
                 return
             except json.decoder.JSONDecodeError as e:
                 Logger().write(LogVerbosity.Info, "Toon set temp error, try " + str(i + 1))

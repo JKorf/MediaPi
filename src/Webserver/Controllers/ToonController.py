@@ -62,11 +62,11 @@ class ToonController:
     @staticmethod
     @app.route('/toon/temperature', methods=['POST'])
     def set_temperature():
-        temp = int(request.args.get('temp'))
+        temp = int(request.args.get('temperature'))
 
         temp /= 100
         Logger().write(LogVerbosity.Info, "Setting toon temperature to " + str(temp))
-        ToonManager().set_temperature(temp)
+        ToonManager().set_temperature(temp, "user")
         return "OK"
 
     @staticmethod

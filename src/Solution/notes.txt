@@ -19,13 +19,12 @@
 
     Youtube
 	    Track watched videos (youtube response?)
-	    Channel favorites
 
     Fix back going a page back instead of to base menu
 
     Refactoring to file buffer
         - Can also offer pieces now
 
-    Extend gas/power usage graphs
+    Gas/power usage and heating history time selection
 
     Manage access by clients
