@@ -21,7 +21,7 @@ class Button extends Component{
     }
 
     render(){
-        return  <div className={"button " + (!this.props.enabled ? "disabled ": "") + (this.state.pointer? "pointer-down": "")}
+        return  <div className={"button " + (!this.props.enabled == false ? "disabled ": "") + (this.state.pointer? "pointer-down": "")}
          onPointerEnter={() => this.SetPointer(true)}
             onPointerLeave={() =>  this.SetPointer(false)}
             onClick={this.onClick}>
