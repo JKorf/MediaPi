@@ -1,5 +1,3 @@
-/*eslint no-mixed-operators: "off"*/
-
 import React, {Component} from 'react';
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import axios from 'axios';
@@ -8,6 +6,7 @@ import Header from './Modules/Header'
 import Footer from './Modules/Footer'
 import View from './Modules/Views/View.js'
 import DashboardView from './Modules/Views/DashboardView.js'
+import LoginPopup from './Modules/Components/Popups/LoginPopup.js'
 
 import MediaPlayerDashboardView from './Modules/Views/MediaPlayer/MediaPlayerDashboardView.js'
 import ShowsView from './Modules/Views/MediaPlayer/ShowsView.js'
@@ -56,9 +55,6 @@ class App extends Component {
     this.changeBack = this.changeBack.bind(this);
     this.changeTitle = this.changeTitle.bind(this);
     this.changeRightImage = this.changeRightImage.bind(this);
-    this.processLoginResult = this.processLoginResult.bind(this);
-    this.processRefreshResult = this.processRefreshResult.bind(this);
-    this.setSessionKey = this.setSessionKey.bind(this);
 
     this.popupControllerRef = React.createRef();
 
@@ -97,95 +93,6 @@ class App extends Component {
     }
 
     Socket2.init();
-    this.authenticate();
-  }
-
-  authenticate()
-  {
-    var clientId = localStorage.getItem('Client-ID');
-    if (!clientId){
-        clientId = this.generate_id();
-        localStorage.setItem('Client-ID', clientId);
-        axios.defaults.headers.common['Client-ID'] = clientId;
-        this.login();
-    }
-    else{
-        axios.defaults.headers.common['Client-ID'] = clientId;
-        this.refresh();
-    }
-  }
-
-  login()
-  {
-    var pw = prompt("Password");
-    if (pw)
-        axios.post(window.vars.apiBase + "auth/login?p=" + encodeURIComponent(pw)).then(this.processLoginResult, this.processLoginResult);
-  }
-
-  refresh()
-  {
-    axios.post(window.vars.apiBase + "auth/refresh").then(this.processRefreshResult, this.processRefreshResult);
-  }
-
-  generate_id()
-  {
-      return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-      )
-  }
-
-  processLoginResult(result)
-  {
-    if (result.response)
-        result = result.response;
-
-    if(!result.status)
-    {
-        this.setState({authError: "No connection could be made to server"});
-    }
-    else if(result.status === 200)
-    {
-        console.log("Successfully logged in");
-        this.setSessionKey(result.data.key);
-    }
-    else if(result.status === 401)
-    {
-        console.log("Login failed");
-        this.login();
-    }
-    else{
-        this.setState({authError: "Error during login: " + result.statusText});
-    }
-  }
-
-  processRefreshResult(result)
-  {
-    if (result.response)
-        result = result.response;
-
-    if(!result.status)
-    {
-        this.setState({authError: "No connection could be made to server"});
-    }
-    else if(result.status === 200)
-    {
-        console.log("Successfully refreshed");
-        this.setSessionKey(result.data.key);
-    }
-    else if(result.status === 401)
-    {
-        console.log("Refresh failed, need to log in again");
-        this.login();
-    }
-    else{
-        this.setState({authError: "Error during authentication: " + result.statusText});
-    }
-  }
-
-  setSessionKey(key){
-    sessionStorage.setItem('Session-Key', key);
-    Socket2.connect();
-    this.setState({auth: true});
   }
 
   changeBack (value){
@@ -202,8 +109,7 @@ class App extends Component {
 
   render() {
     if (!this.state.auth){
-        if (this.state.authError) return <div>Authentication failed: {this.state.authError}</div>
-        else  return <div>Authentication required</div>
+        return <LoginPopup onAuthorize={(e)=> this.setState({auth: true})}/>;
     }
 
     const link = this.state.backConfig;

@@ -42,11 +42,13 @@ class UIWebsocketController(BaseWebsocketController):
 
     @staticmethod
     def on_init(client_id, session_key):
-        Logger().write(LogVerbosity.Info, "Init UI: " + client_id + ", " + session_key)
+        Logger().write(LogVerbosity.Info, "Init UI: " + client_id)
         client = [x for x in UIWebsocketController.clients if x.sid == request.sid][0]
 
         client_key = APIController.get_salted(client_id)
         client.authenticated = Database().check_session_key(client_key, session_key)
+        if not client.authenticated:
+            Logger().write(LogVerbosity.Debug, "UI invalid client/session key")
 
         return client.authenticated
 

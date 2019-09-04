@@ -28,7 +28,7 @@ class HeatingView extends Component {
         (error) => { console.log(error) }
     )
 
-    var end = (new Date).getTime();
+    var end = new Date().getTime();
     var start = end - 1000 * 60 * 60 * 24 * 7;
     axios.get(window.vars.apiBase + 'util/get_action_history?topic=temperature&start=' + start + "&end=" + end).then(
         (data) => {
@@ -141,8 +141,9 @@ class HeatingView extends Component {
                 </div>
             </InfoGroup>
 
-            <InfoGroup title="History">
-                { this.state.historyData &&
+            { this.state.historyData && this.state.historyData.length > 1 &&
+
+                <InfoGroup title="History">
                     <ResponsiveContainer width="100%" height={200}>
                         <LineChart data={this.state.historyData} margin={{top:20,right:30,bottom:30,left:-10}}>
                           <XAxis angle={20}
@@ -156,8 +157,9 @@ class HeatingView extends Component {
                           <Tooltip content={<CustomTooltip />} />
                         </LineChart>
                     </ResponsiveContainer>
-                }
-            </InfoGroup>
+                </InfoGroup>
+            }
+
             </div>
         }
       </div>
@@ -172,8 +174,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 				<div className="label">{formatTime(label, false, true, true, true, true)}</div>
 				<div>{payload[0].value}°C</div>
 				<div className="desc">
-				{ payload[0].payload.caller == "user" && <span>Set by user</span> }
-				{ payload[0].payload.caller == "rule" && <span>Set by rule</span> }
+				{ payload[0].payload.caller === "user" && <span>Set by user</span> }
+				{ payload[0].payload.caller === "rule" && <span>Set by rule</span> }
 				</div>
 			</div>
 		);
