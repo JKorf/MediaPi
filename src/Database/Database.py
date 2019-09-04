@@ -3,6 +3,8 @@ import pathlib
 
 import sqlite3
 
+from werkzeug import useragents
+
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
 from Shared.Util import current_time, Singleton
@@ -355,14 +357,14 @@ class Database(metaclass=Singleton):
         database.commit()
         database.close()
 
-    def add_login_attempt(self, ip, user_agent, type):
+    def add_login_attempt(self, client_id, ip, user_agent, type):
         if self.slave:
             raise PermissionError("Cant call add_login_attempt on slave")
         Logger().write(LogVerbosity.All, "Database refresh session key")
         database, cursor = self.connect()
         cursor.execute(
             "INSERT INTO AuthorizeAttempts (ClientKey, IP, UserAgent, Timestamp, Type, Successful) VALUES (?, ?, ?, ?, ?, ?)",
-            ["", ip, user_agent, current_time(), type, False])
+            [client_id, ip, user_agent, current_time(), type, False])
         database.commit()
         database.close()
 
@@ -378,6 +380,44 @@ class Database(metaclass=Singleton):
         cursor.execute(
             "INSERT INTO AuthorizeAttempts (ClientKey, IP, UserAgent, Timestamp, Type, Successful) VALUES (?, ?, ?, ?, ?, ?)",
             [client_key, ip, user_agent, current_time(), "Login", True])
+        database.commit()
+        database.close()
+
+    def get_clients(self):
+        if self.slave:
+            raise PermissionError("Cant call get_clients on slave")
+
+        Logger().write(LogVerbosity.Debug, "Database get clients")
+
+        database, cursor = self.connect()
+        cursor.execute("SELECT * FROM Clients")
+        data = cursor.fetchall()
+        database.commit()
+        database.close()
+        return [Client(x[0], x[1], x[3], x[4]) for x in data]
+
+    def get_client_access(self, id):
+        if self.slave:
+            raise PermissionError("Cant call get_clients on slave")
+
+        Logger().write(LogVerbosity.Debug, "Database get client access")
+
+        database, cursor = self.connect()
+        cursor.execute("SELECT a.Id, a.IP, a.UserAgent, a.Timestamp, a.Type, a.Successful FROM Clients c, AuthorizeAttempts a WHERE c.Id=? AND c.ClientKey=a.ClientKey ORDER BY a.Timestamp DESC LIMIT 100", [id])
+        data = cursor.fetchall()
+        database.commit()
+        database.close()
+        return [ClientAccess(x[0], x[1], x[2], x[3], x[4], x[5]) for x in data]
+
+    def remove_client(self, client_key):
+        if self.slave:
+            raise PermissionError("Cant call remove_client on slave")
+
+        Logger().write(LogVerbosity.Debug, "Database remove client")
+
+        database, cursor = self.connect()
+        cursor.execute("DELETE FROM Clients WHERE ClientKey=?", [client_key])
+        cursor.execute("DELETE FROM AuthorizeAttempts WHERE ClientKey=?", [client_key])
         database.commit()
         database.close()
 
@@ -497,6 +537,29 @@ class Database(metaclass=Singleton):
             return []
 
         return [ActionHistory(int(x[0]), x[1], x[2], x[3], int(x[4]), x[5], x[6], x[7]) for x in data]
+
+
+class Client:
+
+    def __init__(self, id, key, issued, last_seen):
+        self.id = id
+        self.key = key
+        self.issued = issued
+        self.last_seen = last_seen
+
+
+class ClientAccess:
+
+    def __init__(self, id, ip, user_agent, timestamp, type, success):
+        self.id = id
+        self.ip = ip
+        ua_details = useragents.UserAgent(user_agent)
+        self.platform = ua_details.platform
+        self.browser = ua_details.browser
+        self.version = ua_details.version
+        self.timestamp = timestamp
+        self.type = type
+        self.success = success
 
 
 class ActionHistory:

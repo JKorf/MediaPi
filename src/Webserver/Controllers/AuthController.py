@@ -24,7 +24,7 @@ class AuthController:
 
         status = 200
         if not success:
-            Database().add_login_attempt(ip_addr, user_agent, "Login")
+            Database().add_login_attempt(APIController.get_salted(client_id), ip_addr, user_agent, "Login")
             status = 401
         return to_JSON(AuthResult(success, key)), status
 
@@ -39,7 +39,7 @@ class AuthController:
 
         if not client_known:
             Logger().write(LogVerbosity.Info, str(client_id) + " failed to refresh")
-            Database().add_login_attempt(ip_addr, user_agent, "Refresh")
+            Database().add_login_attempt(client_key, ip_addr, user_agent, "Refresh")
             return to_JSON(AuthResult(False, None)), 401
 
         session_key = AuthController.generate_session_key()

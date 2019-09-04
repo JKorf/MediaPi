@@ -23,7 +23,7 @@ class ConfigurationDashboardView extends Component {
 
   render() {
     return <div className="settings-view">
-        <DashboardLink to="/configuration/access" img={lockImg} text="Access"></DashboardLink>
+        <DashboardLink to="/configuration/clients" img={lockImg} text="Clients"></DashboardLink>
         <DashboardLink to="/configuration/test" img={testImg} text="Test"></DashboardLink>
     </div>
   }

@@ -50,6 +50,7 @@ class APIController(metaclass=Singleton):
 
     def internal_start_master(self):
         from Webserver.Controllers.AuthController import AuthController
+        from Webserver.Controllers.AccessController import AccessController
         from Webserver.Controllers.MediaPlayer.MovieController import MovieController
         from Webserver.Controllers.MediaPlayer.ShowController import ShowController
         from Webserver.Controllers.MediaPlayer.PlayController import PlayController
@@ -58,10 +59,10 @@ class APIController(metaclass=Singleton):
         from Webserver.Controllers.MediaPlayer.TorrentController import TorrentController
         from Webserver.Controllers.MediaPlayer.YouTubeController import YouTubeController
         from Webserver.Controllers.DataController import DataController
-        from Webserver.Controllers.TradfriController import TradfriController
-        from Webserver.Controllers.ToonController import ToonController
+        from Webserver.Controllers.Home.TradfriController import TradfriController
+        from Webserver.Controllers.Home.ToonController import ToonController
         from Webserver.Controllers.UtilController import UtilController
-        from Webserver.Controllers.RuleController import RuleController
+        from Webserver.Controllers.Home.RuleController import RuleController
         from Webserver.Controllers.Websocket2.UIWebsocketController import UIWebsocketController
         from Webserver.Controllers.Websocket2.SlaveWebsocketController import SlaveWebsocketController
 
