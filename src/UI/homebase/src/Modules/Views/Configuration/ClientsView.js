@@ -31,7 +31,7 @@ class ClientsView extends Component {
 
   revokeClient(client){
     if(window.confirm("Do you want to revoke access for client " + client.key + "?")){
-        axios.post(window.vars.apiBase + "access/revoke_client?key=" + client.key);
+        axios.post(window.vars.apiBase + "access/revoke_client?key=" + encodeURIComponent(client.key));
         var clients = this.state.clients;
         clients.splice(clients.indexOf(client), 1);
         this.setState({clients: clients});

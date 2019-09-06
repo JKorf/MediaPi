@@ -9,19 +9,19 @@ class Button extends Component{
     }
 
     SetPointer(newState){
-        if(!this.props.enabled)
+        if(this.props.enabled !== false)
             return;
 
         this.setState({pointer: newState});
     }
 
     onClick(){
-        if(this.props.enabled === true)
+        if(this.props.enabled !== false)
             this.props.onClick();
     }
 
     render(){
-        return  <div className={"button " + (!this.props.enabled === false ? "disabled ": "") + (this.state.pointer? "pointer-down": "")}
+        return  <div className={"button " + (this.props.enabled === false ? "disabled ": "") + (this.state.pointer? "pointer-down": "")}
          onPointerEnter={() => this.SetPointer(true)}
             onPointerLeave={() =>  this.SetPointer(false)}
             onClick={this.onClick}>

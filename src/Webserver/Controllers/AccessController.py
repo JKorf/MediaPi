@@ -1,4 +1,5 @@
 from flask import request
+import urllib.parse
 
 from Database.Database import Database
 from Shared.Logger import Logger, LogVerbosity
@@ -24,5 +25,5 @@ class AccessController:
     @app.route('/access/revoke_client', methods=['POST'])
     def revoke_client():
         Logger().write(LogVerbosity.Debug, "Revoking client")
-        Database().remove_client(request.args.get('key'))
+        Database().remove_client(urllib.parse.unquote(request.args.get('key')))
         return "OK"
