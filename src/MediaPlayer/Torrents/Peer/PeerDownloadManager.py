@@ -59,7 +59,7 @@ class PeerDownloadManager(LogObject):
             #     self.request(to_download)
             #     return True
 
-        if current_time() - self.timed_out_blocks < 5000:
+        if current_time() - self.timed_out_blocks < 10000:
             # We have timed out on block we previously requested, don't request new for some time
             return True
 

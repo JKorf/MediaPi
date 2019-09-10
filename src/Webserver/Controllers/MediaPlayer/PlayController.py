@@ -122,7 +122,10 @@ class PlayController:
         Logger().write(LogVerbosity.Info, "Play url " + title + "(" + url + ") on " + str(instance))
 
         if instance == 1:
-            MediaManager().start_url(title, url)
+            if url.startswith("magnet:"):
+                MediaManager().start_torrent(title, url, None)
+            else:
+                MediaManager().start_url(title, url)
         else:
             APIController().slave_command(instance, "media", "start_url", title, url)
         return "OK"

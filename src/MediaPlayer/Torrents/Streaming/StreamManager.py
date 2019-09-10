@@ -6,7 +6,7 @@ from MediaPlayer.Torrents.TorrentManager import TorrentManager
 from MediaPlayer.Util.Enums import DownloadMode
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Settings import Settings
-from Shared.Util import write_size
+from Shared.Util import write_size, current_time
 
 
 class StreamManager(TorrentManager):
@@ -92,7 +92,9 @@ class StreamManager(TorrentManager):
             self.stream_position_piece_index = new_index
 
     def update(self):
-        if self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer > Settings.get_int("important_only_start_threshold") and self.torrent.download_manager.download_mode == DownloadMode.Full:
+        big_buffer_but_not_consequetive = self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer > Settings.get_int("important_only_start_threshold")
+        queued_high_priority_piece_timeout_while_downloading = len([x for x in self.torrent.download_manager.queue[0: 10] if x.max_priority_set_time != 0 and current_time() - x.max_priority_set_time > 10000]) > 0 and self.torrent.network_manager.average_download_counter.value > 200000
+        if (big_buffer_but_not_consequetive or queued_high_priority_piece_timeout_while_downloading) and self.torrent.download_manager.download_mode == DownloadMode.Full:
             Logger().write(LogVerbosity.Info, "Entering ImportantOnly download mode: " + write_size(self.torrent.bytes_total_in_buffer) + " in buffer total")
             self.torrent.download_manager.download_mode = DownloadMode.ImportantOnly
         elif self.torrent.bytes_total_in_buffer - self.torrent.bytes_ready_in_buffer < Settings.get_int("important_only_stop_threshold") and self.torrent.download_manager.download_mode == DownloadMode.ImportantOnly:

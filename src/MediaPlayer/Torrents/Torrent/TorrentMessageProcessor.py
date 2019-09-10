@@ -115,7 +115,7 @@ class TorrentMessageProcessor(TorrentManager):
 
         elif isinstance(message, HaveMessage):
             if peer.state == PeerState.Started:
-                Logger().write(LogVerbosity.All, str(peer.id) + ' Received have message')
+                Logger().write(LogVerbosity.All, str(peer.id) + ' Received have message for piece ' + str(message.piece_index))
                 peer.protocol_logger.update("Received Have", True)
                 peer.bitfield.update_piece(message.piece_index, True)
             return

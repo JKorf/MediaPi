@@ -27,4 +27,11 @@
 
     Gas/power usage and heating history time selection
 
-    Manage access by clients
+    Piece werd niet gedownload? Bleef ergens hangen? Had wel 100.9% priority..
+
+    Home automation apparaten meer modulair maken
+
+    Moods maken?
+        Film -> gedimde verlichting
+        Normaal
+        etc

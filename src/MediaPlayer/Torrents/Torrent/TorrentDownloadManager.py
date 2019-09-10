@@ -81,6 +81,10 @@ class TorrentDownloadManager(TorrentManager):
 
         for piece in pieces_to_look_at:
             piece.priority = self.prioritize_piece_index(piece.index)
+            if piece.priority > 100 and piece.max_priority_set_time == 0:
+                piece.max_priority_set_time = current_time()
+            else:
+                piece.max_priority_set_time = 0
         if full:
             self.queue = sorted(self.queue, key=lambda x: x.priority, reverse=True)
             first = "none"
@@ -91,8 +95,8 @@ class TorrentDownloadManager(TorrentManager):
 
         if self.queue:
             piece = self.queue[0]
-            Logger().write(LogVerbosity.Debug, "Highest prio: " + str(piece.index) + ": "+str(piece.priority)+"% "
-                            "("+str(piece.start_byte)+"-"+str(piece.end_byte)+"), took " + str(current_time()-start_time)+"ms, full: " + str(full))
+            Logger().write(LogVerbosity.Debug, "Highest prio: " + str(piece.index) + ": "+str(piece.priority)+"%, " + str(len([x for x in piece.blocks.values() if not x.done])) +
+                            " block left, took " + str(current_time()-start_time)+"ms, full: " + str(full))
         else:
             Logger().write(LogVerbosity.Debug, "No prio: queue empty")
 
@@ -260,6 +264,7 @@ class TorrentDownloadManager(TorrentManager):
         if self._ticks == 100:
             self._ticks = 0
             Logger().write(LogVerbosity.Debug, "Removed " + str(removed) + ", skipped " + str(skipped) + ", retrieved " + str(len(result)) + ", queue length: " + str(len(self.queue)) + " took " + str(current_time() - start) + "ms")
+
 
         self._ticks += 1
         self.last_get_result = amount, len(result)

@@ -51,6 +51,7 @@ class Bitfield(LogObject):
             else:
                 self.field[i] = False
         self.pieces_has_log = pieces_has
+        Logger().write(LogVerbosity.All, "Bitfield set, index 2: " + str(self.has_piece(2)))
 
     def get_bitfield(self):
         result = bytearray()
@@ -122,6 +123,7 @@ class Piece(LogObject):
         self.done = False
         self.written = False
         self.cleared = False
+        self.max_priority_set_time = 0
 
         self._data = None
         self._blocks = dict()
