@@ -31,6 +31,8 @@ import DevicesView from './Modules/Views/Home/DevicesView.js'
 import DeviceView from './Modules/Views/Home/DeviceView.js'
 import RulesView from './Modules/Views/Home/RulesView.js'
 import RuleView from './Modules/Views/Home/RuleView.js'
+import AutomationView from './Modules/Views/Home/AutomationView.js'
+import AutomationGroupView from './Modules/Views/Home/AutomationGroupView.js'
 
 import ConfigurationDashboardView from './Modules/Views/Configuration/ConfigurationDashboardView.js'
 import TestView from './Modules/Views/Configuration/TestView.js'
@@ -45,6 +47,7 @@ import './Styles/components.less';
 import './Styles/mediaplayer.less';
 import './Styles/rules.less';
 import './Styles/settings.less';
+import './Styles/automation.less';
 
 class App extends Component {
   constructor(props) {
@@ -144,6 +147,8 @@ class App extends Component {
                     <Route path="/home/device/:id" exact render={(props) => <DeviceView {...props} functions={this.functions}  />} />
                     <Route path="/home/rules" exact render={(props) => <RulesView {...props} functions={this.functions}  />} />
                     <Route path="/home/rule/:id" exact render={(props) => <RuleView {...props} functions={this.functions}  />} />
+                    <Route path="/home/automation" exact render={(props) => <AutomationView {...props} functions={this.functions}  />} />
+                    <Route path="/home/automation-group/:id" exact render={(props) => <AutomationGroupView {...props} functions={this.functions}  />} />
 
                     <Route path="/configuration" exact render={(props) => <ConfigurationDashboardView {...props} functions={this.functions}  />} />
                     <Route path="/configuration/test" exact render={(props) => <TestView {...props} functions={this.functions}  />} />

@@ -1,0 +1,183 @@
+@import "base.less";
+
+.automation-view{
+    margin: 10px;
+}
+
+.automation-group{
+    width: 100%;
+    border-bottom: 1px solid #colors[borders];
+}
+
+.automation-no-groups, .automation-no-devices{
+    padding: 8px;
+    text-align: center;
+}
+
+.automation-group-icon{
+    display: inline-block;
+    vertical-align: top;
+    width: 50px;
+    padding: 10px;
+}
+
+.automation-group-name{
+    display: inline-block;
+    vertical-align: top;
+    width: calc(100% - 120px);
+    padding: 10px;
+}
+
+.automation-group-length{
+    display: inline-block;
+    vertical-align: top;
+    width: 60px;
+    padding: 10px;
+    text-align: center;
+}
+
+.automation-group-controls{
+    display: inline-block;
+    vertical-align: top;
+    width: 60px;
+    font-size: 12px;
+    position: relative;
+    padding: 4px 10px;
+
+    .switch{
+        position: absolute;
+        right: 4px;
+        top: 6px;
+    }
+}
+
+.automation-devices{
+    margin-top: 10px;
+}
+
+.automation-header{
+    background: #colors[item-background];
+    border-bottom: 1px solid #colors[borders];
+}
+
+.automation-header-column{
+    display:inline-block;
+    font-size: 11px;
+    color: #colors[text-faded];
+    padding-left: 4px;
+    line-height: 22px;
+}
+
+.automation-header-group-name{
+    width: calc(100% - 120px);
+}
+
+
+.automation-header-name{
+    width: calc(100% - 200px);
+}
+
+.automation-header-type{
+    width: 50px;
+    text-align: center;
+    padding-left: 0;
+}
+
+.automation-header-action{
+    width: 36px;
+}
+
+.automation-device{
+    width: 100%;
+    border-bottom: 1px solid #colors[borders];
+}
+
+.automation-device-type{
+    display: inline-block;
+    vertical-align: top;
+    width: 50px;
+    padding: 10px;
+
+    svg{
+        width: 30px;
+        height: 30px;
+    }
+}
+
+.automation-device-name{
+    display: inline-block;
+    vertical-align: top;
+    width: calc(100% - 180px);
+    padding: 10px;
+    line-height: 34px;
+    height: 54px;
+}
+
+.automation-device-select-type{
+    display: inline-block;
+    vertical-align: top;
+    width: 50px;
+    padding: 10px;
+
+    svg{
+        width: 30px;
+        height: 30px;
+    }
+}
+
+.automation-device-select-name{
+    display: inline-block;
+    vertical-align: top;
+    width: calc(100% - 80px);
+    padding: 10px;
+    line-height: 34px;
+    height: 54px;
+}
+
+.automation-device-select-checkbox{
+    width: 30px;
+    display: inline-block;
+    vertical-align: top;
+    padding: 19px 0;
+}
+
+.automation-device-template{
+    display: inline-block;
+    vertical-align: top;
+    position: relative;
+    width: 130px;
+    height: 10px;
+    padding: 10px 0;
+
+    .switch{
+        position: absolute;
+        right: 4px;
+        top: 14px;
+    }
+}
+
+.automation-thermostat-template{
+    .temp-widget-current-setpoint{
+        padding: 0 15px;
+    }
+}
+
+.automation-group-block{
+    padding: 10px;
+}
+
+.automation-label{
+    width: calc(50% - 10px);
+    display: inline-block;
+    vertical-align: top;
+}
+
+.automation-value{
+    width: calc(50% - 10px);
+    display: inline-block;
+    vertical-align: top;
+}
+
+.automation-group-save{
+    margin-top: 10px;
+}

@@ -1,6 +1,7 @@
 from flask import request
 from flask_socketio import join_room, leave_room, emit
 
+from Automation.DeviceController import DeviceController
 from Database.Database import Database
 from Shared.Logger import LogVerbosity, Logger
 from Shared.Util import current_time, to_JSON
@@ -10,6 +11,7 @@ from Webserver.Controllers.Websocket2.BaseWebsocketController import BaseWebsock
 
 class UIWebsocketController(BaseWebsocketController):
     clients = []
+    device_callback_registrations = []
 
     @staticmethod
     def init():
@@ -22,6 +24,7 @@ class UIWebsocketController(BaseWebsocketController):
 
         APIController.slaves.register_callback(lambda old, new: UIWebsocketController.broadcast("slaves", new.data))
         TradfriManager().tradfri_state.register_callback(lambda old, new: UIWebsocketController.broadcast("tradfri", new))
+        DeviceController().register_callback(lambda old, new: UIWebsocketController.broadcast("devices", new))
         StateManager().state_data.register_callback(lambda old, new: UIWebsocketController.broadcast("1.state", new))
         VLCPlayer().player_state.register_callback(lambda old, new: UIWebsocketController.broadcast("1.player", new))
         MediaManager().media_data.register_callback(lambda old, new: UIWebsocketController.broadcast("1.media", new))
@@ -68,6 +71,12 @@ class UIWebsocketController(BaseWebsocketController):
         if not authenticated:
             Logger().write(LogVerbosity.Info, "Unauthenticated socket request subscribing")
             return
+
+        if topic.startswith("device:"):
+            is_registered = len([x for x in UIWebsocketController.device_callback_registrations if x == topic]) != 0
+            if not is_registered:
+                DeviceController().register_device_callback(topic[7:], lambda old, new: UIWebsocketController.broadcast(topic, new))
+                UIWebsocketController.device_callback_registrations.append(topic)
 
         Logger().write(LogVerbosity.Info, "UI client subscribing to " + topic)
         join_room(topic)

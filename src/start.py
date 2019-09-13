@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import eventlet
-
 eventlet.monkey_patch()
 
 from eventlet import hubs
@@ -16,7 +15,7 @@ from datetime import datetime
 import sys
 import time
 
-from Shared.Threading import ThreadManager, CustomThread
+from Shared.Threading import ThreadManager
 from Controllers.RuleManager import RuleManager
 from Updater import Updater
 from Webserver.APIController import APIController
@@ -27,8 +26,10 @@ from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
 
 from Controllers.PresenceManager import PresenceManager
 from Controllers.WiFiController import WiFiController
-from Controllers.TradfriManager import TradfriManager
+#from Controllers.TradfriManager import TradfriManager
 from Controllers.TVManager import TVManager
+from Controllers.VacuumManager import VacuumManager
+from Automation.DeviceController import DeviceController
 
 from Shared.Util import current_time
 from Shared.Stats import Stats
@@ -89,8 +90,10 @@ class Program:
         TVManager().start()
 
         if not self.is_slave:
-            Logger().write(LogVerbosity.Debug, "Initializing TradeFriManager")
-            TradfriManager().init()
+            DeviceController().initialize()
+
+            # Logger().write(LogVerbosity.Debug, "Initializing TradeFriManager")
+            # TradfriManager().init()
 
             Logger().write(LogVerbosity.Debug, "Initializing master file server")
             self.file_listener = StreamListener("MasterFileServer", 50015)
@@ -115,6 +118,7 @@ class Program:
         ThreadManager()
         PresenceManager()
         RuleManager()
+        VacuumManager()
 
     @staticmethod
     def init_sound():

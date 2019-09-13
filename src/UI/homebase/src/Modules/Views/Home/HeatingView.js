@@ -5,6 +5,7 @@ import { formatTemperature, formatTime } from './../../../Utils/Util.js';
 import { InfoGroup } from './../../Components/InfoGroup';
 import ViewLoader from './../../Components/ViewLoader';
 import { ResponsiveContainer, LineChart, XAxis, YAxis, Tooltip, Line } from 'recharts';
+import Socket from './../../../Socket2.js';
 
 class HeatingView extends Component {
   constructor(props) {
@@ -15,18 +16,12 @@ class HeatingView extends Component {
     this.props.functions.changeTitle("Heating");
     this.props.functions.changeRightImage(null);
 
-    this.setActiveState = this.setActiveState.bind(this);
     this.changeTemp = this.changeTemp.bind(this);
+    this.devicesUpdate = this.devicesUpdate.bind(this);
   }
 
   componentDidMount() {
-    axios.get(window.vars.apiBase + 'toon/details').then(
-        (data) => {
-            this.setState({thermostatData: data.data});
-            console.log(data.data);
-         },
-        (error) => { console.log(error) }
-    )
+    this.devicesSub = Socket.subscribe("device:ToonThermostat", this.devicesUpdate);
 
     var end = new Date().getTime();
     var start = end - 1000 * 60 * 60 * 24 * 7;
@@ -40,17 +35,24 @@ class HeatingView extends Component {
     )
   }
 
+  componentWillUnmount(){
+     Socket.unsubscribe(this.devicesSub);
+  }
+
+  devicesUpdate(subId, data){
+    console.log(data);
+    this.setState(data);
+    this.setState({loading: false});
+  }
+
   changeTemp(delta){
-       var newTemp = this.state.thermostatData.current_setpoint + delta;
-       var old = this.state.thermostatData;
-       old.current_setpoint = newTemp;
-       old.active_state = -1;
-       this.setState({thermostatData: old});
+       var newTemp = this.state.setpoint + delta;
+       this.setState({setpoint: newTemp});
 
         if (this.timer)
             clearTimeout(this.timer);
         this.timer = setTimeout(() => {
-            axios.post(window.vars.apiBase + 'toon/temperature?temperature=' + this.state.thermostatData.current_setpoint).then(
+            axios.post(window.vars.apiBase + 'home/set_setpoint?device_id=ToonThermostat&temperature=' + this.state.setpoint).then(
                 (data) => {
                     console.log(data);
                  },
@@ -59,84 +61,32 @@ class HeatingView extends Component {
         }, 750);
   }
 
-  setActiveState(state){
-    var old = this.state.thermostatData;
-    old.active_state = state.id;
-    old.current_setpoint = state.temp;
-    this.setState({thermostatData: old});
-    axios.post(window.vars.apiBase + 'toon/state?state=' + state.name).then(
-        (data) => {
-            console.log(data);
-         },
-        (error) => { console.log(error) }
-    )
-  }
-
   render() {
     var currentState = {};
     var nextState = {};
     var nextTime = "";
 
-    if(this.state.thermostatData){
-        var date = new Date(0);
-        date.setUTCSeconds(this.state.thermostatData.next_time);
-        nextTime = formatTime(date, false, false, false, true, true);
-        currentState = this.state.thermostatData.states.filter(x => x.id === this.state.thermostatData.active_state)[0];
-        if(!currentState)
-            currentState = {id: -1, temp: this.state.thermostatData.real_setpoint, name: "Manual"};
-        nextState = this.state.thermostatData.states.filter(x => x.id === this.state.thermostatData.next_state)[0];
-    }
     return (
       <div className="heating-view">
-        <ViewLoader loading={!this.state.thermostatData}/>
-        { this.state.thermostatData &&
+        <ViewLoader loading={!this.state.setpoint}/>
+        { this.state.setpoint &&
             <div className="heating-view-content">
             <InfoGroup title="Temperature">
                 <div className="info-group-box heating-box">
                      <div className="heating-current-temp">
                         <div className="heating-current-header">current</div>
-                        <div className="heating-current-value">{formatTemperature(this.state.thermostatData.current_display_temp)}</div>
+                        <div className="heating-current-value">{formatTemperature(this.state.temperature)}</div>
                     </div>
                     <div className="heating-set-temp">
 
                         <div className="heating-current-setpoint">
                             <div className="heating-current-setpoint-header">target</div>
-                            <div className="heating-current-setpoint-value">{formatTemperature(this.state.thermostatData.current_setpoint)}</div>
+                            <div className="heating-current-setpoint-value">{formatTemperature(this.state.setpoint)}</div>
                         </div>
                         <div className="heating-current-controls">
-                            <div className="heating-increase-temp" onClick={() => this.changeTemp(50)}>+</div>
-                            <div className="heating-decrease-temp" onClick={() => this.changeTemp(-50)}>-</div>
+                            <div className="heating-increase-temp" onClick={() => this.changeTemp(1)}>+</div>
+                            <div className="heating-decrease-temp" onClick={() => this.changeTemp(-1)}>-</div>
                         </div>
-                    </div>
-                </div>
-            </InfoGroup>
-
-            <InfoGroup title="State">
-                <div className="info-group-box heating-box">
-                    <div className="heating-states">
-                        { this.state.thermostatData.states.map(state =>
-                            <div key={state.id} className={"heating-state " + (state.id === this.state.thermostatData.active_state ? "selected": "")} onClick={() => this.setActiveState(state)}>{state.name}</div>
-                        ) }
-                    </div>
-
-                    <div className="heating-state-details">
-                        <div className="heating-state-current">
-                            { currentState &&
-                                <div>
-                                    <div className="heating-state-current-header">current</div>
-                                    <div className="heating-state-current-name">{currentState.name}</div>
-                                    <div className="heating-state-current-temp">{formatTemperature(currentState.temp)}</div>
-                                </div>
-                            }
-                        </div>
-
-                        { nextState &&
-                            <div className="heating-state-next">
-                                <div className="heating-state-next-header">next at {nextTime}</div>
-                                <div className="heating-state-next-name">{nextState.name}</div>
-                                <div className="heating-state-next-temp">{formatTemperature(nextState.temp)}</div>
-                            </div>
-                        }
                     </div>
                 </div>
             </InfoGroup>

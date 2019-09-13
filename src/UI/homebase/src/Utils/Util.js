@@ -61,5 +61,5 @@ export function formatTime(milliseconds_value, year, month, day, hour, minute, s
 }
 
 export function formatTemperature(value){
-     return (Math.round(value / 10) / 10) + "°C";
+     return value + "°C";
 }

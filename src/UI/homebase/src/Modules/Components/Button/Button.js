@@ -16,6 +16,9 @@ class Button extends Component{
     }
 
     onClick(){
+        if (!this.props.onClick)
+            return;
+
         if(this.props.enabled !== false)
             this.props.onClick();
     }

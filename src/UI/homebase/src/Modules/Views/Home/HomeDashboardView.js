@@ -30,6 +30,8 @@ class HomeDashboardView extends Component {
 
         <DashboardLink to="/home/devices" img={deviceImg} text="devices"></DashboardLink>
         <DashboardLink to="/home/rules" img={rulesImg} text="rules"></DashboardLink>
+
+        <DashboardLink to="/home/automation" img={rulesImg} text="automation"></DashboardLink>
     </div>
     );
   }

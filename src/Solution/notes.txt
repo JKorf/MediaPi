@@ -27,11 +27,36 @@
 
     Gas/power usage and heating history time selection
 
-    Piece werd niet gedownload? Bleef ergens hangen? Had wel 100.9% priority..
-
     Home automation apparaten meer modulair maken
+        Lamps
+            Tradfri
+            Shelly
+        Sockets
+            Tradfri
+            ..
+        Vacuum
+            Xiomi
+        Heating
+            Toon
+        Sensors
+            Door/window sensors
+            Prescence sensors
+
+        Type enum ^
+        All
+            Id
+            GetState -> different results for different devices
+            DeviceType
+
+        DeviceProviders -> File/configuration (vacuum, toon, shelly), gateway -> tradfri
 
     Moods maken?
         Film -> gedimde verlichting
         Normaal
         etc
+
+    Buffer elec/gas usage for faster dashboard loading
+
+    Seeking doesn't work on desktop
+
+    Knoppen play/pause groter ?

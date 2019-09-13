@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import SvgImage from "./../SvgImage"
 
-import settingsImage from './../../../Images/edit.svg'
+import editImage from './../../../Images/edit.svg'
+import settingsImage from './../../../Images/settings.svg'
 import saveImage from './../../../Images/save.svg'
 
 class InfoGroup extends Component {
@@ -38,10 +39,13 @@ class InfoGroup extends Component {
       <div className="info-group-box">
         <div className="info-group-box-title">
             { this.props.icon && <div className="info-group-title-icon"><SvgImage src={this.props.icon} /></div>}
+
             { !this.state.editingTitle && <div className={"info-group-title-value " + (this.props.icon ? "with-icon": "")} onClick={() => this.onTitleClick()}>{this.props.title}</div> }
             { this.state.editingTitle && <div className={"info-group-title-edit "  + (this.props.icon ? "with-icon": "")}><input onChange={(e) => this.changeTitle(e)} type="text" value={this.props.title} /></div> }
-            { this.props.titleChangeable && !this.state.editingTitle && <div className="info-group-title-change" onClick={() => this.editTitle()}><SvgImage src={settingsImage} /></div>}
+            { this.props.titleChangeable && !this.state.editingTitle && <div className="info-group-title-change" onClick={() => this.editTitle()}><SvgImage src={editImage} /></div>}
             { this.props.titleChangeable && this.state.editingTitle && <div className="info-group-title-change" onClick={() => this.saveTitle()}><SvgImage src={saveImage} /></div>}
+
+            { this.props.configurable && <div className="info-group-title-change" onClick={() => this.props.onConfigure()}><SvgImage src={this.props.configureIcon} /></div>}
         </div>
         <div className="info-group-box-content">{this.props.children}</div>
     </div>
