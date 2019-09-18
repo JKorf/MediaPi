@@ -5,35 +5,30 @@
 --- TODO ---
     IPTV
 
-    zigbee
-
     Tv control goed toepassen
         pi_is_active bijwerken door interpreten cec messages
         Also adjust NOOBS /boot/config.txt with hdmi_ignore_cec_init=1
 
-    Remember peers that are known to be good to download from when pausing?
-
-    Check secure on all channels
+    Check security for slave devices
 
     utp
 
     Fix back going a page back instead of to base menu
 
-    Refactoring to file buffer
-        - Can also offer pieces now
+    Refactor gas/power usage graphs
+        Buffer data so we only have to request once ( maybe remove if older than x? )
+        Create distinction between flow and graph data.
+            Flow = consumption per 5 minutes -> line graph
+            Graph = consumption per interval -> historical data -> bar graph
+        Add selection tools
+            Quick selections: Today, This month, This year
+            Add start/end time selectors
 
-    Gas/power usage and heating history time selection
+    Als device group delete dan ook rule voor die deleten?
 
-    Home automation apparaten meer modulair maken
-        Als device group delete dan ook rule voor die deleten?
+    ui-homescreen voor play/pause again?
 
     Moods maken?
         Film -> gedimde verlichting
         Normaal
         etc
-
-    Buffer elec/gas usage for faster dashboard loading
-
-    Seeking doesn't work on desktop
-
-    Knoppen play/pause groter ?

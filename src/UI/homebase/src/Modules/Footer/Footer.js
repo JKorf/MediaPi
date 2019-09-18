@@ -160,7 +160,9 @@ class Footer extends Component
                                              <SvgImage src={stopImage} />
                                         </div>
                                     </div>
-                                    <MediaProgress percentage={percentagePlaying} ></MediaProgress>
+                                    <div className="media-player-widget-progress">
+                                        <MediaProgress percentage={percentagePlaying} ></MediaProgress>
+                                    </div>
                                 </div>
                                 </div>
                         </Link>
