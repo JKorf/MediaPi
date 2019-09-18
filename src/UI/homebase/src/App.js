@@ -23,7 +23,6 @@ import HistoryView from './Modules/Views/MediaPlayer/HistoryView.js'
 import UrlView from './Modules/Views/MediaPlayer/UrlView.js'
 
 import HomeDashboardView from './Modules/Views/Home/HomeDashboardView.js'
-import HeatingView from './Modules/Views/Home/HeatingView.js'
 import GasView from './Modules/Views/Home/GasView.js'
 import PowerView from './Modules/Views/Home/PowerView.js'
 import DevicesView from './Modules/Views/Home/DevicesView.js'
@@ -139,7 +138,6 @@ class App extends Component {
                     <Route path="/mediaplayer/history" exact render={(props) => <HistoryView {...props} functions={this.functions}  />} />
 
                     <Route path="/home/" exact render={(props) => <HomeDashboardView {...props} functions={this.functions}  />} />
-                    <Route path="/home/heating" exact render={(props) => <HeatingView {...props} functions={this.functions}  />} />
                     <Route path="/home/gas" exact render={(props) => <GasView {...props} functions={this.functions}  />} />
                     <Route path="/home/power" exact render={(props) => <PowerView {...props} functions={this.functions}  />} />
                     <Route path="/home/devices" exact render={(props) => <DevicesView {...props} functions={this.functions}/>} />

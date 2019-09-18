@@ -36,6 +36,7 @@ class AutomationView extends Component {
   }
 
   devicesUpdate(subId, data){
+    data.devices = data.devices.sort((a, b) => a.device_type == "Thermostat" ? -1 : 1);
     this.setState(data);
   }
 

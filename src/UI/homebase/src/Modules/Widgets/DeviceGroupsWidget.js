@@ -6,7 +6,7 @@ import Switch from './../Components/Switch';
 import Dragger from './../Components/Dragger';
 import Socket from './../../Socket2.js';
 
-class TradfriWidget extends Component {
+class DeviceGroupsWidget extends Component {
   constructor(props) {
     super(props);
 
@@ -86,4 +86,4 @@ class TradfriWidget extends Component {
   }
 };
 
-export default TradfriWidget;
+export default DeviceGroupsWidget;

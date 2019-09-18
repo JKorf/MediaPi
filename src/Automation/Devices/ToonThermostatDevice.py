@@ -84,6 +84,9 @@ class ToonThermostatDevice(ThermostatDevice):
         Logger().write(LogVerbosity.All, "Get toon gas stats")
         result = None
 
+        if self.testing:
+            return None
+
         if current_time() - self.__last_gas_usage_data[0] < 1000 * 60 * 5:
             return self.__last_gas_usage_data[1]
 
@@ -102,6 +105,9 @@ class ToonThermostatDevice(ThermostatDevice):
     def get_electricity_stats(self, from_date, to_date):
         Logger().write(LogVerbosity.All, "Get toon electricity stats")
         result = None
+
+        if self.testing:
+            return None
 
         if current_time() - self.__last_power_usage_data[0] < 1000 * 60 * 5:
             return self.__last_power_usage_data[1]

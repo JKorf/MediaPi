@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import FavoriteSeriesWidget from './../Widgets/FavoriteSeriesWidget.js'
 import FavoriteChannelsWidget from './../Widgets/FavoriteChannelsWidget.js'
 import TempWidget from './../Widgets/TempWidget.js'
-import TradfriWidget from './../Widgets/TradfriWidget.js'
+import DeviceGroupsWidget from './../Widgets/DeviceGroupsWidget.js'
 import GasUsageWidget from './../Widgets/GasUsageWidget.js'
 import PowerUsageWidget from './../Widgets/PowerUsageWidget.js'
 
@@ -16,8 +16,8 @@ class DashboardView extends Component {
     this.widgetIndex = 0;
 
     this.widgetRefs = [];
-    this.addWidget(<TradfriWidget title="Lights" titleLink={"/home/tradfri"} ref={React.createRef()} />);
-    this.addWidget(<TempWidget title="Temperature" titleLink={"/home/heating"} ref={React.createRef()} />);
+    this.addWidget(<DeviceGroupsWidget title="Lights" titleLink={"/home/automation"} ref={React.createRef()} />);
+    this.addWidget(<TempWidget title="Temperature" titleLink={"/home/automation-device/ToonThermostat"} ref={React.createRef()} />);
     this.addWidget(<PowerUsageWidget title="Power usage" titleLink={"/home/power"} ref={React.createRef()} />);
     this.addWidget(<GasUsageWidget title="Gas usage" titleLink={"/home/gas"} ref={React.createRef()} />);
     this.addWidget(<FavoriteSeriesWidget title="Shows" ref={React.createRef()} />);

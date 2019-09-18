@@ -93,9 +93,6 @@ class Program:
             Logger().write(LogVerbosity.Debug, "Initializing device controller")
             DeviceController().initialize()
 
-            # Logger().write(LogVerbosity.Debug, "Initializing TradeFriManager")
-            # TradfriManager().init()
-
             Logger().write(LogVerbosity.Debug, "Initializing master file server")
             self.file_listener = StreamListener("MasterFileServer", 50015)
             self.file_listener.start_listening()
