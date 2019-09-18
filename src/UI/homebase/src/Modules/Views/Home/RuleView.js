@@ -6,7 +6,7 @@ import axios from 'axios';
 import Button from './../../Components/Button';
 import CheckBox from './../../Components/CheckBox';
 import TimePicker from './../../Components/TimePicker';
-import TradfriGroupSelector from './../../Components/TradfriGroupSelector';
+import DeviceGroupSelector from './../../Components/DeviceGroupSelector';
 import InstanceSelector from './../../Components/InstanceSelector';
 import RadioSelector from './../../Components/RadioSelector';
 import SelectConditionPopup from './../../Components/Popups/SelectConditionPopup';
@@ -176,8 +176,14 @@ class RuleView extends Component {
                             { condition.parameter_description[index][1] === "time" &&
                                 <div><TimePicker hour={Math.floor(param / 60)} minute={param % 60} onHourChange={(newVal) => this.paramHourChange(cond, index, newVal)} onMinuteChange={(newVal) => this.paramMinuteChange(cond, index, newVal)} /></div>
                             }
-                            { condition.parameter_description[index][1] === "tradfri_group" &&
-                                <div><TradfriGroupSelector value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /></div>
+                            { condition.parameter_description[index][1] === "device_group" &&
+                                <div><DeviceGroupSelector type="group" value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /></div>
+                            }
+                            { condition.parameter_description[index][1] === "device" &&
+                                <div><DeviceGroupSelector type="individual" value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /></div>
+                            }
+                            { condition.parameter_description[index][1] === "thermostat_device" &&
+                                <div><DeviceGroupSelector type="individual" filter={e => e.device_type === "Thermostat"} value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /></div>
                             }
                             { condition.parameter_description[index][1] === "instance" &&
                                 <div><InstanceSelector value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /></div>
@@ -216,8 +222,14 @@ class RuleView extends Component {
                         { action.parameter_description[index][1] === "time" &&
                             <div><TimePicker hour={Math.floor(param / 60)} minute={param % 60} onHourChange={(newVal) => this.paramHourChange(act, index, newVal)} onMinuteChange={(newVal) => this.paramMinuteChange(action, index, newVal)} /></div>
                         }
-                        { action.parameter_description[index][1] === "tradfri_group" &&
-                            <div><TradfriGroupSelector value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /></div>
+                        { action.parameter_description[index][1] === "device_group" &&
+                            <div><DeviceGroupSelector type="group" value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /></div>
+                        }
+                        { action.parameter_description[index][1] === "device" &&
+                            <div><DeviceGroupSelector type="individual" value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /></div>
+                        }
+                        { action.parameter_description[index][1] === "thermostat_device" &&
+                            <div><DeviceGroupSelector type="individual" filter={e => e.device_type === "Thermostat"} value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /></div>
                         }
                         { action.parameter_description[index][1] === "instance" &&
                             <div><InstanceSelector value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /></div>

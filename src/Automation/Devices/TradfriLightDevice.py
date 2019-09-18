@@ -1,10 +1,11 @@
 from Automation.DeviceBase import LightDevice
+from Database.Database import Database
 
 
 class TradfriLightDevice(LightDevice):
 
-    def __init__(self, gateway, api, id, name, can_dim, can_change_warmth):
-        super().__init__(id, name)
+    def __init__(self, gateway, api, id, name, testing, can_dim, can_change_warmth):
+        super().__init__("TradfriLight", id, name, testing, False)
         self.__gateway = gateway
         self.__api = api
         self.can_dim = can_dim
@@ -31,22 +32,38 @@ class TradfriLightDevice(LightDevice):
         self.dim = dim
         self.warmth = warmth
 
-    def set_on(self, state):
+    def set_on(self, state, src):
         if self.testing:
+            Database().add_action_history(self.id, "on", src, state)
             self.on = state
             return
 
         device = self.__api(self.__gateway.get_device(self.id))
         self.__api(device.light_control.set_state(state))
+        Database().add_action_history(self.id, "on", src, state)
         self.on = state
 
-    def set_dimmer(self, value):
-        device = self.__api(self.__gateway.get_device(self.id))
-        self.__api(device.light_control.set_dimmer(value))
+    def set_dim(self, value, src):
+        if self.testing:
+            self.dim = value
+            return
 
-    def set_warmth(self, value):
+        tradfri_value = value / 100 * 254
         device = self.__api(self.__gateway.get_device(self.id))
-        self.__api(device.light_control.set_color_temp(value))
+        self.__api(device.light_control.set_dimmer(tradfri_value))
+        Database().add_action_history(self.id, "dim", src, value)
+        self.dim = value
+
+    def set_warmth(self, value, src):
+        if self.testing:
+            self.warmth = value
+            return
+
+        tradfri_value = value / 100 * 204 + 250
+        device = self.__api(self.__gateway.get_device(self.id))
+        self.__api(device.light_control.set_color_temp(tradfri_value))
+        Database().add_action_history(self.id, "warmth", src, value)
+        self.warmth = value
 
 
 class Obj:

@@ -17,9 +17,6 @@
 
     utp
 
-    Youtube
-	    Track watched videos (youtube response?)
-
     Fix back going a page back instead of to base menu
 
     Refactoring to file buffer
@@ -28,27 +25,7 @@
     Gas/power usage and heating history time selection
 
     Home automation apparaten meer modulair maken
-        Lamps
-            Tradfri
-            Shelly
-        Sockets
-            Tradfri
-            ..
-        Vacuum
-            Xiomi
-        Heating
-            Toon
-        Sensors
-            Door/window sensors
-            Prescence sensors
-
-        Type enum ^
-        All
-            Id
-            GetState -> different results for different devices
-            DeviceType
-
-        DeviceProviders -> File/configuration (vacuum, toon, shelly), gateway -> tradfri
+        Als device group delete dan ook rule voor die deleten?
 
     Moods maken?
         Film -> gedimde verlichting
@@ -60,3 +37,5 @@
     Seeking doesn't work on desktop
 
     Knoppen play/pause groter ?
+
+    Waarom speelt hij random youtube video na een url?

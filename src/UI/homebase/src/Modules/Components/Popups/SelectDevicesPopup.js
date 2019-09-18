@@ -65,7 +65,7 @@ class SelectDevicesPopup extends Component {
             { this.props.devices.filter(d => d.device_type === "Switch" || d.device_type === "Light").map(device =>
                 <div className="automation-device" key={device.id}>
                         <div className="automation-device-select-type"><SvgImage src={this.getIcon(device.device_type)} /></div>
-                        <div className="automation-device-select-name">{device.name}</div>
+                        <div className="automation-device-select-name" onClick={e => this.toggleDevice(device, e)}>{device.name}</div>
                         <div className="automation-device-select-checkbox"><CheckBox value={device.selected} onChange={e => this.toggleDevice(device, e)} /></div>
                     </div>
 

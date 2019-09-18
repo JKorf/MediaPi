@@ -14,7 +14,7 @@ class Observable(LogObject):
 
         self.__name = name
         self.__update_interval = update_interval
-        self.__callbacks = []
+        self.__callbacks = dict()
         self.__changed = True
         self.__last_update = 0
 
@@ -25,13 +25,16 @@ class Observable(LogObject):
 
         self.__running = False
         self.__update_thread = CustomThread(self.__check_update, name + " observer")
+        self.__last_id = 0
 
     def register_callback(self, cb):
-        self.__callbacks.append(cb)
+        self.__last_id += 1
+        self.__callbacks[self.__last_id] = cb
         cb(self, self)
+        return self.__last_id
 
-    def remove_callback(self, cb):
-        self.__callbacks.remove(cb)
+    def remove_callback(self, id):
+        self.__callbacks.pop(id)
 
     def start_update(self):
         self.__start_state = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
@@ -73,7 +76,7 @@ class Observable(LogObject):
                 self.__last_update = current_time()
                 dic = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
                 last_update = namedtuple("Observable", dic.keys())(*dic.values())
-                for cb in self.__callbacks:
+                for cb in self.__callbacks.values():
                     try:
                         cb(self.__last_update_state or self, self)
                     except Exception as e:

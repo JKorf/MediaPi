@@ -7,6 +7,7 @@ import lightingImg from './../../../Images/bulb.svg'
 import deviceImg from './../../../Images/device.svg'
 import rulesImg from './../../../Images/rules.svg'
 import powerImg from './../../../Images/power.svg'
+import smartHomeImg from './../../../Images/smart-home.svg'
 
 class HomeDashboardView extends Component {
   constructor(props) {
@@ -22,16 +23,13 @@ class HomeDashboardView extends Component {
   render() {
     return (
     <div className="mediaplayer-dashboard">
-        <DashboardLink to="/home/tradfri" img={lightingImg} text="lights & sockets"></DashboardLink>
-        <DashboardLink to="/home/heating" img={tempImg} text="heating"></DashboardLink>
-
         <DashboardLink to="/home/gas" img={gasImg} text="gas usage"></DashboardLink>
         <DashboardLink to="/home/power" img={powerImg} text="power usage"></DashboardLink>
 
         <DashboardLink to="/home/devices" img={deviceImg} text="devices"></DashboardLink>
         <DashboardLink to="/home/rules" img={rulesImg} text="rules"></DashboardLink>
 
-        <DashboardLink to="/home/automation" img={rulesImg} text="automation"></DashboardLink>
+        <DashboardLink to="/home/automation" img={smartHomeImg} text="automation"></DashboardLink>
     </div>
     );
   }

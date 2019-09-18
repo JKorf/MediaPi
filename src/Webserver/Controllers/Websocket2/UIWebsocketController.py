@@ -11,11 +11,10 @@ from Webserver.Controllers.Websocket2.BaseWebsocketController import BaseWebsock
 
 class UIWebsocketController(BaseWebsocketController):
     clients = []
-    device_callback_registrations = []
+    device_callback_registrations = dict()
 
     @staticmethod
     def init():
-        from Controllers.TradfriManager import TradfriManager
         from MediaPlayer.MediaManager import MediaManager
         from MediaPlayer.Player.VLCPlayer import VLCPlayer
         from Updater import Updater
@@ -23,7 +22,6 @@ class UIWebsocketController(BaseWebsocketController):
         from Shared.Stats import Stats
 
         APIController.slaves.register_callback(lambda old, new: UIWebsocketController.broadcast("slaves", new.data))
-        TradfriManager().tradfri_state.register_callback(lambda old, new: UIWebsocketController.broadcast("tradfri", new))
         DeviceController().register_callback(lambda old, new: UIWebsocketController.broadcast("devices", new))
         StateManager().state_data.register_callback(lambda old, new: UIWebsocketController.broadcast("1.state", new))
         VLCPlayer().player_state.register_callback(lambda old, new: UIWebsocketController.broadcast("1.player", new))
@@ -40,6 +38,12 @@ class UIWebsocketController(BaseWebsocketController):
     @staticmethod
     def on_disconnect():
         client = [x for x in UIWebsocketController.clients if x.sid == request.sid][0]
+
+        subs = [key for key, value in UIWebsocketController.device_callback_registrations.items() if client in value[1]]
+        for sub in subs:
+            UIWebsocketController.remove_device_callback(sub, [x for x in UIWebsocketController.clients if
+                                                                 x.sid == request.sid][0])
+
         UIWebsocketController.clients.remove(client)
         Logger().write(LogVerbosity.Info, "UI client disconnected")
 
@@ -73,10 +77,13 @@ class UIWebsocketController(BaseWebsocketController):
             return
 
         if topic.startswith("device:"):
-            is_registered = len([x for x in UIWebsocketController.device_callback_registrations if x == topic]) != 0
-            if not is_registered:
-                DeviceController().register_device_callback(topic[7:], lambda old, new: UIWebsocketController.broadcast(topic, new))
-                UIWebsocketController.device_callback_registrations.append(topic)
+            if topic not in UIWebsocketController.device_callback_registrations:
+                # No subscriptions on this device, add a callback
+                reg_id = DeviceController().register_device_callback(topic[7:], lambda old, new: UIWebsocketController.broadcast(topic, new))
+                UIWebsocketController.device_callback_registrations[topic] = (reg_id, [])
+                Logger().write(LogVerbosity.Debug, "UI client created callback to " + topic)
+
+            UIWebsocketController.device_callback_registrations[topic][1].append([x for x in UIWebsocketController.clients if x.sid == request.sid][0])
 
         Logger().write(LogVerbosity.Info, "UI client subscribing to " + topic)
         join_room(topic)
@@ -90,6 +97,9 @@ class UIWebsocketController(BaseWebsocketController):
             Logger().write(LogVerbosity.Info, "Unauthenticated socket request for unsubscribing")
             return
 
+        if topic.startswith("device:"):
+            UIWebsocketController.remove_device_callback(topic, [x for x in UIWebsocketController.clients if x.sid == request.sid][0])
+
         Logger().write(LogVerbosity.Info, "UI client unsubscribing from " + topic)
         leave_room(topic)
 
@@ -98,3 +108,12 @@ class UIWebsocketController(BaseWebsocketController):
         APIController.last_data[topic] = data
         Logger().write(LogVerbosity.All, "Sending update: " + topic)
         socketio.emit("update", (topic, to_JSON(data)), namespace="/UI", room=topic)
+
+    @staticmethod
+    def remove_device_callback(topic, client):
+        if topic in UIWebsocketController.device_callback_registrations:
+            UIWebsocketController.device_callback_registrations[topic][1].remove(client)
+            if len(UIWebsocketController.device_callback_registrations[topic][1]) == 0:
+                DeviceController().unregister_device_callback(topic[7:], UIWebsocketController.device_callback_registrations[topic][0])
+                UIWebsocketController.device_callback_registrations.pop(topic)
+                Logger().write(LogVerbosity.Debug, "UI client removed callback to " + topic)

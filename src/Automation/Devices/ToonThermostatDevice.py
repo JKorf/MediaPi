@@ -9,16 +9,25 @@ from Automation.DeviceBase import ThermostatDevice
 from Database.Database import Database
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Threading import CustomThread
+from Shared.Util import current_time
 
 
 class ToonThermostatDevice(ThermostatDevice):
 
     id = "ToonThermostat"
 
-    def __init__(self, eneco_username, eneco_password, eneco_consumer_id, eneco_consumer_secret):
-        super().__init__(ToonThermostatDevice.id, "Toon thermostat")
-        self.__api = Toon(eneco_username, eneco_password, eneco_consumer_id, eneco_consumer_secret)
+    def __init__(self, testing, eneco_username, eneco_password, eneco_consumer_id, eneco_consumer_secret):
+        super().__init__("ToonThermostat", ToonThermostatDevice.id, "Toon thermostat", testing, True)
+        if not testing:
+            self.__api = Toon(eneco_username, eneco_password, eneco_consumer_id, eneco_consumer_secret)
         self.setpoint = 0
+        self.eneco_username = eneco_username
+        self.eneco_password = eneco_password
+        self.eneco_consumer_id = eneco_consumer_id
+        self.eneco_consumer_secret = eneco_consumer_secret
+
+        self.__last_gas_usage_data = (0, None)
+        self.__last_power_usage_data = (0, None)
 
     def initialize(self):
         thermostat_info = self.get_temperature()
@@ -32,8 +41,9 @@ class ToonThermostatDevice(ThermostatDevice):
         self.temperature = temperature
         self.setpoint = setpoint
 
-    def set_setpoint(self, temperature):
+    def set_setpoint(self, temperature, src):
         if self.testing:
+            Database().add_action_history(self.id, "temperature", src, temperature)
             self.setpoint = temperature
             return
 
@@ -42,7 +52,7 @@ class ToonThermostatDevice(ThermostatDevice):
                 self.__api.thermostat = temperature
                 self.setpoint = temperature
                 Logger().write(LogVerbosity.Debug, "Temp set")
-                Database().add_action_history("temperature", "set", "", temperature)
+                Database().add_action_history(self.id, "temperature", src, temperature)
                 return
             except json.decoder.JSONDecodeError as e:
                 Logger().write(LogVerbosity.Info, "Toon set temp error, try " + str(i + 1))
@@ -64,6 +74,44 @@ class ToonThermostatDevice(ThermostatDevice):
                 result = self.__api.thermostat_info
             except Exception as e:
                 Logger().write(LogVerbosity.Info, "Toon thermostat_info failed attempt " + str(i) + ": " + str(e))
+
+            if result is not None:
+                return result
+            time.sleep(1)
+        return None
+
+    def get_gas_stats(self, from_date, to_date, interval):
+        Logger().write(LogVerbosity.All, "Get toon gas stats")
+        result = None
+
+        if current_time() - self.__last_gas_usage_data[0] < 1000 * 60 * 5:
+            return self.__last_gas_usage_data[1]
+
+        for i in range(3):
+            try:
+                result = self.__api.data.graph.get_gas_time_window(from_date, to_date, interval)
+                self.__last_gas_usage_data = (current_time(), result)
+            except Exception as e:
+                Logger().write(LogVerbosity.Info, "Toon get_gas_stats failed attempt " + str(i) + ": " + str(e))
+
+            if result is not None:
+                return result
+            time.sleep(1)
+        return None
+
+    def get_electricity_stats(self, from_date, to_date):
+        Logger().write(LogVerbosity.All, "Get toon electricity stats")
+        result = None
+
+        if current_time() - self.__last_power_usage_data[0] < 1000 * 60 * 5:
+            return self.__last_power_usage_data[1]
+
+        for i in range(3):
+            try:
+                result = self.__api.data.flow.get_power_time_window(from_date, to_date)
+                self.__last_power_usage_data = (current_time(), result)
+            except Exception as e:
+                Logger().write(LogVerbosity.Info, "Toon get_electricity_stats failed attempt " + str(i) + ": " + str(e))
 
             if result is not None:
                 return result

@@ -26,7 +26,7 @@ class PowerUsageGraph extends Component {
 
   getData(){
     this.setState({loading: true});
-    axios.get(window.vars.apiBase + 'toon/electricity?startHours=' + -(this.props.hoursAgo - 8) + "&endHours=" + -this.props.hoursAgo).then(
+    axios.get(window.vars.apiBase + 'home/get_gas_usage?startHours=' + -(this.props.hoursAgo - 8) + "&endHours=" + -this.props.hoursAgo).then(
         (data) => {
             this.setState({loading: false});
             if (data.data.hours.length === 0){

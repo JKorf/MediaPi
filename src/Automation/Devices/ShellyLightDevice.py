@@ -1,14 +1,15 @@
 import json
 
 from Automation.DeviceBase import LightDevice
+from Database.Database import Database
 from Shared.Logger import Logger, LogVerbosity
 from Shared.Network import RequestFactory
 
 
 class ShellyLightDevice(LightDevice):
 
-    def __init__(self, id, name, ip_address):
-        super().__init__(id, name)
+    def __init__(self, id, name, ip_address, testing):
+        super().__init__("ShellyLight", id, name, testing, True)
         self.ip_address = ip_address
 
     def initialize(self):
@@ -28,9 +29,9 @@ class ShellyLightDevice(LightDevice):
         json_data = json.loads(result)
         return json_data["ison"]
 
-    def set_on(self, state):
+    def set_on(self, state, src):
         if not self.testing:
             on_state = "on" if state else "off"
             RequestFactory.make_request("http://" + self.ip_address + "/relay/0?state=" + on_state, "POST")
 
-        self.on = state
+        Database().add_action_history(self.id, "on", src, state)

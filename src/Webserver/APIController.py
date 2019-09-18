@@ -59,8 +59,6 @@ class APIController(metaclass=Singleton):
         from Webserver.Controllers.MediaPlayer.TorrentController import TorrentController
         from Webserver.Controllers.MediaPlayer.YouTubeController import YouTubeController
         from Webserver.Controllers.DataController import DataController
-        from Webserver.Controllers.Home.TradfriController import TradfriController
-        from Webserver.Controllers.Home.ToonController import ToonController
         from Webserver.Controllers.UtilController import UtilController
         from Webserver.Controllers.Home.RuleController import RuleController
         from Webserver.Controllers.Home.HomeController import HomeController

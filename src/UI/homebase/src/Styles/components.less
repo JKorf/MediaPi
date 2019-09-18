@@ -603,3 +603,47 @@
     border-radius: 3px;
     padding: 10px;
 }
+
+.dragger-wrapper{
+    touch-action: none;
+    height: 100%;
+    width: 100%;
+    position: relative;
+
+}
+
+.dragger-background{
+    position: absolute;
+    left:0;
+    top: 0;
+    bottom: 0;
+    background: yellow;
+    pointer-events: none;
+}
+
+.dragger-content{
+    position: absolute;
+    left:0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.dragger-tooltip{
+    position: absolute;
+    width: 80px;
+    text-align: center;
+    padding: 4px;
+    top: 6px;
+    background: #colors[item-background];
+    border: 1px solid #colors[borders];
+    border-radius: 4px;
+
+    &.left{
+        left: calc(50% - 100px);
+    }
+
+    &.right{
+        left: calc(50% + 20px);
+    }
+}

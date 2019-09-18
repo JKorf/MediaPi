@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import eventlet
+
 eventlet.monkey_patch()
 
 from eventlet import hubs
@@ -26,7 +27,6 @@ from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
 
 from Controllers.PresenceManager import PresenceManager
 from Controllers.WiFiController import WiFiController
-#from Controllers.TradfriManager import TradfriManager
 from Controllers.TVManager import TVManager
 from Controllers.VacuumManager import VacuumManager
 from Automation.DeviceController import DeviceController
@@ -90,6 +90,7 @@ class Program:
         TVManager().start()
 
         if not self.is_slave:
+            Logger().write(LogVerbosity.Debug, "Initializing device controller")
             DeviceController().initialize()
 
             # Logger().write(LogVerbosity.Debug, "Initializing TradeFriManager")

@@ -16,7 +16,7 @@ class Database(metaclass=Singleton):
         self.path = Settings.get_string("base_folder") + "Solution/"
         self.db_name = "database.data"
         self.slave = Settings.get_bool("slave")
-        self.current_version = 13
+        self.current_version = 14
 
     def init_database(self):
         Logger().write(LogVerbosity.Info, "Opening database at " + str(self.path))
@@ -512,7 +512,7 @@ class Database(metaclass=Singleton):
 
         return [Radio(x[0], x[1], x[2], x[3]) for x in data]
 
-    def add_action_history(self, topic, action, caller, param1=None, param2=None, param3=None):
+    def add_action_history(self, device_id, topic, source, value):
         if self.slave:
             raise PermissionError("Cant call add_action_history on slave")
 
@@ -520,23 +520,26 @@ class Database(metaclass=Singleton):
 
         database, cursor = self.connect()
         time = current_time()
-        cursor.execute("INSERT INTO ActionHistory (Topic, Action, Caller, Timestamp, Param1, Param2, Param3) Values (?, ?, ?, ?, ?, ? ,?)",
-                       [topic, action, caller, time, param1, param2, param3])
+        cursor.execute("INSERT INTO ActionHistory (DeviceId, Topic, Source, Timestamp, Value) Values (?, ?, ?, ? ,?)",
+                       [device_id, topic, source, time, value])
         database.commit()
         database.close()
 
-    def get_action_history(self, topic, start_time, end_time):
+    def get_action_history(self, device_id, topic, start_time, end_time):
+        if self.slave:
+            raise PermissionError("Cant call add_action_history on slave")
+
         Logger().write(LogVerbosity.All, "Database get action history")
 
         database, cursor = self.connect()
-        cursor.execute("SELECT * FROM ActionHistory WHERE Topic=? AND Timestamp>? AND Timestamp<?", [topic, start_time, end_time])
+        cursor.execute("SELECT * FROM ActionHistory WHERE DeviceId=? AND Topic=? AND Timestamp>? AND Timestamp<?", [device_id, topic, start_time, end_time])
         data = cursor.fetchall()
         database.commit()
         database.close()
         if not data:
             return []
 
-        return [ActionHistory(int(x[0]), x[1], x[2], x[3], int(x[4]), x[5], x[6], x[7]) for x in data]
+        return [ActionHistory(int(x[0]), x[1], x[2], x[3], int(x[4]), x[5]) for x in data]
 
 
 class Client:
@@ -564,15 +567,13 @@ class ClientAccess:
 
 class ActionHistory:
 
-    def __init__(self, id, topic, action, caller, timestamp, param1, param2, param3):
+    def __init__(self, id, device_id, topic, source, timestamp, value):
         self.id = id
+        self.device_id = device_id
         self.topic = topic
-        self.action = action
-        self.caller = caller
+        self.source = source
         self.timestamp = timestamp
-        self.param1 = param1
-        self.param2 = param2
-        self.param3 = param3
+        self.value = value
 
 
 class RuleRecord:

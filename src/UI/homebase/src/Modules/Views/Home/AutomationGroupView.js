@@ -32,23 +32,23 @@ class AutomationGroupView extends Component {
             console.log(data.data);
             var allDevices = data.data;
             this.setState({allDevices: data.data});
+
+             if(!this.newGroup){
+                axios.get(window.vars.apiBase + 'home/get_group?id=' + this.state.id).then(
+                    (data) => {
+                        console.log(data.data);
+                        var devices = this.state.allDevices;
+                        for (var i = 0; i < data.data.devices.length; i++){
+                            devices.filter(d => d.id == data.data.devices[i].id)[0].selected = true;
+                        }
+                        this.setState({name: data.data.name, devices: data.data.devices, allDevices: devices});
+                     },
+                    (error) => { console.log(error) }
+                );
+            }
          },
         (error) => { console.log(error) }
       );
-
-     if(!this.newGroup){
-        axios.get(window.vars.apiBase + 'home/get_group?id=' + this.state.id).then(
-            (data) => {
-                console.log(data.data);
-                for (var i = 0; i < data.data.devices.length; i++){
-                    data.data.devices[i].selected = true;
-                }
-                this.setState({name: data.data.name, devices: data.data.devices});
-             },
-            (error) => { console.log(error) }
-        )
-    }
-
   }
 
   componentWillUnmount(){
@@ -120,7 +120,7 @@ class AutomationGroupView extends Component {
             </div>
 
             <div className="automation-group-save">
-                <Link to="/home/automation"><Button text="Save" onClick={e => this.save()} /></Link>
+                <div className="automation-group-save-button"><Link to="/home/automation"><Button text="Save" onClick={e => this.save()} /></Link></div>
                 <Link to="/home/automation"><Button text="Delete" onClick={e => this.remove()} /></Link>
             </div>
         </div>

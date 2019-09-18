@@ -40,11 +40,12 @@ class UtilController:
     @staticmethod
     @app.route('/util/get_action_history', methods=['GET'])
     def get_action_history():
+        device_id = request.args.get("device_id")
         topic = request.args.get("topic")
         start_time = int(request.args.get("start"))
         end_time = int(request.args.get("end"))
 
-        return to_JSON(Database().get_action_history(topic, start_time, end_time))
+        return to_JSON(Database().get_action_history(device_id, topic, start_time, end_time))
 
     @staticmethod
     @app.route('/util/update', methods=['POST'])

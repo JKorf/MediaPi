@@ -8,6 +8,7 @@ import { InfoGroup } from './../../Components/InfoGroup';
 import Switch from './../../Components/Switch';
 import SvgImage from './../../Components/SvgImage';
 import Button from './../../Components/Button';
+import Dragger from './../../Components/Dragger';
 
 import tempImg from './../../../Images/thermometer.svg'
 import lightingImg from './../../../Images/bulb.svg'
@@ -27,14 +28,6 @@ class AutomationView extends Component {
   }
 
   componentDidMount() {
-//    axios.get(window.vars.apiBase + 'home/get_overview').then(
-//        (data) => {
-//            console.log(data.data);
-//            this.setState({groups: data.data[0], devices: data.data[1]});
-//         },
-//        (error) => { console.log(error) }
-//    )
-
       this.devicesSub = Socket.subscribe("devices", this.devicesUpdate);
   }
 
@@ -65,7 +58,15 @@ class AutomationView extends Component {
       console.log(value);
       group.state = value;
       this.updateGroup(group);
-      axios.post(window.vars.apiBase + 'home/set_group?group_id=' + group.id + "&state=" + value);
+      axios.post(window.vars.apiBase + 'home/set_group_state?group_id=' + group.id + "&state=" + value);
+  }
+
+  changeGroupDimmer(group, value)
+  {
+      console.log(value);
+      group.dim = value;
+      this.updateGroup(group);
+      axios.post(window.vars.apiBase + 'home/set_group_dim?group_id=' + group.id + "&dim=" + value);
   }
 
   changeTemperature(device, value){
@@ -164,11 +165,13 @@ class AutomationView extends Component {
                   </div>
                 { this.state.groups.map(group =>
                     <div className="automation-group" key={group.id}>
-                        <div className="automation-group-name"><Link to={"/home/automation-group/" + group.id}>{group.name}</Link></div>
-                        <div className="automation-group-length"><Link to={"/home/automation-group/" + group.id}>{group.devices.length}</Link></div>
-                        <div className="automation-group-controls">
-                            <Switch value={group.state} onToggle={e => this.toggleGroup(group, e)} />
-                        </div>
+                        <Dragger value={group.dim} key={group.id} onDragged={e => this.changeGroupDimmer(group, e)}>
+                            <div className="automation-group-name no-select"><Link to={"/home/automation-group/" + group.id}>{group.name}</Link></div>
+                            <div className="automation-group-length no-select"><Link to={"/home/automation-group/" + group.id}>{group.devices.length}</Link></div>
+                            <div className="automation-group-controls">
+                                <Switch value={group.state} onToggle={e => this.toggleGroup(group, e)} />
+                            </div>
+                        </Dragger>
                     </div>
                 )}
                 { this.state.groups.length == 0 && <div className="automation-no-groups">No groups yet</div>}
@@ -187,7 +190,8 @@ class AutomationView extends Component {
                     { this.state.devices.map(device =>
                         <div className="automation-device" key={device.id}>
                             <div className="automation-device-type"><SvgImage src={this.getIcon(device.device_type)} /></div>
-                            <div className="automation-device-name">{device.name}</div>
+                            { device.device_type != "Switch" && <Link to={"/home/automation-device/" + device.id}><div className="automation-device-name">{device.name}</div></Link> }
+                            { device.device_type == "Switch" && <div className="automation-device-name">{device.name}</div> }
                             <div className="automation-device-template">{this.getDeviceChangeTemplate(device)}</div>
                         </div>
                     )}

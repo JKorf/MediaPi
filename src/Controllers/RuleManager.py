@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 
 import math
 
-from Controllers.TradfriManager import TradfriManager
+from Automation.DeviceBase import DeviceType
+from Automation.DeviceController import DeviceController
 from Controllers.PresenceManager import PresenceManager
 from Controllers.TVManager import TVManager
-from Controllers.ToonManager import ToonManager
 from Database.Database import Database
 from Shared.Logger import LogVerbosity, Logger
 from Shared.Settings import Settings
@@ -186,11 +186,11 @@ class OnComingHomeCondition:
         return "first person comes home"
 
 
-class ToggleTradfriGroupAction:
+class ToggleDeviceGroupAction:
 
-    name = "Toggle a Tradfri group"
-    description = "Turns a Tradfri group on or off"
-    parameter_descriptions = [("Group", "tradfri_group"), ("On/Off", "bool")]
+    name = "Toggle a device group"
+    description = "Turns a device group on or off"
+    parameter_descriptions = [("Group", "device_group"), ("On/Off", "bool")]
 
     def __init__(self, id, type, group_ids, on):
         self.id = id
@@ -202,31 +202,61 @@ class ToggleTradfriGroupAction:
 
     def execute(self):
         for group_id in self.group_ids:
-            TradfriManager().set_group_state(group_id, self.on)
+            DeviceController().get_group(int(group_id)).set_state(self.on, "rule")
 
     def get_description(self):
         if self.on:
-            return "turn on the devices for Tradfri group " + str(self.parameters[0])
-        return "turn off the devices for Tradfri group " + str(self.parameters[0])
+            return "turn on the devices for device group " + str(self.parameters[0])
+        return "turn off the devices for device group " + str(self.parameters[0])
 
 
-class SetTemperatureAction:
+class ToggleDeviceAction:
+
+    name = "Toggle a device"
+    description = "Turns a device on or off"
+    parameter_descriptions = [("Device", "device"), ("On/Off", "bool")]
+
+    def __init__(self, id, type, device_ids, on):
+        self.id = id
+        self.type = type
+        on_value = on == "True" or on == "true" or on == "1" or on is True
+        self.parameters = [device_ids, on_value]
+        self.device_ids = device_ids.split('|')
+        self.on = on_value
+
+    def execute(self):
+        for device_id in self.device_ids:
+            device = DeviceController().get_device(device_id)
+            if device.device_type == DeviceType.Switch:
+                device.set_active(self.on, "rule")
+            elif device.device_type == DeviceType.Light:
+                device.set_on(self.on, "rule")
+
+    def get_description(self):
+        if self.on:
+            return "turn on the devices for device " + str(self.parameters[0])
+        return "turn off the devices for device " + str(self.parameters[0])
+
+
+class SetDeviceTemperatureAction:
 
     name = "Set temperature"
     description = "Sets the temperature"
-    parameter_descriptions = [("Target temperature", "int")]
+    parameter_descriptions = [("Device", "thermostat_device"), ("Target temperature", "int")]
 
-    def __init__(self, id, type, temp):
+    def __init__(self, id, type, device_ids, temp):
         self.id = id
         self.type = type
-        self.parameters = [temp]
+        self.parameters = [device_ids, temp]
+        self.device_ids = device_ids.split('|')
         self.temp = int(temp)
 
     def execute(self):
-        ToonManager().set_temperature(self.temp, "rule")
+        for device_id in self.device_ids:
+            DeviceController().get_device(device_id).set_setpoint(self.temp, "rule")
 
     def get_description(self):
-        return "set the temperature to " + str(self.temp) + "°C"
+        return "set the temperature of device " + str(self.parameters[0]) + " to " + str(self.temp) + "°C"
 
 
 class ToggleTvAction:
@@ -289,10 +319,11 @@ class RuleManager(metaclass=Singleton):
         5: OnComingHomeCondition
     }
     actions = {
-        1: ToggleTradfriGroupAction,
-        2: SetTemperatureAction,
-        3: ToggleTvAction,
-        4: PlayRadioAction
+        1: ToggleDeviceAction,
+        2: ToggleDeviceGroupAction,
+        3: SetDeviceTemperatureAction,
+        4: ToggleTvAction,
+        5: PlayRadioAction
     }
 
     def __init__(self):

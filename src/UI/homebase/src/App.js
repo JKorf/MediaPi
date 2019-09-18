@@ -26,13 +26,13 @@ import HomeDashboardView from './Modules/Views/Home/HomeDashboardView.js'
 import HeatingView from './Modules/Views/Home/HeatingView.js'
 import GasView from './Modules/Views/Home/GasView.js'
 import PowerView from './Modules/Views/Home/PowerView.js'
-import TradfriView from './Modules/Views/Home/TradfriView.js'
 import DevicesView from './Modules/Views/Home/DevicesView.js'
 import DeviceView from './Modules/Views/Home/DeviceView.js'
 import RulesView from './Modules/Views/Home/RulesView.js'
 import RuleView from './Modules/Views/Home/RuleView.js'
 import AutomationView from './Modules/Views/Home/AutomationView.js'
 import AutomationGroupView from './Modules/Views/Home/AutomationGroupView.js'
+import AutomationDeviceView from './Modules/Views/Home/AutomationDeviceView.js';
 
 import ConfigurationDashboardView from './Modules/Views/Configuration/ConfigurationDashboardView.js'
 import TestView from './Modules/Views/Configuration/TestView.js'
@@ -142,13 +142,13 @@ class App extends Component {
                     <Route path="/home/heating" exact render={(props) => <HeatingView {...props} functions={this.functions}  />} />
                     <Route path="/home/gas" exact render={(props) => <GasView {...props} functions={this.functions}  />} />
                     <Route path="/home/power" exact render={(props) => <PowerView {...props} functions={this.functions}  />} />
-                    <Route path="/home/tradfri" exact render={(props) => <TradfriView {...props} functions={this.functions}  />} />
                     <Route path="/home/devices" exact render={(props) => <DevicesView {...props} functions={this.functions}/>} />
                     <Route path="/home/device/:id" exact render={(props) => <DeviceView {...props} functions={this.functions}  />} />
                     <Route path="/home/rules" exact render={(props) => <RulesView {...props} functions={this.functions}  />} />
                     <Route path="/home/rule/:id" exact render={(props) => <RuleView {...props} functions={this.functions}  />} />
                     <Route path="/home/automation" exact render={(props) => <AutomationView {...props} functions={this.functions}  />} />
                     <Route path="/home/automation-group/:id" exact render={(props) => <AutomationGroupView {...props} functions={this.functions}  />} />
+                    <Route path="/home/automation-device/:id" exact render={(props) => <AutomationDeviceView {...props} functions={this.functions}  />} />
 
                     <Route path="/configuration" exact render={(props) => <ConfigurationDashboardView {...props} functions={this.functions}  />} />
                     <Route path="/configuration/test" exact render={(props) => <TestView {...props} functions={this.functions}  />} />
