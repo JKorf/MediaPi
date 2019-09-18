@@ -106,6 +106,7 @@ class VLCPlayer(metaclass=Singleton):
     def __stop(self):
         self.__list_player.stop()
         self.__player.stop()
+        self.__list_player.set_media_list(MediaList())
 
     def set_volume(self, vol):
         Logger().write(LogVerbosity.Debug, "Player set volume " + str(vol))

@@ -17,11 +17,11 @@ class Slider extends Component {
 
   touchStart(e){
     this.beforeChange = this.props.value;
-    this.setState({showToolTip: true, startX: e.touches[0].clientX, currentX: e.touches[0].clientX});
+    this.setState({showToolTip: true, startX: e.pageX, currentX: e.pageX});
   }
 
   touchStartBackground(e){
-    var touchPosition = e.touches[0].clientX;
+    var touchPosition = e.pageX;
     var thumbPosition = this.elementRef.current.getElementsByClassName("slider-thumb")[0].getBoundingClientRect().left + 5;
     this.setState({showToolTip: true, startX: thumbPosition, currentX: touchPosition});
   }
@@ -30,7 +30,7 @@ class Slider extends Component {
     if(!this.state.showToolTip)
         return;
 
-    this.setState({currentX: e.touches[0].clientX})
+    this.setState({currentX: e.pageX})
   }
 
   touchEnd(){
@@ -110,8 +110,8 @@ class Slider extends Component {
                     <div className="slider-value">{(this.props.leftValue === "value" ? valueStr: minStr)}</div>
                     <div className="slider-max">{(this.props.rightValue === "left" ? leftStr: maxStr)}</div>
                 </div>
-                <div className="slider-background" onTouchStart={this.touchStartBackground} onTouchMove={this.touchMove} onTouchEnd={this.touchEnd}></div>
-                <div className="slider-thumb" style={thumbStyle} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd}></div>
+                <div className="slider-background" onPointerDown={this.touchStartBackground} onPointerMove={this.touchMove} onPointerUp={this.touchEnd}></div>
+                <div className="slider-thumb" style={thumbStyle} onPointerMove={this.touchMove} onPointerDown={this.touchStart} onPointerUp={this.touchEnd}></div>
 
             </div>
         </div>
