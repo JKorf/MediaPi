@@ -37,5 +37,3 @@
     Seeking doesn't work on desktop
 
     Knoppen play/pause groter ?
-
-    Waarom speelt hij random youtube video na een url?

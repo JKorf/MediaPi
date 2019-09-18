@@ -100,8 +100,12 @@ class VLCPlayer(metaclass=Singleton):
 
     def stop(self):
         Logger().write(LogVerbosity.All, "Player stop")
-        thread = CustomThread(lambda: self.__player.stop(), "Stopping VLC player")
+        thread = CustomThread(self.__stop, "Stopping VLC player")
         thread.start()
+
+    def __stop(self):
+        self.__list_player.stop()
+        self.__player.stop()
 
     def set_volume(self, vol):
         Logger().write(LogVerbosity.Debug, "Player set volume " + str(vol))
@@ -190,22 +194,6 @@ class VLCPlayer(metaclass=Singleton):
     def get_selected_sub(self):
         return self.__player.video_get_spu()
 
-    def try_play_subitem(self):
-        media = self.__player.get_media()
-        if media is None:
-            self.stop()
-            return
-
-        subs = media.subitems()
-        if subs is None:
-            self.stop()
-            return
-
-        if len(subs) == 1:
-            subs[0].add_options("demux=avformat")
-            self.__player.set_media(subs[0])
-            self.__player.play()
-
     def observe_player(self):
         while True:
             state = self.get_state().value
@@ -215,7 +203,7 @@ class VLCPlayer(metaclass=Singleton):
 
             new_state = PlayerState(state)
             if new_state == PlayerState.Nothing and self.player_state.state != PlayerState.Nothing:
-                self.stop_player_thread = CustomThread(self.stop, "Stopping player")
+                self.stop_player_thread = CustomThread(self.__stop, "Stopping player")
                 self.stop_player_thread.start()
 
             self.player_state.start_update()
