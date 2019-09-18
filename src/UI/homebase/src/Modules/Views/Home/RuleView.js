@@ -349,7 +349,7 @@ class RuleView extends Component {
 
         <div className="rule-save-button">
             { !this.newRule &&
-                <Button text="Save" classId="secondary" onClick={() => this.saveRule()}/>
+                <Button text="Save" classId="secondary" onClick={(e) => this.saveRule(e)}/>
             }
             { this.newRule &&
                 <Link to="/home/rules"><Button text="Save" classId="secondary" onClick={(e) => this.saveRule(e)}/></Link>

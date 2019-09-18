@@ -15,12 +15,12 @@ class Button extends Component{
         this.setState({pointer: newState});
     }
 
-    onClick(){
+    onClick(e){
         if (!this.props.onClick)
             return;
 
         if(this.props.enabled !== false)
-            this.props.onClick();
+            this.props.onClick(e);
     }
 
     render(){
