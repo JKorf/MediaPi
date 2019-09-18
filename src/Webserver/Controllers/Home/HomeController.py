@@ -58,8 +58,7 @@ class HomeController:
     def home_set_name():
         device_id = request.args.get('device_id')
         name = urllib.parse.unquote(request.args.get('name'))
-        device = DeviceController().get_device(device_id)
-        device.set_name(name)
+        DeviceController().set_device_name(device_id, name)
         return "OK"
 
     @staticmethod

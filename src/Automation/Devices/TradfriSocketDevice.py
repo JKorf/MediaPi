@@ -15,6 +15,15 @@ class TradfriSocketDevice(SwitchDevice):
     def update(self, state):
         self.active = state
 
+    def set_name(self, name):
+        if self.testing:
+            self.name = name
+            return
+
+        device = self.__api(self.__gateway.get_device(self.id))
+        self.__api(device.set_name(name))
+        self.name = name
+
     def get_state(self):
         if self.testing:
             return False

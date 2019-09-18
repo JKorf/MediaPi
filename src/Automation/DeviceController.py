@@ -50,6 +50,11 @@ class DeviceController(Observable, metaclass=Singleton):
         self.changed()
         self.save_configuration()
 
+    def set_device_name(self, device_id, name):
+        device = self.get_device(device_id)
+        device.set_name(name)
+        self.save_configuration()
+
     def get_device(self, device_id):
         return [x for x in self.devices if x.id == device_id][0]
 

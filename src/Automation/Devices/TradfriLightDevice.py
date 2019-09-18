@@ -32,6 +32,15 @@ class TradfriLightDevice(LightDevice):
         self.dim = dim
         self.warmth = warmth
 
+    def set_name(self, name):
+        if self.testing:
+            self.name = name
+            return
+
+        device = self.__api(self.__gateway.get_device(self.id))
+        self.__api(device.set_name(name))
+        self.name = name
+
     def set_on(self, state, src):
         if self.testing:
             Database().add_action_history(self.id, "on", src, state)
