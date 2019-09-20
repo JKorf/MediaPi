@@ -1,7 +1,9 @@
 import random
 import sys
 import time
+from datetime import datetime
 
+import math
 from toonapilib import Toon
 import json
 
@@ -13,7 +15,6 @@ from Shared.Util import current_time
 
 
 class ToonThermostatDevice(ThermostatDevice):
-
     id = "ToonThermostat"
 
     def __init__(self, testing, eneco_username, eneco_password, eneco_consumer_id, eneco_consumer_secret):
@@ -26,14 +27,24 @@ class ToonThermostatDevice(ThermostatDevice):
         self.eneco_consumer_id = eneco_consumer_id
         self.eneco_consumer_secret = eneco_consumer_secret
 
-        self.__last_gas_usage_data = (0, None)
-        self.__last_power_usage_data = (0, None)
+        self.__usage_data_buffers = \
+            dict(gas=dict(minutes=UsageDataBuffer(60 * 5),
+                          hours=UsageDataBuffer(60 * 60),
+                          days=UsageDataBuffer(60 * 60 * 24),
+                          months=UsageDataBuffer(60 * 60 * 24 * 30),
+                          years=UsageDataBuffer(60 * 60 * 24 * 365)),
+
+                 power=dict(minutes=UsageDataBuffer(60 * 5),
+                            hours=UsageDataBuffer(60 * 60),
+                            days=UsageDataBuffer(60 * 60 * 24),
+                            months=UsageDataBuffer(60 * 60 * 24 * 30),
+                            years=UsageDataBuffer(60 * 60 * 24 * 365)))
 
     def initialize(self):
         thermostat_info = self.get_temperature()
         self.temperature = thermostat_info.current_displayed_temperature
         self.setpoint = thermostat_info.current_set_point
-        if sys.platform != "linux" and sys.platform != "linux2":
+        if self.testing:
             t = CustomThread(self.random_change, "Thermostat device changer", [])
             t.start()
 
@@ -80,47 +91,53 @@ class ToonThermostatDevice(ThermostatDevice):
             time.sleep(1)
         return None
 
-    def get_gas_stats(self, from_date, to_date, interval):
+    def get_usage_stats(self, type, start_time, end_time, interval):
         Logger().write(LogVerbosity.All, "Get toon gas stats")
-        result = None
-
         if self.testing:
             return None
 
-        if current_time() - self.__last_gas_usage_data[0] < 1000 * 60 * 5:
-            return self.__last_gas_usage_data[1]
+        start_string = str(start_time)
+        end_string = str(end_time)
+
+        buffered_data = self.__usage_data_buffers[type][interval].get_data(start_time, end_time)
+        if buffered_data is not None:
+            Logger().write(LogVerbosity.Debug,
+                           "Returning buffered " + type + " usage data from " + start_string + " till " + end_string)
+            return buffered_data
 
         for i in range(3):
             try:
-                result = self.__api.data.graph.get_gas_time_window(from_date, to_date, interval)
-                self.__last_gas_usage_data = (current_time(), result)
+                Logger().write(LogVerbosity.Debug,
+                               "Retrieving " + type + " usage data from " + start_string + " till " + end_string)
+                if interval != "minutes":
+                    if type == "gas":
+                        result = self.__api.data.graph.get_gas_time_window(start_string, end_string, interval)
+                    else:
+                        result = self.__api.data.graph.get_power_time_window(start_string, end_string, interval)
+                        for data in result[interval]:
+                            data['value'] = data['peak'] + data['offPeak']
+
+                    for data in result[interval]:
+                        if data['value'] < 0:
+                            result[interval].remove(data)
+
+                    self.__usage_data_buffers[type][interval].add_data(result[interval])
+                    return result[interval]
+                else:
+                    if type == "gas":
+                        result = self.__api.data.flow.get_gas_time_window(start_string, end_string)
+                    else:
+                        result = self.__api.data.flow.get_power_time_window(start_string, end_string)
+
+                    for data in result['hours']:
+                        if data['value'] < 0:
+                            result['hours'].remove(data)
+
+                    self.__usage_data_buffers[type][interval].add_data(result["hours"])
+                    return result['hours']
             except Exception as e:
-                Logger().write(LogVerbosity.Info, "Toon get_gas_stats failed attempt " + str(i) + ": " + str(e))
+                Logger().write(LogVerbosity.Info, "Toon get_usage_stats failed attempt " + str(i) + ": " + str(e))
 
-            if result is not None:
-                return result
-            time.sleep(1)
-        return None
-
-    def get_electricity_stats(self, from_date, to_date):
-        Logger().write(LogVerbosity.All, "Get toon electricity stats")
-        result = None
-
-        if self.testing:
-            return None
-
-        if current_time() - self.__last_power_usage_data[0] < 1000 * 60 * 5:
-            return self.__last_power_usage_data[1]
-
-        for i in range(3):
-            try:
-                result = self.__api.data.flow.get_power_time_window(from_date, to_date)
-                self.__last_power_usage_data = (current_time(), result)
-            except Exception as e:
-                Logger().write(LogVerbosity.Info, "Toon get_electricity_stats failed attempt " + str(i) + ": " + str(e))
-
-            if result is not None:
-                return result
             time.sleep(1)
         return None
 
@@ -139,3 +156,32 @@ class Obj:
 
     def __init__(self):
         pass
+
+
+class UsageDataBuffer:
+
+    def __init__(self, interval):
+        self.interval = interval
+        self.data = []
+
+    def get_data(self, start_time, end_time):
+        data = [x for x in self.data if start_time <= x.timestamp < end_time]
+        expected_items = math.floor((end_time - start_time) / 1000 / self.interval)
+        if expected_items - len(data) > 0:
+            return None
+
+        return sorted([x.data for x in data], key=lambda x: x['timestamp'])
+
+    def add_data(self, data):
+        added = 0
+        for record in [x for x in data if len([y for y in self.data if y.timestamp == x['timestamp']]) == 0]:
+            self.data.append(UsageData(record['timestamp'], record))
+            added += 1
+        Logger().write(LogVerbosity.Debug, "Added " + str(added) + " item to usage buffer")
+
+
+class UsageData:
+
+    def __init__(self, timestamp, data):
+        self.timestamp = timestamp
+        self.data = data

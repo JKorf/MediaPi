@@ -3,7 +3,7 @@ import urllib.parse
 
 from Automation.DeviceBase import DeviceType
 from Automation.DeviceController import DeviceController
-from Shared.Util import to_JSON
+from Shared.Util import to_JSON, current_time
 from Webserver.APIController import app
 
 
@@ -136,22 +136,13 @@ class HomeController:
         return "OK"
 
     @staticmethod
-    @app.route('/home/get_gas_usage', methods=['GET'])
-    def home_get_gas_usage():
-        start_hours = request.args.get('startHours')
-        end_hours = int(request.args.get('endHours'))
-        if end_hours == 0:
-            end_hours = 0.001
-        device = DeviceController().get_devices_by_type(DeviceType.Thermostat)[0]
-        stats = device.get_gas_stats(start_hours + " hours ago", str(end_hours) + " hours ago", "hours")
-        return to_JSON(stats)
-
-    @staticmethod
-    @app.route('/home/get_power_usage', methods=['GET'])
-    def home_get_power_usage():
-        start_hours = request.args.get('startHours')
-        end_hours = request.args.get('endHours')
+    @app.route('/home/get_usage_stats', methods=['GET'])
+    def home_usage_stats():
+        type = request.args.get('type')
+        start_time = int(request.args.get('startTime'))
+        end_time = int(request.args.get('endTime'))
+        interval = request.args.get('interval')
 
         device = DeviceController().get_devices_by_type(DeviceType.Thermostat)[0]
-        stats = device.get_electricity_stats(start_hours + " hours ago", end_hours + " hours ago")
+        stats = device.get_usage_stats(type, start_time, end_time, interval)
         return to_JSON(stats)

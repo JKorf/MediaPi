@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import Widget from './Widget.js';
-import GasUsageGraph from './../Components/GasUsageGraph';
+import UsageGraph from './../Components/UsageGraph';
 
 class GasUsageWidget extends Component {
   constructor(props) {
@@ -21,7 +21,6 @@ class GasUsageWidget extends Component {
   }
 
   componentDidMount() {
-
   }
 
   componentWillUnmount(){
@@ -30,7 +29,7 @@ class GasUsageWidget extends Component {
   render() {
     return (
       <Widget {...this.props} loading={false}>
-          <GasUsageGraph hoursAgo={0} height={184} />
+          <UsageGraph hoursAgo={0} height={184} />
       </Widget>
     );
   }

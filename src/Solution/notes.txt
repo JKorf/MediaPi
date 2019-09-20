@@ -26,9 +26,10 @@
 
     Als device group delete dan ook rule voor die deleten?
 
-    ui-homescreen voor play/pause again?
+    mobile-lock screen voor play/pause again?
 
-    Moods maken?
+    States maken?
         Film -> gedimde verlichting
         Normaal
+        Sleep
         etc

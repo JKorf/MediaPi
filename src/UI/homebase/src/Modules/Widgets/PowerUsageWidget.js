@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import Widget from './Widget.js';
-import PowerUsageGraph from './../Components/PowerUsageGraph';
+import UsageGraph from './../Components/UsageGraph';
 
 class PowerUsageWidget extends Component {
   constructor(props) {
@@ -30,7 +30,7 @@ class PowerUsageWidget extends Component {
   render() {
     return (
       <Widget {...this.props} loading={false}>
-          <PowerUsageGraph hoursAgo={0} height={184} />
+          <UsageGraph hoursAgo={0} height={184} />
       </Widget>
     );
   }

@@ -23,8 +23,7 @@ import HistoryView from './Modules/Views/MediaPlayer/HistoryView.js'
 import UrlView from './Modules/Views/MediaPlayer/UrlView.js'
 
 import HomeDashboardView from './Modules/Views/Home/HomeDashboardView.js'
-import GasView from './Modules/Views/Home/GasView.js'
-import PowerView from './Modules/Views/Home/PowerView.js'
+import UsageView from './Modules/Views/Home/UsageView.js'
 import DevicesView from './Modules/Views/Home/DevicesView.js'
 import DeviceView from './Modules/Views/Home/DeviceView.js'
 import RulesView from './Modules/Views/Home/RulesView.js'
@@ -138,8 +137,8 @@ class App extends Component {
                     <Route path="/mediaplayer/history" exact render={(props) => <HistoryView {...props} functions={this.functions}  />} />
 
                     <Route path="/home/" exact render={(props) => <HomeDashboardView {...props} functions={this.functions}  />} />
-                    <Route path="/home/gas" exact render={(props) => <GasView {...props} functions={this.functions}  />} />
-                    <Route path="/home/power" exact render={(props) => <PowerView {...props} functions={this.functions}  />} />
+                    <Route path="/home/gas" exact render={(props) => <UsageView {...props} type="gas" functions={this.functions}  />} />
+                    <Route path="/home/power" exact render={(props) => <UsageView {...props} type="power" functions={this.functions}  />} />
                     <Route path="/home/devices" exact render={(props) => <DevicesView {...props} functions={this.functions}/>} />
                     <Route path="/home/device/:id" exact render={(props) => <DeviceView {...props} functions={this.functions}  />} />
                     <Route path="/home/rules" exact render={(props) => <RulesView {...props} functions={this.functions}  />} />

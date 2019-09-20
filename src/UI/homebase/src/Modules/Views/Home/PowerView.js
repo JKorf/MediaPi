@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 
 import ViewLoader from './../../Components/ViewLoader';
 import Button from './../../Components/Button';
-import PowerUsageGraph from './../../Components/PowerUsageGraph';
+import UsageGraph from './../../Components/UsageGraph';
 
 class PowerView extends Component {
   constructor(props) {
@@ -32,7 +32,7 @@ class PowerView extends Component {
             <div className="graph-forward" onClick={() => this.next()}><Button text="+8 hours" classId="secondary"/></div>
         </div>
 
-        <PowerUsageGraph hoursAgo={this.state.hoursAgo} height={300} />
+        <UsageGraph type="power" startTime={this.state.startTime} endTime={this.state.endTime} interval={this.state.interval} height={300}/>
 
       </div>
     );
