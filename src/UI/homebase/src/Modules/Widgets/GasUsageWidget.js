@@ -9,6 +9,13 @@ class GasUsageWidget extends Component {
 
     this.state = {};
     this.getSize = this.getSize.bind(this);
+
+    this.endTime = this.floorDate(new Date(), 60 * 60 * 1000).getTime();
+    this.startTime = this.endTime - 8 * 60 * 60 * 1000;
+  }
+
+   floorDate(date, period) {
+    return new Date(Math.floor(date.getTime() / period ) * period);
   }
 
   shouldShow(){
@@ -29,7 +36,7 @@ class GasUsageWidget extends Component {
   render() {
     return (
       <Widget {...this.props} loading={false}>
-          <UsageGraph hoursAgo={0} height={184} />
+          <UsageGraph type="gas" startTime={this.startTime} endTime={this.endTime} interval={"hours"}  height={184} />
       </Widget>
     );
   }

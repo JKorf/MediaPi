@@ -16,7 +16,6 @@ class GasView extends Component {
 
   componentDidMount() {
       this.changeInterval("hours");
-
   }
 
   back(){
@@ -89,10 +88,10 @@ class GasView extends Component {
     return (
       <div className="gas-view">
          <div className="graph-navigation">
-            <div className="graph-back" onClick={() => this.back()}><Button text="-8 hours" classId="secondary"/></div>
-            <div className="graph-forward" onClick={() => this.next()}><Button text="+8 hours" classId="secondary"/></div>
+            <div className="graph-back" onClick={() => this.back()}><Button text="<" classId="secondary"/></div>
+            <div className="graph-forward" onClick={() => this.next()}><Button text=">" classId="secondary"/></div>
             <div className="graph-interval">
-                <select onChange={(e) => this.changeInterval(e.target.value)}>
+                <select value={this.state.interval} onChange={(e) => this.changeInterval(e.target.value)}>
                     <option value="minutes">minutes</option>
                     <option value="hours">hours</option>
                     <option value="days">days</option>

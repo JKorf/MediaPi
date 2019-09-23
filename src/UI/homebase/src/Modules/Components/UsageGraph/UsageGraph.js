@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import { ResponsiveContainer, LineChart, Line, BarChart, LabelList, XAxis, YAxis, Tooltip, Bar } from 'recharts';
 import ViewLoader from './../../Components/ViewLoader';
-import { formatTime } from './../../../Utils/Util.js';
+import { writeNumber, formatTime } from './../../../Utils/Util.js';
 
 class UsageGraph extends Component {
   constructor(props){
@@ -11,6 +11,9 @@ class UsageGraph extends Component {
       this.valueKey = "value";
       this.state = {loading: true};
       this.getTickLabel = this.getTickLabel.bind(this);
+      this.offsetLeft = 10;
+      if (this.props.type == "gas")
+        this.offsetLeft = -20;
   }
 
   componentDidMount(){
@@ -70,7 +73,7 @@ class UsageGraph extends Component {
                       <XAxis angle={60}
                              dy={20}
                              tickFormatter={this.getTickLabel}/>
-                      <YAxis dataKey={this.valueKey} unit={this.state.usageData[0].unit}/>
+                      <YAxis dataKey={this.valueKey} unit={this.state.usageData[0].unit} tickFormatter={writeNumber}/>
                       <Tooltip labelFormatter={this.getTickLabel} />
                       <Line dataKey={this.valueKey} fill="#8884d8" animationDuration={500}>
                       </Line>
@@ -79,17 +82,17 @@ class UsageGraph extends Component {
             }
             { this.props.interval != "minutes" &&
                 <ResponsiveContainer minHeight={this.props.height}>
-                    <BarChart data={this.state.usageData} margin={{top:30,right:10,bottom:20,left:0}}>
+                    <BarChart data={this.state.usageData} margin={{top:30,right:10,bottom:20,left:this.offsetLeft}}>
                       <XAxis angle={60}
                              dy={20}
                              minTickGap={0}
                              interval={0}
                              tickCount={8}
                              tickFormatter={this.getTickLabel}/>
-                      <YAxis dataKey={this.valueKey} unit={this.state.usageData[0].unit} />
+                      <YAxis dataKey={this.valueKey} unit={this.state.usageData[0].unit} tickFormatter={writeNumber} />
                       <Tooltip labelFormatter={this.getTickLabel} />
                       <Bar dataKey={this.valueKey} fill="#8884d8" animationDuration={500}>
-                        <LabelList fill="#222" dataKey={this.valueKey} position="top" offset={10} />
+                        <LabelList fill="#222" dataKey={this.valueKey} position="top" offset={10} formatter={writeNumber} />
                       </Bar>
                     </BarChart>
                 </ResponsiveContainer>

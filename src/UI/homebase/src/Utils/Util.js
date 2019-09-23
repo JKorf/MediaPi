@@ -41,7 +41,7 @@ export function writeNumber(value)
     if(f > 1000000)
         return Math.round(f / 100000) / 10 + "m";
     if(f > 1000)
-        return Math.round(f / 1000) / 10 + "k";
+        return Math.round(f / 100) / 10 + "k";
 
     return value;
 }

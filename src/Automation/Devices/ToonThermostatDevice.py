@@ -42,8 +42,8 @@ class ToonThermostatDevice(ThermostatDevice):
 
     def initialize(self):
         thermostat_info = self.get_temperature()
-        self.temperature = thermostat_info.current_displayed_temperature
-        self.setpoint = thermostat_info.current_set_point
+        self.temperature = thermostat_info.current_displayed_temperature / 100
+        self.setpoint = thermostat_info.current_set_point / 100
         if self.testing:
             t = CustomThread(self.random_change, "Thermostat device changer", [])
             t.start()
@@ -60,7 +60,7 @@ class ToonThermostatDevice(ThermostatDevice):
 
         for i in range(3):
             try:
-                self.__api.thermostat = temperature
+                self.__api.thermostat = temperature * 100
                 self.setpoint = temperature
                 Logger().write(LogVerbosity.Debug, "Temp set")
                 Database().add_action_history(self.id, "temperature", src, temperature)
@@ -104,6 +104,8 @@ class ToonThermostatDevice(ThermostatDevice):
             Logger().write(LogVerbosity.Debug,
                            "Returning buffered " + type + " usage data from " + start_string + " till " + end_string)
             return buffered_data
+
+        self.__usage_data_buffers[type][interval].clean_data()
 
         for i in range(3):
             try:
@@ -166,18 +168,30 @@ class UsageDataBuffer:
 
     def get_data(self, start_time, end_time):
         data = [x for x in self.data if start_time <= x.timestamp < end_time]
-        expected_items = math.floor((end_time - start_time) / 1000 / self.interval)
-        if expected_items - len(data) > 0:
+        expected_items = math.ceil((end_time - start_time) / 1000 / self.interval)
+        if expected_items != len(data):
             return None
 
+        for x in data:
+            x.last_access = current_time()
         return sorted([x.data for x in data], key=lambda x: x['timestamp'])
 
     def add_data(self, data):
         added = 0
         for record in [x for x in data if len([y for y in self.data if y.timestamp == x['timestamp']]) == 0]:
+            if ((current_time() - record['timestamp']) / 1000) < self.interval:
+                Logger().write(LogVerbosity.Debug, "Not adding timestamp " + str(record['timestamp']) + " since its not complete yet")
+                continue
             self.data.append(UsageData(record['timestamp'], record))
             added += 1
         Logger().write(LogVerbosity.Debug, "Added " + str(added) + " item to usage buffer")
+
+    def clean_data(self):
+        old = len(self.data)
+        self.data = [x for x in self.data if current_time() - x.last_access < 1000 * 60 * 60 * 24 * 7]
+        change = old - len(self.data)
+        if change > 0:
+            Logger().write(LogVerbosity.Debug, "Cleaned " + str(change) + " items from usage buffer")
 
 
 class UsageData:
@@ -185,3 +199,4 @@ class UsageData:
     def __init__(self, timestamp, data):
         self.timestamp = timestamp
         self.data = data
+        self.last_access = current_time()
