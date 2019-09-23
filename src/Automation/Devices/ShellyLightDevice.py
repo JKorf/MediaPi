@@ -13,6 +13,7 @@ class ShellyLightDevice(LightDevice):
     def __init__(self, id, name, ip_address, testing):
         super().__init__("ShellyLight", id, name, testing, True)
         self.ip_address = ip_address
+        self.__port = 50000 + int(self.ip_address.split('.')[-1])
         self.__listen_socket_on = None
         self.__listen_socket_off = None
         self.__listen_thread_on = None
@@ -20,6 +21,10 @@ class ShellyLightDevice(LightDevice):
 
     def initialize(self):
         self.on = self.get_state()
+        if self.testing:
+            return
+
+        self.set_settings()
         self.listen()
 
     def update(self, state, dim, warmth):
@@ -48,12 +53,18 @@ class ShellyLightDevice(LightDevice):
         Logger().write(LogVerbosity.Debug, self.name + " received device change. New state: " + str(value))
         self.on = value
 
+    def set_settings(self):
+        on_url = "192.168.2.100:" + str(self.__port)
+        off_url = "192.168.2.100:" + str(self.__port + 100)
+        settings = "http://" + self.ip_address + "/settings/relay/0?btn_on_url=" + on_url + "&out_on_url=" + on_url + "&btn_off_url=" + off_url + "&out_off_url=" + off_url
+        Logger().write(LogVerbosity.Debug, self.name + " setting: " + settings)
+        RequestFactory.make_request(settings, "POST")
+
     def listen(self):
-        port = int(self.ip_address.split('.')[-1])
         self.__listen_socket_on = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__listen_socket_on.bind(('localhost', 50000 + port))
+        self.__listen_socket_on.bind(('localhost', self.__port))
         self.__listen_socket_off = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__listen_socket_off.bind(('localhost', 50100 + port))
+        self.__listen_socket_off.bind(('localhost', self.__port + 100))
         self.__listen_thread_on = CustomThread(self.start_server, "Shelly on listener", [self.__listen_socket_on, lambda: self.__set_on(True)])
         self.__listen_thread_off = CustomThread(self.start_server, "Shelly off listener", [self.__listen_socket_off, lambda: self.__set_on(False)])
         self.__listen_thread_on.start()
