@@ -1,7 +1,5 @@
 import random
-import sys
 import time
-from datetime import datetime
 
 import math
 from toonapilib import Toon
@@ -74,8 +72,8 @@ class ToonThermostatDevice(ThermostatDevice):
     def get_temperature(self):
         if self.testing:
             result = Obj()
-            result.current_displayed_temperature = 20
-            result.current_set_point = 20
+            result.current_displayed_temperature = 2000
+            result.current_set_point = 2000
             return result
 
         Logger().write(LogVerbosity.All, "Get toon status")

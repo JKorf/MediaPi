@@ -6,12 +6,11 @@ import uuid
 from pytradfri import Gateway
 from pytradfri.api.libcoap_api import APIFactory
 
-from Automation.DeviceBase import DeviceType, DeviceProvider
+from Automation.DeviceBase import DeviceProvider
 from Automation.Devices.TradfriLightDevice import TradfriLightDevice
 from Automation.Devices.TradfriSocketDevice import TradfriSocketDevice
 from Database.Database import Database
 from Shared.Logger import Logger, LogVerbosity
-from Shared.Threading import CustomThread
 from Shared.Util import current_time
 
 
@@ -119,58 +118,3 @@ class TradfriProvider(DeviceProvider):
             return TradfriLightDevice(self.__gateway, self.__api, data.id, data.name, data.light_control.can_set_dimmer, data.light_control.can_set_temp, False)
         elif data.has_socket_control:
             return TradfriSocketDevice(self.__gateway, self.__api, data.id, data.name, False)
-
-    def start_observing(self):
-        Logger().write(LogVerbosity.Debug, "Start observing light data")
-
-        if sys.platform != "linux" and sys.platform != "linux2":
-            self.__observe_thread = CustomThread(self.random_change, "Light device changer", [])
-            self.__observe_thread.start()
-            return
-
-        self.__observing = True
-        if self.__observing_end > current_time():
-            Logger().write(LogVerbosity.All, "Still observing, not starting again")
-            return  # still observing, the check observing thread will renew
-
-        self.__observing_end = current_time() + 30000
-        result = self.__api(self.__api(self.__gateway.get_devices()))
-        for device in result:
-            self.observe_device(device)
-
-    def observe_device(self, device):
-        Logger().write(LogVerbosity.All, "Starting observe for device " + device.name)
-        self.__observe_thread = CustomThread(lambda: self.__api(device.observe(
-            self.device_change,
-            lambda x: self.check_observe(device), duration=30)), "Light device observer", [])
-        self.__observe_thread.start()
-
-    def device_change(self, device):
-        if device.has_light_control:
-            state = device.light_control.lights[0].state
-            dim = device.light_control.lights[0].dimmer
-            warmth = device.light_control.lights[0].warmth
-            self.__on_light_device_change(state, dim, warmth)
-        else:
-            state = device.socket_control.sockets[0].state
-            self.__on_socket_device_change(device.id, state)
-
-    def check_observe(self, device):
-        if self.__observing:
-            # Restart observing since it timed out
-            Logger().write(LogVerbosity.Debug, "Restarting observing for group " + str(device.name))
-            self.observe_device(device)
-
-    def stop_observing(self):
-        Logger().write(LogVerbosity.Debug, "Stop observing light data")
-        self.__observing = False
-
-    def random_change(self):
-        while True:
-            device = random.choice(self.__test_devices)
-            state = bool(random.getrandbits(1))
-            if device.device_type == DeviceType.Switch:
-                self.__on_socket_device_change(device.id, state)
-            else:
-                self.__on_light_device_change(device.id, state, 0, 0)
-            time.sleep(5)

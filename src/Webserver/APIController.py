@@ -18,7 +18,7 @@ from Shared.Util import Singleton, to_JSON, current_time
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", engineio_logger=False)
 
 
 class APIController(metaclass=Singleton):
