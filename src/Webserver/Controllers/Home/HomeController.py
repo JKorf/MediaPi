@@ -96,7 +96,7 @@ class HomeController:
         device = DeviceController().get_device(device_id)
         if device.device_type != DeviceType.Light:
             raise TypeError("Can't set dimmer on device of type " + str(device.device_type))
-        device.set_dimmer(dim, "user")
+        device.set_dim(dim, "user")
         return "OK"
 
     @staticmethod

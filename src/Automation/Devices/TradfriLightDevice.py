@@ -1,3 +1,4 @@
+import math
 import random
 import time
 
@@ -66,9 +67,10 @@ class TradfriLightDevice(LightDevice):
             self.dim = value
             return
 
-        tradfri_value = value / 100 * 254
+        tradfri_value = math.floor(value / 100 * 254)
         device = self.__api(self.__gateway.get_device(self.id))
         self.__api(device.light_control.set_dimmer(tradfri_value))
+        Logger().write(LogVerbosity.Debug, "Set dim value of " + str(self.name) + " to " + str(tradfri_value))
         Database().add_action_history(self.id, "dim", src, value)
         self.dim = value
 
@@ -77,9 +79,10 @@ class TradfriLightDevice(LightDevice):
             self.warmth = value
             return
 
-        tradfri_value = value / 100 * 204 + 250
+        tradfri_value = math.floor(value / 100 * 204 + 250)
         device = self.__api(self.__gateway.get_device(self.id))
         self.__api(device.light_control.set_color_temp(tradfri_value))
+        Logger().write(LogVerbosity.Debug, "Set warmth value of " + str(self.name) + " to " + str(tradfri_value))
         Database().add_action_history(self.id, "warmth", src, value)
         self.warmth = value
 
@@ -98,7 +101,7 @@ class TradfriLightDevice(LightDevice):
 
     def device_change(self, device):
         Logger().write(LogVerbosity.Debug,
-                       "Tradfri light change received. New state: " + str(device.socket_control.sockets[0].state))
+                       "Tradfri light change received. New state: " + str(device.light_control.lights[0].state))
         self.on = device.light_control.lights[0].state
         self.dim = device.light_control.lights[0].dimmer
         self.warmth = device.light_control.lights[0].color_temp

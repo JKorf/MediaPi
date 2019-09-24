@@ -115,6 +115,6 @@ class TradfriProvider(DeviceProvider):
 
     def parse_device(self, data):
         if data.has_light_control:
-            return TradfriLightDevice(self.__gateway, self.__api, data.id, data.name, data.light_control.can_set_dimmer, data.light_control.can_set_temp, False)
+            return TradfriLightDevice(self.__gateway, self.__api, str(data.id), data.name, False, data.light_control.can_set_dimmer, data.light_control.can_set_temp)
         elif data.has_socket_control:
-            return TradfriSocketDevice(self.__gateway, self.__api, data.id, data.name, False)
+            return TradfriSocketDevice(self.__gateway, self.__api, str(data.id), data.name, False)

@@ -28,7 +28,7 @@ from MediaPlayer.Torrents.Streaming.StreamListener import StreamListener
 from Controllers.PresenceManager import PresenceManager
 from Controllers.WiFiController import WiFiController
 from Controllers.TVManager import TVManager
-from Controllers.VacuumManager import VacuumManager
+#from Controllers.VacuumManager import VacuumManager
 from Automation.DeviceController import DeviceController
 
 from Shared.Util import current_time
@@ -116,7 +116,7 @@ class Program:
         ThreadManager()
         PresenceManager()
         RuleManager()
-        VacuumManager()
+        #VacuumManager()
 
     @staticmethod
     def init_sound():
