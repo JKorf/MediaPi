@@ -7,6 +7,7 @@ import Button from './../../Components/Button';
 import CheckBox from './../../Components/CheckBox';
 import TimePicker from './../../Components/TimePicker';
 import DeviceGroupSelector from './../../Components/DeviceGroupSelector';
+import MoodSelector from './../../Components/MoodSelector';
 import InstanceSelector from './../../Components/InstanceSelector';
 import RadioSelector from './../../Components/RadioSelector';
 import SelectConditionPopup from './../../Components/Popups/SelectConditionPopup';
@@ -191,6 +192,9 @@ class RuleView extends Component {
                             { condition.parameter_description[index][1] === "radio" &&
                                 <div><RadioSelector value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /></div>
                             }
+                            { condition.parameter_description[index][1] === "mood" &&
+                                <div><MoodSelector value={param} onChange={(newVal) => this.paramChange(cond, index, newVal)} /></div>
+                            }
                         </div>
                     </div>
                 ) }
@@ -236,6 +240,9 @@ class RuleView extends Component {
                         }
                         { action.parameter_description[index][1] === "radio" &&
                             <div><RadioSelector value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /></div>
+                        }
+                        { action.parameter_description[index][1] === "mood" &&
+                            <div><MoodSelector value={param} onChange={(newVal) => this.paramChange(act, index, newVal)} /></div>
                         }
                     </div>
                 </div>

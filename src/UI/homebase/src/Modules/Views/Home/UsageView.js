@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import Button from './../../Components/Button';
 import UsageGraph from './../../Components/UsageGraph';
 
-class GasView extends Component {
+class UsageView extends Component {
   constructor(props) {
     super(props);
     var time = new Date().getTime();
@@ -108,4 +108,4 @@ class GasView extends Component {
   }
 };
 
-export default GasView;
+export default UsageView;

@@ -15,21 +15,8 @@
 
     Fix back going a page back instead of to base menu
 
-    Refactor gas/power usage graphs
-        Buffer data so we only have to request once ( maybe remove if older than x? )
-        Create distinction between flow and graph data.
-            Flow = consumption per 5 minutes -> line graph
-            Graph = consumption per interval -> historical data -> bar graph
-        Add selection tools
-            Quick selections: Today, This month, This year
-            Add start/end time selectors
-
-    Als device group delete dan ook rule voor die deleten?
+    Als devicegroup/mood wordt verwijdert rules checken en eventueel uitschakelen en condition/action deleten
 
     mobile-lock screen voor play/pause again?
 
-    States maken?
-        Film -> gedimde verlichting
-        Normaal
-        Sleep
-        etc
+    Dimmer setten voor group

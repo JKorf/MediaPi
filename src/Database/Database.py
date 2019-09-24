@@ -16,7 +16,7 @@ class Database(metaclass=Singleton):
         self.path = Settings.get_string("base_folder") + "Solution/"
         self.db_name = "database.data"
         self.slave = Settings.get_bool("slave")
-        self.current_version = 14
+        self.current_version = 15
 
     def init_database(self):
         Logger().write(LogVerbosity.Info, "Opening database at " + str(self.path))
@@ -540,6 +540,53 @@ class Database(metaclass=Singleton):
             return []
 
         return [ActionHistory(int(x[0]), x[1], x[2], x[3], int(x[4]), x[5]) for x in data]
+
+    def add_mood(self, name):
+        if self.slave:
+            raise PermissionError("Cant call add_mood on slave")
+
+        Logger().write(LogVerbosity.Debug, "Database add mood")
+
+        database, cursor = self.connect()
+        cursor.execute("INSERT INTO Moods (Name) Values (?)",
+                       [name])
+        database.commit()
+        database.close()
+
+    def get_moods(self):
+        if self.slave:
+            raise PermissionError("Cant call get_moods on slave")
+
+        Logger().write(LogVerbosity.All, "Database get moods")
+
+        database, cursor = self.connect()
+        cursor.execute("SELECT * FROM Moods")
+        data = cursor.fetchall()
+        database.commit()
+        database.close()
+        if not data:
+            return []
+
+        return [Mood(x[0], x[1]) for x in data]
+
+    def remove_mood(self, id):
+        if self.slave:
+            raise PermissionError("Cant call remove_mood on slave")
+
+        Logger().write(LogVerbosity.Debug, "Database remove mood")
+
+        database, cursor = self.connect()
+        cursor.execute("DELETE FROM Moods WHERE Id=(?)",
+                       [id])
+        database.commit()
+        database.close()
+
+
+class Mood:
+
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
 
 
 class Client:

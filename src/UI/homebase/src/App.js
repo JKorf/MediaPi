@@ -31,6 +31,7 @@ import RuleView from './Modules/Views/Home/RuleView.js'
 import AutomationView from './Modules/Views/Home/AutomationView.js'
 import AutomationGroupView from './Modules/Views/Home/AutomationGroupView.js'
 import AutomationDeviceView from './Modules/Views/Home/AutomationDeviceView.js';
+import MoodsView from './Modules/Views/Home/MoodsView.js';
 
 import ConfigurationDashboardView from './Modules/Views/Configuration/ConfigurationDashboardView.js'
 import TestView from './Modules/Views/Configuration/TestView.js'
@@ -146,6 +147,7 @@ class App extends Component {
                     <Route path="/home/automation" exact render={(props) => <AutomationView {...props} functions={this.functions}  />} />
                     <Route path="/home/automation-group/:id" exact render={(props) => <AutomationGroupView {...props} functions={this.functions}  />} />
                     <Route path="/home/automation-device/:id" exact render={(props) => <AutomationDeviceView {...props} functions={this.functions}  />} />
+                    <Route path="/home/moods" exact render={(props) => <MoodsView {...props} functions={this.functions}  />} />
 
                     <Route path="/configuration" exact render={(props) => <ConfigurationDashboardView {...props} functions={this.functions}  />} />
                     <Route path="/configuration/test" exact render={(props) => <TestView {...props} functions={this.functions}  />} />

@@ -6,6 +6,7 @@ import TempWidget from './../Widgets/TempWidget.js'
 import DeviceGroupsWidget from './../Widgets/DeviceGroupsWidget.js'
 import GasUsageWidget from './../Widgets/GasUsageWidget.js'
 import PowerUsageWidget from './../Widgets/PowerUsageWidget.js'
+import MoodsWidget from './../Widgets/MoodsWidget.js'
 
 class DashboardView extends Component {
   constructor(props) {
@@ -17,6 +18,7 @@ class DashboardView extends Component {
 
     this.widgetRefs = [];
     this.addWidget(<DeviceGroupsWidget title="Lights" titleLink={"/home/automation"} ref={React.createRef()} />);
+    this.addWidget(<MoodsWidget title="Moods" titleLink={"/home/moods"} ref={React.createRef()} />);
     this.addWidget(<TempWidget title="Temperature" titleLink={"/home/automation-device/ToonThermostat"} ref={React.createRef()} />);
     this.addWidget(<PowerUsageWidget title="Power usage" titleLink={"/home/power"} ref={React.createRef()} />);
     this.addWidget(<GasUsageWidget title="Gas usage" titleLink={"/home/gas"} ref={React.createRef()} />);

@@ -1,5 +1,6 @@
 import time
 from datetime import datetime, timedelta
+from threading import Event
 
 import math
 
@@ -46,6 +47,8 @@ class Rule:
     def execute(self):
         for action in self.actions:
             action.execute()
+        for condition in [x for x in self.conditions if x.name == "Mood select"]:
+            condition.mood_selected = False
         self.last_execution = current_time()
 
     def get_description(self):
@@ -93,6 +96,25 @@ class IsBetweenTimeCondition:
 
     def get_description(self):
         return "time is between " + add_leading_zero(self.start_time_hours)+":" + add_leading_zero(self.start_time_minutes) + " and " + add_leading_zero(self.end_time_hours)+":" + add_leading_zero(self.end_time_minutes)
+
+
+class MoodSelectCondition:
+    name = "Mood select"
+    parameter_descriptions = [("Mood", "mood")]
+    description = "Triggers on a mood selection"
+
+    def __init__(self, id, type, mood_id):
+        self.id = id
+        self.type = type
+        self.mood_id = mood_id
+        self.parameters = [int(mood_id)]
+        self.mood_selected = False
+
+    def check(self):
+        return self.mood_selected
+
+    def get_description(self):
+        return "user selects mood " + str(self.mood_id)
 
 
 class IsPassingTimeCondition:
@@ -186,6 +208,28 @@ class OnComingHomeCondition:
         return "first person comes home"
 
 
+class DimDeviceGroupAction:
+
+    name = "Set dimmer device group"
+    description = "Set the dimmer for a device group to a specific value"
+    parameter_descriptions = [("Group", "device_group"), ("Dim", "int")]
+
+    def __init__(self, id, type, group_ids, dim):
+        self.id = id
+        self.type = type
+        dim_value = int(dim)
+        self.parameters = [group_ids, dim_value]
+        self.group_ids = group_ids.split('|')
+        self.dim = dim_value
+
+    def execute(self):
+        for group_id in self.group_ids:
+            DeviceController().get_group(int(group_id)).set_dim(self.dim, "rule")
+
+    def get_description(self):
+        return "set the dimmer for device group " + str(self.parameters[0]) + " to " + str(self.dim) + "%"
+
+
 class ToggleDeviceGroupAction:
 
     name = "Toggle a device group"
@@ -208,6 +252,30 @@ class ToggleDeviceGroupAction:
         if self.on:
             return "turn on the devices for device group " + str(self.parameters[0])
         return "turn off the devices for device group " + str(self.parameters[0])
+
+
+class DimDeviceAction:
+
+    name = "Set dimmer device"
+    description = "Set the dimmer for a device to a specific value"
+    parameter_descriptions = [("Device", "device"), ("Dim", "int")]
+
+    def __init__(self, id, type, device_ids, dim):
+        self.id = id
+        self.type = type
+        dim_value = int(dim)
+        self.parameters = [device_ids, dim_value]
+        self.device_ids = device_ids.split('|')
+        self.dim = dim_value
+
+    def execute(self):
+        for device_id in self.device_ids:
+            device = DeviceController().get_device(device_id)
+            if device.device_type == DeviceType.Light and device.can_dim:
+                device.set_dim(self.dim, "rule")
+
+    def get_description(self):
+        return "set the dimmer for device " + str(self.parameters[0]) + " to " + str(self.dim) + "%"
 
 
 class ToggleDeviceAction:
@@ -234,8 +302,8 @@ class ToggleDeviceAction:
 
     def get_description(self):
         if self.on:
-            return "turn on the devices for device " + str(self.parameters[0])
-        return "turn off the devices for device " + str(self.parameters[0])
+            return "turn on device " + str(self.parameters[0])
+        return "turn off device " + str(self.parameters[0])
 
 
 class SetDeviceTemperatureAction:
@@ -316,14 +384,17 @@ class RuleManager(metaclass=Singleton):
         2: IsPassingTimeCondition,
         3: IsHomeCondition,
         4: OnLeavingHomeCondition,
-        5: OnComingHomeCondition
+        5: OnComingHomeCondition,
+        6: MoodSelectCondition
     }
     actions = {
         1: ToggleDeviceAction,
         2: ToggleDeviceGroupAction,
         3: SetDeviceTemperatureAction,
         4: ToggleTvAction,
-        5: PlayRadioAction
+        5: PlayRadioAction,
+        6: DimDeviceAction,
+        7: DimDeviceGroupAction
     }
 
     def __init__(self):
@@ -333,6 +404,7 @@ class RuleManager(metaclass=Singleton):
         self.load_rules()
         enabled = Database().get_stat("rules_enabled")
         self.enabled = bool(enabled)
+        self.wait_event = Event()
 
     def start(self):
         if Settings.get_bool("slave"):
@@ -340,6 +412,21 @@ class RuleManager(metaclass=Singleton):
 
         self.running = True
         self.check_thread.start()
+
+    def mood_selected(self, id):
+        for rule in self.current_rules:
+            for condition in [x for x in rule.conditions if x.name == "Mood select"]:
+                condition.mood_selected = int(condition.mood_id) == id
+
+        self.wait_event.set()
+
+    def device_group_removed(self, id):
+        # TODO
+        pass
+
+    def mood_removed(self, id):
+        # TODO
+        pass
 
     def stop(self):
         self.running = False
@@ -362,7 +449,8 @@ class RuleManager(metaclass=Singleton):
                             Logger().write_error(e, "Rule error")
                     Database().update_rule(rule)
 
-            time.sleep(10)
+            self.wait_event.wait(10)
+            self.wait_event.clear()
 
     def update_rule(self, rule_id, active, name, actions, conditions):
         if rule_id == -1:

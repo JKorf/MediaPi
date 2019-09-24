@@ -8,6 +8,7 @@ import deviceImg from './../../../Images/device.svg'
 import rulesImg from './../../../Images/rules.svg'
 import powerImg from './../../../Images/power.svg'
 import smartHomeImg from './../../../Images/smart-home.svg'
+import moodsImg from './../../../Images/moods.svg'
 
 class HomeDashboardView extends Component {
   constructor(props) {
@@ -30,6 +31,8 @@ class HomeDashboardView extends Component {
         <DashboardLink to="/home/rules" img={rulesImg} text="rules"></DashboardLink>
 
         <DashboardLink to="/home/automation" img={smartHomeImg} text="automation"></DashboardLink>
+
+        <DashboardLink to="/home/moods" img={moodsImg} text="moods"></DashboardLink>
     </div>
     );
   }

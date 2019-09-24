@@ -18,9 +18,8 @@ class TempWidget extends Component {
     return true;
   }
 
-
   getSize(){
-    return {width: 180, height: 135};
+    return {width: 120, height: 135};
   }
 
   componentDidMount() {

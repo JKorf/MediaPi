@@ -3,6 +3,9 @@ import urllib.parse
 
 from Automation.DeviceBase import DeviceType
 from Automation.DeviceController import DeviceController
+from Controllers.RuleManager import RuleManager
+from Database.Database import Database
+from Shared.Logger import LogVerbosity, Logger
 from Shared.Util import to_JSON, current_time
 from Webserver.APIController import app
 
@@ -51,6 +54,7 @@ class HomeController:
     def home_remove_group():
         id = int(request.args.get('id'))
         DeviceController().remove_group(id)
+        RuleManager().device_group_removed(id)
         return "OK"
 
     @staticmethod
@@ -146,3 +150,36 @@ class HomeController:
         device = DeviceController().get_devices_by_type(DeviceType.Thermostat)[0]
         stats = device.get_usage_stats(type, start_time, end_time, interval)
         return to_JSON(stats)
+
+    @staticmethod
+    @app.route('/home/moods', methods=['GET'])
+    def home_moods():
+        Logger().write(LogVerbosity.Debug, "Getting moods")
+        return to_JSON(Database().get_moods())
+
+    @staticmethod
+    @app.route('/home/add_mood', methods=['POST'])
+    def home_add_mood():
+        Logger().write(LogVerbosity.Debug, "Adding mood")
+        name = urllib.parse.unquote(request.args.get('name'))
+        Database().add_mood(name)
+        return "OK"
+
+    @staticmethod
+    @app.route('/home/remove_mood', methods=['POST'])
+    def home_remove_mood():
+        Logger().write(LogVerbosity.Debug, "Removing mood")
+        id = int(request.args.get('id'))
+        Database().remove_mood(id)
+        RuleManager().mood_removed(id)
+        return "OK"
+
+    @staticmethod
+    @app.route('/home/select_mood', methods=['POST'])
+    def home_select_mood():
+        Logger().write(LogVerbosity.Debug, "Selecting mood")
+        id = int(request.args.get('id'))
+        RuleManager().mood_selected(id)
+        return "OK"
+
+
