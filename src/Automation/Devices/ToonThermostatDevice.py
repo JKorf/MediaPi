@@ -16,7 +16,7 @@ class ToonThermostatDevice(ThermostatDevice):
     id = "ToonThermostat"
 
     def __init__(self, testing, eneco_username, eneco_password, eneco_consumer_id, eneco_consumer_secret):
-        super().__init__("ToonThermostat", ToonThermostatDevice.id, "Toon thermostat", testing, True)
+        super().__init__("ToonThermostat", ToonThermostatDevice.id, "Toon thermostat", testing, True, None)
         if not testing:
             self.__api = Toon(eneco_username, eneco_password, eneco_consumer_id, eneco_consumer_secret)
         self.setpoint = 0
@@ -49,6 +49,10 @@ class ToonThermostatDevice(ThermostatDevice):
             t = CustomThread(self.random_change, "Thermostat device changer", [])
             t.start()
         return True
+
+    def deinitialize(self):
+        # might need to implement this at some point
+        pass
 
     def update(self, temperature, setpoint):
         self.temperature = temperature

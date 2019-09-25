@@ -1,4 +1,3 @@
-import sys
 from enum import Enum
 
 from Shared.Observable import Observable
@@ -12,7 +11,7 @@ class Device(Observable):
             if self.changed is not None:
                 self.changed()
 
-    def __init__(self, device_type, implementation_type, id, name, testing, is_base_device):
+    def __init__(self, device_type, implementation_type, id, name, testing, is_base_device, provider_name):
         super().__init__(id, 0.5)
         self.device_type = device_type
         self.implementation_type = implementation_type
@@ -20,10 +19,14 @@ class Device(Observable):
         self.id = id
         self.testing = testing
         self.is_base_device = is_base_device
+        self.provider_name = provider_name
         self.accessible = False
 
     def initialize(self):
         return True
+
+    def deinitialize(self):
+        pass
 
     def set_name(self, name):
         self.name = name
@@ -31,8 +34,8 @@ class Device(Observable):
 
 class LightDevice(Device):
 
-    def __init__(self, implementation_type, id, name, testing, is_base_device):
-        super().__init__(DeviceType.Light, implementation_type, id, name, testing, is_base_device)
+    def __init__(self, implementation_type, id, name, testing, is_base_device, provider_name):
+        super().__init__(DeviceType.Light, implementation_type, id, name, testing, is_base_device, provider_name)
         self.on = False
 
         self.can_dim = False
@@ -58,8 +61,8 @@ class LightDevice(Device):
 
 class ThermostatDevice(Device):
 
-    def __init__(self, implementation_type, id, name, testing, is_base_device):
-        super().__init__(DeviceType.Thermostat, implementation_type, id, name, testing, is_base_device)
+    def __init__(self, implementation_type, id, name, testing, is_base_device, provider_name):
+        super().__init__(DeviceType.Thermostat, implementation_type, id, name, testing, is_base_device, provider_name)
         self.temperature = 0
 
     def set_setpoint(self, temperature, src):
@@ -71,8 +74,8 @@ class ThermostatDevice(Device):
 
 class SwitchDevice(Device):
 
-    def __init__(self, implementation_type, id, name, testing, is_base_device):
-        super().__init__(DeviceType.Switch, implementation_type, id, name, testing, is_base_device)
+    def __init__(self, implementation_type, id, name, testing, is_base_device, provider_name):
+        super().__init__(DeviceType.Switch, implementation_type, id, name, testing, is_base_device, provider_name)
         self.active = False
 
     def set_active(self, active, src):

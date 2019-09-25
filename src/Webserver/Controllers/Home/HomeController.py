@@ -149,6 +149,14 @@ class HomeController:
         return "OK"
 
     @staticmethod
+    @app.route('/home/resync_provider', methods=['POST'])
+    def home_resync_provider():
+        Logger().write(LogVerbosity.Debug, "Resyncing provider")
+        name = request.args.get('name')
+        device = DeviceController().resync_provider_devices(name)
+        return "OK"
+
+    @staticmethod
     @app.route('/home/get_usage_stats', methods=['GET'])
     def home_usage_stats():
         type = request.args.get('type')

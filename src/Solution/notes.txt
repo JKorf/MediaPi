@@ -19,10 +19,4 @@
 
     mobile-lock screen voor play/pause again?
 
-    Dimmer setten voor group
-
-    Afhandeling voor als device niet te bereiken is
-
     Devices kunnen toevoegen via UI
-
-    Providers opnieuw devices laten opvragen (bv tradfri light toegevoegd)

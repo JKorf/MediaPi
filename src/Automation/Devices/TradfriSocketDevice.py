@@ -9,20 +9,27 @@ from Shared.Threading import CustomThread
 
 class TradfriSocketDevice(SwitchDevice):
 
-    def __init__(self, gateway, api, id, name, testing):
-        super().__init__("TradfriSocket", id, name, testing, False)
+    def __init__(self, gateway, api, provider_name, id, name, testing):
+        super().__init__("TradfriSocket", id, name, testing, False, provider_name)
         self.__gateway = gateway
         self.__api = api
         self.__observe_thread = None
         self.__device = None
+        self.__running = False
 
     def initialize(self):
         state = self.get_state()
         if state is None:
             return False
         self.active = state
+        self.__running = True
         self.start_observing()
         return True
+
+    def deinitialize(self):
+        self.__running = False
+        if self.__observe_thread:
+            self.__observe_thread.join()
 
     def update(self, state):
         self.active = state
@@ -52,6 +59,9 @@ class TradfriSocketDevice(SwitchDevice):
             Database().add_action_history(self.id, "active", src, state)
             return
 
+        if not self.__running:
+            return
+
         device = self.__api(self.__gateway.get_device(self.id))
         self.__api(device.socket_control.set_state(state))
         Database().add_action_history(self.id, "active", src, state)
@@ -67,7 +77,7 @@ class TradfriSocketDevice(SwitchDevice):
 
         self.__observe_thread = CustomThread(lambda: self.__api(self.__device.observe(
             self.device_change,
-            lambda x: self.start_observing(), duration=60)), "Light device observer", [])
+            lambda x: self.start_observing(), duration=30)), "Light device observer", [])
         self.__observe_thread.start()
 
     def device_change(self, device):
@@ -75,6 +85,6 @@ class TradfriSocketDevice(SwitchDevice):
         self.active = device.socket_control.sockets[0].state
 
     def random_change(self):
-        while True:
+        while self.__running:
             self.active = bool(random.getrandbits(1))
             time.sleep(random.randint(5, 30))

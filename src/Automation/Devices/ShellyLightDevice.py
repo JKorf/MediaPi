@@ -11,7 +11,7 @@ from Shared.Threading import CustomThread
 class ShellyLightDevice(LightDevice):
 
     def __init__(self, id, name, ip_address, testing):
-        super().__init__("ShellyLight", id, name, testing, True)
+        super().__init__("ShellyLight", id, name, testing, True, None)
         self.ip_address = ip_address
         self.__port = 50000 + int(self.ip_address.split('.')[-1])
         self.__listen_socket_on = None
@@ -31,6 +31,10 @@ class ShellyLightDevice(LightDevice):
         self.set_settings()
         self.listen()
         return True
+
+    def deinitialize(self):
+        # might need to implement this at some point
+        pass
 
     def update(self, state, dim, warmth):
         self.on = state

@@ -170,6 +170,29 @@ class DeviceController(Observable, metaclass=Singleton):
         device.accessible = device.initialize()
         Logger().write(LogVerbosity.Debug, device.name + " init done. Accessible: " + str(device.accessible))
 
+    def resync_provider_devices(self, provider_name):
+        provider = [x for x in self.providers if x.name == provider_name][0]
+        Logger().write(LogVerbosity.Info, "Resyncing provider devices for provider " + provider_name)
+        devices = provider.get_devices()
+        missing_device_ids = [x.id for x in self.devices if x.provider_name == provider.name]  # all current device for this provider
+
+        for device in devices:
+            if device.id not in [x.id for x in self.devices]:
+                Logger().write(LogVerbosity.Info, provider_name + " new device found: " + str(device.name))
+                self.devices.append(device)  # new device, add to devices
+                self.init_device(device)
+            else:
+                missing_device_ids.remove(device.id)  # existing device, remove it from missing list
+
+        for device_id in missing_device_ids:
+            device = self.get_device(device_id)
+            Logger().write(LogVerbosity.Info, provider_name + " device removed: " + str(device.name))
+            # loop all devices which are no long here
+            self.devices.remove(device)
+            device.deinitialize()
+        Logger().write(LogVerbosity.Info, "Provider resynced")
+        self.changed()
+
     def save_configuration(self):
         with open(Settings.get_string("base_folder") + 'Solution/device_configuration.txt', 'w+') as file:
             file.write(to_JSON(Configuration(self.devices, self.groups, self.providers)))

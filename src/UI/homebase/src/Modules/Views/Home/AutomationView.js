@@ -13,6 +13,7 @@ import tempImg from './../../../Images/thermometer.svg'
 import lightingImg from './../../../Images/bulb.svg'
 import switchImg from './../../../Images/switch.svg'
 import addImg from './../../../Images/plus.svg'
+import ikeaImg from './../../../Images/ikea.png'
 
 class AutomationView extends Component {
   constructor(props) {
@@ -22,7 +23,7 @@ class AutomationView extends Component {
     this.props.functions.changeTitle("Automation");
     this.props.functions.changeRightImage(null);
 
-    this.state = {groups: [], devices: [], showAddGroup: false};
+    this.state = {groups: [], devices: [], providers: [], showAddGroup: false};
     this.devicesUpdate = this.devicesUpdate.bind(this);
   }
 
@@ -128,6 +129,11 @@ class AutomationView extends Component {
         return switchImg;
   }
 
+  getProviderIcon(providerType){
+    if(providerType == "TradfriHub")
+        return ikeaImg;
+  }
+
   createGroup(name)
   {
     this.setState({showAddGroup: false});
@@ -151,6 +157,13 @@ class AutomationView extends Component {
         groups.splice(groups.indexOf(group));
         this.setState({groups: groups});
     }
+  }
+
+  resyncProvider(provider)
+  {
+    console.log("Resync " + provider.name);
+    axios.post(window.vars.apiBase + 'home/resync_provider?name=' + encodeURIComponent(provider.name));
+
   }
 
   render() {
@@ -193,6 +206,24 @@ class AutomationView extends Component {
                             { device.device_type !== "Switch" && <Link to={"/home/automation-device/" + device.id}><div className="automation-device-name">{device.name}</div></Link> }
                             { device.device_type === "Switch" && <div className="automation-device-name">{device.name}</div> }
                             <div className="automation-device-template">{this.getDeviceChangeTemplate(device)}</div>
+                        </div>
+                    )}
+                </InfoGroup>
+            </div>
+
+            <div className="automation-providers">
+                <InfoGroup title="Providers">
+                    <div className="automation-header">
+                        <div className="automation-header-column automation-header-provider-type">type</div>
+                        <div className="automation-header-column automation-header-name">name</div>
+                        <div className="automation-header-column automation-header-action"></div>
+                      </div>
+
+                    { this.state.providers.map(provider =>
+                        <div className={"automation-provider " + (!provider.accessible? "inaccessible": "")} key={provider.name}>
+                            <div className="automation-provider-type"><img src={this.getProviderIcon(provider.type)} /></div>
+                            <div className="automation-provider-name">{provider.name}</div>
+                            <div className="automation-provider-resync" onClick={e => this.resyncProvider(provider)}>Resync provider</div>
                         </div>
                     )}
                 </InfoGroup>

@@ -11,7 +11,6 @@ from Automation.Devices.TradfriLightDevice import TradfriLightDevice
 from Automation.Devices.TradfriSocketDevice import TradfriSocketDevice
 from Database.Database import Database
 from Shared.Logger import Logger, LogVerbosity
-from Shared.Util import current_time
 
 
 class TradfriProvider(DeviceProvider):
@@ -32,18 +31,19 @@ class TradfriProvider(DeviceProvider):
         self.__observing = False
         self.__observing_end = 0
         self.__observe_thread = None
+        self.__init_done = False
 
         self.__test_devices = [
-                TradfriLightDevice(None, None, "Light123", "Test light 1", True, False, True),
-                TradfriLightDevice(None, None, "Light456", "Test light 2", True, False, True),
-                TradfriLightDevice(None, None, "Light789", "Test light 3", True, False, True),
-                TradfriLightDevice(None, None, "Light7891", "Test light 3", True, False, False),
-                TradfriLightDevice(None, None, "Light7892", "Test light 4", True, False, False),
-                TradfriLightDevice(None, None, "Light7893", "Test light 5", True, True, True),
-                TradfriLightDevice(None, None, "Light7894", "Test light 6", True, True, True),
-                TradfriLightDevice(None, None, "Light7895", "Test light 7", True, True, True),
-                TradfriSocketDevice(None, None, "Socket123", "Test socket 1", True),
-                TradfriSocketDevice(None, None, "Socket456", "Test socket 2", True),
+                TradfriLightDevice(None, None, self.name, "Light123", "Test light 1", True, False, True),
+                TradfriLightDevice(None, None, self.name, "Light456", "Test light 2", True, False, True),
+                TradfriLightDevice(None, None, self.name, "Light789", "Test light 3", True, False, True),
+                TradfriLightDevice(None, None, self.name, "Light7891", "Test light 3", True, False, False),
+                TradfriLightDevice(None, None, self.name, "Light7892", "Test light 4", True, False, False),
+                TradfriLightDevice(None, None, self.name, "Light7893", "Test light 5", True, True, True),
+                TradfriLightDevice(None, None, self.name, "Light7894", "Test light 6", True, True, True),
+                TradfriLightDevice(None, None, self.name, "Light7895", "Test light 7", True, True, True),
+                TradfriSocketDevice(None, None, self.name, "Socket123", "Test socket 1", True),
+                TradfriSocketDevice(None, None, self.name, "Socket456", "Test socket 2", True),
             ]
 
     def initialize(self):
@@ -101,7 +101,11 @@ class TradfriProvider(DeviceProvider):
 
     def get_devices(self):
         if self.testing:
-            return self.__test_devices
+            if not self.__init_done:
+                self.__init_done = True
+                return self.__test_devices
+            else:
+                return self.__test_devices[3:] + [TradfriLightDevice(None, None, self.name, "Light7895d", "Extra light", True, True, True)]
 
         Logger().write(LogVerbosity.All, "Get devices")
         devices_commands = self.__api(self.__gateway.get_devices())
@@ -110,6 +114,6 @@ class TradfriProvider(DeviceProvider):
 
     def parse_device(self, data):
         if data.has_light_control:
-            return TradfriLightDevice(self.__gateway, self.__api, str(data.id), data.name, False, data.light_control.can_set_dimmer, data.light_control.can_set_temp)
+            return TradfriLightDevice(self.__gateway, self.__api, self.name, str(data.id), data.name, False, data.light_control.can_set_dimmer, data.light_control.can_set_temp)
         elif data.has_socket_control:
-            return TradfriSocketDevice(self.__gateway, self.__api, str(data.id), data.name, False)
+            return TradfriSocketDevice(self.__gateway, self.__api, self.name, str(data.id), data.name, False)
