@@ -5,7 +5,6 @@ from Automation.DeviceBase import SwitchDevice
 from Database.Database import Database
 from Shared.Logger import LogVerbosity, Logger
 from Shared.Threading import CustomThread
-from Shared.Util import current_time
 
 
 class TradfriSocketDevice(SwitchDevice):
@@ -18,8 +17,12 @@ class TradfriSocketDevice(SwitchDevice):
         self.__device = None
 
     def initialize(self):
-        self.active = self.get_state()
+        state = self.get_state()
+        if state is None:
+            return False
+        self.active = state
         self.start_observing()
+        return True
 
     def update(self, state):
         self.active = state
@@ -37,8 +40,11 @@ class TradfriSocketDevice(SwitchDevice):
         if self.testing:
             return False
 
-        self.__device = self.__api(self.__gateway.get_device(self.id))
-        return self.__device.state
+        try:
+            self.__device = self.__api(self.__gateway.get_device(self.id))
+            return self.__device.state
+        except:
+            return None
 
     def set_active(self, state, src):
         if self.testing:

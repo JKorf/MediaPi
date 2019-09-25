@@ -1,21 +1,13 @@
 import React, { Component } from 'react';
-import { Link } from "react-router-dom";
 import axios from 'axios';
-import { ResponsiveContainer, BarChart, Bar, LineChart, XAxis, YAxis, Tooltip, Line } from 'recharts';
+import { ResponsiveContainer, LineChart, XAxis, YAxis, Tooltip, Line } from 'recharts';
 import { formatTemperature, formatTime } from './../../../Utils/Util.js';
 
 
 import { InfoGroup } from './../../Components/InfoGroup';
 import Switch from './../../Components/Switch';
-import SvgImage from './../../Components/SvgImage';
-import Button from './../../Components/Button';
 import Slider from './../../Components/Slider';
-import SelectDevicesPopup from './../../Components/Popups/SelectDevicesPopup.js';
-
-import tempImg from './../../../Images/thermometer.svg'
-import lightingImg from './../../../Images/bulb.svg'
-import switchImg from './../../../Images/switch.svg'
-import settingsImg from './../../../Images/settings.svg'
+import ViewLoader from './../../Components/ViewLoader';
 
 import Socket from './../../../Socket2.js';
 
@@ -29,7 +21,7 @@ class AutomationDeviceView extends Component {
     this.props.functions.changeTitle("Device");
     this.props.functions.changeRightImage(null);
 
-    this.state = {id: this.props.match.params.id, loaded: false, historyDataType: "temperature"};
+    this.state = {id: this.props.match.params.id, loaded: false, historyDataType: "temperature", loading: true};
     this.devicesUpdate = this.devicesUpdate.bind(this);
   }
 
@@ -46,9 +38,9 @@ class AutomationDeviceView extends Component {
     if(!this.state.loaded)
     {
         var topic = "temperature";
-        if(data.device_type == "Switch")
+        if(data.device_type === "Switch")
             topic = "active";
-        if(data.device_type == "Light")
+        if(data.device_type === "Light")
             topic = "on";
         this.setState({historyDataType: topic});
 
@@ -74,7 +66,7 @@ class AutomationDeviceView extends Component {
     }
 
     this.setState(data);
-    this.setState({loaded: true});
+    this.setState({loaded: true, loading: false});
   }
 
   saveName()
@@ -120,11 +112,25 @@ class AutomationDeviceView extends Component {
     return Math.round(value) + "%";
   }
 
+  retryConnection(){
+    this.setState({loading: true});
+    axios.post(window.vars.apiBase + 'home/retry_connection?id='+ this.state.id).then(
+        (data) => {
+            this.setState({loading: false});
+         },
+        (error) => { this.setState({loading: false}); }
+    );
+  }
+
   render() {
     return (
         <div className="automation-view">
+            <ViewLoader loading={this.state.loading} />
         { this.state.name &&
             <InfoGroup title={this.state.name} titleChangeable={true} onTitleChange={e => this.setState({name: e})} onSave={e => this.saveName()} >
+                { !this.state.accessible &&
+                    <div className="automation-device-retry-connection">No connection to the device could be made. <a onClick={e => this.retryConnection()}>Retry</a></div>
+                }
                 { this.state.device_type === "Light" &&
                     <div className="automation-device-light">
                         <div className="automation-device-state"><Switch value={this.state.on} onToggle={(value) => this.toggleLight(value)} /></div>

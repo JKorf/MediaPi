@@ -140,6 +140,15 @@ class HomeController:
         return "OK"
 
     @staticmethod
+    @app.route('/home/retry_connection', methods=['POST'])
+    def home_retry_connection():
+        Logger().write(LogVerbosity.Debug, "Retrying connection")
+        id = request.args.get('id')
+        device = DeviceController().get_device(id)
+        device.accessible = device.initialize()
+        return "OK"
+
+    @staticmethod
     @app.route('/home/get_usage_stats', methods=['GET'])
     def home_usage_stats():
         type = request.args.get('type')

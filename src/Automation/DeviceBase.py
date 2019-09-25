@@ -20,6 +20,10 @@ class Device(Observable):
         self.id = id
         self.testing = testing
         self.is_base_device = is_base_device
+        self.accessible = False
+
+    def initialize(self):
+        return True
 
     def set_name(self, name):
         self.name = name

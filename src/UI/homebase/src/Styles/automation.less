@@ -91,6 +91,19 @@
 .automation-device{
     width: 100%;
     border-bottom: 1px solid #colors[borders];
+
+    &.inaccessible {
+        background: #eee;
+        a {
+            color: #colors[text-faded];
+        }
+
+        svg{
+            fill: #colors[text-faded];
+        }
+    }
+
+
 }
 
 .automation-device-type{
@@ -277,4 +290,15 @@
     font-size: 12px;
     vertical-align: top;
     padding: 4px 10px;
+}
+
+.automation-device-retry-connection{
+    padding: 8px 4px;
+    font-size: 12px;
+    background: #fff394;
+    border-bottom: 1px solid #colors[borders];
+
+    a{
+        text-decoration: underline;
+    }
 }

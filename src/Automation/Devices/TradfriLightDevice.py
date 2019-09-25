@@ -21,10 +21,14 @@ class TradfriLightDevice(LightDevice):
 
     def initialize(self):
         state = self.get_state()
+        if state is None:
+            return False
+
         self.on = state.state
         self.dim = state.dimmer
         self.warmth = state.color_temp
         self.start_observing()
+        return True
 
     def get_state(self):
         if self.testing:
@@ -34,8 +38,11 @@ class TradfriLightDevice(LightDevice):
             result.color_temp = 25
             return result
 
-        self.__device = self.__api(self.__gateway.get_device(self.id))
-        return self.__device.light_control.lights[0]
+        try:
+            self.__device = self.__api(self.__gateway.get_device(self.id))
+            return self.__device.light_control.lights[0]
+        except:
+            return None
 
     def update(self, state, dim, warmth):
         self.on = state

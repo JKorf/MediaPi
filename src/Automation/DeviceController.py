@@ -160,14 +160,15 @@ class DeviceController(Observable, metaclass=Singleton):
                 self.groups.append(g)
 
     def init_provider(self, provider):
-        provider.init()
-        self.devices += provider.get_devices()
-        Logger().write(LogVerbosity.Debug, provider.type + " init done")
+        provider.accessible = provider.initialize()
+        if provider.accessible:
+            self.devices += provider.get_devices()
+        Logger().write(LogVerbosity.Debug, provider.type + " init done. Accessible: " + str(provider.accessible))
 
     def init_device(self, device):
         device.register_callback(lambda old, newv: self.changed())
-        device.initialize()
-        Logger().write(LogVerbosity.Debug, device.name + " init done")
+        device.accessible = device.initialize()
+        Logger().write(LogVerbosity.Debug, device.name + " init done. Accessible: " + str(device.accessible))
 
     def save_configuration(self):
         with open(Settings.get_string("base_folder") + 'Solution/device_configuration.txt', 'w+') as file:

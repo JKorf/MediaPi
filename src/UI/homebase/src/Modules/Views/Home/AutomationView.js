@@ -7,7 +7,6 @@ import Socket from './../../../Socket2.js';
 import { InfoGroup } from './../../Components/InfoGroup';
 import Switch from './../../Components/Switch';
 import SvgImage from './../../Components/SvgImage';
-import Button from './../../Components/Button';
 import Dragger from './../../Components/Dragger';
 
 import tempImg from './../../../Images/thermometer.svg'
@@ -36,7 +35,7 @@ class AutomationView extends Component {
   }
 
   devicesUpdate(subId, data){
-    data.devices = data.devices.sort((a, b) => a.device_type == "Thermostat" ? -1 : 1);
+    data.devices = data.devices.sort((a, b) => a.device_type === "Thermostat" ? -1 : 1);
     this.setState(data);
   }
 
@@ -175,7 +174,7 @@ class AutomationView extends Component {
                         </Dragger>
                     </div>
                 )}
-                { this.state.groups.length == 0 && <div className="automation-no-groups">No groups yet</div>}
+                { this.state.groups.length === 0 && <div className="automation-no-groups">No groups yet</div>}
 
             </InfoGroup>
 
@@ -189,10 +188,10 @@ class AutomationView extends Component {
                       </div>
 
                     { this.state.devices.map(device =>
-                        <div className="automation-device" key={device.id}>
+                        <div className={"automation-device " + (!device.accessible? "inaccessible": "")} key={device.id}>
                             <div className="automation-device-type"><SvgImage src={this.getIcon(device.device_type)} /></div>
-                            { device.device_type != "Switch" && <Link to={"/home/automation-device/" + device.id}><div className="automation-device-name">{device.name}</div></Link> }
-                            { device.device_type == "Switch" && <div className="automation-device-name">{device.name}</div> }
+                            { device.device_type !== "Switch" && <Link to={"/home/automation-device/" + device.id}><div className="automation-device-name">{device.name}</div></Link> }
+                            { device.device_type === "Switch" && <div className="automation-device-name">{device.name}</div> }
                             <div className="automation-device-template">{this.getDeviceChangeTemplate(device)}</div>
                         </div>
                     )}

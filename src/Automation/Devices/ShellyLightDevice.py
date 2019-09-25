@@ -20,12 +20,17 @@ class ShellyLightDevice(LightDevice):
         self.__listen_thread_off = None
 
     def initialize(self):
-        self.on = self.get_state()
+        state = self.get_state()
         if self.testing:
-            return
+            return True
 
+        if state is None:
+            return False
+
+        self.on = state
         self.set_settings()
         self.listen()
+        return True
 
     def update(self, state, dim, warmth):
         self.on = state
@@ -36,7 +41,8 @@ class ShellyLightDevice(LightDevice):
 
         result = RequestFactory.make_request("http://" + self.ip_address + "/relay/0")
         if result is None:
-            Logger().write(LogVerbosity.Warning, "Failed to get shelly light state")
+            Logger().write(LogVerbosity.Info, "Failed to get shelly light state")
+            return None
 
         json_data = json.loads(result)
         return json_data["ison"]

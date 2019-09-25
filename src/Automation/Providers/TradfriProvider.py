@@ -46,21 +46,14 @@ class TradfriProvider(DeviceProvider):
                 TradfriSocketDevice(None, None, "Socket456", "Test socket 2", True),
             ]
 
-    def init(self):
+    def initialize(self):
         if self.__initialized:
-            return
-
-        if self.testing:
-            time.sleep(random.randint(1, 10))
+            return True
 
         if sys.platform != "linux" and sys.platform != "linux2":
             Logger().write(LogVerbosity.Info, "Lighting: Not initializing, no coap client available on windows")
             self.__initialized = True
-            return
-
-        if current_time() - self.__last_init < 5000:
-            Logger().write(LogVerbosity.Info, "Tried initialization less than 5s ago")
-            return
+            return True
 
         Logger().write(LogVerbosity.All, "Start LightManager init")
         if not self.__initialized:
@@ -90,19 +83,21 @@ class TradfriProvider(DeviceProvider):
                     Logger().write(LogVerbosity.Info, "Lighting: New key retrieved")
                 except Exception as e:
                     Logger().write_error(e, "Unhandled exception")
-                    return
+                    return False
             else:
                 Logger().write(LogVerbosity.Info, "Lighting: Previously saved key found")
 
             try:
                 self.__initialized = True
                 self.__api(self.__api(self.__gateway.get_groups()))  # check init was okay
+                return True
             except Exception as e:
                 Logger().write(LogVerbosity.Info, "Failed to init tradfri, clearing previous key to try generate new")
                 self.__initialized = False
                 Database().remove_stat("LightingId")
                 Database().remove_stat("LightingKey")
                 Logger().write_error(e, "Failed to get groups from hub")
+                return False
 
     def get_devices(self):
         if self.testing:

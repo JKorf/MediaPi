@@ -40,11 +40,15 @@ class ToonThermostatDevice(ThermostatDevice):
 
     def initialize(self):
         thermostat_info = self.get_temperature()
+        if thermostat_info is None:
+            return False
+
         self.temperature = thermostat_info.current_displayed_temperature / 100
         self.setpoint = thermostat_info.current_set_point / 100
         if self.testing:
             t = CustomThread(self.random_change, "Thermostat device changer", [])
             t.start()
+        return True
 
     def update(self, temperature, setpoint):
         self.temperature = temperature
