@@ -20,6 +20,11 @@ class TVManager(metaclass=Singleton):
         self.cec_process = None
         self.pi_is_active = False
         self.pi = sys.platform == "linux" or sys.platform == "linux2"
+        self.key_callbacks = []
+        self.last_action_id = 0
+
+    def on_key_press(self, key, callback):
+        self.key_callbacks.append(KeyCallback(key, callback))
 
     def switch_input_to_pi(self):
         if not self.pi or self.pi_is_active:
@@ -49,7 +54,23 @@ class TVManager(metaclass=Singleton):
 
     def __read_cec(self):
         for line in iter(self.cec_process.stdout.readline, b''):
-            Logger().write(LogVerbosity.All, "CEC: " + line.decode('utf-8'))
+            self.parse_cec_line(line.decode('utf-8'))
+
+    def parse_cec_line(self, line):
+        Logger().write(LogVerbosity.All, "CEC: " + line)
+        if 'key pressed: ' in line:
+            action_id = int(line[line.index('[') + 1: line.index(']')].replace(' ', ''))
+            if abs(action_id - self.last_action_id) < 5:
+                return
+
+            self.last_action_id = action_id
+            index_start = line.index('key pressed: ') + 13
+            index_end = line.index(' (', index_start)
+            key = line[index_start: index_end].lower()
+            Logger().write(LogVerbosity.Debug, "CEC key press: " + key)
+            callbacks = [x.callback for x in self.key_callbacks if x.key == key]
+            for callback in callbacks:
+                callback(key)
 
     def start(self):
         if not self.pi:
@@ -67,3 +88,10 @@ class TVManager(metaclass=Singleton):
         Logger().write(LogVerbosity.Debug, "TV manager sending command: " + command)
         result = subprocess.check_output('echo "' + command + '" | cec-client -s -d ' + self.debug_level, shell=True).decode("utf8")
         Logger().write(LogVerbosity.Debug, "TV manager result: " + str(result))
+
+
+class KeyCallback:
+
+    def __init__(self, key, callback):
+        self.key = key
+        self.callback = callback

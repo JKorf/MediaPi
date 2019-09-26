@@ -53,6 +53,8 @@ class MediaManager(metaclass=Singleton):
         EventManager.register_event(EventType.TorrentStopped, lambda: self.on_torrent_stopped())
 
         VLCPlayer().player_state.register_callback(self.player_state_change)
+        TVManager().on_key_press("pause", lambda key: self.pause_resume())
+        TVManager().on_key_press("play", lambda key: self.pause_resume())
         self.torrent_observer = CustomThread(self.observe_torrent, "Torrent observer")
         self.torrent_observer.start()
         self.next_epi_thread = None
@@ -179,7 +181,6 @@ class MediaManager(metaclass=Singleton):
     def aborting_torrent(self, reason):
         APIController().ui_message("Aborting torrent", reason)
         self.stop_play()
-
 
     @staticmethod
     def on_torrent_stopped():

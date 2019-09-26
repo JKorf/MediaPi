@@ -20,3 +20,4 @@
     mobile-lock screen voor play/pause again?
 
     Devices kunnen toevoegen via UI
+
