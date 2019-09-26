@@ -223,7 +223,7 @@ class AutomationView extends Component {
                         <div className={"automation-provider " + (!provider.accessible? "inaccessible": "")} key={provider.name}>
                             <div className="automation-provider-type"><div className="height-helper" /><img src={this.getProviderIcon(provider.type)} /></div>
                             <div className="automation-provider-name">{provider.name}</div>
-                            <div className="automation-provider-resync" onClick={e => this.resyncProvider(provider)}>Resync provider</div>
+                            <div className="automation-provider-resync" onClick={e => this.resyncProvider(provider)}>Resync</div>
                         </div>
                     )}
                 </InfoGroup>

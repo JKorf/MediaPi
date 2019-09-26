@@ -153,7 +153,7 @@ class HomeController:
     def home_resync_provider():
         Logger().write(LogVerbosity.Debug, "Resyncing provider")
         name = request.args.get('name')
-        device = DeviceController().resync_provider_devices(name)
+        DeviceController().resync_provider_devices(name)
         return "OK"
 
     @staticmethod

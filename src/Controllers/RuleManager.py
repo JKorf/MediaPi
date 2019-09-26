@@ -1,4 +1,3 @@
-import time
 from datetime import datetime, timedelta
 from threading import Event
 
@@ -106,8 +105,8 @@ class MoodSelectCondition:
     def __init__(self, id, type, mood_id):
         self.id = id
         self.type = type
-        self.mood_id = mood_id
-        self.parameters = [int(mood_id)]
+        self.mood_id = int(mood_id)
+        self.parameters = [self.mood_id]
         self.mood_selected = False
 
     def check(self):
@@ -219,12 +218,12 @@ class DimDeviceGroupAction:
         self.type = type
         dim_value = int(dim)
         self.parameters = [group_ids, dim_value]
-        self.group_ids = group_ids.split('|')
+        self.group_ids = [int(x) for x in group_ids.split('|')]
         self.dim = dim_value
 
     def execute(self):
         for group_id in self.group_ids:
-            DeviceController().get_group(int(group_id)).set_dim(self.dim, "rule")
+            DeviceController().get_group(group_id).set_dim(self.dim, "rule")
 
     def get_description(self):
         return "set the dimmer for device group " + str(self.parameters[0]) + " to " + str(self.dim) + "%"
@@ -241,12 +240,12 @@ class ToggleDeviceGroupAction:
         self.type = type
         on_value = on == "True" or on == "true" or on == "1" or on is True
         self.parameters = [group_ids, on_value]
-        self.group_ids = group_ids.split('|')
+        self.group_ids = [int(x) for x in group_ids.split('|')]
         self.on = on_value
 
     def execute(self):
         for group_id in self.group_ids:
-            DeviceController().get_group(int(group_id)).set_state(self.on, "rule")
+            DeviceController().get_group(group_id).set_state(self.on, "rule")
 
     def get_description(self):
         if self.on:
@@ -421,12 +420,27 @@ class RuleManager(metaclass=Singleton):
         self.wait_event.set()
 
     def device_group_removed(self, id):
-        # TODO
-        pass
+        for rule in self.current_rules:
+            rule_changed = False
+            for action in [x for x in rule.actions if x.name == "Toggle a device group" or x.name == "Set dimmer device group"]:
+                if id in action.group_ids:
+                    rule.actions.remove(action)
+                    rule_changed = True
+            if rule_changed:
+                rule.active = False
+                rule.description = "Disabled because of removed device group. Was: " + rule.description
+                Database().save_rule(rule)
 
     def mood_removed(self, id):
-        # TODO
-        pass
+        for rule in self.current_rules:
+            rule_changed = False
+            for condition in [x for x in rule.conditions if x.name == "Mood select" and x.mood_id == id]:
+                rule.conditions.remove(condition)
+                rule_changed = True
+            if rule_changed:
+                rule.active = False
+                rule.description = "Disabled because of removed mood. Was: " + rule.description
+                Database().save_rule(rule)
 
     def stop(self):
         self.running = False

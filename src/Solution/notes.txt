@@ -15,8 +15,6 @@
 
     Fix back going a page back instead of to base menu
 
-    Als devicegroup/mood wordt verwijdert rules checken en eventueel uitschakelen en condition/action deleten
-
     mobile-lock screen voor play/pause again?
 
     Devices kunnen toevoegen via UI
