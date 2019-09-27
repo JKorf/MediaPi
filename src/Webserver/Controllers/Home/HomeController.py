@@ -179,8 +179,8 @@ class HomeController:
     def home_add_mood():
         Logger().write(LogVerbosity.Debug, "Adding mood")
         name = urllib.parse.unquote(request.args.get('name'))
-        Database().add_mood(name)
-        return "OK"
+        result = Database().add_mood(name)
+        return str(result)
 
     @staticmethod
     @app.route('/home/remove_mood', methods=['POST'])

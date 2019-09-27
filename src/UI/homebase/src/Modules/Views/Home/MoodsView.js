@@ -26,7 +26,11 @@ class MoodsView extends Component {
   }
 
   addMood(name){
-    axios.post(window.vars.apiBase + "home/add_mood?name=" + encodeURIComponent(name));
+    axios.post(window.vars.apiBase + "home/add_mood?name=" + encodeURIComponent(name)).then(response => {
+        var current = this.state.moods;
+        current.push({id: response.data + "", name: name});
+        this.setState({moods: current});
+    });
     this.setState({showAdd: false});
   }
 
@@ -35,8 +39,10 @@ class MoodsView extends Component {
   }
 
   removeMood(mood){
-    if(window.confirm("Do you want to remove mood " + mood.name + "?"))
+    if(window.confirm("Do you want to remove mood " + mood.name + "?")){
         axios.post(window.vars.apiBase + "home/remove_mood?id=" + mood.id);
+        this.setState({moods: this.state.moods.filter(x => x.id !== mood.id)});
+    }
   }
 
   render() {
@@ -56,6 +62,9 @@ class MoodsView extends Component {
                         </div>
                     </div>
                 )}
+                {this.state.moods.length == 0 &&
+                    <div className="no-moods">No moods defined yet</div>
+                }
                 </InfoGroup>
             </div>
          }

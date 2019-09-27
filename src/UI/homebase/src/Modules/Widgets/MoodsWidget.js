@@ -7,16 +7,16 @@ class MoodsWidget extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {groups: []};
+    this.state = {moods: []};
     this.getSize = this.getSize.bind(this);
   }
 
   shouldShow(){
-    return true;
+    return this.state.moods.length > 0;
   }
 
   getSize(){
-    return {width: 120, height: 135};
+    return {width: 140, height: 135};
   }
 
   componentDidMount() {
@@ -37,18 +37,22 @@ class MoodsWidget extends Component {
 
   render() {
     return (
-      <Widget {...this.props} >
-        <div className="moods-widget-content">
-            { this.state.moods && this.state.moods.map(mood => {
-                    return(
-                        <div className="moods-widget-mood" key={mood.id} onClick={e => this.selectMood(mood)} >
-                            {mood.name}
-                        </div>
-                    );
-                })
-            }
+
+        <div className="moods-widget-wrapper">
+            <div className="moods-widget-content">
+                { this.state.moods.map(mood => {
+                        return(
+                            <div className="moods-widget-mood" key={mood.id} onClick={e => this.selectMood(mood)} >
+                                <div className="moods-widget-mood-wrapper">
+                                    <div className="moods-subtitle">mood</div>
+                                    <div className="moods-name">{mood.name}</div>
+                                </div>
+                            </div>
+                        );
+                    })
+                }
+            </div>
         </div>
-      </Widget>
     );
   }
 };

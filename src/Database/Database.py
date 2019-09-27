@@ -552,6 +552,7 @@ class Database(metaclass=Singleton):
                        [name])
         database.commit()
         database.close()
+        return cursor.lastrowid
 
     def get_moods(self):
         if self.slave:

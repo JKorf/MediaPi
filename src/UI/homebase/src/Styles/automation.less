@@ -221,12 +221,12 @@
 }
 
 .automation-group .dragger-background{
-    background: linear-gradient(to right, #colors[item-background], #fffdc9);
+    background: linear-gradient(to right, #fdffe3, #fffa96);
     border-right: 1px solid #ccc;
 }
 
 .light-widget-content .dragger-background{
-    background: linear-gradient(to right, #colors[item-background], #fffdc9);
+    background: linear-gradient(to right, #fdffe3, #fffa96);
     border-right: 1px solid #ccc;
 }
 
@@ -258,9 +258,56 @@
     top: 36px;
 }
 
-.moods-widget-mood{
+.moods-widget-mood-{
     border-bottom: 1px solid #colors[borders];
     padding: 6px 10px;
+}
+
+.moods-widget-wrapper{
+    height: calc(100% - 20px);
+    width: calc(100% - 20px);
+    margin: 10px;
+}
+
+.moods-subtitle{
+    font-size: 12px;
+    color: #colors[text-faded];
+}
+
+.no-moods{
+    padding: 10px;
+}
+
+.moods-widget-content
+{
+    height: calc(100% + 10px);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-content: stretch;
+    margin: -5px;
+}
+
+.moods-widget-mood-wrapper{
+  margin: 0;
+  width: 100%;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.moods-widget-mood{
+    background: linear-gradient(to right top, #colors[primary-header2], #colors[primary-header]);
+    position: relative;
+    margin: 5px;
+    width: calc(50% - 10px);
+    min-width:30px;
+    text-align: center;
+    box-shadow: 4px 4px #555;
+    min-height: 44px;
+    max-height: calc(50% - 10px);
+    color: #colors[text-header];
 }
 
 .moods{
