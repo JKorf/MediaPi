@@ -20,11 +20,17 @@ import homeImage from "./../../Images/home.svg";
 import entertainmentImage from "./../../Images/entertainment.svg";
 import settingsImage from "./../../Images/settings.svg";
 
+import testVideo from "./../../Images/test.mp4";
+import videoFile from './../../Images/video_file.png';
+
 class Footer extends Component
 {
     constructor(props) {
         super(props);
         this.state = {slaveData: []};
+
+        this.initialMediaDone = false;
+        this.currentMediaState = 0;
 
         this.slaveUpdate = this.slaveUpdate.bind(this);
         this.mediaUpdate = this.mediaUpdate.bind(this);
@@ -37,6 +43,7 @@ class Footer extends Component
     }
 
     componentDidMount() {
+        this.initializeMediaSession();
         this.slaveSub = Socket.subscribe("slaves", this.slaveUpdate);
     }
 
@@ -68,6 +75,7 @@ class Footer extends Component
     }
 
     mediaUpdate(subId, data){
+        this.updateMediaSessionMetadata(data);
         setTimeout(() => {
             this.setState(state => {
               const slaveData = state.slaveData.map(s => {
@@ -85,11 +93,13 @@ class Footer extends Component
     }
 
     playerUpdate(subId, data){
+        this.updateMediaSessionState(data);
         setTimeout(() => {
             this.setState(state => {
               const slaveData = state.slaveData.map(s => {
-                if(s.playerSubscription === subId)
+                if(s.playerSubscription === subId){
                     s.playerData = data;
+                }
                 return s;
               });
 
@@ -100,6 +110,68 @@ class Footer extends Component
         }, 10);
     }
 
+    updateMediaFromClick(){
+        if(this.initialMediaDone)
+            return;
+
+        document.getElementById("video-w").load();
+        this.initialMediaDone = true;
+    }
+
+    initializeMediaSession(){
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', () => { this.pausePlayClick(this.state.slaveData[0]); });
+            navigator.mediaSession.setActionHandler('pause', () => { this.pausePlayClick(this.state.slaveData[0]); });
+        }
+    }
+
+    updateMediaSessionState(playerData){
+        var paused = playerData.state === 4;
+        var playing = playerData.state === 3;
+        var videoPlayer = document.getElementById("video-w");
+        document.getElementById("video-w").volume = 0;
+
+        if(playing){
+            if(this.currentMediaState == 2)
+                return;
+
+            this.currentMediaState = 2;
+            videoPlayer.src = testVideo;
+            videoPlayer.play();
+            navigator.mediaSession.playbackState = "playing";
+
+        }else if(paused){
+            if(this.currentMediaState == 1)
+                return;
+
+            this.currentMediaState = 1;
+            navigator.mediaSession.playbackState = "paused";
+        }
+        else{
+            if(this.currentMediaState == 0)
+                return;
+
+            this.currentMediaState = 0;
+            videoPlayer.pause();
+            videoPlayer.removeAttribute('src');
+            videoPlayer.load();
+        }
+    }
+
+    updateMediaSessionMetadata(mediaData)
+    {
+        if ('mediaSession' in navigator) {
+            var image = mediaData.image ? mediaData.image: videoFile;
+
+            navigator.mediaSession.metadata = new window.MediaMetadata({
+                title: mediaData.title,
+                artwork: [
+                  { src: image, sizes: '512x512', type: 'image/png' }
+                ]
+              });
+        }
+    }
+
     pausePlayClick(instance, e){
         axios.post(window.vars.apiBase + 'player/pause_resume?instance=' + instance.id);
         var data = this.state.slaveData;
@@ -108,7 +180,8 @@ class Footer extends Component
         else
             data[0].playerData.state = 4;
         this.setState({slaveData: data});
-        e.preventDefault();
+        if(e)
+            e.preventDefault();
       }
 
       stopClick(instance, e){
@@ -132,7 +205,12 @@ class Footer extends Component
         height: (playing.length * 66) + "px"
       };
       return (
-      <div className="footer">
+      <div className="footer" onClick={e => this.updateMediaFromClick()}>
+        <div className="mobile-video-wrapper">
+            <video id="video-w" loop>
+              <source src={testVideo} />
+            </video>
+        </div>
         <div className="footer-players" style={style}>
             { playing.map(x => {
                     let playPauseButton = <SvgImage key={x.playerData.state} src={pauseImage} />
