@@ -1,9 +1,9 @@
+/*eslint no-loop-func: "off"*/
 import React, { Component } from 'react';
 import { Link } from "react-router-dom";
 import axios from 'axios';
 
 import { InfoGroup } from './../../Components/InfoGroup';
-import Switch from './../../Components/Switch';
 import SvgImage from './../../Components/SvgImage';
 import Button from './../../Components/Button';
 import SelectDevicesPopup from './../../Components/Popups/SelectDevicesPopup.js';
@@ -29,8 +29,6 @@ class AutomationGroupView extends Component {
   componentDidMount() {
      axios.get(window.vars.apiBase + 'home/get_devices').then(
         (data) => {
-            console.log(data.data);
-            var allDevices = data.data;
             this.setState({allDevices: data.data});
 
              if(!this.newGroup){
@@ -39,7 +37,7 @@ class AutomationGroupView extends Component {
                         console.log(data.data);
                         var devices = this.state.allDevices;
                         for (var i = 0; i < data.data.devices.length; i++){
-                            devices.filter(d => d.id == data.data.devices[i].id)[0].selected = true;
+                            devices.filter(d => d.id === data.data.devices[i].id)[0].selected = true;
                         }
                         this.setState({name: data.data.name, devices: data.data.devices, allDevices: devices});
                      },
@@ -115,7 +113,7 @@ class AutomationGroupView extends Component {
                             <div className="automation-device-name">{device.name}</div>
                         </div>
                     )}
-                    { this.state.devices.length == 0 && <div className="automation-no-devices">No devices</div>}
+                    { this.state.devices.length === 0 && <div className="automation-no-devices">No devices</div>}
                 </InfoGroup>
             </div>
 

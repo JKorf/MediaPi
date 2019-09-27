@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import SvgImage from "./../SvgImage"
 
 import editImage from './../../../Images/edit.svg'
-import settingsImage from './../../../Images/settings.svg'
 import saveImage from './../../../Images/save.svg'
 
 class InfoGroup extends Component {

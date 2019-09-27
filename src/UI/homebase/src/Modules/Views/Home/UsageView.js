@@ -6,7 +6,6 @@ import UsageGraph from './../../Components/UsageGraph';
 class UsageView extends Component {
   constructor(props) {
     super(props);
-    var time = new Date().getTime();
     this.state = {loading: true, interval: "hours", type: this.props.type};
     var t = (this.props.type === "power"? "Power": "Gas");
     this.props.functions.changeBack({ to: "/home/" });
@@ -33,19 +32,19 @@ class UsageView extends Component {
   changeInterval(newInterval){
     var endTime = this.ceilDate(new Date(), this.getTimespan(newInterval)).getTime();
     var startTime = 0;
-    if (newInterval == "minutes"){
+    if (newInterval==="minutes"){
         startTime = endTime - this.getTicks(newInterval) * this.getTimespan(newInterval);
     }
-    else if(newInterval == "hours"){
+    else if(newInterval === "hours"){
         startTime = endTime - this.getTicks(newInterval) * this.getTimespan(newInterval);
     }
-    else if(newInterval == "days"){
+    else if(newInterval === "days"){
         startTime = endTime - this.getTicks(newInterval) * this.getTimespan(newInterval);
     }
-    else if(newInterval == "months"){
+    else if(newInterval === "months"){
         startTime = endTime - this.getTicks(newInterval) * this.getTimespan(newInterval);
     }
-    else if(newInterval == "years"){
+    else if(newInterval === "years"){
         startTime = endTime - this.getTicks(newInterval) * this.getTimespan(newInterval);
     }
     endTime -= 1000;
@@ -54,28 +53,28 @@ class UsageView extends Component {
 
   getTimespan(interval)
   {
-    if (interval == "minutes")
+    if (interval === "minutes")
         return 5 * 60 * 1000;
-    else if(interval == "hours")
+    else if(interval === "hours")
         return 60 * 60 * 1000;
-    else if(interval == "days")
+    else if(interval === "days")
         return 24 * 60 * 60 * 1000;
-    else if(interval == "months")
+    else if(interval === "months")
         return 30 * 24 * 60 * 60 * 1000;
-    else if(interval == "years")
+    else if(interval === "years")
         return 365 * 24 * 60 * 60 * 1000;
   }
 
   getTicks(interval){
-   if (interval == "minutes")
+   if (interval === "minutes")
         return 48;
-    else if(interval == "hours")
+    else if(interval === "hours")
         return 12;
-    else if(interval == "days")
+    else if(interval === "days")
         return 14;
-    else if(interval == "months")
+    else if(interval === "months")
         return 12;
-    else if(interval == "years")
+    else if(interval === "years")
         return 3;
   }
 

@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 
 import DashboardLink from './../../Components/DashboardLink'
 import gasImg from './../../../Images/heating.svg'
-import tempImg from './../../../Images/thermometer.svg'
-import lightingImg from './../../../Images/bulb.svg'
 import deviceImg from './../../../Images/device.svg'
 import rulesImg from './../../../Images/rules.svg'
 import powerImg from './../../../Images/power.svg'

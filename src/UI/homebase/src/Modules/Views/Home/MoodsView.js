@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import Button from './../../Components/Button';
 import AddMoodPopup from './../../Components/Popups/AddMoodPopup.js';
 import { InfoGroup } from './../../Components/InfoGroup'
 import addImg from './../../../Images/plus.svg'

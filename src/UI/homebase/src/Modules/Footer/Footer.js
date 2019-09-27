@@ -132,7 +132,7 @@ class Footer extends Component
         document.getElementById("video-w").volume = 0;
 
         if(playing){
-            if(this.currentMediaState == 2)
+            if(this.currentMediaState === 2)
                 return;
 
             this.currentMediaState = 2;
@@ -141,14 +141,14 @@ class Footer extends Component
             navigator.mediaSession.playbackState = "playing";
 
         }else if(paused){
-            if(this.currentMediaState == 1)
+            if(this.currentMediaState === 1)
                 return;
 
             this.currentMediaState = 1;
             navigator.mediaSession.playbackState = "paused";
         }
         else{
-            if(this.currentMediaState == 0)
+            if(this.currentMediaState === 0)
                 return;
 
             this.currentMediaState = 0;

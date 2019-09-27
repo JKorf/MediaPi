@@ -12,7 +12,7 @@ class UsageGraph extends Component {
       this.state = {loading: true};
       this.getTickLabel = this.getTickLabel.bind(this);
       this.offsetLeft = 10;
-      if (this.props.type == "gas")
+      if (this.props.type === "gas")
         this.offsetLeft = -20;
   }
 
@@ -50,15 +50,15 @@ class UsageGraph extends Component {
   }
 
   getTickLabel(tickNumber){
-    if(this.props.interval == "minutes")
+    if(this.props.interval === "minutes")
         return formatTime(this.firstTime + tickNumber * (1000*60*5), false, false, false, true, true);
-    else if(this.props.interval == "hours")
+    else if(this.props.interval === "hours")
         return formatTime(this.firstTime + tickNumber * (1000*60*60), false, false, false, true, true);
-    else if(this.props.interval == "days")
+    else if(this.props.interval === "days")
         return formatTime(this.firstTime + tickNumber * (1000*60*60*24), false, true, true, false, false);
-    else if(this.props.interval == "months")
+    else if(this.props.interval === "months")
         return formatTime(this.firstTime + tickNumber * (1000*60*60*24*31), false, true, false, false, false);
-    else if(this.props.interval == "years")
+    else if(this.props.interval === "years")
         return formatTime(this.firstTime + tickNumber * (1000*60*60*24*365), true, false, false, false, false);
   }
 
@@ -67,7 +67,7 @@ class UsageGraph extends Component {
         <ViewLoader loading={this.state.loading}/>
         { this.state.usageData && this.state.usageData.length > 0 &&
         <div className="gas-graph-container">
-            { this.props.interval == "minutes" &&
+            { this.props.interval === "minutes" &&
                 <ResponsiveContainer minHeight={this.props.height}>
                     <LineChart data={this.state.usageData} margin={{top:30,right:10,bottom:20,left:0}}>
                       <XAxis angle={60}
@@ -80,7 +80,7 @@ class UsageGraph extends Component {
                     </LineChart>
                 </ResponsiveContainer>
             }
-            { this.props.interval != "minutes" &&
+            { this.props.interval !== "minutes" &&
                 <ResponsiveContainer minHeight={this.props.height}>
                     <BarChart data={this.state.usageData} margin={{top:30,right:10,bottom:20,left:this.offsetLeft}}>
                       <XAxis angle={60}

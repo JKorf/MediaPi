@@ -130,7 +130,7 @@ class AutomationView extends Component {
   }
 
   getProviderIcon(providerType){
-    if(providerType == "TradfriHub")
+    if(providerType === "TradfriHub")
         return ikeaImg;
   }
 
@@ -221,7 +221,7 @@ class AutomationView extends Component {
 
                     { this.state.providers.map(provider =>
                         <div className={"automation-provider " + (!provider.accessible? "inaccessible": "")} key={provider.name}>
-                            <div className="automation-provider-type"><div className="height-helper" /><img src={this.getProviderIcon(provider.type)} /></div>
+                            <div className="automation-provider-type"><div className="height-helper" /><img alt="Device provider" src={this.getProviderIcon(provider.type)} /></div>
                             <div className="automation-provider-name">{provider.name}</div>
                             <div className="automation-provider-resync" onClick={e => this.resyncProvider(provider)}>Resync</div>
                         </div>

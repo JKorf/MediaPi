@@ -1,6 +1,4 @@
 import React, { Component } from 'react';
-import { Link } from "react-router-dom";
-import SvgImage from "./../SvgImage";
 
 class Dragger extends Component{
     constructor(props) {
@@ -38,7 +36,7 @@ class Dragger extends Component{
     }
 
     componentDidUpdate(prev){
-        if(prev.value != this.props.value)
+        if(prev.value !== this.props.value)
             this.SetBackground(this.props.value);
     }
 

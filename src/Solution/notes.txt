@@ -17,3 +17,4 @@
 
     Devices kunnen toevoegen via UI
 
+    api calls goede response status laten terug geven + ui reageren

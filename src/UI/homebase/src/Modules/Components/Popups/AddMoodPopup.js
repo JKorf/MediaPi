@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import Popup from "./Popup.js"
 import Button from "./../Button"
-import seenImage from './../../../Images/watched.svg';
-import SvgImage from './../../Components/SvgImage';
 
 class AddMoodPopup extends Component {
   constructor(props) {

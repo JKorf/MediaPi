@@ -50,13 +50,13 @@ class AutomationDeviceView extends Component {
         axios.get(window.vars.apiBase + 'util/get_action_history?device_id='+this.props.match.params.id+'&topic='+topic+'&start=' + start + "&end=" + end).then(
             (data) => {
                 console.log(data);
-                if (topic == "temperature"){
+                if (topic === "temperature"){
                     for (var i = 0; i < data.data.length; i++)
                         data.data[i].value = parseInt(data.data[i].value);
                 }
                 else{
-                    for (var i = 0; i < data.data.length; i++)
-                        data.data[i].value = data.data[i].value === "1" ? "on": "off";
+                    for (var j = 0; j < data.data.length; i++)
+                        data.data[j].value = data.data[j].value === "1" ? "on": "off";
                 }
                 this.setState({historyData: data.data});
              },
@@ -129,7 +129,7 @@ class AutomationDeviceView extends Component {
         { this.state.name &&
             <InfoGroup title={this.state.name} titleChangeable={true} onTitleChange={e => this.setState({name: e})} onSave={e => this.saveName()} >
                 { !this.state.accessible &&
-                    <div className="automation-device-retry-connection">No connection to the device could be made. <a onClick={e => this.retryConnection()}>Retry</a></div>
+                    <div className="automation-device-retry-connection">No connection to the device could be made. <span onClick={e => this.retryConnection()}>Retry</span></div>
                 }
                 { this.state.device_type === "Light" &&
                     <div className="automation-device-light">
