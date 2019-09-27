@@ -76,7 +76,7 @@ class Observable(LogObject):
                 self.__last_update = current_time()
                 dic = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
                 last_update = namedtuple("Observable", dic.keys())(*dic.values())
-                for cb in self.__callbacks.values():
+                for cb in list(self.__callbacks.values()):
                     try:
                         cb(self.__last_update_state or self, self)
                     except Exception as e:
