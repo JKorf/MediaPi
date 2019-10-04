@@ -20,3 +20,13 @@
     api calls goede response status laten terug geven + ui reageren
 
     mood list updaten bij adden/deleten
+
+    Add name to authentication, easier for revoking and recognizing
+
+    Moods UI
+
+    Loading popup small blue bar
+
+    Default image (values?) while loading list and movie data
+
+    Fix history
