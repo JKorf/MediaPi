@@ -66,7 +66,7 @@ class ToonThermostatDevice(ThermostatDevice):
 
         for i in range(3):
             try:
-                self.__api.thermostat = temperature * 100
+                self.__api.thermostat = temperature
                 self.setpoint = temperature
                 Logger().write(LogVerbosity.Debug, "Temp set")
                 Database().add_action_history(self.id, "temperature", src, temperature)
