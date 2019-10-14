@@ -12,6 +12,7 @@ from Shared.Util import to_JSON
 from Webserver.APIController import app
 from Webserver.Models import BaseMedia
 
+
 class ShowController:
 
     shows_api_path = Settings.get_string("serie_api")

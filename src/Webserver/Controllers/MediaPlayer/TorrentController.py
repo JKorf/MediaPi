@@ -1,4 +1,5 @@
 import re
+import urllib.parse
 
 from bs4 import Tag
 from flask import request
@@ -29,9 +30,9 @@ class TorrentController:
     @staticmethod
     @app.route('/torrents', methods=['GET'])
     def search():
-        terms = request.args.get('keywords')
+        terms = urllib.parse.unquote(request.args.get('keywords'))
         category = request.args.get('category')
-        return to_JSON(TorrentController.get_torrents(TorrentController.base_url + "/category-search/" + terms + "/" + category + "/1/"))
+        return to_JSON(TorrentController.get_torrents(TorrentController.base_url + "/category-search/" + urllib.parse.quote(terms) + "/" + category + "/1/"))
 
     @staticmethod
     def get_magnet_url(url):
