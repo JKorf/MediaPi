@@ -17,7 +17,10 @@ class HistoryView extends Component {
   componentDidMount() {
     axios.get(window.vars.apiBase + 'data/history').then(
         (data) => {
-            this.setState({history: data.data.sort((a, b) =>  b.watched_at - a.watched_at)});
+            var data = data.data.filter(x => !isNaN(x.watched_at));
+            this.setState({history: data.sort((a, b) =>  {
+                return b.watched_at - a.watched_at;
+            })});
             console.log(data);
          },
         (error) => { console.log(error) }
