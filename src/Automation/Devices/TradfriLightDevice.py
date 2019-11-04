@@ -47,8 +47,12 @@ class TradfriLightDevice(LightDevice):
 
         try:
             self.__device = self.__api(self.__gateway.get_device(self.id))
-            return self.__device.light_control.lights[0]
-        except:
+            data = self.__device.light_control.lights[0]
+            data.dimmer = data.dimmer / 254 * 100
+            data.color_temp = (data.color_temp - 250) / 204
+            # TODO fix, cant assign attribute like this
+        except Exception as e:
+            Logger().write_error(e)
             return None
 
     def update(self, state, dim, warmth):
@@ -120,8 +124,8 @@ class TradfriLightDevice(LightDevice):
         Logger().write(LogVerbosity.Debug,
                        "Tradfri light change received. New state: " + str(device.light_control.lights[0].state))
         self.on = device.light_control.lights[0].state
-        self.dim = device.light_control.lights[0].dimmer
-        self.warmth = device.light_control.lights[0].color_temp
+        self.dim = device.light_control.lights[0].dimmer / 254 * 100
+        self.warmth = (device.light_control.lights[0].color_temp - 250) / 204
 
     def random_change(self):
         while self.__running:
