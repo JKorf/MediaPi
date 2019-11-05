@@ -133,10 +133,13 @@ class TradfriLightDevice(LightDevice):
             time.sleep(random.randint(5, 30))
 
     def parse_device_state(self, data):
+
         result = Obj()
         result.state = data.state
         result.dimmer = data.dimmer / 254 * 100
-        result.color_temp = ((data.color_temp - 250) / 204) * 100
+        result.color_temp = 0
+        if data.color_temp:
+            result.color_temp = ((data.color_temp - 250) / 204) * 100
         return result
 
 
