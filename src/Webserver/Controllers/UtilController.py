@@ -1,6 +1,8 @@
 import os
 import time
 import urllib.parse
+import subprocess
+from subprocess import PIPE
 
 import sys
 
@@ -105,6 +107,20 @@ class UtilController:
     def get_log_file():
         file = urllib.parse.unquote(request.args.get('file'))
         return Logger.get_log_file(file)
+
+    @staticmethod
+    @app.route('/util/get_installed_modules', methods=['GET'])
+    def get_installed_modules():
+        proc = subprocess.Popen(["pip", "list"], stdout=PIPE, universal_newlines=True)
+        out, err = proc.communicate()
+        out_lines = out.split('\n')
+        result = dict()
+        for line in out_lines[2:]:
+            if line == '':
+                continue
+            line = line.rstrip()
+            result[line[0: line.find(' ')]] = line[line.rfind(' ') + 1:]
+        return to_JSON(result)
 
     @staticmethod
     @app.route('/util/shelly', methods=['POST'])

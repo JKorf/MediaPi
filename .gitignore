@@ -106,3 +106,4 @@ test.txt
 trackers.txt
 credentials.txt
 src/Solution/Cache/*
+.vscode/

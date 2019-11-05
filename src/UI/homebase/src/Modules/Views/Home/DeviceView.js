@@ -73,6 +73,7 @@ class DeviceView extends Component {
     this.updateSub = Socket.subscribe(this.props.match.params.id + ".update", this.updateUpdate);
 
     this.getLogFiles();
+    this.getInstalledModules();
   }
 
   componentWillUnmount(){
@@ -91,6 +92,17 @@ class DeviceView extends Component {
   getLogFiles(){
     axios.get(window.vars.apiBase + 'util/logs').then((data) => {
         this.setState({logFiles: data.data});
+    });
+  }
+
+  getInstalledModules(){
+    axios.get(window.vars.apiBase + 'util/get_installed_modules').then((data) => {        
+        var modules = [];
+        Object.keys(data.data).forEach(function(key) {
+            modules.push({key: key, value: data.data[key]});
+        })
+
+        this.setState({installedModules: modules});
     });
   }
 
@@ -413,11 +425,20 @@ class DeviceView extends Component {
 
              { this.state.currentView === "Status" &&
                 <div className="info-group-box">
-                     <InfoRow name="Boot time" value={formatTime(this.state.stateData.boot_time * 1000, true, true, true, true, true)}></InfoRow>
-                     <InfoRow name="CPU" value={this.state.stateData.cpu + "%"}></InfoRow>
-                     <InfoRow name="Memory" value={this.state.stateData.memory + "%"}></InfoRow>
-                     <InfoRow name="Disk usage" value={writeSize(this.state.stateData.disk_used) + "/" + writeSize(this.state.stateData.disk_total) + "(" + this.state.stateData.disk_percentage + "%)"}></InfoRow>
-                     <InfoRow name="Temperature" value={this.state.stateData.temperature}></InfoRow>
+                    <div className="device-config-subtitle">system state</div>
+                    <div className="device-config-item">
+                        <InfoRow name="Boot time" value={formatTime(this.state.stateData.boot_time * 1000, true, true, true, true, true)}></InfoRow>
+                        <InfoRow name="CPU" value={this.state.stateData.cpu + "%"}></InfoRow>
+                        <InfoRow name="Memory" value={this.state.stateData.memory + "%"}></InfoRow>
+                        <InfoRow name="Disk usage" value={writeSize(this.state.stateData.disk_used) + "/" + writeSize(this.state.stateData.disk_total) + "(" + this.state.stateData.disk_percentage + "%)"}></InfoRow>
+                        <InfoRow name="Temperature" value={this.state.stateData.temperature}></InfoRow>
+                    </div>
+                    <div className="device-config-subtitle">installed modules</div>
+                    <div className="device-config-item">
+                    {
+                         this.state.installedModules.map(module => <InfoRow key={module.key} name={module.key} value={module.value} />)
+                    }
+                    </div>
                      <Button text="Run system health check" onClick={() => this.systemHealthCheck()}/>
                 </div>
              }

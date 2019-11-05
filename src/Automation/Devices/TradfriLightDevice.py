@@ -48,9 +48,7 @@ class TradfriLightDevice(LightDevice):
         try:
             self.__device = self.__api(self.__gateway.get_device(self.id))
             data = self.__device.light_control.lights[0]
-            data.dimmer = data.dimmer / 254 * 100
-            data.color_temp = (data.color_temp - 250) / 204
-            # TODO fix, cant assign attribute like this
+            return self.parse_device_state(data)
         except Exception as e:
             Logger().write_error(e)
             return None
@@ -123,14 +121,23 @@ class TradfriLightDevice(LightDevice):
     def device_change(self, device):
         Logger().write(LogVerbosity.Debug,
                        "Tradfri light change received. New state: " + str(device.light_control.lights[0].state))
-        self.on = device.light_control.lights[0].state
-        self.dim = device.light_control.lights[0].dimmer / 254 * 100
-        self.warmth = (device.light_control.lights[0].color_temp - 250) / 204
+        state = self.parse_device_state(device.light_control.lights[0])
+        
+        self.on = state.state
+        self.dim = state.dimmer
+        self.warmth = state.color_temp
 
     def random_change(self):
         while self.__running:
             self.on = bool(random.getrandbits(1))
             time.sleep(random.randint(5, 30))
+
+    def parse_device_state(self, data):
+        result = Obj()
+        result.state = data.state
+        result.dimmer = data.dimmer / 254 * 100
+        result.color_temp = (data.color_temp - 250) / 204
+        return result
 
 
 class Obj:
