@@ -46,8 +46,8 @@ class UtilController:
         topic = request.args.get("topic")
         start_time = int(request.args.get("start"))
         end_time = int(request.args.get("end"))
-        # TODO fix, hangs for light device?
-        return to_JSON([]) #Database().get_action_history(device_id, topic, start_time, end_time))
+        data = Database().get_action_history(device_id, topic, start_time, end_time)
+        return to_JSON(data)
 
     @staticmethod
     @app.route('/util/update', methods=['POST'])

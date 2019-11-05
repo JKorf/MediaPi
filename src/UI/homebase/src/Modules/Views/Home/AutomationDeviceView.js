@@ -55,13 +55,13 @@ class AutomationDeviceView extends Component {
                         data.data[i].value = parseInt(data.data[i].value);
                 }
                 else{
-                    for (var j = 0; j < data.data.length; i++)
+                    for (var j = 0; j < data.data.length; j++)
                         data.data[j].value = data.data[j].value === "1" ? "on": "off";
                 }
                 this.setState({historyData: data.data});
              },
             (error) => { console.log(error) }
-        )
+        );
 
     }
 
