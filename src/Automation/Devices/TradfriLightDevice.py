@@ -136,7 +136,7 @@ class TradfriLightDevice(LightDevice):
         result = Obj()
         result.state = data.state
         result.dimmer = data.dimmer / 254 * 100
-        result.color_temp = (data.color_temp - 250) / 204
+        result.color_temp = ((data.color_temp - 250) / 204) * 100
         return result
 
 

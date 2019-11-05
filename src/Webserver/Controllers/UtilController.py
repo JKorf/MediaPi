@@ -111,7 +111,7 @@ class UtilController:
     @staticmethod
     @app.route('/util/get_installed_modules', methods=['GET'])
     def get_installed_modules():
-        proc = subprocess.Popen(["pip", "list"], stdout=PIPE, universal_newlines=True)
+        proc = subprocess.Popen(["pip3", "list"], stdout=PIPE, universal_newlines=True)
         out, err = proc.communicate()
         out_lines = out.split('\n')
         result = dict()

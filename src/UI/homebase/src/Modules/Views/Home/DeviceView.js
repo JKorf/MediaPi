@@ -31,7 +31,7 @@ class DeviceView extends Component {
 
     this.changedTitle = false;
     this.state = {
-        playerData: { sub_tracks: [], audio_tracks: []},
+        playerData: { sub_tracks: [], audio_tracks: [], },
         mediaData: {},
         torrentData: {},
         stateData: {},
@@ -39,6 +39,7 @@ class DeviceView extends Component {
         state: this.states[1],
         currentView: "Media",
         logFiles: [],
+        installedModules: [],
         updateState: "Idle",
         currentVersion: "",
         loading: false};
@@ -97,6 +98,7 @@ class DeviceView extends Component {
 
   getInstalledModules(){
     axios.get(window.vars.apiBase + 'util/get_installed_modules').then((data) => {        
+        console.log(data.data);
         var modules = [];
         Object.keys(data.data).forEach(function(key) {
             modules.push({key: key, value: data.data[key]});
